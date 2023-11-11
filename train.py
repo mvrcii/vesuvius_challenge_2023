@@ -72,7 +72,7 @@ def main():
 
                     total_loss += accumulated_loss * accumulation_steps  # Adjust for the normalization
                     accumulated_loss = 0  # Reset accumulated loss after logging
-                    t.set_postfix({'Batch Loss': accumulated_loss})
+                    t.set_postfix({'Batch Loss': total_loss})
 
         # Log epoch loss
         average_loss = total_loss / (len(train_data_loader) / accumulation_steps)
