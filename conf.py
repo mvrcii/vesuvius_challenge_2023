@@ -5,7 +5,13 @@ from transformers import SegformerConfig
 
 
 class CFG:
+    local = False
+
     data_root_dir = "data"
+    fragment_root_dir = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
+    if local:
+        fragment_root_dir = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
+
     data_out_path = "data/train"
 
     # ============== model cfg =============
