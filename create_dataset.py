@@ -128,7 +128,7 @@ if __name__ == '__main__':
     CFG.size = CFG.tile_size
 
     # train
-    if args.cr_train:
+    if not args.skip_train:
         create_dataset(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), dataset_type=args.split)
 
     # val
