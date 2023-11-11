@@ -5,7 +5,7 @@ from transformers import SegformerConfig
 
 
 class CFG:
-    local = False
+    local = True
 
     data_root_dir = "data"
     fragment_root_dir = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
@@ -26,15 +26,15 @@ class CFG:
     stride = tile_size // 4
 
     device = 'cuda'
-    seed = 17
+    seed = 2
 
-    epochs = 20
-    lr = 1e-3
+    epochs = 50
+    lr = 1e-4
     train_batch_size = 1  # 32
     val_batch_size = 1
     num_workers = 1
 
-    dataset_fraction = 0.01
+    dataset_fraction = 0.1
 
     # ============== fixed =============
     # min_lr = 1e-6
