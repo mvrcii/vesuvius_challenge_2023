@@ -39,29 +39,24 @@ def main():
         total_loss = 0
 
         scheduler_warmup.step(epoch)
-        print(epoch, optimizer.param_groups[0]['lr'])
+        print("Epoch:", epoch, "LR:", optimizer.param_groups[0]['lr'])
         wandb.log({"LR": optimizer.param_groups[0]['lr']})
 
         print("Starting Epoch", epoch)
 
         for batch_idx, (data, target) in enumerate(train_data_loader):
-            print("Starting the batch loop")
+            print("Batch:", batch_idx)
+
             data, target = data.to(CFG.device), target.to(CFG.device)
-            print("Moved input to CUDA")
 
             # Forward pass
             output = model(data)
-            # output = output.squeeze(1)
-            print("Performed Forward Pass")
 
             loss = loss_function(output, target.float())
-            print("Calculated Loss")
 
-            # Backward pass and optimization
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            print("Performed Backward")
 
             total_loss += loss.item()
 
