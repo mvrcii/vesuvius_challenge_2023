@@ -1,35 +1,53 @@
-import torch.nn as nn
-from transformers import SegformerForSemanticSegmentation
+import torch
+import wandb
 
-from conf import CFG, unet_3d_jumbo_config
-from unetr import UNETR
-from dataset import make_test_dataset
-
-
-class UNETR_Segformer(nn.Module):
-    def __init__(self, cfg, dropout=.2):
-        super().__init__()
-        self.cfg = cfg
-        self.dropout = nn.Dropout2d(dropout)
-        self.encoder = UNETR(
-            input_dim=1,
-            output_dim=32,
-            img_shape=(16, self.cfg.size, self.cfg.size)
-        )
-        self.encoder_2d = SegformerForSemanticSegmentation(unet_3d_jumbo_config)
-        self.upscaler1 = nn.ConvTranspose2d(
-            1, 1, kernel_size=(4, 4), stride=2, padding=1)
-        self.upscaler2 = nn.ConvTranspose2d(
-            1, 1, kernel_size=(4, 4), stride=2, padding=1)
-
-    def forward(self, image):
-        output = self.encoder(image).max(axis=2)[0]
-        output = self.dropout(output)
-        output = self.encoder_2d(output).logits
-        output = self.upscaler1(output)
-        output = self.upscaler2(output)
-        return output
+from conf import CFG
+from dataset import build_dataloader
+from unetr_segformer import UNETR_Segformer
+from utils.create_dataset import create_dataset
+from torch.optim import AdamW
 
 
-model = UNETR_Segformer(CFG)
-test_loader, xyxys = make_test_dataset(2)
+def main():
+    wandb.init(project="Kaggle1stReimp", entity="mvrcii_")
+
+    model = UNETR_Segformer(CFG)
+    optimizer = AdamW(model.parameters(), lr=CFG.lr)
+    loss_function = torch.nn.BCELoss()
+
+    train_data_loader = build_dataloader(data_root_dir=CFG.data_root_dir, dataset_type='train')
+
+    # Training loop
+    for epoch in range(CFG.epochs):
+        model.train()
+        total_loss = 0
+
+        for batch_idx, (data, target) in enumerate(train_data_loader):
+            data, target = data.to(torch.device(CFG.device)), target.to(torch.device(CFG.device))
+
+            # Forward pass
+            output = model(data)
+            loss = loss_function(output, target)
+
+            # Backward pass and optimization
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item()
+
+            # Log to wandb
+            wandb.log({"Epoch": epoch, "Batch Loss": loss.item()})
+
+        # Log epoch loss
+        average_loss = total_loss / len(train_data_loader)
+        wandb.log({"Epoch": epoch, "Average Loss": average_loss})
+
+        print(f"Epoch [{epoch+1}/{CFG.epochs}], Loss: {average_loss:.4f}")
+
+    # Finish Weights & Biases run
+    wandb.finish()
+
+
+if __name__ == '__main__':
+    main()

@@ -5,6 +5,11 @@ Same ``env`` as mmsegmentation experiment.
 
 Then only additional dependency should be albumentations:
 
+## Dataset Creation
+```bash
+create_dataset(data_root_dir=CFG.data_root_dir, dataset_type='train')
+```
+
 ```commandline
 pip install albumentations
 ```

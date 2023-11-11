@@ -1,4 +1,5 @@
 import albumentations as A
+import torch.cuda
 from albumentations.pytorch import ToTensorV2
 from transformers import SegformerConfig
 
@@ -6,12 +7,8 @@ from transformers import SegformerConfig
 class CFG:
     # ============== comp exp name =============
     comp_name = 'vesuvius'
-
-    # comp_dir_path = './'
-    comp_dir_path = '/kaggle/input/'
-    comp_folder_name = 'vesuvius-challenge-ink-detection'
-    # comp_dataset_path = f'{comp_dir_path}datasets/{comp_folder_name}/'
-    comp_dataset_path = f'{comp_dir_path}{comp_folder_name}/'
+    data_root_dir = "data"
+    data_out_path = "data/train"
 
     exp_name = '3d_unet_subv2'
 
@@ -23,7 +20,7 @@ class CFG:
     backbone = 'None'
     #     backbone = 'se_resnext50_32x4d'
 
-    in_chans = 16
+    in_chans = 4
     # ============== training cfg =============
     size = 1024
     tile_size = 1024
@@ -31,6 +28,8 @@ class CFG:
 
     batch_size = 3  # 32
     use_amp = True
+
+    device = 'cuda'
 
     scheduler = 'GradualWarmupSchedulerV2'
     # scheduler = 'CosineAnnealingLR'
@@ -55,7 +54,7 @@ class CFG:
     max_grad_norm = 1000
 
     print_freq = 50
-    num_workers = 2
+    num_workers = 1
 
     seed = 42
 
