@@ -13,7 +13,7 @@ class UNETR_Segformer(nn.Module):
         self.encoder = UNETR(
             input_dim=1,
             output_dim=32,
-            img_shape=(16, self.cfg.size, self.cfg.size)
+            img_shape=(4, self.cfg.size, self.cfg.size)
         )
         self.encoder_2d = SegformerForSemanticSegmentation(unet_3d_jumbo_config)
         self.upscaler1 = nn.ConvTranspose2d(

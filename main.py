@@ -4,7 +4,6 @@ import wandb
 from conf import CFG
 from dataset import build_dataloader
 from unetr_segformer import UNETR_Segformer
-from utils.create_dataset import create_dataset
 from torch.optim import AdamW
 
 
@@ -12,6 +11,12 @@ def main():
     wandb.init(project="Kaggle1stReimp", entity="mvrcii_")
 
     model = UNETR_Segformer(CFG)
+
+    if torch.cuda.is_available():
+        model = model.to('cuda')
+    else:
+        print('Cuda not available')
+
     optimizer = AdamW(model.parameters(), lr=CFG.lr)
     loss_function = torch.nn.BCELoss()
 
@@ -21,18 +26,25 @@ def main():
     for epoch in range(CFG.epochs):
         model.train()
         total_loss = 0
+        print("Starting Epoch", epoch)
 
         for batch_idx, (data, target) in enumerate(train_data_loader):
-            data, target = data.to(torch.device(CFG.device)), target.to(torch.device(CFG.device))
+            print("Starting the batch loop")
+            data, target = data.to(CFG.device), target.to(CFG.device)
+            print("Moved input to CUDA")
 
             # Forward pass
             output = model(data)
+            print("Performed Forward Pass")
+
             loss = loss_function(output, target)
+            print("Calculated Loss")
 
             # Backward pass and optimization
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            print("Performed Backward")
 
             total_loss += loss.item()
 

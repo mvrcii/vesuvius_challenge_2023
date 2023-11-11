@@ -73,3 +73,7 @@ def create_dataset(data_root_dir, dataset_type='train', fragment_id=2):
 
             progress_bar.update(1)
     progress_bar.close()
+
+
+if __name__ == '__main__':
+    create_dataset(data_root_dir=CFG.data_root_dir, dataset_type='train')
