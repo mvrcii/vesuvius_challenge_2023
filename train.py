@@ -101,7 +101,6 @@ def main():
 
     # Finish Weights & Biases run
     wandb.finish()
-    timestamp = time.time()
     torch.save(model.state_dict(), f"model_{CFG.size}_{CFG.lr}_final.pth")
 
 
@@ -151,9 +150,9 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
         ax2.title.set_text('Prediction')
         ax2.axis('off')
 
-
-
-        plt.show()
+        # plt.show()
+        plt.savefig(f'vis_epoch_{epoch}_idx_{val_idx}.png', bbox_inches='tight')
+        plt.close(fig)  # Close the figure to avoid displaying it in notebooks
 
 
 if __name__ == '__main__':
