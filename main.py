@@ -34,7 +34,6 @@ def main():
         model.train()
         total_loss = 0
 
-        scheduler_steplr.step()
         print("Epoch:", epoch, "LR:", optimizer.param_groups[0]['lr'])
         wandb.log({"LR": optimizer.param_groups[0]['lr']})
 
@@ -56,6 +55,8 @@ def main():
 
             # Log to wandb
             wandb.log({"Epoch": epoch, "Batch Loss": loss.item()})
+
+        scheduler_steplr.step()
 
         # Log epoch loss
         average_loss = total_loss / len(train_data_loader)
