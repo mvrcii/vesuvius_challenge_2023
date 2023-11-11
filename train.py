@@ -25,7 +25,8 @@ def main():
     optimizer = AdamW(model.parameters(), lr=CFG.lr)
     scheduler = StepLR(optimizer, step_size=1, gamma=0.999)
     loss_function = torch.nn.BCELoss()
-    # TODO: Test Dice Loss
+    # TODO: Implement and test Dice Loss
+    # TODO: Add global seeding
 
     train_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
                                          dataset_type='train')
