@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from transformers import SegformerForSemanticSegmentation
 
@@ -27,4 +28,8 @@ class UNETR_Segformer(nn.Module):
         output = self.encoder_2d(output).logits
         output = self.upscaler1(output)
         output = self.upscaler2(output)
+
+        output = output.squeeze(1)
+        output = torch.sigmoid(output)
+
         return output

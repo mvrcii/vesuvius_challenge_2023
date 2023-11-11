@@ -37,7 +37,7 @@ def main():
 
             # Forward pass
             output = model(data)
-            output = output.squeeze(1)
+            # output = output.squeeze(1)
             print("Performed Forward Pass")
 
             loss = loss_function(output, target.float())
