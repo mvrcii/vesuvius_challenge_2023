@@ -19,10 +19,7 @@ def read_image(fragment_id):
 
     path = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
     for i in tqdm(idxs):
-        # image = cv2.imread(CFG.comp_dataset_path + f"{mode}/{fragment_id}/surface_volume/{i:02}.tif", 0)
-        # img_path = os.path.join("A:\\", "projects_a", "Python", "vesuv", "data", "fragments", "fragment2", "slices",
-        #                         f"{i:05}.tif")
-        img_path = os.path.join(path, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+        img_path = os.path.join(CFG.data_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
 
