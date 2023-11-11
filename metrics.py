@@ -1,5 +1,20 @@
 import numpy as np
+import wandb
 from sklearn.metrics import roc_auc_score, confusion_matrix
+
+def log_predictions_to_wandb(images, predictions, targets, threshold, step):
+    """
+    Log a sample of images, predicted masks, and ground truth masks to wandb.
+    """
+    # Convert predictions to binary masks based on the threshold
+    predicted_masks = predictions > threshold
+
+    # Log to wandb
+    for i in range(len(images)):
+        wandb.log({"Step": step,
+                   "Original Image": wandb.Image(images[i].cpu()),
+                   "Predicted Mask": wandb.Image(predicted_masks[i].cpu()),
+                   "Ground Truth Mask": wandb.Image(targets[i].cpu())})
 
 
 def calculate_incremental_metrics(metric_accumulator, y_true, y_pred, threshold):
