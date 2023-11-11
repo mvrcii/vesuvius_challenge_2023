@@ -129,7 +129,7 @@ def validate_model(epoch, model, val_data_loader, device, threshold=0.5):
 
 
 def visualize(epoch, val_idx, val_total, pred_label, target_label):
-    if CFG.show_predictions == torch.max(pred_label).item() > 0:
+    if CFG.show_predictions and torch.max(pred_label).item() > 0:
         print("Predicting something white!")
 
         pred_label_np = pred_label.cpu().numpy()
