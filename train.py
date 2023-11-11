@@ -24,7 +24,7 @@ def main():
         print('Cuda not available')
 
     optimizer = AdamW(model.parameters(), lr=CFG.lr, weight_decay=1e-5)
-    scheduler = StepLR(optimizer, step_size=1, gamma=0.999)
+    scheduler = StepLR(optimizer, step_size=4, gamma=0.999)
     loss_function = torch.nn.BCELoss()
     # TODO: Implement and test Dice Loss
     # TODO: Add global seeding
