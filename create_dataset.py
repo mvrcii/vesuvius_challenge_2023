@@ -78,8 +78,8 @@ def create_dataset(data_root_dir, dataset_type='train', fragment_id=2):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create a dataset.')
-    parser.add_argument('patch_size', type=int, help='Size of the patch.')
-    parser.add_argument('dataset_type', type=str, choices=['train', 'test', 'val'],
+    parser.add_argument('patch_size', type=int, default=512, help='Size of the patch.')
+    parser.add_argument('dataset_type', type=str, default='train', choices=['train', 'test', 'val'],
                         help='Type of the dataset (train, test, val).')
 
     args = parser.parse_args()
