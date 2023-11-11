@@ -34,7 +34,7 @@ jobStart=$(date +%s)
 # Main loop
 for range in "${ranges[@]}"; do
     read -r start end <<< "$range"
-    for ((i=start; i<=end; i++)); do
+    for ((i=10#$start; i<=10#$end; i++)); do
         printf -v formattedIndex "%02d" $i
         url="http://dl.ash2txt.org/fragments/Frag2.volpkg/working/54keV_exposed_surface/surface_volume/${formattedIndex}.tif"
         outputFile="${outputFolder}/0$(printf "%04d" $i).tif"
