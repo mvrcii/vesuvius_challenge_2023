@@ -33,10 +33,9 @@ class CFG:
 
     scheduler = 'GradualWarmupSchedulerV2'
     # scheduler = 'CosineAnnealingLR'
-    epochs = 15
 
-    warmup_factor = 10
-    lr = 1e-4 / warmup_factor
+    epochs = 15
+    lr = 1e-4
 
     # ============== fold =============
     valid_id = 2
