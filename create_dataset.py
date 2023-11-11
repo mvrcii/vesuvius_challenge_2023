@@ -1,6 +1,9 @@
 import argparse
 import gc
+import logging
 import os
+import random
+import shutil
 
 import numpy as np
 from tqdm import tqdm
@@ -73,11 +76,49 @@ def create_dataset(data_root_dir, dataset_type='train', fragment_id=2):
     progress_bar.close()
 
 
+def move_files(src_dir, dest_dir, files):
+    for file in files:
+        shutil.move(os.path.join(src_dir, file), os.path.join(dest_dir, file))
+
+
+def create_val_from_train(data_root_dir, train_split=0.8):
+    train_dir = os.path.join(data_root_dir, 'train')
+    train_img_dir = os.path.join(train_dir, 'images')
+    train_label_dir = os.path.join(train_dir, 'labels')
+
+    if not (os.path.exists(train_dir) and os.path.exists(train_img_dir) and os.path.exists(train_label_dir)):
+        logging.error("Train directory, images, or labels are missing!")
+
+
+
+    val_dir = os.path.join(data_root_dir, 'val')
+    val_img_dir = os.path.join(val_dir, 'images')
+    val_label_dir = os.path.join(val_dir, 'labels')
+
+    # Create val directories if they don't exist
+    os.makedirs(val_img_dir, exist_ok=True)
+    os.makedirs(val_label_dir, exist_ok=True)
+
+    # List all files in the train images and labels directories
+    image_files = os.listdir(train_img_dir)
+    label_files = os.listdir(train_label_dir)
+
+    # Assuming the image and label files have a one-to-one correspondence and the same naming convention
+    assert len(image_files) == len(label_files)
+
+    # Randomly select 20% of the files
+    num_files_to_select = int(len(image_files) * (1 - train_split))
+    selected_files = random.sample(image_files, num_files_to_select)
+
+    # Move the selected image and label files
+    move_files(train_img_dir, val_img_dir, selected_files)
+    move_files(train_label_dir, val_label_dir, selected_files)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create a dataset.')
     parser.add_argument('--patch_size', type=int, default=512, help='Size of the patch.')
-    parser.add_argument('--dataset_type', type=str, default='train', choices=['train', 'test', 'val'],
-                        help='Type of the dataset (train, test, val).')
+    parser.add_argument('--split', type=float, default=0.8, help='Train and validation split.')
 
     args = parser.parse_args()
 
@@ -85,4 +126,8 @@ if __name__ == '__main__':
     CFG.tile_size = args.patch_size
     CFG.size = CFG.tile_size
 
-    create_dataset(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), dataset_type=args.dataset_type)
+    # train
+    create_dataset(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), dataset_type=args.split)
+
+    # val
+    create_val_from_train(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), train_split=args.split)
