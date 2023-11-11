@@ -133,7 +133,7 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
         print("Predicting something white!")
 
         pred_label_np = pred_label.cpu().numpy().squeeze(0)
-        label_np = target_label.cpu().numpy()
+        label_np = target_label.cpu().numpy().squeeze(0)
 
         # Create a figure with 1 row and 2 columns of subplots
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
