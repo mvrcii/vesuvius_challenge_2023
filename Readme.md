@@ -11,3 +11,5 @@ pip install albumentations
 
 # Todo: Train Loop (not in source)
 However we have train config and example of test dataloader, and model is a nn.Module, so should be quite straight forward.
+
+### (And later inference / ensemble, see source for more code)
