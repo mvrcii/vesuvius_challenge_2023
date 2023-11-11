@@ -38,9 +38,6 @@ def main():
         model.train()
         total_loss = 0
 
-        print("Epoch:", epoch, "LR:", optimizer.param_groups[0]['lr'])
-        wandb.log({"LR": optimizer.param_groups[0]['lr']})
-
         print("Starting Epoch", epoch)
 
         with tqdm(enumerate(train_data_loader), total=len(train_data_loader), desc='Batches', leave=False) as t:
@@ -60,6 +57,7 @@ def main():
 
                 # Update Scheduler
                 scheduler.step()
+                wandb.log({"LR": optimizer.param_groups[0]['lr']})
 
                 # Log to wandb
                 wandb.log({"Epoch": epoch, "Batch Loss": loss.item()})
