@@ -8,7 +8,7 @@ from tqdm import tqdm
 import wandb
 from conf import CFG
 from dataset import build_dataloader
-from metrics import calculate_incremental_metrics, calculate_final_metrics, log_predictions_to_wandb
+from metrics import calculate_incremental_metrics, calculate_final_metrics
 from unetr_segformer import UNETR_Segformer
 
 
@@ -91,7 +91,6 @@ def main():
 
 def validate_model(model, val_data_loader, device, threshold=0.5):
     model.eval()
-    step = 0
     metric_accumulator = {'tp': 0, 'fp': 0, 'fn': 0, 'tn': 0, 'auc': 0, 'count': 0}
 
     with torch.no_grad():
@@ -101,9 +100,6 @@ def validate_model(model, val_data_loader, device, threshold=0.5):
             output = torch.sigmoid(output)  # Convert to probabilities
 
             calculate_incremental_metrics(metric_accumulator, target.cpu().numpy(), output.cpu().numpy(), threshold)
-
-            log_predictions_to_wandb(data, output, target, threshold, step)
-            step += 1
 
     return calculate_final_metrics(metric_accumulator)
 
