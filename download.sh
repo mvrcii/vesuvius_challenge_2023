@@ -8,9 +8,7 @@ credentials="$user:$password"
 # Configuration
 outputFolder="../testdownload"
 ranges=(
-    "00000 00010"
-    "06000 07250"
-    "13000 13010"
+    "00024 00039"
 )
 overwriteExistingFiles=false
 
