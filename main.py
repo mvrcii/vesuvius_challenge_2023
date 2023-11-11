@@ -44,8 +44,7 @@ def main():
 
         print("Starting Epoch", epoch)
 
-        for batch_idx, (data, target) in enumerate(train_data_loader):
-            print("Batch:", batch_idx)
+        for batch_idx, (data, target) in tqdm(enumerate(train_data_loader)):
 
             data, target = data.to(CFG.device), target.to(CFG.device)
 
