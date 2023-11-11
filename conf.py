@@ -26,7 +26,7 @@ class CFG:
     tile_size = 512
     stride = tile_size // 4
 
-    batch_size = 4  # 32
+    batch_size = 2  # 32
     use_amp = True
 
     device = 'cuda'
