@@ -6,7 +6,7 @@ password="only"
 credentials="$user:$password"
 
 # Configuration
-outputFolder="../fullScrollData"
+outputFolder="../testdownload"
 ranges=(
     "00000 00010"
     "06000 07250"
