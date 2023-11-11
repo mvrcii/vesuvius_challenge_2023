@@ -6,7 +6,7 @@ password="only"
 credentials="$user:$password"
 
 # Configuration
-outputFolder="/testdownload/"
+outputFolder="testdownload"
 ranges=(
     "00024 00039"
 )
