@@ -1,6 +1,8 @@
 import os
 
 import torch
+from tqdm import tqdm
+
 import wandb
 
 from conf import CFG
@@ -32,7 +34,7 @@ def main():
     train_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), dataset_type='train')
 
     # Training loop
-    for epoch in range(CFG.epochs):
+    for epoch in tqdm(range(CFG.epochs)):
         model.train()
         total_loss = 0
 
