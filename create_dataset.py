@@ -67,7 +67,7 @@ def create_dataset(data_root_dir, fragment_id=2):
                 img_file_path = os.path.join(img_path, file_name)
                 label_file_path = os.path.join(label_path, file_name)
 
-                if label[y1:y2, x1:x2].unqiue() == 2:
+                if label[y1:y2, x1:x2].unique() == 2:
                     if not os.path.exists(img_file_path):
                         np.save(img_file_path, images[y1:y2, x1:x2])
 
