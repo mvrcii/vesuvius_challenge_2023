@@ -40,8 +40,8 @@ def read_image(fragment_id):
     return images, label
 
 
-def create_dataset(data_root_dir, dataset_type='train', fragment_id=2):
-    data_dir = os.path.join(data_root_dir, dataset_type)
+def create_dataset(data_root_dir, fragment_id=2):
+    data_dir = os.path.join(data_root_dir, 'train')
 
     img_path = os.path.join(data_dir, "images")
     label_path = os.path.join(data_dir, "labels")
@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
     # train
     if not args.skip_train:
-        create_dataset(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), dataset_type=args.split)
+        create_dataset(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)))
 
     # val
     create_val_from_train(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), train_split=args.split)
