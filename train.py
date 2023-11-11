@@ -35,7 +35,7 @@ def main():
     val_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
                                        dataset_type='val')
 
-    accumulation_steps = 8
+    accumulation_steps = 4
     accumulated_loss = 0
 
     # Training loop
