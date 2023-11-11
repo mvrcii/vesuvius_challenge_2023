@@ -33,8 +33,8 @@ def read_image(fragment_id):
         images.append(image)
     images = np.stack(images, axis=2)
 
-    label_path = os.path.join(path, "fragments/fragment2/inklabels_original.png")
-    label = cv2.imread(CFG.data_root_dir, cv2.IMREAD_GRAYSCALE)
+    label_path = os.path.join(CFG.data_root_dir, "fragments/fragment2/inklabels.png")
+    label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
     label = np.pad(label, [(0, pad0), (0, pad1)], mode='constant', constant_values=0)
 
     return images, label
