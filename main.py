@@ -1,3 +1,5 @@
+import os
+
 import torch
 import wandb
 
@@ -20,7 +22,7 @@ def main():
     optimizer = AdamW(model.parameters(), lr=CFG.lr)
     loss_function = torch.nn.BCELoss()
 
-    train_data_loader = build_dataloader(data_root_dir=CFG.data_root_dir, dataset_type='train')
+    train_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), dataset_type='train')
 
     # Training loop
     for epoch in range(CFG.epochs):
@@ -35,9 +37,10 @@ def main():
 
             # Forward pass
             output = model(data)
+            output = output.squeeze(1)
             print("Performed Forward Pass")
 
-            loss = loss_function(output, target)
+            loss = loss_function(output, target.float())
             print("Calculated Loss")
 
             # Backward pass and optimization

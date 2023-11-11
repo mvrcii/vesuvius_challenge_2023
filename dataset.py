@@ -4,6 +4,7 @@ import os
 import albumentations as A
 import cv2
 import numpy as np
+import torch
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 
@@ -67,6 +68,9 @@ class CustomDataset(Dataset):
         image = data['image']
 
         label = np.load(os.path.join(self.label_dir, self.labels[idx]))
+        if np.max(label) == 255:
+            label = label // 255
+
         return image[None, :, :, :], label
 
 

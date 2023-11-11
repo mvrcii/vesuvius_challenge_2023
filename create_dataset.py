@@ -76,4 +76,4 @@ def create_dataset(data_root_dir, dataset_type='train', fragment_id=2):
 
 
 if __name__ == '__main__':
-    create_dataset(data_root_dir=CFG.data_root_dir, dataset_type='train')
+    create_dataset(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), dataset_type='train')

@@ -22,8 +22,8 @@ class CFG:
 
     in_chans = 16
     # ============== training cfg =============
-    size = 1024
-    tile_size = 1024
+    size = 512
+    tile_size = 512
     stride = tile_size // 4
 
     batch_size = 1  # 32
