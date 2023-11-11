@@ -34,7 +34,7 @@ class CFG:
     val_batch_size = 1
     num_workers = 1
 
-    dataset_fraction = 0.0001
+    dataset_fraction = 0.001
     show_predictions = True
 
     # ============== fixed =============
