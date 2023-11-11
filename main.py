@@ -10,7 +10,7 @@ from torch.optim import AdamW
 
 
 def main():
-    wandb.init(project="Kaggle1stReimp", entity="mvrcii_")
+    wandb.init(project="Kaggle1stReimp", entity="wuesuv")
 
     model = UNETR_Segformer(CFG)
 
