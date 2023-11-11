@@ -30,7 +30,7 @@ def main():
                                          dataset_type='train')
 
     # Training loop
-    for epoch in tqdm(range(CFG.epochs)):
+    for epoch in tqdm(range(CFG.epochs), desc='Epochs'):
         model.train()
         total_loss = 0
 
@@ -39,22 +39,25 @@ def main():
 
         print("Starting Epoch", epoch)
 
-        for batch_idx, (data, target) in tqdm(enumerate(train_data_loader)):
-            data, target = data.to(CFG.device), target.to(CFG.device)
+        with tqdm(enumerate(train_data_loader), total=len(train_data_loader), desc='Batches', leave=False) as t:
+            for batch_idx, (data, target) in t:
+                data, target = data.to(CFG.device), target.to(CFG.device)
 
-            # Forward pass
-            output = model(data)
+                # Forward pass
+                output = model(data)
 
-            loss = loss_function(output, target.float())
+                loss = loss_function(output, target.float())
 
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
 
-            total_loss += loss.item()
+                total_loss += loss.item()
 
-            # Log to wandb
-            wandb.log({"Epoch": epoch, "Batch Loss": loss.item()})
+                # Log to wandb
+                wandb.log({"Epoch": epoch, "Batch Loss": loss.item()})
+
+                t.set_postfix({'Batch Loss': loss.item()})
 
         scheduler_steplr.step()
 
