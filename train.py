@@ -156,7 +156,9 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
         vis_path = os.path.join(vis_path, f'vis_epoch_{epoch}_idx_{val_idx}.png')
         plt.savefig(vis_path, bbox_inches='tight')
         plt.close(fig)  # Close the figure to avoid displaying it in notebooks
-        print("Saving img in", )
+        print("Saving img in", vis_path)
+    else:
+        print("Skip visualization, torch.max(pred_label).item() =", torch.max(pred_label).item())
 
 
 if __name__ == '__main__':
