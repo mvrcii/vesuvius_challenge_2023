@@ -29,12 +29,13 @@ class CFG:
     seed = 13
 
     epochs = 50
-    lr = 1e-3
+    lr = 1e-2
     train_batch_size = 1  # 32
     val_batch_size = 1
     num_workers = 1
 
-    dataset_fraction = 0.1
+    dataset_fraction = 0.0001
+    show_predictions = True
 
     # ============== fixed =============
     # min_lr = 1e-6

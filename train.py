@@ -2,6 +2,7 @@ import os
 import time
 
 import torch
+from matplotlib import pyplot as plt
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
@@ -80,7 +81,7 @@ def main():
         print(f"Epoch [{epoch + 1}/{CFG.epochs}], Train Loss: {average_loss:.4f}")
 
         # Validation step
-        val_metrics = validate_model(model, val_data_loader, CFG.device)
+        val_metrics = validate_model(epoch, model, val_data_loader, CFG.device)
 
         if (epoch + 1) % 10 == 0:
             checkpoint_path = f"model_{CFG.size}_{CFG.lr}_epoch_{epoch + 1}.pth"
@@ -104,19 +105,52 @@ def main():
     torch.save(model.state_dict(), f"model_{CFG.size}_{CFG.lr}_final.pth")
 
 
-def validate_model(model, val_data_loader, device, threshold=0.5):
+def validate_model(epoch, model, val_data_loader, device, threshold=0.5):
     model.eval()
     metric_accumulator = {'tp': 0, 'fp': 0, 'fn': 0, 'tn': 0, 'auc': 0, 'count': 0}
 
     with torch.no_grad():
+
+        counter = 0
         for data, target in val_data_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
             output = torch.sigmoid(output)  # Convert to probabilities
 
+            if counter % int(len(val_data_loader) / 10) == 0:
+                visualize(epoch=epoch, val_idx=counter, val_total=len(val_data_loader),
+                          pred_label=output, target_label=target)
+            counter += 1
             calculate_incremental_metrics(metric_accumulator, target.cpu().numpy(), output.cpu().numpy(), threshold)
 
     return calculate_final_metrics(metric_accumulator)
+
+
+def visualize(epoch, val_idx, val_total, pred_label, target_label):
+    if CFG.show_predictions == torch.max(pred_label).item() > 0:
+        print("Predicting something white!")
+
+        pred_label_np = pred_label.cpu().numpy()
+        label_np = target_label.cpu().numpy()
+
+        # Create a figure with 1 row and 2 columns of subplots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+
+        fig.suptitle(f'Epoch {epoch}, Validation Index {val_idx} of {val_total}', fontsize=16)
+
+        # Plot the first tensor on the first axis
+        ax1.imshow(label_np, cmap='gray')
+        ax1.title.set_text('Ground Truth')
+        ax1.axis('off')
+
+        # Plot the second tensor on the second axis
+        ax2.imshow(pred_label_np, cmap='gray')
+        ax2.title.set_text('Prediction')
+        ax2.axis('off')
+
+
+
+        plt.show()
 
 
 if __name__ == '__main__':
