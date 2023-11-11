@@ -55,6 +55,8 @@ def create_dataset(data_root_dir, fragment_id=2):
 
     progress_bar = tqdm(total=len(x1_list) * len(y1_list), desc="Train Dataset: Processing images and labels")
 
+    skip_counter_mask = 0
+    skip_counter_label = 0
     for y1 in y1_list:
         for x1 in x1_list:
             y2 = y1 + CFG.tile_size
@@ -65,15 +67,22 @@ def create_dataset(data_root_dir, fragment_id=2):
                 img_file_path = os.path.join(img_path, file_name)
                 label_file_path = os.path.join(label_path, file_name)
 
-                if not os.path.exists(img_file_path):
-                    np.save(img_file_path, images[y1:y2, x1:x2])
+                if label[y1:y2, x1:x2].unqiue() == 2:
+                    if not os.path.exists(img_file_path):
+                        np.save(img_file_path, images[y1:y2, x1:x2])
 
-                if not os.path.exists(label_file_path):
-                    np.save(label_file_path, label[y1:y2, x1:x2])
+                    if not os.path.exists(label_file_path):
+                        np.save(label_file_path, label[y1:y2, x1:x2])
+                else:
+                    skip_counter_label += 1
+            else:
+                skip_counter_mask += 1
 
             progress_bar.update(1)
-    progress_bar.close()
 
+    progress_bar.close()
+    print("Patches skipped due to unary label:", skip_counter_label)
+    print("Patches skipped due to black source image:", skip_counter_mask)
 
 def move_files(src_dir, dest_dir, files, pbar):
     for file in files:
