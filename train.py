@@ -23,7 +23,7 @@ def main():
     else:
         print('Cuda not available')
 
-    optimizer = AdamW(model.parameters(), lr=CFG.lr)
+    optimizer = AdamW(model.parameters(), lr=CFG.lr, weight_decay=1e-5)
     scheduler = StepLR(optimizer, step_size=1, gamma=0.999)
     loss_function = torch.nn.BCELoss()
     # TODO: Implement and test Dice Loss
@@ -35,12 +35,15 @@ def main():
     val_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
                                        dataset_type='val')
 
+    accumulation_steps = 4
+    accumulated_loss = 0
+
     # Training loop
     for epoch in tqdm(range(CFG.epochs), desc='Epochs'):
         model.train()
         total_loss = 0
 
-        print("Starting Epoch", epoch)
+        optimizer.zero_grad()  # Reset gradients; do this once at the start
 
         with tqdm(enumerate(train_data_loader), total=len(train_data_loader), desc='Batches', leave=False) as t:
             for batch_idx, (data, target) in t:
@@ -48,28 +51,32 @@ def main():
 
                 # Forward pass
                 output = model(data)
-
                 loss = loss_function(output, target.float())
+                loss = loss / accumulation_steps  # Normalize our loss (if averaged)
 
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                loss.backward()  # Accumulate gradients
 
-                total_loss += loss.item()
+                accumulated_loss += loss.item()
 
-                # Update Scheduler
-                scheduler.step()
-                wandb.log({"LR": optimizer.param_groups[0]['lr']})
+                if (batch_idx + 1) % accumulation_steps == 0:
+                    optimizer.step()  # Perform a single optimization step
+                    optimizer.zero_grad()  # Reset gradients after updating
+                    scheduler.step()  # Update the learning rate
 
-                # Log to wandb
-                wandb.log({"Epoch": epoch, "Batch Loss": loss.item()})
+                    # Log the accumulated loss and then reset it
+                    wandb.log({
+                        "Epoch": epoch,
+                        "Batch Loss": accumulated_loss,
+                        "LR": optimizer.param_groups[0]['lr']
+                    })
 
-                t.set_postfix({'Batch Loss': loss.item()})
+                    total_loss += accumulated_loss * accumulation_steps  # Adjust for the normalization
+                    accumulated_loss = 0  # Reset accumulated loss after logging
+                    t.set_postfix({'Batch Loss': accumulated_loss})
 
         # Log epoch loss
-        average_loss = total_loss / len(train_data_loader)
+        average_loss = total_loss / (len(train_data_loader) / accumulation_steps)
         wandb.log({"Epoch": epoch, "Average Train Loss": average_loss})
-
         print(f"Epoch [{epoch + 1}/{CFG.epochs}], Train Loss: {average_loss:.4f}")
 
         # Validation step
