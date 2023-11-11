@@ -1,4 +1,5 @@
 import os
+import time
 
 import torch
 from torch.optim import AdamW
@@ -74,6 +75,11 @@ def main():
         # Validation step
         val_metrics = validate_model(model, val_data_loader, CFG.device)
 
+        if (epoch + 1) % 10 == 0:
+            checkpoint_path = f"model_{CFG.size}_{CFG.lr}_epoch_{epoch + 1}.pth"
+            torch.save(model.state_dict(), checkpoint_path)
+            print(f"Checkpoint saved at {checkpoint_path}")
+
         wandb.log(
             {"Epoch": epoch,
              "Val mIoU": val_metrics[0],
@@ -87,6 +93,8 @@ def main():
 
     # Finish Weights & Biases run
     wandb.finish()
+    timestamp = time.time()
+    torch.save(model.state_dict(), f"model_{CFG.size}_{CFG.lr}_final.pth")
 
 
 def validate_model(model, val_data_loader, device, threshold=0.5):
