@@ -132,7 +132,7 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
     if CFG.show_predictions and torch.max(pred_label).item() > 0:
         print("Predicting something white!")
 
-        pred_label_np = pred_label.cpu().numpy()
+        pred_label_np = pred_label.cpu().numpy().squeeze(0)
         label_np = target_label.cpu().numpy()
 
         # Create a figure with 1 row and 2 columns of subplots
