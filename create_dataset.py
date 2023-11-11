@@ -20,7 +20,6 @@ def read_image(fragment_id):
     end = mid + CFG.in_chans // 2
     idxs = range(start, end)
 
-    path = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
     for i in tqdm(idxs):
         img_path = os.path.join(CFG.data_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
@@ -35,7 +34,7 @@ def read_image(fragment_id):
     images = np.stack(images, axis=2)
 
     label_path = os.path.join(path, "fragments/fragment2/inklabels_original.png")
-    label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
+    label = cv2.imread(CFG.data_root_dir, cv2.IMREAD_GRAYSCALE)
     label = np.pad(label, [(0, pad0), (0, pad1)], mode='constant', constant_values=0)
 
     return images, label
