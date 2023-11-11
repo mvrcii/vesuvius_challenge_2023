@@ -82,7 +82,6 @@ def move_files(src_dir, dest_dir, files, pbar):
 
 
 def create_val_from_train(data_root_dir, train_split=0.8):
-    print("Validation Dataset: Processing images")
     train_dir = os.path.join(data_root_dir, 'train')
     train_img_dir = os.path.join(train_dir, 'images')
     train_label_dir = os.path.join(train_dir, 'labels')
