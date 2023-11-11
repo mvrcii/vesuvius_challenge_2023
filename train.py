@@ -153,8 +153,10 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
         # plt.show()
         vis_path = 'vis'
         os.makedirs(vis_path, exist_ok=True)
-        plt.savefig(os.path.join(vis_path, f'vis_epoch_{epoch}_idx_{val_idx}.png'), bbox_inches='tight')
+        vis_path = os.path.join(vis_path, f'vis_epoch_{epoch}_idx_{val_idx}.png')
+        plt.savefig(vis_path, bbox_inches='tight')
         plt.close(fig)  # Close the figure to avoid displaying it in notebooks
+        print("Saving img in", )
 
 
 if __name__ == '__main__':
