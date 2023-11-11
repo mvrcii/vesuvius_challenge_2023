@@ -1,10 +1,11 @@
+import gc
+import os
+
 import albumentations as A
 import cv2
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
-import gc
-import os
 
 from conf import CFG
 
@@ -21,7 +22,8 @@ def read_image(fragment_id):
 
     for i in tqdm(idxs):
         # image = cv2.imread(CFG.comp_dataset_path + f"{mode}/{fragment_id}/surface_volume/{i:02}.tif", 0)
-        img_path = os.path.join("A:\\", "projects_a", "Python", "vesuv", "data", "fragments", "fragment2", "slices", f"{i:05}.tif")
+        img_path = os.path.join("A:\\", "projects_a", "Python", "vesuv", "data", "fragments", "fragment2", "slices",
+                                f"{i:05}.tif")
         image = cv2.imread(img_path, 0)
 
         pad0 = (CFG.tile_size - image.shape[0] % CFG.tile_size)
@@ -89,5 +91,6 @@ def make_test_dataset(fragment_id):
                              num_workers=CFG.num_workers, pin_memory=True, drop_last=False)
 
     return test_loader, xyxys
+
 
 test_loader, xyxys = make_test_dataset(2)
