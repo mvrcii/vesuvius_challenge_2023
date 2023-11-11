@@ -1,2 +1,5 @@
 .idea
 *.xml
+
+data
+wandb
