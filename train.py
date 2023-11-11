@@ -117,7 +117,10 @@ def validate_model(epoch, model, val_data_loader, device, threshold=0.5):
             output = model(data)
             output = torch.sigmoid(output)  # Convert to probabilities
 
-            if counter % int(len(val_data_loader) * 0.2) == 0:
+            step_size = int(len(val_data_loader) * 0.2)
+            if step_size <= 0:
+                step_size = 1
+            if counter % step_size == 0:
                 visualize(epoch=epoch, val_idx=counter, val_total=len(val_data_loader),
                           pred_label=output, target_label=target)
             counter += 1
