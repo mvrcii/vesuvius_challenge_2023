@@ -53,7 +53,7 @@ def create_dataset(data_root_dir, fragment_id=2):
     x1_list = list(range(0, images.shape[1] - CFG.tile_size + 1, CFG.stride))
     y1_list = list(range(0, images.shape[0] - CFG.tile_size + 1, CFG.stride))
 
-    progress_bar = tqdm(total=len(x1_list) * len(y1_list), desc="Processing images")
+    progress_bar = tqdm(total=len(x1_list) * len(y1_list), desc="Train Dataset: Processing images and labels")
 
     for y1 in y1_list:
         for x1 in x1_list:
@@ -75,9 +75,10 @@ def create_dataset(data_root_dir, fragment_id=2):
     progress_bar.close()
 
 
-def move_files(src_dir, dest_dir, files):
+def move_files(src_dir, dest_dir, files, pbar):
     for file in files:
         shutil.move(os.path.join(src_dir, file), os.path.join(dest_dir, file))
+        pbar.update(1)
 
 
 def create_val_from_train(data_root_dir, train_split=0.8):
@@ -87,8 +88,6 @@ def create_val_from_train(data_root_dir, train_split=0.8):
 
     if not (os.path.exists(train_dir) and os.path.exists(train_img_dir) and os.path.exists(train_label_dir)):
         logging.error("Train directory, images, or labels are missing!")
-
-
 
     val_dir = os.path.join(data_root_dir, 'val')
     val_img_dir = os.path.join(val_dir, 'images')
@@ -109,9 +108,13 @@ def create_val_from_train(data_root_dir, train_split=0.8):
     num_files_to_select = int(len(image_files) * (1 - train_split))
     selected_files = random.sample(image_files, num_files_to_select)
 
+    progress_bar = tqdm(total=len(image_files) * 2, desc="Validation Dataset: Processing images and labels")
+
     # Move the selected image and label files
-    move_files(train_img_dir, val_img_dir, selected_files)
-    move_files(train_label_dir, val_label_dir, selected_files)
+    move_files(train_img_dir, val_img_dir, selected_files, pbar=progress_bar)
+    move_files(train_label_dir, val_label_dir, selected_files, pbar=progress_bar)
+
+    progress_bar.close()
 
 
 if __name__ == '__main__':
