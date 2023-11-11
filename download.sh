@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Basic authentication
-user="<VesuviusUsernameHere>"
-password="<VesuviusPasswordHere>"
+user="registeredusers"
+password="only"
 credentials="$user:$password"
 
 # Configuration
