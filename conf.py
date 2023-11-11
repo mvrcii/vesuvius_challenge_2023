@@ -5,57 +5,35 @@ from transformers import SegformerConfig
 
 
 class CFG:
-    # ============== comp exp name =============
-    comp_name = 'vesuvius'
     data_root_dir = "data"
     data_out_path = "data/train"
-
-    exp_name = '3d_unet_subv2'
-
-    # ============== pred target =============
-    target_size = 1
 
     # ============== model cfg =============
     model_name = '3d_unet_segformer'
     backbone = 'None'
-    #     backbone = 'se_resnext50_32x4d'
-
+    # backbone = 'se_resnext50_32x4d'
     in_chans = 16
+
     # ============== training cfg =============
     size = 512
     tile_size = 512
     stride = tile_size // 4
 
-    batch_size = 1  # 32
-    use_amp = True
-
     device = 'cuda'
-
-    scheduler = 'GradualWarmupSchedulerV2'
-    # scheduler = 'CosineAnnealingLR'
+    seed = 42
 
     epochs = 15
     lr = 1e-4
-
-    # ============== fold =============
-    valid_id = 2
-
-    objective_cv = 'binary'  # 'binary', 'multiclass', 'regression'
-    metric_direction = 'maximize'  # maximize, 'minimize'
-    # metrics = 'dice_coef'
-
-    # ============== fixed =============
-    pretrained = True
-    inf_weight = 'best'  # 'best'
-
-    min_lr = 1e-6
-    weight_decay = 1e-6
-    max_grad_norm = 1000
-
-    print_freq = 50
+    train_batch_size = 1  # 32
+    val_batch_size = 4
     num_workers = 1
 
-    seed = 42
+    dataset_fraction = 0.02
+
+    # ============== fixed =============
+    # min_lr = 1e-6
+    # weight_decay = 1e-6
+    # max_grad_norm = 1000
 
     # ============== augmentation =============
     train_aug_list = [

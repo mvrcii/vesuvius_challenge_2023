@@ -83,6 +83,14 @@ def build_dataloader(data_root_dir, dataset_type='train'):
     images_list = os.listdir(img_dir)
     label_list = os.listdir(label_dir)
 
+    num_samples = int(len(images_list) * CFG.dataset_fraction)
+
+    images_list.sort()
+    label_list.sort()
+
+    images_list = images_list[:num_samples]
+    label_list = label_list[:num_samples]
+
     dataset = CustomDataset(data_dir=data_dir,
                             img_dir=img_dir,
                             label_dir=label_dir,
@@ -91,9 +99,10 @@ def build_dataloader(data_root_dir, dataset_type='train'):
                             cfg=CFG,
                             transform=get_transforms(data=dataset_type, cfg=CFG))
 
+
     data_loader = DataLoader(dataset,
-                             batch_size=CFG.batch_size,
-                             shuffle=True,
+                             batch_size=CFG.train_batch_size if dataset_type == 'train' else CFG.val_batch_size,
+                             shuffle=dataset_type == 'train',
                              num_workers=CFG.num_workers,
                              pin_memory=True,
                              drop_last=False)

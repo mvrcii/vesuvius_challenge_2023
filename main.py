@@ -8,6 +8,7 @@ from tqdm import tqdm
 import wandb
 from conf import CFG
 from dataset import build_dataloader
+from metrics import calculate_incremental_metrics, calculate_final_metrics
 from unetr_segformer import UNETR_Segformer
 
 
@@ -17,17 +18,20 @@ def main():
     model = UNETR_Segformer(CFG)
 
     if torch.cuda.is_available():
-        model = model.to('cuda')
+        model = model.to(CFG.device)
     else:
         print('Cuda not available')
 
     optimizer = AdamW(model.parameters(), lr=CFG.lr)
-    scheduler_steplr = StepLR(optimizer, step_size=1, gamma=0.9)
-
+    scheduler = StepLR(optimizer, step_size=1, gamma=0.999)
     loss_function = torch.nn.BCELoss()
+    # TODO: Test Dice Loss
 
     train_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
                                          dataset_type='train')
+
+    val_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
+                                       dataset_type='val')
 
     # Training loop
     for epoch in tqdm(range(CFG.epochs), desc='Epochs'):
@@ -54,21 +58,51 @@ def main():
 
                 total_loss += loss.item()
 
+                # Update Scheduler
+                scheduler.step()
+
                 # Log to wandb
                 wandb.log({"Epoch": epoch, "Batch Loss": loss.item()})
 
                 t.set_postfix({'Batch Loss': loss.item()})
 
-        scheduler_steplr.step()
-
         # Log epoch loss
         average_loss = total_loss / len(train_data_loader)
-        wandb.log({"Epoch": epoch, "Average Loss": average_loss})
+        wandb.log({"Epoch": epoch, "Average Train Loss": average_loss})
 
-        print(f"Epoch [{epoch + 1}/{CFG.epochs}], Loss: {average_loss:.4f}")
+        print(f"Epoch [{epoch + 1}/{CFG.epochs}], Train Loss: {average_loss:.4f}")
+
+        # Validation step
+        val_metrics = validate_model(model, val_data_loader, CFG.device)
+
+        wandb.log(
+            {"Epoch": epoch,
+             "Val mIoU": val_metrics[0],
+             "Val mAP": val_metrics[1],
+             "Val AUC": val_metrics[2],
+             "Val F1-Score": val_metrics[3]
+             }
+        )
+        print(f"Validation - mIoU: {val_metrics[0]:.4f}, mAP: {val_metrics[1]:.4f}, "
+              f"AUC: {val_metrics[2]:.4f}, F1-Score: {val_metrics[3]:.4f}")
 
     # Finish Weights & Biases run
     wandb.finish()
+
+
+def validate_model(model, val_data_loader, device, threshold=0.5):
+    model.eval()
+    metric_accumulator = {'tp': 0, 'fp': 0, 'fn': 0, 'tn': 0, 'auc': 0, 'count': 0}
+
+    with torch.no_grad():
+        for data, target in val_data_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            output = torch.sigmoid(output)  # Convert to probabilities
+
+            calculate_incremental_metrics(metric_accumulator, target.cpu().numpy(), output.cpu().numpy(), threshold)
+
+    return calculate_final_metrics(metric_accumulator)
 
 
 if __name__ == '__main__':
