@@ -8,7 +8,7 @@ class CFG:
     local = True
 
     data_root_dir = "data"
-    fragment_root_dir = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
+    fragment_root_dir = data_root_dir
     if local:
         fragment_root_dir = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
 
