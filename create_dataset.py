@@ -119,6 +119,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create a dataset.')
     parser.add_argument('--patch_size', type=int, default=512, help='Size of the patch.')
     parser.add_argument('--split', type=float, default=0.8, help='Train and validation split.')
+    parser.add_argument('--skip_train', action="store_true", help='Skip the creation of train dataset.')
 
     args = parser.parse_args()
 
@@ -127,7 +128,8 @@ if __name__ == '__main__':
     CFG.size = CFG.tile_size
 
     # train
-    create_dataset(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), dataset_type=args.split)
+    if args.cr_train:
+        create_dataset(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), dataset_type=args.split)
 
     # val
     create_val_from_train(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), train_split=args.split)
