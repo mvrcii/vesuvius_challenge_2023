@@ -12,13 +12,14 @@ from transformers import SegformerForSemanticSegmentation
 from conf import CFG
 from dataset import build_dataloader
 from metrics import calculate_incremental_metrics, calculate_final_metrics
+import torch.nn as nn
 
 
 def main():
     wandb.init(project="Kaggle1stReimp", entity="wuesuv")
 
     # define model
-    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b0",
+    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b5",
                                                              num_labels=1,
                                                              num_channels=16,
                                                              ignore_mismatched_sizes=True,
@@ -37,6 +38,12 @@ def main():
 
     val_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
                                        dataset_type='val')
+
+    # Check if multiple GPUs are available
+    if torch.cuda.is_available() and torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs!")
+        # Wrap the model with nn.DataParallel
+        model = nn.DataParallel(model)
 
     model.train()
 
@@ -110,8 +117,8 @@ def validate_model(epoch, model, val_data_loader, device, threshold=0.5):
 
 def visualize(epoch, val_idx, pred_label, target_label):
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))  # 1 row, 2 columns
-    axes[0].imshow(target_label.detach().squeeze().cpu().numpy(), cmap='viridis')
-    axes[1].imshow(pred_label.detach().squeeze().cpu().numpy(), cmap='viridis')
+    axes[0].imshow(target_label[0].detach().squeeze().cpu().numpy(), cmap='viridis')
+    axes[1].imshow(pred_label[0].detach().squeeze().cpu().numpy(), cmap='viridis')
     plt.tight_layout()
     plt.savefig(f"vis/vis_epoch{epoch}_validx{val_idx}.png")
 

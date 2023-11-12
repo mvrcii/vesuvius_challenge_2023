@@ -67,7 +67,7 @@ def build_dataloader(data_root_dir, dataset_type='train'):
 
     data_loader = DataLoader(dataset,
                              batch_size=CFG.train_batch_size if dataset_type == 'train' else CFG.val_batch_size,
-                             shuffle=dataset_type == 'train',
+                             shuffle=True,
                              num_workers=CFG.num_workers,
                              pin_memory=True,
                              drop_last=False)
