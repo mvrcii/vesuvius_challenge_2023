@@ -28,10 +28,10 @@ class CFG:
     device = 'cuda'
     seed = 13
 
-    epochs = 50
-    lr = 1e-2
-    train_batch_size = 1  # 32
-    val_batch_size = 1
+    epochs = 100
+    lr = 1e-3
+    train_batch_size = 4  # 32
+    val_batch_size = 4
     num_workers = 1
 
     dataset_fraction = 0.05

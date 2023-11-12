@@ -142,8 +142,8 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
         wrong = pred_label_np != label_np
 
         overlay = np.zeros((*label_np.shape, 3), dtype=np.uint8)
-        overlay[..., 1] = correct * 255  # Green for correct
-        overlay[..., 0] = wrong * 255  # Red for incorrect
+        overlay[..., 0] = correct * 255  # Green for correct
+        overlay[..., 1] = wrong * 255  # Red for incorrect
 
         # Create a figure with 1 row and 2 columns of subplots
         fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
