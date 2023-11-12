@@ -1,3 +1,4 @@
+import torch
 from transformers import SegformerFeatureExtractor, SegformerForSemanticSegmentation, SegformerConfig
 import torch.nn as nn
 
@@ -14,7 +15,8 @@ class CNN3D_Segformer(nn.Module):
 
         ckpt_path = "nvidia/segformer-b1-finetuned-ade-512-512"
         self.xy_encoder_2d = SegformerForSemanticSegmentation.from_pretrained(ckpt_path,
-                                                                              config=cnn_3d_segformer_b1_config)
+                                                                              config=cnn_3d_segformer_b1_config,
+                                                                              ignore_mismatched_sizes=True)
         self.upscaler1 = nn.ConvTranspose2d(1, 1, kernel_size=(4, 4), stride=2, padding=1)
         self.upscaler2 = nn.ConvTranspose2d(1, 1, kernel_size=(4, 4), stride=2, padding=1)
 
@@ -26,6 +28,9 @@ class CNN3D_Segformer(nn.Module):
         output = self.xy_encoder_2d(output).logits
         output = self.upscaler1(output)
         output = self.upscaler2(output)
+
+        output = output.squeeze(1)
+        output = torch.sigmoid(output)
         return output
 
 
