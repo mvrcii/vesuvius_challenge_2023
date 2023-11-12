@@ -2,7 +2,7 @@ from transformers import SegformerFeatureExtractor, SegformerForSemanticSegmenta
 import torch.nn as nn
 
 
-class cnn3d_segformer(nn.Module):
+class CNN3D_Segformer(nn.Module):
     def __init__(self, cfg):
         super().__init__()
         self.cfg = cfg
