@@ -134,8 +134,8 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
     if CFG.show_predictions and torch.max(pred_label).item() > 0:
         print("Predicting something white!")
 
-        pred_label_np = pred_label.cpu().numpy().squeeze(0) > 0.5  # Threshold predictions
-        label_np = target_label.cpu().numpy().squeeze(0) > 0.5  # Threshold ground truth
+        pred_label_np = pred_label.cpu().numpy()[0] > 0.5  # Threshold predictions
+        label_np = target_label.cpu().numpy()[0] > 0.5  # Threshold ground truth
 
         # Calculate the correct and wrong pixels
         correct = np.logical_and(pred_label_np == label_np, label_np == 1)
