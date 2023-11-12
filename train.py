@@ -29,7 +29,7 @@ def main():
         print('Cuda not available')
 
     optimizer = AdamW(model.parameters(), lr=CFG.lr, weight_decay=1e-5)
-    scheduler = StepLR(optimizer, step_size=4, gamma=0.995)
+    scheduler = StepLR(optimizer, step_size=1, gamma=0.999)
     loss_function = torch.nn.BCELoss()
     # TODO: Implement and test Dice Loss
     # TODO: Add global seeding
@@ -40,7 +40,7 @@ def main():
     val_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
                                        dataset_type='val')
 
-    accumulation_steps = 4
+    accumulation_steps = 1
     accumulated_loss = 0
 
     # Training loop
@@ -57,6 +57,11 @@ def main():
                 # Forward pass
                 output = model(data)
                 loss = loss_function(output, target.float())
+
+                img = output.detach().cpu()[0]
+                plt.imshow(img, cmap='gray')
+                plt.show()
+
                 loss = loss / accumulation_steps  # Normalize our loss (if averaged)
 
                 loss.backward()  # Accumulate gradients

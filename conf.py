@@ -26,10 +26,10 @@ class CFG:
     stride = tile_size // 4
 
     device = 'cuda'
-    seed = 13
+    seed = 15
 
     epochs = 100
-    lr = 1e-3
+    lr = 1e-2
     train_batch_size = 4  # 32
     val_batch_size = 4
     num_workers = 1
