@@ -9,13 +9,16 @@ from conf import CFG
 
 def get_transforms(data, cfg):
     if data == 'train':
-        aug = A.Compose(cfg.train_aug_list)
+        aug = A.Compose([
+            *cfg.train_aug_list,
+            A.Lambda(image=CFG.image_specific_aug)  # Apply only to images
+        ])
     elif data == 'val':
         aug = A.Compose(cfg.valid_aug_list)
     return aug
 
 
-class CustomDataset(Dataset):
+class WuesuvDataset(Dataset):
     def __init__(self, data_dir, img_dir, label_dir, images, cfg, labels=None, transform=None):
         self.images = np.array(images)
         self.cfg = cfg
@@ -30,12 +33,14 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx):
         image = np.load(os.path.join(self.img_dir, self.images[idx]))
-        data = self.transform(image=image)
-        image = data['image']
-
         label = np.load(os.path.join(self.label_dir, self.labels[idx]))
         if np.max(label) == 255:
             label = label // 255
+
+        if self.transform:
+            transformed = self.transform(image=image, mask=label)
+            image = transformed['image']
+            label = transformed['mask']
 
         return image[None, :, :, :], label
 
@@ -57,7 +62,7 @@ def build_dataloader(data_root_dir, dataset_type='train'):
     images_list = images_list[:num_samples]
     label_list = label_list[:num_samples]
 
-    dataset = CustomDataset(data_dir=data_dir,
+    dataset = WuesuvDataset(data_dir=data_dir,
                             img_dir=img_dir,
                             label_dir=label_dir,
                             images=images_list,
