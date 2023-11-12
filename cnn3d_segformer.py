@@ -12,7 +12,9 @@ class CNN3D_Segformer(nn.Module):
         self.conv3d_3 = nn.Conv3d(8, 16, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
         self.conv3d_4 = nn.Conv3d(16, 32, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
 
-        self.xy_encoder_2d = SegformerForSemanticSegmentation(self.cfg.segformer_config)
+        ckpt_path = "nvidia/segformer-b1-finetuned-ade-512-512"
+        self.xy_encoder_2d = SegformerForSemanticSegmentation.from_pretrained(ckpt_path,
+                                                                              config=cnn_3d_segformer_b1_config)
         self.upscaler1 = nn.ConvTranspose2d(1, 1, kernel_size=(4, 4), stride=2, padding=1)
         self.upscaler2 = nn.ConvTranspose2d(1, 1, kernel_size=(4, 4), stride=2, padding=1)
 
@@ -55,6 +57,3 @@ cnn_3d_segformer_b1_config = SegformerConfig(
         "num_labels": 1,
     }
 )
-
-model = SegformerForSemanticSegmentation.from_pretrained("nvidia/segformer-b1-finetuned-ade-512-512", config=cnn_3d_segformer_b1_config)
-

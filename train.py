@@ -14,12 +14,14 @@ from conf import CFG
 from dataset import build_dataloader
 from metrics import calculate_incremental_metrics, calculate_final_metrics
 from unetr_segformer import UNETR_Segformer
+from cnn3d_segformer import CNN3D_Segformer
 
 
 def main():
     wandb.init(project="Kaggle1stReimp", entity="wuesuv")
 
-    model = UNETR_Segformer(CFG)
+    # model = UNETR_Segformer(CFG)
+    model = CNN3D_Segformer(CFG)
 
     if torch.cuda.is_available():
         model = model.to(CFG.device)
@@ -120,7 +122,7 @@ def validate_model(epoch, model, val_data_loader, device, threshold=0.5):
             output = torch.sigmoid(output)  # Convert to probabilities
 
             if not visualized:
-                visualize(epoch=epoch, val_idx=0, pred_label=output, target_label=target)
+                visualize(epoch=epoch, val_idx=0, val_total=len(val_data_loader), pred_label=output, target_label=target)
                 visualized = True  # Set the flag to True after visualization
 
             calculate_incremental_metrics(metric_accumulator, target.cpu().numpy(), output.cpu().numpy(), threshold)
