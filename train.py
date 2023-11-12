@@ -1,8 +1,10 @@
 import os
 import time
 
+import numpy as np
 import torch
 from matplotlib import pyplot as plt
+from matplotlib.colors import ListedColormap
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
@@ -131,11 +133,19 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
     if CFG.show_predictions and torch.max(pred_label).item() > 0:
         print("Predicting something white!")
 
-        pred_label_np = pred_label.cpu().numpy().squeeze(0)
-        label_np = target_label.cpu().numpy().squeeze(0)
+        pred_label_np = pred_label.cpu().numpy().squeeze(0) > 0.5  # Threshold predictions
+        label_np = target_label.cpu().numpy().squeeze(0) > 0.5  # Threshold ground truth
+
+        # Calculate the correct and wrong pixels
+        correct = np.logical_and(pred_label_np == label_np, label_np == 1)
+        wrong = pred_label_np != label_np
+
+        overlay = np.zeros((*label_np.shape, 3), dtype=np.uint8)
+        overlay[..., 1] = correct * 255  # Green for correct
+        overlay[..., 0] = wrong * 255  # Red for incorrect
 
         # Create a figure with 1 row and 2 columns of subplots
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
 
         fig.suptitle(f'Epoch {epoch}, Validation Index {val_idx} of {val_total}', fontsize=16)
 
@@ -149,13 +159,19 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
         ax2.title.set_text('Prediction')
         ax2.axis('off')
 
-        # plt.show()
+        # Plot the overlay on the third axis
+        ax3.imshow(label_np, cmap='gray')
+        ax3.imshow(overlay, cmap=ListedColormap(['red', 'green']), alpha=0.5)
+        ax3.title.set_text('Overlay')
+        ax3.axis('off')
+
+        # Save the plot to a file
         vis_path = 'vis'
         os.makedirs(vis_path, exist_ok=True)
         vis_path = os.path.join(vis_path, f'vis_epoch_{epoch}_idx_{val_idx}.png')
         plt.savefig(vis_path, bbox_inches='tight')
-        plt.close(fig)  # Close the figure to avoid displaying it in notebooks
-        print("Saving img in", vis_path)
+        plt.close(fig)  # Close the figure
+        print("Saved image in", vis_path)
     else:
         print("Skip visualization, torch.max(pred_label).item() =", torch.max(pred_label).item())
 
