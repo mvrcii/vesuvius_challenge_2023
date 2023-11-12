@@ -134,12 +134,13 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
     if CFG.show_predictions and torch.max(pred_label).item() > 0:
         print("Predicting something white!")
 
-        pred_label_np = pred_label.cpu().numpy()[0] > 0.5  # Threshold predictions
+        pred_label = pred_label.cpu().numpy()[0]
+        pred_label_np_th = pred_label > 0.5  # Threshold predictions
         label_np = target_label.cpu().numpy()[0] > 0.5  # Threshold ground truth
 
         # Calculate the correct and wrong pixels
-        correct = np.logical_and(pred_label_np == label_np, label_np == 1)
-        wrong = pred_label_np != label_np
+        correct = np.logical_and(pred_label_np_th == label_np, label_np == 1)
+        wrong = pred_label_np_th != label_np
 
         overlay = np.zeros((*label_np.shape, 3), dtype=np.uint8)
         overlay[..., 0] = correct * 255  # Green for correct
@@ -156,7 +157,7 @@ def visualize(epoch, val_idx, val_total, pred_label, target_label):
         ax1.axis('off')
 
         # Plot the second tensor on the second axis
-        ax2.imshow(pred_label_np, cmap='gray')
+        ax2.imshow(pred_label, cmap='gray')
         ax2.title.set_text('Prediction')
         ax2.axis('off')
 
