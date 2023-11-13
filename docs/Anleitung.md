@@ -1,4 +1,5 @@
 # Todos
+## [Link to Feature Table](https://docs.google.com/spreadsheets/d/1JRAk7uyF5X4zzWYsBLnpsfwa-0DcStzytsSrPrMuDAc/edit?usp=sharing)
 - Repo aufräumen
 - Train so anpassen, dass checkpoints in pro run getrennte work_dirs gepackt werden
 - infer_full_image so anpassen dass checkpoint als param übergeben werden kann (inference easy auf cluster ohne script anpassung)
