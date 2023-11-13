@@ -26,6 +26,7 @@ def main():
     model = MultiChannelSegformer()
 
     if torch.cuda.device_count() == 8:
+        print("Using device count 8")
         model = torch.nn.DataParallel(model)
 
     if torch.cuda.is_available():
@@ -59,11 +60,11 @@ def main():
                 outputs = model(pixel_values=data, labels=target)
                 logits, loss = outputs[0], outputs[1]
 
-                img = logits.detach().cpu()[0]
-                plt.imshow(img, cmap='gray')
-                plt.show()
+                # img = logits.detach().cpu()[0]
+                # plt.imshow(img, cmap='gray')
+                # plt.show()
 
-                loss.backward()  # Accumulate gradients
+                loss.sum().backward()  # Accumulate gradients
 
                 optimizer.step()
                 scheduler.step()
