@@ -6,7 +6,7 @@ import torch
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import StepLR
+from torch.optim.lr_scheduler import StepLR, CosineAnnealingLR
 from tqdm import tqdm
 
 import wandb
@@ -36,6 +36,7 @@ def main():
 
     optimizer = AdamW(model.parameters(), lr=CFG.lr, weight_decay=1e-5)
     scheduler = StepLR(optimizer, step_size=1, gamma=0.999)
+
     loss_function = torch.nn.BCELoss()
     # TODO: Implement and test Dice Loss
     # TODO: Add global seeding
@@ -72,11 +73,11 @@ def main():
                 # Log the accumulated loss and then reset it
                 wandb.log({
                     "Epoch": epoch,
-                    "Batch Loss": loss,
+                    "Batch Loss": loss.mean(),
                     "LR": optimizer.param_groups[0]['lr']
                 })
 
-                t.set_postfix({'Batch Loss': loss})
+                t.set_postfix({'Batch Loss': loss.mean()})
 
         # Validation step
         val_metrics = validate_model(epoch, model, val_data_loader, CFG.device)

@@ -28,11 +28,11 @@ class CFG:
 
     epochs = 100
     lr = 1e-4
-    train_batch_size = 32 # 32
-    val_batch_size = 4
-    num_workers = 1
+    train_batch_size = 64  # 32
+    val_batch_size = 32
+    num_workers = 2
 
-    dataset_fraction = 0.25
+    dataset_fraction = 1.0
     show_predictions = True
 
     # ============== fixed =============
