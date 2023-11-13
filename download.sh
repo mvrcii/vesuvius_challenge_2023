@@ -6,7 +6,7 @@ password="only"
 credentials="$user:$password"
 
 # Configuration
-outputFolder="testdownload"
+outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/slices"
 ranges=(
     "00024 00039"
 )
