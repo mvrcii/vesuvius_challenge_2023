@@ -21,7 +21,7 @@ from conf import CFG
 # Load your model
 model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b0", num_labels=1, num_channels=16,
                                                          ignore_mismatched_sizes=True)
-checkpoint = torch.load("segb0_op.pth")
+checkpoint = torch.load("model_512_0.0001_epoch_6.pth")
 model.load_state_dict(checkpoint)
 
 
