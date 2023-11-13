@@ -24,6 +24,7 @@ def read_image(fragment_id):
         img_path = os.path.join(CFG.fragment_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
+        assert 1 < np.asarray(image).max() <= 255, "Invalid image"
 
         pad0 = (CFG.tile_size - image.shape[0] % CFG.tile_size) % CFG.tile_size
         pad1 = (CFG.tile_size - image.shape[1] % CFG.tile_size) % CFG.tile_size
@@ -36,6 +37,8 @@ def read_image(fragment_id):
     label_path = os.path.join(CFG.fragment_root_dir, "fragments/fragment2/inklabels.png")
     label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
     label = np.pad(label, [(0, pad0), (0, pad1)], mode='constant', constant_values=0)
+    label = (label / 255).astype(np.uint8)
+    assert set(np.unique(np.array(label))) == {0, 1}, "Invalid label"
 
     return images, label
 
@@ -55,36 +58,45 @@ def create_dataset(data_root_dir, fragment_id=2):
 
     progress_bar = tqdm(total=len(x1_list) * len(y1_list), desc="Train Dataset: Processing images and labels")
 
-    skip_counter_mask = 0
+    skip_counter_black_image = 0
     skip_counter_label = 0
+    requirement = (CFG.tile_size ** 2) * 0.1
+
     for y1 in y1_list:
         for x1 in x1_list:
             y2 = y1 + CFG.tile_size
             x2 = x1 + CFG.tile_size
-            if images[y1:y2, x1:x2].max() != 0:
-                file_name = f"{x1}_{y1}_{x2}_{y2}.npy"
-
-                img_file_path = os.path.join(img_path, file_name)
-                label_file_path = os.path.join(label_path, file_name)
-
-                if len(np.unique(label[y1:y2, x1:x2])) == 2:
-                    if not os.path.exists(img_file_path):
-                        print("img saved at", img_file_path)
-                        np.save(img_file_path, images[y1:y2, x1:x2])
-
-                    if not os.path.exists(label_file_path):
-                        print("label saved at", img_file_path)
-                        np.save(label_file_path, label[y1:y2, x1:x2])
-                else:
-                    skip_counter_label += 1
-            else:
-                skip_counter_mask += 1
-
             progress_bar.update(1)
 
+            # Check that the train image is not full black
+            if images[y1:y2, x1:x2].max() == 0:
+                skip_counter_black_image += 1
+                continue
+
+            # Check that the label has two classes
+            if len(np.unique(label[y1:y2, x1:x2])) != 2:
+                skip_counter_label += 1
+                continue
+
+            # Check that the label contains at least 10% ink
+            if label[y1:y2, x1:x2].sum() <= requirement:
+                continue
+
+            file_name = f"{x1}_{y1}_{x2}_{y2}.npy"
+            img_file_path = os.path.join(img_path, file_name)
+            label_file_path = os.path.join(label_path, file_name)
+
+            if not os.path.exists(img_file_path):
+                np.save(img_file_path, images[y1:y2, x1:x2])
+
+            if not os.path.exists(label_file_path):
+                np.save(label_file_path, label[y1:y2, x1:x2])
+
     progress_bar.close()
+
     print("Patches skipped due to unary label:", skip_counter_label)
-    print("Patches skipped due to black source image:", skip_counter_mask)
+    print("Patches skipped due to black source image:", skip_counter_black_image)
+
 
 def move_files(src_dir, dest_dir, files, pbar):
     for file in files:

@@ -1,7 +1,9 @@
 import os
 
 import albumentations as A
+import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from torch.utils.data import Dataset, DataLoader
 
 from conf import CFG
@@ -9,10 +11,7 @@ from conf import CFG
 
 def get_transforms(data, cfg):
     if data == 'train':
-        aug = A.Compose([
-            *cfg.train_aug_list,
-            A.Lambda(image=CFG.image_specific_aug)  # Apply only to images
-        ])
+        aug = A.Compose(cfg.train_aug_list)
     elif data == 'val':
         aug = A.Compose(cfg.valid_aug_list)
     return aug
@@ -37,10 +36,31 @@ class WuesuvDataset(Dataset):
         if np.max(label) == 255:
             label = label // 255
 
+        original_label = label.copy()
+        original_images = image.copy()
+
         if self.transform:
             transformed = self.transform(image=image, mask=label)
-            image = transformed['image']
-            label = transformed['mask']
+            image = transformed['image'].numpy()
+            label = transformed['mask'].numpy()
+
+        fig, ax = plt.subplots(2, 2, figsize=(10, 5))
+        ax[0, 0].imshow(original_label)
+        ax[0, 0].set_title("Original Label")
+
+        ax[0, 1].imshow(label)
+        ax[0, 1].set_title("Transformed Label")
+
+        ax[1, 0].imshow(original_images[:, :, 0])
+        ax[1, 0].set_title("Original Image")
+
+        ax[1, 1].imshow(image[0])
+        ax[1, 1].set_title("Transformed Image")
+
+        plt.show()
+
+        torch.tensor(image)
+        torch.tensor(label)
 
         return image[None, :, :, :], label
 
