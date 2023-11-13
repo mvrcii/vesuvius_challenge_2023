@@ -28,9 +28,9 @@ class CFG:
 
     epochs = 100
     lr = 1e-4
-    train_batch_size = 64  # 32
-    val_batch_size = 32
-    num_workers = 2
+    train_batch_size = 96  # 32
+    val_batch_size = 48
+    num_workers = 4
 
     dataset_fraction = 1.0
     show_predictions = True
@@ -50,7 +50,7 @@ class CFG:
             A.VerticalFlip(),
             A.RandomRotate90(),
             A.Transpose(),
-        ], p=1.0),
+        ], p=0.25),
         A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
         ToTensorV2(transpose_mask=True),
     ]
