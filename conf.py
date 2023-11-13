@@ -29,7 +29,12 @@ class CFG:
 
     epochs = 20
     lr = 1e-4
-    # Segformer b3, bs8 => 16GB VRAM
+    seg_pretrained = "nvidia/mit-b3"
+    """
+    V-Ram Usage:
+        Segformer b3:
+            bs8 => 16GB (~3 min per epoch on gpu1b)
+    """
     train_batch_size = 8  # 32
     save_every_n_epochs = 3
     val_batch_size = 1
