@@ -5,7 +5,7 @@ from transformers import SegformerForSemanticSegmentation
 class MultiChannelSegformer(nn.Module):
     def __init__(self):
         super().__init__()
-        self.segformer = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b5",
+        self.segformer = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b0",
                                                                           num_labels=1,
                                                                           num_channels=16,
                                                                           ignore_mismatched_sizes=True,
