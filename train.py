@@ -82,7 +82,7 @@ def main():
         # Validation step
         # val_metrics = validate_model(epoch, model, val_data_loader, CFG.device)
 
-        if (epoch + 1) % 10 == 0:
+        if (epoch + 1) % CFG.save_every_n_epochs == 0:
             checkpoint_path = f"model_{CFG.size}_{CFG.lr}_epoch_{epoch + 1}.pth"
             torch.save(model.state_dict(), checkpoint_path)
             print(f"Checkpoint saved at {checkpoint_path}")
