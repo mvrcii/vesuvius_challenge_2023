@@ -114,8 +114,9 @@ def infer_full_fragment(fragment_index):
 
 if __name__ == '__main__':
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
-    result = infer_full_fragment(3)
-    np.save(f"{date_time_string}result.npy", result)
+    fragment_num = 4
+    result = infer_full_fragment(fragment_num)
+    np.save(f"frag_{fragment_num}_{date_time_string}result.npy", result)
     if CFG.local:
         plt.imshow(result, cmap='gray')
         plt.imshow(result > 0.5, cmap='gray')
