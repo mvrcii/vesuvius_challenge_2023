@@ -28,8 +28,8 @@ class CFG:
 
     epochs = 100
     lr = 1e-2
-    train_batch_size = 2  # 32
-    val_batch_size = 2
+    train_batch_size = 6  # 32
+    val_batch_size = 4
     num_workers = 1
 
     dataset_fraction = 0.25
