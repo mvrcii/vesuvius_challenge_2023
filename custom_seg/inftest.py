@@ -1,52 +1,45 @@
-from transformers import SegformerForSemanticSegmentation
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
-import torch
+import random
+import os
+from transformers import SegformerForSemanticSegmentation
 
+# Assuming your images and labels are stored in these directories
+image_dir = "../data/512/train/images/"
+label_dir = "../data/512/train/labels/"
 
-label_tensor = np.load("../data/512/train/labels/4096_9984_4608_10496.npy")
-input_tensor = np.load("../data/512/train/images/4096_9984_4608_10496.npy")
-input_tensor =torch.tensor(input_tensor.transpose(2, 0, 1)).unsqueeze(0).float()
-input_tensor =  input_tensor / 255.0
+# Randomly select 5 image-label pairs
+image_files = os.listdir(image_dir)
+selected_files = random.sample(image_files, 5)
 
-# plt.imshow(label_tensor)
-print(label_tensor.shape)
-print(input_tensor.shape)
-# plt.show()
-# exit()
-
-
-
-# define model
-model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b0",
-                                                         num_labels=1,
-                                                         num_channels=16,
-                                                         ignore_mismatched_sizes=True)
-
-checkpoint = torch.load("../model_512_0.01_epoch_10.pth")
-
+# Load your model
+model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b0", num_labels=1, num_channels=16, ignore_mismatched_sizes=True)
+checkpoint = torch.load("../segb0_op.pth")
 model.load_state_dict(checkpoint)
 
-outputs = model(input_tensor)
+# Set up the figure for plotting
+fig, axs = plt.subplots(5, 3, figsize=(10, 10))  # 5 rows for images, 3 columns for logits, binary, and label
 
-logits = outputs.logits
-logits = logits.detach().squeeze().cpu()
+for i, file in enumerate(selected_files):
+    input_tensor = np.load(image_dir + file)
+    label_tensor = np.load(label_dir + file.replace('images', 'labels'))
 
-# plt.imshow(logits.detach().squeeze().cpu(), cmap='gray')
-# plt.show()
+    outputs = model(torch.tensor(input_tensor).unsqueeze(0).float())
+    logits = outputs.logits
+    logits = logits.detach().squeeze().cpu()
 
-plt.figure(figsize=(20, 10))
+    # Plot each of the three images for this sample
+    axs[i, 0].imshow(logits, cmap='gray')
 
-# Loop to create 10 subplots with different thresholds
-for i in range(10):
-    threshold = i * 0.05 - 1.6 # Thresholds from 0 to 0.5
-    binary_image = logits > threshold  # Convert to binary using the threshold
+    axs[i, 1].imshow(logits > 0.5, cmap='gray')
 
-    plt.subplot(2, 5, i + 1)  # 2 rows, 5 columns
-    plt.imshow(binary_image, cmap='gray')
-    plt.title(f'Threshold: {threshold:.2f}')
-    plt.axis('off')
+    axs[i, 2].imshow(label_tensor, cmap='gray')
+
+    if i == 0:
+        axs[i, 0].title.set_text('logits')
+        axs[i, 1].title.set_text('binary')
+        axs[i, 2].title.set_text('label')
 
 plt.tight_layout()
 plt.show()

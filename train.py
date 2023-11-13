@@ -1,45 +1,46 @@
 import os
-import time
 
 import numpy as np
 import torch
+from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import StepLR, CosineAnnealingLR
+from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
+from transformers import SegformerForSemanticSegmentation
 
 import wandb
 from conf import CFG
 from dataset import build_dataloader
 from metrics import calculate_incremental_metrics, calculate_final_metrics
-from mucha_segformer import MultiChannelSegformer
-from unetr_segformer import UNETR_Segformer
-from cnn3d_segformer import CNN3D_Segformer
 
 
 def main():
     wandb.init(project="Kaggle1stReimp", entity="wuesuv")
 
-    # model = UNETR_Segformer(CFG)
-    # model = CNN3D_Segformer(CFG)
-    model = MultiChannelSegformer()
+    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b0",
+                                                             num_labels=1,
+                                                             num_channels=16,
+                                                             ignore_mismatched_sizes=True,
+                                                             )
 
     if torch.cuda.device_count() == 8:
-        print("Using device count 8")
+        print("Using device count 8!")
         model = torch.nn.DataParallel(model)
+    else:
+        print("Using one device.")
 
     if torch.cuda.is_available():
         model = model.to(CFG.device)
+        print("Cuda available.")
     else:
         print('Cuda not available')
 
-    optimizer = AdamW(model.parameters(), lr=CFG.lr, weight_decay=1e-5)
+    optimizer = AdamW(model.parameters(), lr=CFG.lr)
     scheduler = StepLR(optimizer, step_size=1, gamma=0.999)
 
-    loss_function = torch.nn.BCELoss()
-    # TODO: Implement and test Dice Loss
-    # TODO: Add global seeding
+    loss_function = torch.nn.BCEWithLogitsLoss()
 
     train_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
                                          dataset_type='train')
@@ -52,20 +53,19 @@ def main():
         model.train()
 
         with tqdm(enumerate(train_data_loader), total=len(train_data_loader), desc='Batches', leave=False) as t:
-            for batch_idx, (data, target) in t:
+            for _, (data, target) in t:
                 data, target = data.to(CFG.device), target.to(CFG.device)
 
                 optimizer.zero_grad()
 
                 # Forward pass
-                outputs = model(pixel_values=data, labels=target)
-                logits, loss = outputs[0], outputs[1]
+                output = model(data.float())
+                output = rearrange(output.logits, 'b 1 h w -> b h w')  # remove channel dimension
 
-                # img = logits.detach().cpu()[0]
-                # plt.imshow(img, cmap='gray')
-                # plt.show()
+                loss = loss_function(output, target.float())
+                loss.backward()
 
-                loss.sum().backward()  # Accumulate gradients
+                # loss.sum().backward()  # Accumulate gradients
 
                 optimizer.step()
                 scheduler.step()
@@ -73,58 +73,58 @@ def main():
                 # Log the accumulated loss and then reset it
                 wandb.log({
                     "Epoch": epoch,
-                    "Batch Loss": loss.mean(),
+                    "Batch Loss": loss,
                     "LR": optimizer.param_groups[0]['lr']
                 })
 
                 t.set_postfix({'Batch Loss': loss.mean()})
 
         # Validation step
-        val_metrics = validate_model(epoch, model, val_data_loader, CFG.device)
+        # val_metrics = validate_model(epoch, model, val_data_loader, CFG.device)
 
         if (epoch + 1) % 10 == 0:
             checkpoint_path = f"model_{CFG.size}_{CFG.lr}_epoch_{epoch + 1}.pth"
             torch.save(model.state_dict(), checkpoint_path)
             print(f"Checkpoint saved at {checkpoint_path}")
 
-        wandb.log(
-            {"Epoch": epoch,
-             "Val mIoU": val_metrics[0],
-             "Val mAP": val_metrics[1],
-             "Val AUC": val_metrics[2],
-             "Val F1-Score": val_metrics[3]
-             }
-        )
-        print(f"Validation - mIoU: {val_metrics[0]:.4f}, mAP: {val_metrics[1]:.4f}, "
-              f"AUC: {val_metrics[2]:.4f}, F1-Score: {val_metrics[3]:.4f}")
+        # wandb.log(
+        #     {"Epoch": epoch,
+        #      "Val mIoU": val_metrics[0],
+        #      "Val mAP": val_metrics[1],
+        #      "Val AUC": val_metrics[2],
+        #      "Val F1-Score": val_metrics[3]
+        #      }
+        # )
+        # print(f"Validation - mIoU: {val_metrics[0]:.4f}, mAP: {val_metrics[1]:.4f}, "
+        #       f"AUC: {val_metrics[2]:.4f}, F1-Score: {val_metrics[3]:.4f}")
 
     # Finish Weights & Biases run
     wandb.finish()
     torch.save(model.state_dict(), f"model_{CFG.size}_{CFG.lr}_final.pth")
 
 
-def validate_model(epoch, model, val_data_loader, device, threshold=0.5):
-    model.eval()
-    metric_accumulator = {'tp': 0, 'fp': 0, 'fn': 0, 'tn': 0, 'auc': 0, 'count': 0}
-
-    with torch.no_grad():
-
-        visualized = False
-
-        for data, target in val_data_loader:
-            data, target = data.to(device), target.to(device)
-
-            outputs = model(pixel_values=data, labels=target)
-            logits, loss = outputs[0], outputs[1]
-            output = torch.sigmoid(logits)  # Convert to probabilities
-
-            if not visualized:
-                visualize(epoch=epoch, val_idx=0, val_total=len(val_data_loader), pred_label=output, target_label=target)
-                visualized = True  # Set the flag to True after visualization
-
-            calculate_incremental_metrics(metric_accumulator, target.cpu().numpy(), output.cpu().numpy(), threshold)
-
-    return calculate_final_metrics(metric_accumulator)
+# def validate_model(epoch, model, val_data_loader, device, threshold=0.5):
+#     model.eval()
+#     metric_accumulator = {'tp': 0, 'fp': 0, 'fn': 0, 'tn': 0, 'auc': 0, 'count': 0}
+#
+#     with torch.no_grad():
+#
+#         visualized = False
+#
+#         for data, target in val_data_loader:
+#             data, target = data.to(device), target.to(device)
+#
+#             output = model(data)
+#             output = torch.sigmoid(output)  # Convert to probabilities
+#
+#             if not visualized:
+#                 visualize(epoch=epoch, val_idx=0, val_total=len(val_data_loader), pred_label=output,
+#                           target_label=target)
+#                 visualized = True  # Set the flag to True after visualization
+#
+#             calculate_incremental_metrics(metric_accumulator, target.cpu().numpy(), output.cpu().numpy(), threshold)
+#
+#     return calculate_final_metrics(metric_accumulator)
 
 
 def visualize(epoch, val_idx, val_total, pred_label, target_label):

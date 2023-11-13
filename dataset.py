@@ -1,9 +1,7 @@
 import os
 
 import albumentations as A
-import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from torch.utils.data import Dataset, DataLoader
 
 from conf import CFG
@@ -18,11 +16,10 @@ def get_transforms(data, cfg):
 
 
 class WuesuvDataset(Dataset):
-    def __init__(self, data_dir, img_dir, label_dir, images, cfg, labels=None, transform=None):
+    def __init__(self, data_dir, img_dir, label_dir, images, cfg, labels=None):
         self.images = np.array(images)
         self.cfg = cfg
         self.labels = labels
-        self.transform = transform
         self.data_dir = data_dir
         self.img_dir = img_dir
         self.label_dir = label_dir
@@ -33,36 +30,6 @@ class WuesuvDataset(Dataset):
     def __getitem__(self, idx):
         image = np.load(os.path.join(self.img_dir, self.images[idx]))
         label = np.load(os.path.join(self.label_dir, self.labels[idx]))
-        if np.max(label) == 255:
-            label = label // 255
-
-        original_label = label.copy()
-        original_images = image.copy()
-
-        if self.transform:
-            transformed = self.transform(image=image, mask=label)
-            image = transformed['image']
-            label = transformed['mask']
-
-        show_plot = False
-        if show_plot:
-            image = image.numpy()
-            label = label.numpy()
-
-            fig, ax = plt.subplots(2, 2, figsize=(10, 5))
-            ax[0, 0].imshow(original_label)
-            ax[0, 0].set_title("Original Label")
-
-            ax[0, 1].imshow(label)
-            ax[0, 1].set_title("Transformed Label")
-
-            ax[1, 0].imshow(original_images[:, :, 0])
-            ax[1, 0].set_title("Original Image")
-
-            ax[1, 1].imshow(image[0])
-            ax[1, 1].set_title("Transformed Image")
-
-            plt.show()
 
         return image, label
 
@@ -89,8 +56,7 @@ def build_dataloader(data_root_dir, dataset_type='train'):
                             label_dir=label_dir,
                             images=images_list,
                             labels=label_list,
-                            cfg=CFG,
-                            transform=get_transforms(data=dataset_type, cfg=CFG))
+                            cfg=CFG)
 
     data_loader = DataLoader(dataset,
                              batch_size=CFG.train_batch_size if dataset_type == 'train' else CFG.val_batch_size,

@@ -33,7 +33,7 @@ def read_image(fragment_id):
         image = np.pad(image, [(0, pad0), (0, pad1)], constant_values=0)
 
         images.append(image)
-    images = np.stack(images, axis=2)
+    images = np.stack(images, axis=0)
 
     label_path = os.path.join(CFG.fragment_root_dir, "fragments/fragment2/inklabels.png")
     label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
@@ -54,13 +54,14 @@ def create_dataset(data_root_dir, fragment_id=2):
 
     images, label = read_image(fragment_id)
 
-    x1_list = list(range(0, images.shape[1] - CFG.tile_size + 1, CFG.stride))
-    y1_list = list(range(0, images.shape[0] - CFG.tile_size + 1, CFG.stride))
+    x1_list = list(range(0, images.shape[2] - CFG.tile_size + 1, CFG.stride))
+    y1_list = list(range(0, images.shape[1] - CFG.tile_size + 1, CFG.stride))
 
     progress_bar = tqdm(total=len(x1_list) * len(y1_list), desc="Train Dataset: Processing images and labels")
 
     skip_counter_black_image = 0
     skip_counter_label = 0
+    skip_counter_low_ink = 0
     requirement = (128 ** 2) * 0.1
 
     for y1 in y1_list:
@@ -69,8 +70,10 @@ def create_dataset(data_root_dir, fragment_id=2):
             x2 = x1 + CFG.tile_size
             progress_bar.update(1)
 
+            img_patch = images[:, y1:y2, x1:x2]
+
             # Check that the train image is not full black
-            if images[y1:y2, x1:x2].max() == 0:
+            if img_patch.max() == 0:
                 skip_counter_black_image += 1
                 continue
 
@@ -84,22 +87,21 @@ def create_dataset(data_root_dir, fragment_id=2):
 
             # Check that the label contains at least 10% ink
             if label_patch.sum() <= requirement:
+                skip_counter_low_ink += 1
                 continue
 
             file_name = f"{x1}_{y1}_{x2}_{y2}.npy"
             img_file_path = os.path.join(img_path, file_name)
             label_file_path = os.path.join(label_path, file_name)
 
-            if not os.path.exists(img_file_path):
-                np.save(img_file_path, images[y1:y2, x1:x2])
-
-            if not os.path.exists(label_file_path):
-                np.save(label_file_path, label[y1:y2, x1:x2])
+            np.save(img_file_path, img_patch)
+            np.save(label_file_path, label_patch)
 
     progress_bar.close()
 
     print("Patches skipped due to unary label:", skip_counter_label)
     print("Patches skipped due to black source image:", skip_counter_black_image)
+    print("Patches skipped due to low ink:", skip_counter_low_ink)
 
 
 def move_files(src_dir, dest_dir, files, pbar):

@@ -22,18 +22,18 @@ class CFG:
     # ============== training cfg =============
     size = 512
     tile_size = 512
-    stride = tile_size // 4
+    stride = tile_size // 2
 
     device = 'cuda'
     seed = 15
 
     epochs = 100
     lr = 1e-4
-    train_batch_size = 96  # 32
-    val_batch_size = 48
-    num_workers = 4
+    train_batch_size = 2  # 32
+    val_batch_size = 1
+    num_workers = 0
 
-    dataset_fraction = 1.0
+    dataset_fraction = 0.05
     show_predictions = True
 
     # ============== fixed =============
