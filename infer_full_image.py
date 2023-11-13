@@ -71,7 +71,7 @@ def infer_full_fragment(fragment_index):
     # Initialize an empty array to hold the stitched result
     stitched_result = np.zeros((y_patches * patch_size, x_patches * patch_size), dtype=np.float32)
 
-    progress_bar = tqdm(total=x_patches * y_patches, desc="Train Dataset: Processing images and labels")
+    progress_bar = tqdm(total=x_patches * y_patches, desc="Infer Full Fragment: Processing patches")
 
     for y in range(y_patches):
         for x in range(x_patches):
