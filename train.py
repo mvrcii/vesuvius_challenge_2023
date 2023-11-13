@@ -13,6 +13,7 @@ import wandb
 from conf import CFG
 from dataset import build_dataloader
 from metrics import calculate_incremental_metrics, calculate_final_metrics
+from mucha_segformer import MultiChannelSegformer
 from unetr_segformer import UNETR_Segformer
 from cnn3d_segformer import CNN3D_Segformer
 
@@ -21,7 +22,8 @@ def main():
     wandb.init(project="Kaggle1stReimp", entity="wuesuv")
 
     # model = UNETR_Segformer(CFG)
-    model = CNN3D_Segformer(CFG)
+    # model = CNN3D_Segformer(CFG)
+    model = MultiChannelSegformer()
 
     if torch.cuda.is_available():
         model = model.to(CFG.device)
@@ -55,10 +57,10 @@ def main():
                 data, target = data.to(CFG.device), target.to(CFG.device)
 
                 # Forward pass
-                output = model(data)
-                loss = loss_function(output, target.float())
+                outputs = model(pixel_values=data, labels=target)
+                logits, loss = outputs[0], outputs[1]
 
-                img = output.detach().cpu()[0]
+                img = logits.detach().cpu()[0]
                 plt.imshow(img, cmap='gray')
                 plt.show()
 
@@ -123,8 +125,10 @@ def validate_model(epoch, model, val_data_loader, device, threshold=0.5):
 
         for data, target in val_data_loader:
             data, target = data.to(device), target.to(device)
-            output = model(data)
-            output = torch.sigmoid(output)  # Convert to probabilities
+
+            outputs = model(pixel_values=data, labels=target)
+            logits, loss = outputs[0], outputs[1]
+            output = torch.sigmoid(logits)  # Convert to probabilities
 
             if not visualized:
                 visualize(epoch=epoch, val_idx=0, val_total=len(val_data_loader), pred_label=output, target_label=target)
