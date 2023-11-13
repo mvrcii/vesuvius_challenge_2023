@@ -6,7 +6,7 @@ password="only"
 credentials="$user:$password"
 
 # Configuration
-outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment3/slices"
+outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment4/slices"
 ranges=(
     "00024 00039"
 )
@@ -36,7 +36,7 @@ for range in "${ranges[@]}"; do
     read -r start end <<< "$range"
     for ((i=10#$start; i<=10#$end; i++)); do
         printf -v formattedIndex "%02d" $i
-        url="http://dl.ash2txt.org/fragments/Frag1.volpkg/working/54keV_exposed_surface/surface_volume/${formattedIndex}.tif"
+        url="http://dl.ash2txt.org/fragments/Frag4.volpkg/working/54keV_exposed_surface/PHercParis1Fr39_54keV_surface_volume/${formattedIndex}.tif"
         outputFile="${outputFolder}/0$(printf "%04d" $i).tif"
         download_file "$url" "$outputFile" &
     done
