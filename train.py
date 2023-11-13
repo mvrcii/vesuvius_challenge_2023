@@ -24,6 +24,7 @@ def main():
     # model = UNETR_Segformer(CFG)
     # model = CNN3D_Segformer(CFG)
     model = MultiChannelSegformer()
+    model = torch.nn.DataParallel(model)
 
     if torch.cuda.is_available():
         model = model.to(CFG.device)
@@ -42,19 +43,15 @@ def main():
     val_data_loader = build_dataloader(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
                                        dataset_type='val')
 
-    accumulation_steps = 1
-    accumulated_loss = 0
-
     # Training loop
     for epoch in tqdm(range(CFG.epochs), desc='Epochs'):
         model.train()
-        total_loss = 0
-
-        optimizer.zero_grad()  # Reset gradients; do this once at the start
 
         with tqdm(enumerate(train_data_loader), total=len(train_data_loader), desc='Batches', leave=False) as t:
             for batch_idx, (data, target) in t:
                 data, target = data.to(CFG.device), target.to(CFG.device)
+
+                optimizer.zero_grad()
 
                 # Forward pass
                 outputs = model(pixel_values=data, labels=target)
@@ -64,32 +61,19 @@ def main():
                 plt.imshow(img, cmap='gray')
                 plt.show()
 
-                loss = loss / accumulation_steps  # Normalize our loss (if averaged)
-
                 loss.backward()  # Accumulate gradients
 
-                accumulated_loss += loss.item()
+                optimizer.step()
+                scheduler.step()
 
-                if (batch_idx + 1) % accumulation_steps == 0:
-                    optimizer.step()  # Perform a single optimization step
-                    optimizer.zero_grad()  # Reset gradients after updating
-                    scheduler.step()  # Update the learning rate
+                # Log the accumulated loss and then reset it
+                wandb.log({
+                    "Epoch": epoch,
+                    "Batch Loss": loss,
+                    "LR": optimizer.param_groups[0]['lr']
+                })
 
-                    # Log the accumulated loss and then reset it
-                    wandb.log({
-                        "Epoch": epoch,
-                        "Batch Loss": accumulated_loss,
-                        "LR": optimizer.param_groups[0]['lr']
-                    })
-
-                    total_loss += accumulated_loss * accumulation_steps  # Adjust for the normalization
-                    t.set_postfix({'Batch Loss': accumulated_loss * accumulation_steps})
-                    accumulated_loss = 0  # Reset accumulated loss after logging
-
-        # Log epoch loss
-        average_loss = total_loss / (len(train_data_loader) / accumulation_steps)
-        wandb.log({"Epoch": epoch, "Average Train Loss": average_loss})
-        print(f"Epoch [{epoch + 1}/{CFG.epochs}], Train Loss: {average_loss:.4f}")
+                t.set_postfix({'Batch Loss': loss})
 
         # Validation step
         val_metrics = validate_model(epoch, model, val_data_loader, CFG.device)
