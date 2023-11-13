@@ -19,7 +19,7 @@ from metrics import calculate_incremental_metrics, calculate_final_metrics
 def main():
     wandb.init(project="Kaggle1stReimp", entity="wuesuv")
 
-    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b0",
+    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b3",
                                                              num_labels=1,
                                                              num_channels=16,
                                                              ignore_mismatched_sizes=True,
