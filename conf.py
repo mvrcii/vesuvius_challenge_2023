@@ -3,7 +3,7 @@ from albumentations.pytorch import ToTensorV2
 
 
 class CFG:
-    local = True
+    local = False
 
     data_root_dir = "data"
     fragment_root_dir = data_root_dir
@@ -28,8 +28,8 @@ class CFG:
 
     epochs = 100
     lr = 1e-2
-    train_batch_size = 8  # 32
-    val_batch_size = 4
+    train_batch_size = 2  # 32
+    val_batch_size = 2
     num_workers = 1
 
     dataset_fraction = 0.25
