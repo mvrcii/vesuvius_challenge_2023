@@ -3,10 +3,10 @@ from albumentations.pytorch import ToTensorV2
 
 
 class CFG:
-    local = True
+    local = False
 
     data_root_dir = "data"
-    fragment_root_dir = data_root_dir
+    fragment_root_dir = "/scratch/medfm/vesuv/kaggle1stReimp/data"
     if local:
         fragment_root_dir = r"A:\projects_a\Python\vesuv\data"
         # fragment_root_dir = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
@@ -14,26 +14,23 @@ class CFG:
     data_out_path = "data/train"
 
     # ============== model cfg =============
-    model_name = '3d_unet_segformer'
-    backbone = 'None'
-    # backbone = 'se_resnext50_32x4d'
     in_chans = 16
 
     # ============== training cfg =============
     size = 512
     tile_size = 512
-    stride = tile_size // 2
+    stride = tile_size // 4
 
     device = 'cuda'
     seed = 15
 
-    epochs = 100
+    epochs = 20
     lr = 1e-4
-    train_batch_size = 2  # 32
+    train_batch_size = 16  # 32
     val_batch_size = 1
     num_workers = 0
 
-    dataset_fraction = 0.05
+    dataset_fraction = 1.0
     show_predictions = True
 
     # ============== fixed =============
