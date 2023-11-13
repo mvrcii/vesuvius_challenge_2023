@@ -24,7 +24,9 @@ def main():
     # model = UNETR_Segformer(CFG)
     # model = CNN3D_Segformer(CFG)
     model = MultiChannelSegformer()
-    model = torch.nn.DataParallel(model)
+
+    if torch.cuda.device_count() == 8:
+        model = torch.nn.DataParallel(model)
 
     if torch.cuda.is_available():
         model = model.to(CFG.device)
