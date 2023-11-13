@@ -41,28 +41,30 @@ class WuesuvDataset(Dataset):
 
         if self.transform:
             transformed = self.transform(image=image, mask=label)
-            image = transformed['image'].numpy()
-            label = transformed['mask'].numpy()
+            image = transformed['image']
+            label = transformed['mask']
 
-        fig, ax = plt.subplots(2, 2, figsize=(10, 5))
-        ax[0, 0].imshow(original_label)
-        ax[0, 0].set_title("Original Label")
+        show_plot = False
+        if show_plot:
+            image = image.numpy()
+            label = label.numpy()
 
-        ax[0, 1].imshow(label)
-        ax[0, 1].set_title("Transformed Label")
+            fig, ax = plt.subplots(2, 2, figsize=(10, 5))
+            ax[0, 0].imshow(original_label)
+            ax[0, 0].set_title("Original Label")
 
-        ax[1, 0].imshow(original_images[:, :, 0])
-        ax[1, 0].set_title("Original Image")
+            ax[0, 1].imshow(label)
+            ax[0, 1].set_title("Transformed Label")
 
-        ax[1, 1].imshow(image[0])
-        ax[1, 1].set_title("Transformed Image")
+            ax[1, 0].imshow(original_images[:, :, 0])
+            ax[1, 0].set_title("Original Image")
 
-        plt.show()
+            ax[1, 1].imshow(image[0])
+            ax[1, 1].set_title("Transformed Image")
 
-        torch.tensor(image)
-        torch.tensor(label)
+            plt.show()
 
-        return image[None, :, :, :], label
+        return image, label
 
 
 def build_dataloader(data_root_dir, dataset_type='train'):
