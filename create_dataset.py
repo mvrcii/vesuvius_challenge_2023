@@ -1,4 +1,5 @@
 import argparse
+from skimage.transform import resize
 import gc
 import logging
 import os
@@ -60,7 +61,7 @@ def create_dataset(data_root_dir, fragment_id=2):
 
     skip_counter_black_image = 0
     skip_counter_label = 0
-    requirement = (CFG.tile_size ** 2) * 0.1
+    requirement = (128 ** 2) * 0.1
 
     for y1 in y1_list:
         for x1 in x1_list:
@@ -73,13 +74,16 @@ def create_dataset(data_root_dir, fragment_id=2):
                 skip_counter_black_image += 1
                 continue
 
+            # Scale label down to match segformer output
+            label_patch = resize(label[y1:y2, x1:x2], (128, 128), order=0, preserve_range=True, anti_aliasing=False)
+
             # Check that the label has two classes
-            if len(np.unique(label[y1:y2, x1:x2])) != 2:
+            if len(np.unique(label_patch)) != 2:
                 skip_counter_label += 1
                 continue
 
             # Check that the label contains at least 10% ink
-            if label[y1:y2, x1:x2].sum() <= requirement:
+            if label_patch.sum() <= requirement:
                 continue
 
             file_name = f"{x1}_{y1}_{x2}_{y2}.npy"
