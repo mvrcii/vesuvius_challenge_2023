@@ -28,7 +28,7 @@ class CFG:
 
     epochs = 100
     lr = 1e-2
-    train_batch_size = 6  # 32
+    train_batch_size = 32 # 32
     val_batch_size = 4
     num_workers = 1
 
