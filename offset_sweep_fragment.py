@@ -22,7 +22,7 @@ from conf import CFG
 def read_fragment(fragment_id, offset, single_image=False):
     images = []
 
-    mid = (65 // 2) - offset
+    mid = (65 // 2) + offset
 
     start = mid - CFG.in_chans // 2
     end = mid + CFG.in_chans // 2
@@ -122,7 +122,7 @@ def infer_full_fragment(model, images):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print("Usage: python offset_sweep_fragment.py <checkpoint_path> <fragment_num>")
 
     checkpoint_path = sys.argv[1]
