@@ -24,6 +24,9 @@ def read_image(fragment_id):
         img_path = os.path.join(CFG.fragment_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
+
+        if image is None or image.shape[0] == 0:
+            print("Image is empty or not loaded correctly:", img_path)
         assert 1 < np.asarray(image).max() <= 255, f"Invalid image"
 
         pad0 = (CFG.tile_size - image.shape[0] % CFG.tile_size) % CFG.tile_size
@@ -34,8 +37,12 @@ def read_image(fragment_id):
         images.append(image)
     images = np.stack(images, axis=0)
 
-    label_path = os.path.join(CFG.fragment_root_dir, "fragments/fragment2/inklabels.png")
+    label_path = os.path.join(CFG.fragment_root_dir, f"../inklabels/fragment{fragment_id}/inklabels.png")
     label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
+
+    if label is None or label.shape[0] == 0:
+        print("Label is empty or not loaded correctly:", label_path)
+
     label = np.pad(label, [(0, pad0), (0, pad1)], mode='constant', constant_values=0)
     label = (label / 255).astype(np.uint8)
     assert set(np.unique(np.array(label))) == {0, 1}, "Invalid label"
