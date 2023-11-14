@@ -36,7 +36,7 @@ for range in "${ranges[@]}"; do
     read -r start end <<< "$range"
     for ((i=10#$start; i<=10#$end; i++)); do
         printf -v formattedIndex "%02d" $i
-        url="http://dl.ash2txt.org/fragments/Frag3.volpkg/working/54keV_exposed_surface/surface_volume/${formattedIndex}.tif"
+        url="http://http://dl.ash2txt.org/stephen-parsons-uploads/recto/Scroll1_part_1_wrap_recto_surface_volume/${formattedIndex}.tif"
         outputFile="${outputFolder}/0$(printf "%04d" $i).tif"
         download_file "$url" "$outputFile" &
     done
