@@ -10,7 +10,7 @@ outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment2/slice
 
 # default 00024 00039 to get 16 slices
 ranges=(
-    "00023 00039"
+    "00000 00064"
 )
 overwriteExistingFiles=false
 
