@@ -124,7 +124,7 @@ if __name__ == '__main__':
     result = infer_full_fragment(fragment_num, checkpoint_path)
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
-    results_dir = os.path.join("inference", "results", f"fragment{fragment_num}", "date_time_string")
+    results_dir = os.path.join("inference", "results", f"fragment{fragment_num}", date_time_string)
     os.makedirs(results_dir, exist_ok=True)
 
     # save logits
