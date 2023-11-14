@@ -18,6 +18,7 @@ def read_image(fragment_id):
     mid = 65 // 2
     start = mid - CFG.in_chans // 2
     end = mid + CFG.in_chans // 2
+    pad0, pad1 = None, None
     idxs = range(start, end)
 
     for i in tqdm(idxs):
@@ -43,8 +44,11 @@ def read_image(fragment_id):
     if label is None or label.shape[0] == 0:
         print("Label is empty or not loaded correctly:", label_path)
 
+    assert pad0 is not None and pad1 is not None, "Padding is None or not set"
+
     label = np.pad(label, [(0, pad0), (0, pad1)], mode='constant', constant_values=0)
     label = (label / 255).astype(np.uint8)
+
     assert set(np.unique(np.array(label))) == {0, 1}, "Invalid label"
 
     return images, label
