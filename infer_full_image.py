@@ -1,15 +1,14 @@
 import os
-from skimage.transform import resize
+import sys
+from datetime import datetime
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from PIL import Image
+from skimage.transform import resize
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
-import matplotlib.pyplot as plt
-from datetime import datetime
-import sys
 
 from conf import CFG
 
@@ -18,7 +17,6 @@ from conf import CFG
         
         Runs inference on full image, by slicing it into patches.
 '''
-
 
 
 def read_fragment(fragment_id):
