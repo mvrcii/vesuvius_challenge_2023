@@ -6,7 +6,7 @@ password="only"
 credentials="$user:$password"
 
 # Configuration
-outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment3/slices"
+outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/segments/scroll1wraprectoddi/slices"
 ranges=(
     "00024 00039"
 )
