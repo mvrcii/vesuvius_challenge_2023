@@ -152,6 +152,7 @@ if __name__ == '__main__':
                                      images=np.stack(images, axis=0))
 
         results_dir = os.path.join("inference", "results", f"scroll1", "sweeps", date_time_string)
+        # results_dir = os.path.join("inference", "results", f"fragment{fragment_num}", "sweeps", date_time_string)
         os.makedirs(results_dir, exist_ok=True)
 
         # save logits
