@@ -9,6 +9,7 @@ from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 import matplotlib.pyplot as plt
 from datetime import datetime
+import sys
 
 from conf import CFG
 
@@ -18,11 +19,6 @@ from conf import CFG
         Runs inference on full image, by slicing it into patches.
 '''
 
-# Load your model
-model = SegformerForSemanticSegmentation.from_pretrained(CFG.seg_pretrained, num_labels=1, num_channels=16,
-                                                         ignore_mismatched_sizes=True)
-checkpoint = torch.load("model_512_0.0001_epoch_6.pth")
-model.load_state_dict(checkpoint)
 
 
 def read_fragment(fragment_id):
@@ -57,9 +53,15 @@ def read_fragment(fragment_id):
     return images
 
 
-def infer_full_fragment(fragment_index):
+def infer_full_fragment(fragment_index, checkpoint_path):
     images = read_fragment(fragment_index)
 
+    # Load your model
+    model = SegformerForSemanticSegmentation.from_pretrained(CFG.seg_pretrained, num_labels=1, num_channels=16,
+                                                             ignore_mismatched_sizes=True)
+    checkpoint = torch.load(checkpoint_path)
+    model.load_state_dict(checkpoint)
+    print("Loaded model", checkpoint_path)
     # Define the size of the patches
     patch_size = 512
     height, width = images[0].shape
@@ -113,10 +115,33 @@ def infer_full_fragment(fragment_index):
 
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: python infer_full_fragment.py <checkpoint_path> <fragment_num>")
+
+    checkpoint_path = sys.argv[1]
+    fragment_num = sys.argv[2]
+
+    # inference
+    result = infer_full_fragment(fragment_num, checkpoint_path)
+
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
-    fragment_num = 4
-    result = infer_full_fragment(fragment_num)
-    np.save(f"frag_{fragment_num}_{date_time_string}result.npy", result)
+    results_dir = os.path.join("inference", "results", f"fragment{fragment_num}", "date_time_string")
+    os.makedirs(results_dir, exist_ok=True)
+
+    # save logits
+    plt.imshow(result, cmap='gray')
+    logit_path = os.path.join(results_dir, f"logits_fragment{fragment_num}_{date_time_string}.png")
+    plt.savefig(logit_path, bbox_inches='tight', dpi=500, pad_inches=0)
+
+    # save binary
+    plt.imshow(result > 0.5, cmap='gray')
+    binary_bath = os.path.join(results_dir, f"binarized_fragment{fragment_num}_{date_time_string}.png")
+    plt.savefig(binary_bath, bbox_inches='tight', dpi=1500, pad_inches=0)
+
+    print("Saved results to", results_dir)
+    # save raw output
+    # np.save(f"frag_{fragment_num}_{date_time_string}result.npy", result)
+
     if CFG.local:
         plt.imshow(result, cmap='gray')
         plt.imshow(result > 0.5, cmap='gray')
