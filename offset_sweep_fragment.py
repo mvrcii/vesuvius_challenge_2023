@@ -73,7 +73,7 @@ def infer_full_fragment(model, images):
 
     progress_bar = tqdm(total=x_patches * y_patches, desc="Infer Full Fragment: Processing patches")
 
-    batch_size = 8
+    batch_size = 4
     batch = []
     batch_data = np.zeros((batch_size, CFG.in_chans, patch_size, patch_size))
     batch_info = []
@@ -144,9 +144,8 @@ if __name__ == '__main__':
             images = read_fragment(fragment_num, offset, single_image=False)
         else:
             del(images[0])
-            images.append(read_fragment(fragment_num, offset, single_image=True))
+            images.append(read_fragment(fragment_num, offset, single_image=True)[0])
         print("Inferring with offset", offset)
-        # inference
         result = infer_full_fragment(model=model,
                                      images=np.stack(images, axis=0))
 
