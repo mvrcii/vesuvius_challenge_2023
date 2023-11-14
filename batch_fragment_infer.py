@@ -52,7 +52,7 @@ def read_fragment(fragment_id):
     return images
 
 
-def infer_full_fragment(fragment_index, checkpoint_path, batch_size=8):
+def infer_full_fragment(fragment_index, checkpoint_path, batch_size=32):
     images = read_fragment(fragment_index)
 
     # Load your model
