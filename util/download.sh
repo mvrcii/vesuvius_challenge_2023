@@ -5,12 +5,50 @@ user="registeredusers"
 password="only"
 credentials="$user:$password"
 
-# Configuration
-outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/segments/scroll1recto/slices"
+# Check if an argument is provided
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <option>"
+    echo "Options: fragment1, fragment2, fragment3, fragment4, scroll1"
+    exit 1
+fi
 
+# Assign the first argument to a variable
+option=$1
+
+# Configuration based on option
+case $option in
+    "fragment1")
+        outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment1/slices"
+        baseUrl="http://dl.ash2txt.org/fragments/Frag1.volpkg/working/54keV_exposed_surface/surface_volume/"
+        ;;
+    "fragment2")
+        outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment2/slices"
+        baseUrl="http://dl.ash2txt.org/fragments/Frag2.volpkg/working/54keV_exposed_surface/surface_volume/"
+        ;;
+    "fragment3")
+        outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment3/slices"
+        baseUrl="http://dl.ash2txt.org/fragments/Frag3.volpkg/working/54keV_exposed_surface/surface_volume/"
+        ;;
+    "fragment4")
+        outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment4/slices"
+        baseUrl="http://dl.ash2txt.org/fragments/Frag4.volpkg/working/54keV_exposed_surface/PHercParis1Fr39_54keV_surface_volume/"
+        ;;
+    "scroll1")
+        outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/segments/scroll1recto/slices"
+        baseUrl="http://dl.ash2txt.org/stephen-parsons-uploads/recto/Scroll1_part_1_wrap_recto_surface_volume/"
+        ;;
+    *)
+        echo "Invalid option: $option"
+        echo "Valid options: fragment1, fragment2, fragment3, fragment4, scroll1"
+        exit 1
+        ;;
+esac
+
+# Other configurations
 # default 00024 00039 to get 16 slices
 ranges=(
-    "00000 00064"
+    "00023 00039"
+    #"00000 00064"
 )
 overwriteExistingFiles=false
 
@@ -38,7 +76,7 @@ for range in "${ranges[@]}"; do
     read -r start end <<< "$range"
     for ((i=10#$start; i<=10#$end; i++)); do
         printf -v formattedIndex "%02d" $i
-        url="http://dl.ash2txt.org/stephen-parsons-uploads/recto/Scroll1_part_1_wrap_recto_surface_volume/${formattedIndex}.tif"
+        url="${baseUrl}${formattedIndex}.tif"
         outputFile="${outputFolder}/0$(printf "%04d" $i).tif"
         download_file "$url" "$outputFile" &
     done
