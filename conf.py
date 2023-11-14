@@ -3,14 +3,18 @@ from albumentations.pytorch import ToTensorV2
 
 
 class CFG:
-    local = False
-    marcel = False  # only relevant if local=True
+    local = True
+    marcel = True  # only relevant if local=True
+    marcel_mac = False
 
     data_root_dir = "data"
     fragment_root_dir = "/scratch/medfm/vesuv/kaggle1stReimp/data"
     if local:
         if marcel:
-            fragment_root_dir = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
+            if marcel_mac:
+                fragment_root_dir = r"/Users/marcel/Documents/Git-Master/Private/kaggle1stReimp/data"
+            else:
+                fragment_root_dir = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
         else:
             fragment_root_dir = r"A:\projects_a\Python\vesuv\data"
 
