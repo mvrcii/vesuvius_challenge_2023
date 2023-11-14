@@ -3,8 +3,8 @@ from albumentations.pytorch import ToTensorV2
 
 
 class CFG:
-    local = True
-    marcel = True  # only relevant if local=True
+    local = False
+    marcel = False  # only relevant if local=True
 
     data_root_dir = "data"
     fragment_root_dir = "/scratch/medfm/vesuv/kaggle1stReimp/data"
@@ -56,7 +56,7 @@ class CFG:
     # ============== augmentation =============
     use_cutmix = False
     use_mixup = False
-    use_aug = False
+    use_aug = True
 
     # Train augmentations suitable for images + labels
     train_common_aug = [
@@ -66,22 +66,16 @@ class CFG:
             A.RandomRotate90(),
             A.Transpose(),
         ], p=0.25),
-        A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
-        ToTensorV2(transpose_mask=True),
+        # A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
     ]
 
     train_image_aug = [
-        A.Resize(512, 512),
-        A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
-        ToTensorV2(transpose_mask=True),
+        # A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
     ]
 
     val_common_aug = [
-        ToTensorV2(transpose_mask=True),
     ]
 
     val_image_aug = [
-        A.Resize(512, 512),
-        A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
-        ToTensorV2(),
+        # A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
     ]

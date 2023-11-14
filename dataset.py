@@ -4,6 +4,7 @@ import random
 import albumentations as A
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
+from skimage.transform import resize
 
 from conf import CFG
 
@@ -34,6 +35,11 @@ class WuesuvDataset(Dataset):
         image = np.load(os.path.join(self.img_dir, self.images[idx]))
         label = np.load(os.path.join(self.label_dir, self.labels[idx]))
 
+        # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
+        image = np.transpose(image, (1, 2, 0))
+        # Scale up label to match image size
+        label = resize(label, (512, 512), order=0, preserve_range=True, anti_aliasing=False)
+
         # Apply common augmentations to both image and label
         if self.common_aug and CFG.use_aug:
             augmented = self.common_aug(image=image, mask=label)
@@ -44,15 +50,19 @@ class WuesuvDataset(Dataset):
             augmented = self.image_aug(image=image)
             image = augmented['image']
 
-        if self.train and random.random() < 0.5:  # 50% prob to apply mixup/cutmix
-            image2, label2 = self.load_image_and_mask(random.randint(0, self.__len__() - 1))
-            if random.random() < 0.5:  # Another 50% prob to choose between mixup/cutmix
-                if self.cfg.use_mixup:
-                    image, label = self.apply_mixup(image, label, image2, label2)
-            else:
-                if self.cfg.use_cutmix:
-                    image, label = self.apply_cutmix(image, label, image2, label2)
+        # if self.train and random.random() < 0.5:  # 50% prob to apply mixup/cutmix
+        #     image2, label2 = self.load_image_and_mask(random.randint(0, self.__len__() - 1))
+        #     if random.random() < 0.5:  # Another 50% prob to choose between mixup/cutmix
+        #         if self.cfg.use_mixup:
+        #             image, label = self.apply_mixup(image, label, image2, label2)
+        #     else:
+        #         if self.cfg.use_cutmix:
+        #             image, label = self.apply_cutmix(image, label, image2, label2)
 
+        # Rearrange image back to (channels, height, width) from (height, width, channels) to work with segformer input
+        image = np.transpose(image, (2, 0, 1))
+        # Scale down label to match segformer output
+        label = resize(label, (128, 128), order=0, preserve_range=True, anti_aliasing=False)
         return image, label
 
     @staticmethod
