@@ -43,7 +43,7 @@ class CFG:
     val_batch_size = 4
 
     num_workers = 2
-    dataset_fraction = 0.05
+    dataset_fraction = 1
 
     save_every_n_epochs = 3
     show_predictions = True
