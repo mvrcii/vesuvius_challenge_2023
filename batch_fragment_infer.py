@@ -52,7 +52,7 @@ def read_fragment(fragment_id):
     return images
 
 
-def infer_full_fragment(fragment_index, checkpoint_path, batch_size=16):
+def infer_full_fragment(fragment_index, checkpoint_path, batch_size=8):
     images = read_fragment(fragment_index)
 
     # Load your model
@@ -76,6 +76,10 @@ def infer_full_fragment(fragment_index, checkpoint_path, batch_size=16):
     progress_bar = tqdm(total=x_patches * y_patches, desc="Infer Full Fragment: Processing patches")
 
     batch = []
+    batch_data = np.zeros((batch_size, CFG.in_chans, patch_size, patch_size))  # Assuming 'channels' is defined
+    batch_info = []
+    batch_count = 0
+
     for y in range(y_patches):
         for x in range(x_patches):
             progress_bar.update(1)
@@ -93,19 +97,22 @@ def infer_full_fragment(fragment_index, checkpoint_path, batch_size=16):
                 padding_width = max(patch_size - patch.shape[2], 0)
                 patch = np.pad(patch, ((0, 0), (0, padding_height), (0, padding_width)), 'constant')
 
-            batch.append((patch, x_start, x_end, y_start, y_end))
+            batch_data[batch_count] = patch
+            batch_info.append((x_start, x_end, y_start, y_end))
+            batch_count += 1
 
             # Process the batch when it's full or at the end of the loop
-            if len(batch) == batch_size or (y == y_patches - 1 and x == x_patches - 1):
-                batch_patches = torch.tensor([item[0] for item in batch]).float()
+            if batch_count == batch_size or (y == y_patches - 1 and x == x_patches - 1):
+                batch_patches = torch.tensor(batch_data[:batch_count]).float()
                 outputs = model(batch_patches)
                 logits = outputs.logits.detach().cpu().numpy()
 
-                for i, (patch, x_start, x_end, y_start, y_end) in enumerate(batch):
+                for i, (x_start, x_end, y_start, y_end) in enumerate(batch_info):
                     logits_np = resize(logits[i].squeeze(), (patch_size, patch_size), order=0, preserve_range=True, anti_aliasing=False)
                     stitched_result[y_start:y_end, x_start:x_end] = logits_np[:y_end - y_start, :x_end - x_start]
 
-                batch = []
+                batch_count = 0
+                batch_info = []
 
     progress_bar.close()
 
