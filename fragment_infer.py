@@ -24,10 +24,6 @@ def read_fragment(fragment_id):
 
     mid = 65 // 2
 
-    # todo remove this offset!
-    offset = -1
-    mid += offset
-
     start = mid - CFG.in_chans // 2
     end = mid + CFG.in_chans // 2
     idxs = range(start, end)
