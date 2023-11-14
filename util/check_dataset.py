@@ -22,9 +22,11 @@ def check_images(directory, expected_shape, value_range):
 
 
 # Check images in data/train/images
-check_images('data/512/train/images', (16, 512, 512), (0, 255))
+check_images('../data/512/train/images', (16, 512, 512), (0, 255))
+check_images('../data/512/val/images', (16, 512, 512), (0, 255))
 
 # Check labels in data/train/labels
-check_images('data/512/train/labels', (128, 128), (0, 1))
+check_images('../data/512/train/labels', (128, 128), (0, 1))
+check_images('../data/512/val/labels', (128, 128), (0, 1))
 
 print("Checking complete, all files in valid format.")
