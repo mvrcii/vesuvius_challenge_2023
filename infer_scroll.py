@@ -19,7 +19,7 @@ from conf import CFG
 '''
 
 
-def read_fragment(fragment_id):
+def read_fragment():
     images = []
 
     mid = 65 // 2
@@ -51,8 +51,8 @@ def read_fragment(fragment_id):
     return images
 
 
-def infer_full_fragment(fragment_index, checkpoint_path):
-    images = read_fragment(fragment_index)
+def infer_full_fragment(checkpoint_path):
+    images = read_fragment()
 
     # Load your model
     model = SegformerForSemanticSegmentation.from_pretrained(CFG.seg_pretrained, num_labels=1, num_channels=16,
