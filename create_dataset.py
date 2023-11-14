@@ -1,14 +1,13 @@
 import argparse
-from skimage.transform import resize
-import gc
 import logging
 import os
 import random
 import shutil
 
-import numpy as np
-from tqdm import tqdm
 import cv2
+import numpy as np
+from skimage.transform import resize
+from tqdm import tqdm
 
 from conf import CFG
 
@@ -25,7 +24,7 @@ def read_image(fragment_id):
         img_path = os.path.join(CFG.fragment_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
-        assert 1 < np.asarray(image).max() <= 255, "Invalid image"
+        assert 1 < np.asarray(image).max() <= 255, f"Invalid image"
 
         pad0 = (CFG.tile_size - image.shape[0] % CFG.tile_size) % CFG.tile_size
         pad1 = (CFG.tile_size - image.shape[1] % CFG.tile_size) % CFG.tile_size

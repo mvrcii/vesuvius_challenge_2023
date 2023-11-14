@@ -5,6 +5,8 @@ import random
 import os
 from transformers import SegformerForSemanticSegmentation
 
+ckpt_path = "../checkpoints/231114-0143-ethereal-sun-162/best-checkpoint-epoch=19-val_iou=0.97.ckpt"
+
 # Assuming your images and labels are stored in these directories
 image_dir = "../data/512/train/images/"
 label_dir = "../data/512/train/labels/"
@@ -14,9 +16,11 @@ image_files = os.listdir(image_dir)
 selected_files = random.sample(image_files, 5)
 
 # Load your model
-model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b0", num_labels=1, num_channels=16, ignore_mismatched_sizes=True)
-checkpoint = torch.load("../segb0_op.pth")
-model.load_state_dict(checkpoint)
+model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b3", num_labels=1, num_channels=16, ignore_mismatched_sizes=True)
+checkpoint = torch.load(ckpt_path)
+
+state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+model.load_state_dict(state_dict)
 
 # Set up the figure for plotting
 fig, axs = plt.subplots(5, 3, figsize=(10, 10))  # 5 rows for images, 3 columns for logits, binary, and label

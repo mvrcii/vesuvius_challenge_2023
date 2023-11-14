@@ -1,1 +1,15 @@
 git+https://github.com/ildoonet/pytorch-gradual-warmup-lr.git
+torch
+transformers
+matplotlib
+numpy
+scikit-image
+tqdm
+albumentations
+wandb
+einops
+opencv-python
+pillow
+scikit-learn
+lightning
+torchmetrics
