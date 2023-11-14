@@ -37,7 +37,8 @@ def read_fragment(fragment_id, offset, single_image=False):
         print("extracting slices", start, "to", end)
 
     for i in tqdm(idxs):
-        img_path = os.path.join(CFG.fragment_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+        # img_path = os.path.join(CFG.fragment_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+        img_path = os.path.join(CFG.fragment_root_dir, "segments", f"scroll1recto", "slices", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image"
@@ -138,6 +139,7 @@ if __name__ == '__main__':
 
     offset_magnitude = 5
 
+    date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     for offset in range(-offset_magnitude, offset_magnitude + 1):
         if offset == (-offset_magnitude):
             # initially read all slices
@@ -149,8 +151,7 @@ if __name__ == '__main__':
         result = infer_full_fragment(model=model,
                                      images=np.stack(images, axis=0))
 
-        date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
-        results_dir = os.path.join("inference", "results", f"fragment{fragment_num}", "sweeps", date_time_string)
+        results_dir = os.path.join("inference", "results", f"scroll1", "sweeps", date_time_string)
         os.makedirs(results_dir, exist_ok=True)
 
         # save logits
