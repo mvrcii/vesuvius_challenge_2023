@@ -3,8 +3,8 @@ from albumentations.pytorch import ToTensorV2
 
 
 class CFG:
-    local = True
-    marcel = True  # only relevant if local=True
+    local = False
+    marcel = False  # only relevant if local=True
     marcel_mac = False
 
     data_root_dir = "data"
