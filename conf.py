@@ -20,6 +20,7 @@ class CFG:
     data_out_path = "data/train"
 
     # ============== model =============
+    dataset_in_chans = 24
     in_chans = 16
     seg_pretrained = "nvidia/mit-b5"
     """

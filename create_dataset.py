@@ -218,16 +218,25 @@ if __name__ == '__main__':
     # Parse the arguments
     args = parser.parse_args()
 
-    if args.k_fold is not None:
-        CFG.k_fold = args.k_fold
+    # Load config and eventually merge local config
+    cfg = load_config(CFG)
 
-    if CFG.k_fold:
-        train_ids_str, val_ids_str = build_k_fold_folder(CFG.train_frag_ids, CFG.val_frag_ids)
-        data_root_dir = os.path.join(CFG.data_root_dir, f'k_fold_{train_ids_str}_{val_ids_str}', str(CFG.size))
+    if args.k_fold is not None:
+        logging.info(f"K-fold dataset creation mode set to {cfg.k_fold} from command line argument.")
+        cfg.k_fold = args.k_fold
+
+    if cfg.k_fold:
+        logging.info("Starting k-fold dataset creation process...")
+        train_ids_str, val_ids_str = build_k_fold_folder(cfg.train_frag_ids, cfg.val_frag_ids)
+
+        data_root_dir = os.path.join(cfg.data_root_dir, f'k_fold_{train_ids_str}_{val_ids_str}', str(cfg.size))
+        logging.info(f"Data root directory for k-fold: {data_root_dir}")
         create_k_fold_train_val_dataset(data_root_dir=data_root_dir,
-                                        train_frag_ids=CFG.train_frag_ids,
-                                        val_frag_ids=CFG.val_frag_ids)
+                                        train_frag_ids=cfg.train_frag_ids,
+                                        val_frag_ids=cfg.val_frag_ids)
     else:
-        data_root_dir = os.path.join(CFG.data_root_dir, f'single_TF{CFG.single_train_frag_id}', str(CFG.size))
-        create_dataset(data_root_dir=data_root_dir, fragment_id=CFG.single_train_frag_id)
-        create_single_val_dataset(data_root_dir=data_root_dir, train_split=CFG.train_split)
+        logging.info("Starting single dataset creation process...")
+        data_root_dir = os.path.join(cfg.data_root_dir, f'single_TF{cfg.single_train_frag_id}', str(cfg.size))
+        logging.info(f"Data root directory for single dataset: {data_root_dir}")
+        create_dataset(data_root_dir=data_root_dir, fragment_id=cfg.single_train_frag_id)
+        create_single_val_dataset(data_root_dir=data_root_dir, train_split=cfg.train_split)
