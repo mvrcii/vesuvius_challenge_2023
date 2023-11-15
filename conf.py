@@ -55,8 +55,8 @@ class CFG:
 
     # k_fold fragment dataset creation
     k_fold = False
-    train_frag_ids = (2, 3, 4)
-    val_frag_ids = (1)
+    train_frag_ids = [2, 3, 4]
+    val_frag_ids = [1]
 
     save_every_n_epochs = 3
     show_predictions = True
