@@ -1,5 +1,6 @@
 import argparse
 import logging
+import multiprocessing
 import os
 import random
 import shutil
@@ -8,6 +9,7 @@ import cv2
 import numpy as np
 from skimage.transform import resize
 from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
 from conf import CFG
 
@@ -58,23 +60,22 @@ def read_fragment(fragment_id):
     return images, label
 
 
-def create_k_fold_train_val_dataset(data_root_dir, train_frag_ids = None, val_frag_ids = None):
-    print("Creating k_fold dataset with {} training and {} validation fragments".format(train_frag_ids, val_frag_ids))
-
-    for train_idx in train_frag_ids:
-        print("Processing Training Fragment {}".format(train_idx))
-        create_single_train_dataset(data_root_dir=data_root_dir,
-                                    fragment_id=train_idx,
-                                    data_type='train')
-
-    for val_idx in val_frag_ids:
-        print("Processing Validation Fragment {}".format(val_idx))
-        create_single_train_dataset(data_root_dir=data_root_dir,
-                                    fragment_id=val_idx,
-                                    data_type='val')
+def process_fragment(data_root_dir, fragment_id, data_type):
+    create_dataset(data_root_dir, fragment_id, data_type)
 
 
-def create_single_train_dataset(data_root_dir, fragment_id=2, data_type='train'):
+def create_k_fold_train_val_dataset(data_root_dir, train_frag_ids=None, val_frag_ids=None):
+    print(f"Creating k_fold dataset with {len(train_frag_ids)} training and {len(val_frag_ids)} validation fragments")
+
+    train_args = [(data_root_dir, frag_id, 'train') for frag_id in train_frag_ids]
+    val_args = [(data_root_dir, frag_id, 'val') for frag_id in val_frag_ids]
+
+    process_map(process_fragment, train_args, max_workers=multiprocessing.cpu_count())
+    process_map(process_fragment, val_args, max_workers=multiprocessing.cpu_count())
+
+
+
+def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
     data_dir = os.path.join(data_root_dir, data_type)
 
     img_path = os.path.join(data_dir, "images")
@@ -194,7 +195,8 @@ if __name__ == '__main__':
     "inklabels/fragment1/inklabels.png"
     """
     parser = argparse.ArgumentParser(description="Run k-fold or single train-val dataset creation.")
-    parser.add_argument('--k_fold', type=bool, default=None, help='Enable k_fold dataset creation. Overrides CFG.k_fold if provided.')
+    parser.add_argument('--k_fold', type=bool, default=None,
+                        help='Enable k_fold dataset creation. Overrides CFG.k_fold if provided.')
 
     # Parse the arguments
     args = parser.parse_args()
@@ -210,5 +212,5 @@ if __name__ == '__main__':
                                         val_frag_ids=CFG.val_frag_ids)
     else:
         data_root_dir = os.path.join(CFG.data_root_dir, f'single_TF{CFG.single_train_frag_id}', str(CFG.size))
-        create_single_train_dataset(data_root_dir=data_root_dir, fragment_id=CFG.single_train_frag_id)
+        create_dataset(data_root_dir=data_root_dir, fragment_id=CFG.single_train_frag_id)
         create_single_val_dataset(data_root_dir=data_root_dir, train_split=CFG.train_split)
