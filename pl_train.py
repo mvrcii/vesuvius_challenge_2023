@@ -54,7 +54,6 @@ def main():
         logger=wandb_logger,
         callbacks=[LearningRateMonitor(logging_interval='step'), checkpoint_callback],
         accelerator="auto",
-        precision=16,
         devices=find_usable_cuda_devices(),  # all available gpus
         enable_progress_bar=True
     )
