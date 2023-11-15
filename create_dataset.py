@@ -91,7 +91,7 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
     x1_list = list(range(0, images.shape[2] - CFG.tile_size + 1, CFG.stride))
     y1_list = list(range(0, images.shape[1] - CFG.tile_size + 1, CFG.stride))
 
-    progress_bar = tqdm(total=len(x1_list) * len(y1_list), desc=f"{data_type.capitalize()} Dataset: Processing images "
+    progress_bar = tqdm(total=len(x1_list) * len(y1_list), desc=f"{data_type.capitalize()} Dataset Fragment {fragment_id}: Processing images "
                                                                 f"and labels")
 
     skip_counter_black_image = 0
