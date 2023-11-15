@@ -5,6 +5,7 @@ import multiprocessing
 import os
 import random
 import shutil
+import time
 
 import cv2
 import numpy as np
@@ -61,21 +62,38 @@ def read_fragment(fragment_id):
     return images, label
 
 
-def process_fragment(args):
-    data_root_dir, fragment_id, data_type = args
+def process_fragment(data_root_dir, fragment_id, data_type, progress_tracker):
     create_dataset(data_root_dir, fragment_id, data_type)
 
-    gc.collect()
+    # Update progress tracker
+    with progress_tracker.get_lock():
+        progress_tracker.value += 1
 
 
 def create_k_fold_train_val_dataset(data_root_dir, train_frag_ids=None, val_frag_ids=None):
     print(f"Creating k_fold dataset with {len(train_frag_ids)} training and {len(val_frag_ids)} validation fragments")
 
-    train_args = [(data_root_dir, frag_id, 'train') for frag_id in train_frag_ids]
-    val_args = [(data_root_dir, frag_id, 'val') for frag_id in val_frag_ids]
+    with multiprocessing.Manager() as manager:
+        progress_tracker = manager.Value('i', 0)  # Shared integer for progress tracking
+        total_tasks = len(train_frag_ids) + len(val_frag_ids)
 
-    process_map(process_fragment, train_args, max_workers=multiprocessing.cpu_count())
-    process_map(process_fragment, val_args, max_workers=multiprocessing.cpu_count())
+        all_args = [(data_root_dir, frag_id, 'train', progress_tracker) for frag_id in train_frag_ids]
+        all_args += [(data_root_dir, frag_id, 'val', progress_tracker) for frag_id in val_frag_ids]
+
+        with multiprocessing.Pool() as pool:
+            pool.starmap_async(process_fragment, all_args)
+
+            while True:
+                with progress_tracker.get_lock():
+                    progress = progress_tracker.value
+                print(f"\rProgress: {progress}/{total_tasks}", end="")
+
+                if progress >= total_tasks:
+                    break
+
+                time.sleep(1)  # Update interval
+
+        print("\nAll tasks completed.")
 
 
 def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
