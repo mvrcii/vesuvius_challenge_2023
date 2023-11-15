@@ -44,7 +44,7 @@ class CFG:
     tile_size = 512
     stride = tile_size // 4
 
-    train_batch_size = 4  # 32
+    train_batch_size = 2  # 32
     val_batch_size = 4
     num_workers = 2
 
