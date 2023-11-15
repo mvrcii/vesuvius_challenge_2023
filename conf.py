@@ -45,9 +45,18 @@ class CFG:
 
     train_batch_size = 8  # 32
     val_batch_size = 4
-
     num_workers = 2
+
     dataset_fraction = 1
+
+    # single fragment dataset creation
+    # fragment id default = 2
+    train_split = 0.8
+
+    # k_fold fragment dataset creation
+    k_fold = False
+    train_frag_ids = (2, 3, 4)
+    val_frag_ids = (1)
 
     save_every_n_epochs = 3
     show_predictions = True

@@ -1,4 +1,3 @@
-import argparse
 import logging
 import os
 import random
@@ -12,17 +11,21 @@ from tqdm import tqdm
 from conf import CFG
 
 
-def read_image(fragment_id):
+def read_fragment(fragment_id):
     images = []
+    pad0, pad1 = None, None
+
+    fragment_dir = os.path.join(CFG.fragment_root_dir, "fragments", f"fragment{fragment_id}")
+    assert os.path.isdir(fragment_dir), "Fragment directory does not exist"
 
     mid = 65 // 2
     start = mid - CFG.in_chans // 2
     end = mid + CFG.in_chans // 2
-    pad0, pad1 = None, None
-    idxs = range(start, end)
+    layers = range(start, end)
 
-    for i in tqdm(idxs):
-        img_path = os.path.join(CFG.fragment_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+    for layer in tqdm(layers):
+        img_path = os.path.join(fragment_dir, "slices", f"{layer:05}.tif")
+        assert os.path.isfile(img_path), "Fragment file does not exist"
 
         image = cv2.imread(img_path, 0)
 
@@ -54,25 +57,43 @@ def read_image(fragment_id):
     return images, label
 
 
-def create_dataset(data_root_dir, fragment_id=2):
-    data_dir = os.path.join(data_root_dir, 'train')
+def create_k_fold_train_val_dataset(data_root_dir, train_frag_ids: tuple = None, val_frag_ids: tuple = None):
+    print("Creating k_fold dataset with {} training and {} validation fragments".format(train_frag_ids, val_frag_ids))
+
+    for train_idx in train_frag_ids:
+        print("Processing Training Fragment {}".format(train_idx))
+        create_single_train_dataset(data_root_dir=data_root_dir,
+                                    fragment_id=train_idx,
+                                    data_type='train')
+
+    for val_idx in val_frag_ids:
+        print("Processing Validation Fragment {}".format(val_idx))
+        create_single_train_dataset(data_root_dir=data_root_dir,
+                                    fragment_id=val_idx,
+                                    data_type='val')
+
+
+def create_single_train_dataset(data_root_dir, fragment_id=2, data_type='train'):
+    data_dir = os.path.join(data_root_dir, data_type)
 
     img_path = os.path.join(data_dir, "images")
     label_path = os.path.join(data_dir, "labels")
     os.makedirs(img_path, exist_ok=True)
     os.makedirs(label_path, exist_ok=True)
 
-    images, label = read_image(fragment_id)
+    images, label = read_fragment(fragment_id)
 
     x1_list = list(range(0, images.shape[2] - CFG.tile_size + 1, CFG.stride))
     y1_list = list(range(0, images.shape[1] - CFG.tile_size + 1, CFG.stride))
 
-    progress_bar = tqdm(total=len(x1_list) * len(y1_list), desc="Train Dataset: Processing images and labels")
+    progress_bar = tqdm(total=len(x1_list) * len(y1_list), desc=f"{data_type.capitalize()} Dataset: Processing images "
+                                                                f"and labels")
 
     skip_counter_black_image = 0
     skip_counter_label = 0
     skip_counter_low_ink = 0
     requirement = (128 ** 2) * 0.1
+    segformer_output_dim = (128, 128)
 
     for y1 in y1_list:
         for x1 in x1_list:
@@ -88,7 +109,8 @@ def create_dataset(data_root_dir, fragment_id=2):
                 continue
 
             # Scale label down to match segformer output
-            label_patch = resize(label[y1:y2, x1:x2], (128, 128), order=0, preserve_range=True, anti_aliasing=False)
+            label_patch = resize(label[y1:y2, x1:x2], segformer_output_dim, order=0, preserve_range=True,
+                                 anti_aliasing=False)
 
             # Check that the label has two classes
             if len(np.unique(label_patch)) != 2:
@@ -120,7 +142,7 @@ def move_files(src_dir, dest_dir, files, pbar):
         pbar.update(1)
 
 
-def create_val_from_train(data_root_dir, train_split=0.8):
+def create_single_val_dataset(data_root_dir, train_split=0.8):
     train_dir = os.path.join(data_root_dir, 'train')
     train_img_dir = os.path.join(train_dir, 'images')
     train_label_dir = os.path.join(train_dir, 'labels')
@@ -157,20 +179,12 @@ def create_val_from_train(data_root_dir, train_split=0.8):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Create a dataset.')
-    parser.add_argument('--patch_size', type=int, default=512, help='Size of the patch.')
-    parser.add_argument('--split', type=float, default=0.8, help='Train and validation split.')
-    parser.add_argument('--skip_train', action="store_true", help='Skip the creation of train dataset.')
+    data_root_dir = os.path.join(CFG.data_root_dir, str(CFG.size))
 
-    args = parser.parse_args()
-
-    # Update CFG with the patch_size argument
-    CFG.tile_size = args.patch_size
-    CFG.size = CFG.tile_size
-
-    # train
-    if not args.skip_train:
-        create_dataset(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)))
-
-    # val
-    create_val_from_train(data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)), train_split=args.split)
+    if CFG.k_fold:
+        create_k_fold_train_val_dataset(data_root_dir=data_root_dir,
+                                        train_frag_ids=CFG.train_frag_ids,
+                                        val_frag_ids=CFG.val_frag_ids)
+    else:
+        create_single_train_dataset(data_root_dir=data_root_dir)
+        create_single_val_dataset(data_root_dir=data_root_dir, train_split=CFG.train_split)
