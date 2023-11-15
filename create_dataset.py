@@ -11,10 +11,10 @@ import cv2
 import numpy as np
 from skimage.transform import resize
 from tqdm import tqdm
-from tqdm.contrib.concurrent import process_map
 from multiprocessing import Manager, Pool
 
 from conf import CFG
+from util.train_utils import load_config, build_k_fold_folder
 
 
 def read_fragment(fragment_id):
@@ -24,9 +24,11 @@ def read_fragment(fragment_id):
     fragment_dir = os.path.join(CFG.fragment_root_dir, "fragments", f"fragment{fragment_id}")
     assert os.path.isdir(fragment_dir), "Fragment directory does not exist"
 
+    print(f"Using {CFG.dataset_in_chans} channels for the dataset")
+
     mid = 65 // 2
-    start = mid - CFG.in_chans // 2
-    end = mid + CFG.in_chans // 2
+    start = mid - CFG.dataset_in_chans // 2
+    end = mid + CFG.dataset_in_chans // 2
     layers = range(start, end)
 
     for layer in tqdm(layers):
@@ -197,20 +199,9 @@ def create_single_val_dataset(data_root_dir, train_split=0.8):
     progress_bar.close()
 
 
-def build_k_fold_folder(train_frag_ids, val_frag_ids):
-    train_ids_formatted = ['TF{}'.format(idx) for idx in train_frag_ids]
-    val_ids_formatted = ['VF{}'.format(idx) for idx in val_frag_ids]
-    train_ids_str = '_'.join(train_ids_formatted)
-    val_ids_str = '_'.join(val_ids_formatted)
-
-    return train_ids_str, val_ids_str
-
-
 if __name__ == '__main__':
-    """
-    The label files are expected to be located within inklabels directory, so for example: 
-    "inklabels/fragment1/inklabels.png"
-    """
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
     parser = argparse.ArgumentParser(description="Run k-fold or single train-val dataset creation.")
     parser.add_argument('--k_fold', type=bool, default=None,
                         help='Enable k_fold dataset creation. Overrides CFG.k_fold if provided.')

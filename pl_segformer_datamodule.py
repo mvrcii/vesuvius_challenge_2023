@@ -98,6 +98,15 @@ class WuesuvDataset(Dataset):
 
         # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
         image = np.transpose(image, (1, 2, 0))
+
+        # Randomly select 16 consecutive channels
+        total_channels = image.shape[2]  # Assuming the last dimension is channels
+        max_start = total_channels - self.cfg.in_chans  # cfg.in_channels is 16 in this case
+        start_channel = np.random.randint(0, max_start + 1)
+        image = image[:, :, start_channel:start_channel + self.cfg.in_chans]
+
+        # print("Channels from {} to {}".format(start_channel, start_channel + self.cfg.in_chans))
+
         # Scale up label to match image size
         label = resize(label, (512, 512), order=0, preserve_range=True, anti_aliasing=False)
 
