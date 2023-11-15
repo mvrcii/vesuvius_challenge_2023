@@ -181,6 +181,11 @@ def create_single_val_dataset(data_root_dir, train_split=0.8):
 if __name__ == '__main__':
     data_root_dir = os.path.join(CFG.data_root_dir, str(CFG.size))
 
+    """
+    The label files are expected to be located within inklabels directory, so for example: 
+    "inklabels/fragment1/inklabels.png"
+    """
+
     if CFG.k_fold:
         create_k_fold_train_val_dataset(data_root_dir=data_root_dir,
                                         train_frag_ids=CFG.train_frag_ids,
