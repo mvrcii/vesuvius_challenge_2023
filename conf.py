@@ -3,9 +3,9 @@ from albumentations.pytorch import ToTensorV2
 
 
 class CFG:
-    local = False
-    marcel = False  # only relevant if local=True
-    marcel_mac = False
+    local = True
+    marcel = True  # only relevant if local=True
+    marcel_mac = True
 
     data_root_dir = "data"
     fragment_root_dir = "/scratch/medfm/vesuv/kaggle1stReimp/data"
@@ -22,7 +22,7 @@ class CFG:
 
     # ============== model =============
     in_chans = 16
-    seg_pretrained = "nvidia/mit-b3"
+    seg_pretrained = "nvidia/mit-b5"
     """
     V-Ram Usage:
         Segformer b3:
