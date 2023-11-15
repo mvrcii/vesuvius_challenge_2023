@@ -59,7 +59,7 @@ def infer_full_fragment(fragment_index, checkpoint_path):
                                                              ignore_mismatched_sizes=True)
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-    model.load_state_dict(checkpoint)
+    model.load_state_dict(state_dict)
     print("Loaded model", checkpoint_path)
     # Define the size of the patches
     patch_size = 512
