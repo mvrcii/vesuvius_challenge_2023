@@ -58,7 +58,7 @@ def read_fragment(fragment_id):
     return images, label
 
 
-def create_k_fold_train_val_dataset(data_root_dir, train_frag_ids: tuple = None, val_frag_ids: tuple = None):
+def create_k_fold_train_val_dataset(data_root_dir, train_frag_ids = None, val_frag_ids = None):
     print("Creating k_fold dataset with {} training and {} validation fragments".format(train_frag_ids, val_frag_ids))
 
     for train_idx in train_frag_ids:
