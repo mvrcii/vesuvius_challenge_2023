@@ -2,7 +2,7 @@ import torch
 from einops import rearrange
 from lightning import LightningModule
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau
+from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau, CosineAnnealingLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryAUROC, BinaryJaccardIndex as IoU, BinaryAveragePrecision)
 from transformers import SegformerForSemanticSegmentation
@@ -35,19 +35,19 @@ class SegFormerLightningModule(LightningModule):
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=CFG.lr, weight_decay=CFG.weight_decay)
         # scheduler = StepLR(optimizer, step_size=1, gamma=0.999)
-        scheduler = ReduceLROnPlateau(
-            optimizer,
-            mode='min',
-            factor=0.1,
-            patience=10,
-            verbose=True
-        )
-        # scheduler = CosineAnnealingLR(
+        # scheduler = ReduceLROnPlateau(
         #     optimizer,
-        #     T_max=100,
-        #     eta_min=0
+        #     mode='min',
+        #     factor=0.1,
+        #     patience=10,
+        #     verbose=True
         # )
-        return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "val_iou"}
+        scheduler = CosineAnnealingLR(
+            optimizer,
+            T_max=100,
+            eta_min=0
+        )
+        return {"optimizer": optimizer, "lr_scheduler": scheduler}
 
     def forward(self, x):
         output = self.model(x.float())
