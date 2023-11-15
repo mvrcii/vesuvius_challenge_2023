@@ -1,4 +1,5 @@
 import os
+import warnings
 from datetime import datetime
 
 from lightning import seed_everything
@@ -13,7 +14,28 @@ from pl_segformer_datamodule import SegFormerDataModule
 from pl_segformer_lightning import SegFormerLightningModule
 
 
+def load_config():
+    """
+    Load local configuration from conf_local.py if available.
+    Overrides the default configurations in CFG with values found in conf_local.py.
+    If conf_local.py is not found, a warning is issued and default configurations are used.
+
+    :return: None
+    """
+    try:
+        import conf_local
+        for key in dir(conf_local):
+            if not key.startswith("__"):  # Exclude built-in attributes
+                # Set attribute if it exists in CFG
+                if hasattr(CFG, key):
+                    setattr(CFG, key, getattr(conf_local, key))
+    except ImportError:
+        warnings.warn("Local configuration file 'conf_local.py' not found. Using default configuration.", RuntimeWarning)
+
+
 def main():
+    load_config()
+
     seed_value = CFG.seed
     seed_everything(seed_value)
 
