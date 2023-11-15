@@ -52,7 +52,7 @@ def read_fragment(fragment_id):
 
 
 def infer_full_fragment(fragment_index, checkpoint_path):
-    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b3", num_labels=1, num_channels=16,
+    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b5", num_labels=1, num_channels=16,
                                                              ignore_mismatched_sizes=True)
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
@@ -65,7 +65,12 @@ def infer_full_fragment(fragment_index, checkpoint_path):
 
     # Define the size of the patches
     patch_size = 512
+    expected_patch_shape = (CFG.in_chans, patch_size, patch_size)
     patch_size_out = 128
+
+    margin = int(0.1 * patch_size_out)
+    mask = np.ones((patch_size_out, patch_size_out), dtype=bool)
+    mask[margin:-margin, margin:-margin] = False
 
     stride_factor = 2
     stride = patch_size // stride_factor
@@ -97,7 +102,7 @@ def infer_full_fragment(fragment_index, checkpoint_path):
             patch = images[:, y_start:y_end, x_start:x_end]
 
             # If the patch size is smaller than the expected size, skip it
-            if patch.shape != (CFG.in_chans, patch_size, patch_size):
+            if patch.shape != expected_patch_shape:
                 continue
 
             # Perform inference on the patch
@@ -108,11 +113,8 @@ def infer_full_fragment(fragment_index, checkpoint_path):
             # Calculate the margin to ignore (10% of the patch size)
             margin = int(0.1 * patch_size_out)
 
-            # Set the outer 10% of logits_np to zero
-            logits_np[:margin, :] = 0  # Top margin
-            logits_np[-margin:, :] = 0  # Bottom margin
-            logits_np[:, :margin] = 0  # Left margin
-            logits_np[:, -margin:] = 0  # Right margin
+            # Set the outer 10% of averaged_logits to zero
+            logits_np[mask] = 0
 
             # Determine the location in the stitched_result array
             out_y_start = y * stride_out
@@ -126,7 +128,7 @@ def infer_full_fragment(fragment_index, checkpoint_path):
 
     progress_bar.close()
     # Average the predictions
-    out_arr /= pred_counts
+    out_arr = np.where(pred_counts > 0, out_arr / pred_counts, 0)
 
     return out_arr
 
