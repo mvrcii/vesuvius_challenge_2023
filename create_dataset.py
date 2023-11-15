@@ -12,6 +12,7 @@ import numpy as np
 from skimage.transform import resize
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
+from multiprocessing import Manager, Pool
 
 from conf import CFG
 
@@ -66,32 +67,26 @@ def process_fragment(data_root_dir, fragment_id, data_type, progress_tracker):
     create_dataset(data_root_dir, fragment_id, data_type)
 
     # Update progress tracker
-    with progress_tracker.get_lock():
-        progress_tracker.value += 1
+    progress_tracker.value += 1
 
 
 def create_k_fold_train_val_dataset(data_root_dir, train_frag_ids=None, val_frag_ids=None):
     print(f"Creating k_fold dataset with {len(train_frag_ids)} training and {len(val_frag_ids)} validation fragments")
 
-    with multiprocessing.Manager() as manager:
+    with Manager() as manager:
         progress_tracker = manager.Value('i', 0)  # Shared integer for progress tracking
         total_tasks = len(train_frag_ids) + len(val_frag_ids)
 
         all_args = [(data_root_dir, frag_id, 'train', progress_tracker) for frag_id in train_frag_ids]
         all_args += [(data_root_dir, frag_id, 'val', progress_tracker) for frag_id in val_frag_ids]
 
-        with multiprocessing.Pool() as pool:
-            pool.starmap_async(process_fragment, all_args)
+        with Pool() as pool:
+            # Use asynchronous map with callback to update the progress
+            result = pool.starmap_async(process_fragment, all_args)
 
-            while True:
-                with progress_tracker.get_lock():
-                    progress = progress_tracker.value
-                print(f"\rProgress: {progress}/{total_tasks}", end="")
-
-                if progress >= total_tasks:
-                    break
-
+            while not result.ready():
                 time.sleep(1)  # Update interval
+                print(f"\rProgress: {progress_tracker.value}/{total_tasks}", end="")
 
         print("\nAll tasks completed.")
 
