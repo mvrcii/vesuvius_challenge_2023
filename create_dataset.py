@@ -178,18 +178,28 @@ def create_single_val_dataset(data_root_dir, train_split=0.8):
     progress_bar.close()
 
 
-if __name__ == '__main__':
-    data_root_dir = os.path.join(CFG.data_root_dir, str(CFG.size))
+def build_k_fold_folder(cfg):
+    train_ids_formatted = ['TF{}'.format(idx) for idx in cfg.train_frag_ids]
+    val_ids_formatted = ['VF{}'.format(idx) for idx in cfg.val_frag_ids]
+    train_ids_str = '_'.join(train_ids_formatted)
+    val_ids_str = '_'.join(val_ids_formatted)
 
+    return train_ids_str, val_ids_str
+
+
+if __name__ == '__main__':
     """
     The label files are expected to be located within inklabels directory, so for example: 
     "inklabels/fragment1/inklabels.png"
     """
 
     if CFG.k_fold:
+        train_ids_str, val_ids_str = build_k_fold_folder(CFG)
+        data_root_dir = os.path.join(CFG.data_root_dir, f'k_fold_{train_ids_str}_{val_ids_str}', str(CFG.size))
         create_k_fold_train_val_dataset(data_root_dir=data_root_dir,
                                         train_frag_ids=CFG.train_frag_ids,
                                         val_frag_ids=CFG.val_frag_ids)
     else:
-        create_single_train_dataset(data_root_dir=data_root_dir)
+        data_root_dir = os.path.join(CFG.data_root_dir, f'single_TF{CFG.single_train_frag_id}', str(CFG.size))
+        create_single_train_dataset(data_root_dir=data_root_dir, fragment_id=CFG.single_train_frag_id)
         create_single_val_dataset(data_root_dir=data_root_dir, train_split=CFG.train_split)

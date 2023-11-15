@@ -50,7 +50,7 @@ class CFG:
     dataset_fraction = 1
 
     # single fragment dataset creation
-    # fragment id default = 2
+    single_train_frag_id = 2
     train_split = 0.8
 
     # k_fold fragment dataset creation
