@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import random
@@ -192,6 +193,14 @@ if __name__ == '__main__':
     The label files are expected to be located within inklabels directory, so for example: 
     "inklabels/fragment1/inklabels.png"
     """
+    parser = argparse.ArgumentParser(description="Run k-fold or single train-val dataset creation.")
+    parser.add_argument('--k_fold', type=bool, default=None, help='Enable k_fold dataset creation. Overrides CFG.k_fold if provided.')
+
+    # Parse the arguments
+    args = parser.parse_args()
+
+    if args.k_fold is not None:
+        CFG.k_fold = args.k_fold
 
     if CFG.k_fold:
         train_ids_str, val_ids_str = build_k_fold_folder(CFG)
