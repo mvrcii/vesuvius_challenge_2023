@@ -1,4 +1,5 @@
 import argparse
+import gc
 import logging
 import multiprocessing
 import os
@@ -62,6 +63,7 @@ def read_fragment(fragment_id):
 
 def process_fragment(data_root_dir, fragment_id, data_type):
     create_dataset(data_root_dir, fragment_id, data_type)
+    gc.collect()
 
 
 def create_k_fold_train_val_dataset(data_root_dir, train_frag_ids=None, val_frag_ids=None):
@@ -72,7 +74,6 @@ def create_k_fold_train_val_dataset(data_root_dir, train_frag_ids=None, val_frag
 
     process_map(process_fragment, train_args, max_workers=multiprocessing.cpu_count())
     process_map(process_fragment, val_args, max_workers=multiprocessing.cpu_count())
-
 
 
 def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
@@ -132,7 +133,8 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
             np.save(label_file_path, label_patch)
 
     progress_bar.close()
-
+    del images, label
+    gc.collect()
     print("Patches skipped due to unary label:", skip_counter_label)
     print("Patches skipped due to black source image:", skip_counter_black_image)
     print("Patches skipped due to low ink:", skip_counter_low_ink)
