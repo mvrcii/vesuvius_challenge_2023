@@ -14,7 +14,7 @@ from pl_segformer_lightning import SegFormerLightningModule
 
 
 def main():
-    seed_value = 42
+    seed_value = CFG.seed
     seed_everything(seed_value)
 
     wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
