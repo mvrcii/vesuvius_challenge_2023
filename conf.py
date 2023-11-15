@@ -79,13 +79,13 @@ class CFG:
     ]
 
     train_image_aug = [
-        A.RandomResizedCrop(height=size, width=size, p=0.5),
-        A.OneOf([
-            A.OpticalDistortion(p=0.5),
-            A.GridDistortion(p=0.5),
-        ], p=0.25),
-        A.RandomScale(scale_limit=0.1, p=0.5),
-        A.CenterCrop(height=size, width=size, p=0.5),
+        # A.RandomResizedCrop(height=size, width=size, p=0.5),
+        # A.OneOf([
+        #     A.OpticalDistortion(p=0.5),
+        #     A.GridDistortion(p=0.5),
+        # ], p=0.25),
+        # A.RandomScale(scale_limit=0.1, p=0.5),
+        # A.CenterCrop(height=size, width=size, p=0.5),
         # A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
     ]
 
