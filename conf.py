@@ -2,9 +2,9 @@ import albumentations as A
 
 
 class CFG:
-    local = True
-    marcel = True  # only relevant if local=True
-    marcel_mac = True
+    local = False
+    marcel = False  # only relevant if local=True
+    marcel_mac = False
 
     data_root_dir = "data"
     fragment_root_dir = "/scratch/medfm/vesuv/kaggle1stReimp/data"
