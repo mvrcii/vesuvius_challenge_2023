@@ -61,8 +61,10 @@ def read_fragment(fragment_id):
     return images, label
 
 
-def process_fragment(data_root_dir, fragment_id, data_type):
+def process_fragment(args):
+    data_root_dir, fragment_id, data_type = args
     create_dataset(data_root_dir, fragment_id, data_type)
+
     gc.collect()
 
 
