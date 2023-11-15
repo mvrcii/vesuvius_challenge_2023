@@ -52,7 +52,7 @@ def read_fragment(fragment_id):
     return images
 
 
-def infer_full_fragment(fragment_index, checkpoint_path, batch_size=8, overlap_factor=2):
+def infer_full_fragment(fragment_index, checkpoint_path, batch_size=8):
     images = read_fragment(fragment_index)
 
     # Load your model
@@ -62,10 +62,8 @@ def infer_full_fragment(fragment_index, checkpoint_path, batch_size=8, overlap_f
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
     print("Loaded model", checkpoint_path)
-
     # Define the size of the patches
     patch_size = 512
-    stride = int(patch_size / overlap_factor)
     height, width = images[0].shape
 
     # Calculate the number of patches needed, ensuring coverage of the entire image
@@ -74,17 +72,16 @@ def infer_full_fragment(fragment_index, checkpoint_path, batch_size=8, overlap_f
 
     # Initialize an empty array to hold the stitched result
     stitched_result = np.zeros((y_patches * patch_size, x_patches * patch_size), dtype=np.float32)
-    vote_count = np.zeros((y_patches * patch_size, x_patches * patch_size), dtype=np.int_)
 
     progress_bar = tqdm(total=x_patches * y_patches, desc="Infer Full Fragment: Processing patches")
 
+    batch = []
     batch_data = np.zeros((batch_size, CFG.in_chans, patch_size, patch_size))  # Assuming 'channels' is defined
     batch_info = []
     batch_count = 0
 
-    # Process each patch with overlap
-    for y in range(0, height - patch_size + 1, stride):
-        for x in range(0, width - patch_size + 1, stride):
+    for y in range(y_patches):
+        for x in range(x_patches):
             progress_bar.update(1)
 
             x_start = x * patch_size
@@ -105,25 +102,22 @@ def infer_full_fragment(fragment_index, checkpoint_path, batch_size=8, overlap_f
             batch_count += 1
 
             # Process the batch when it's full or at the end of the loop
-            if batch_count == batch_size or (y >= height - patch_size and x >= width - patch_size):
+            if batch_count == batch_size or (y == y_patches - 1 and x == x_patches - 1):
                 batch_patches = torch.tensor(batch_data[:batch_count]).float()
                 outputs = model(batch_patches)
                 logits = outputs.logits.detach().cpu().numpy()
 
                 for i, (x_start, x_end, y_start, y_end) in enumerate(batch_info):
                     logits_np = resize(logits[i].squeeze(), (patch_size, patch_size), order=0, preserve_range=True, anti_aliasing=False)
-                    stitched_result[y_start:y_end, x_start:x_end] += logits_np[:y_end - y_start, :x_end - x_start]
-                    vote_count[y_start:y_end, x_start:x_end] += 1
+                    stitched_result[y_start:y_end, x_start:x_end] = logits_np[:y_end - y_start, :x_end - x_start]
 
                 batch_count = 0
                 batch_info = []
 
     progress_bar.close()
 
-    # Crop the stitched_result to the original image size and average the results where patches overlap
+    # Crop the stitched_result to the original image size
     stitched_result = stitched_result[:height, :width]
-    vote_count = vote_count[:height, :width]
-    stitched_result /= np.maximum(vote_count, 1)  # Avoid division by zero
 
     return stitched_result
 
