@@ -31,21 +31,21 @@ class CFG:
 
     # ============== training =============
     device = 'cuda'
-    seed = 42
-    epochs = 20
+    seed = 17
+    epochs = 100
 
     # ========= optimizer =========
     weight_decay = 0.01
-    lr = 1e-5
+    lr = 1e-4
 
     # ============== dataset / dataloader =============
     size = 512
     tile_size = 512
     stride = tile_size // 4
 
-    train_batch_size = 4  # 32
-    val_batch_size = 4
-    num_workers = 2
+    train_batch_size = 6  # 32
+    val_batch_size = 8
+    num_workers = 10
 
     dataset_fraction = 1
 
@@ -54,12 +54,9 @@ class CFG:
     train_split = 0.8
 
     # k_fold fragment dataset creation
-    k_fold = False
+    k_fold = True
     train_frag_ids = [2, 3, 4]
     val_frag_ids = [1]
-
-    save_every_n_epochs = 3
-    show_predictions = True
 
     # ============== fixed =============
     # min_lr = 1e-6

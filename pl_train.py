@@ -30,9 +30,11 @@ def main():
     img_patch_size = 512
 
     if k_fold:
+        print("Start training with k_fold data")
         train_ids_str, val_ids_str = build_k_fold_folder(train_frag_ids, val_frag_ids)
         data_root_dir = os.path.join(CFG.data_root_dir, f'k_fold_{train_ids_str}_{val_ids_str}', str(img_patch_size))
     else:
+        print("Start training with single fragment data")
         data_root_dir = os.path.join(CFG.data_root_dir, f'single_TF{single_train_frag_id}', str(img_patch_size))
 
     model = SegFormerLightningModule()
