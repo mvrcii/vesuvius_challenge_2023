@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from lightning import seed_everything
@@ -7,6 +8,7 @@ from lightning.pytorch.trainer import Trainer
 from lightning_fabric.accelerators import find_usable_cuda_devices
 
 from conf import CFG
+from create_dataset import build_k_fold_folder
 from pl_segformer_datamodule import SegFormerDataModule
 from pl_segformer_lightning import SegFormerLightningModule
 
@@ -19,8 +21,22 @@ def main():
     wandb_run_name = wandb_logger.experiment.name
     timestamp = datetime.now().strftime("%y%m%d-%H%M")  # Format: YYMMDD-HHMM
 
+    k_fold = True
+
+    # Fragment Parameters
+    train_frag_ids = [2, 3, 4]
+    val_frag_ids = [1]
+    single_train_frag_id = 2
+    img_patch_size = 512
+
+    if k_fold:
+        train_ids_str, val_ids_str = build_k_fold_folder(train_frag_ids, val_frag_ids)
+        data_root_dir = os.path.join(CFG.data_root_dir, f'k_fold_{train_ids_str}_{val_ids_str}', str(img_patch_size))
+    else:
+        data_root_dir = os.path.join(CFG.data_root_dir, f'single_TF{single_train_frag_id}', str(img_patch_size))
+
     model = SegFormerLightningModule()
-    data_module = SegFormerDataModule()
+    data_module = SegFormerDataModule(data_root_dir=data_root_dir)
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=f"checkpoints/{timestamp}-{wandb_run_name}",

@@ -10,17 +10,18 @@ from conf import CFG
 
 
 class SegFormerDataModule(LightningDataModule):
-    def __init__(self):
+    def __init__(self, data_root_dir: str):
         super().__init__()
+        self.data_root_dir = data_root_dir
 
     def train_dataloader(self):
         return build_dataloader(
-            data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
+            data_root_dir=self.data_root_dir,
             dataset_type='train')
 
     def val_dataloader(self):
         return build_dataloader(
-            data_root_dir=os.path.join(CFG.data_root_dir, str(CFG.size)),
+            data_root_dir=self.data_root_dir,
             dataset_type='val')
 
     # Implement test_dataloader if needed

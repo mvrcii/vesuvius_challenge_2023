@@ -197,9 +197,9 @@ def create_single_val_dataset(data_root_dir, train_split=0.8):
     progress_bar.close()
 
 
-def build_k_fold_folder(cfg):
-    train_ids_formatted = ['TF{}'.format(idx) for idx in cfg.train_frag_ids]
-    val_ids_formatted = ['VF{}'.format(idx) for idx in cfg.val_frag_ids]
+def build_k_fold_folder(train_frag_ids, val_frag_ids):
+    train_ids_formatted = ['TF{}'.format(idx) for idx in train_frag_ids]
+    val_ids_formatted = ['VF{}'.format(idx) for idx in val_frag_ids]
     train_ids_str = '_'.join(train_ids_formatted)
     val_ids_str = '_'.join(val_ids_formatted)
 
@@ -222,7 +222,7 @@ if __name__ == '__main__':
         CFG.k_fold = args.k_fold
 
     if CFG.k_fold:
-        train_ids_str, val_ids_str = build_k_fold_folder(CFG)
+        train_ids_str, val_ids_str = build_k_fold_folder(CFG.train_frag_ids, CFG.val_frag_ids)
         data_root_dir = os.path.join(CFG.data_root_dir, f'k_fold_{train_ids_str}_{val_ids_str}', str(CFG.size))
         create_k_fold_train_val_dataset(data_root_dir=data_root_dir,
                                         train_frag_ids=CFG.train_frag_ids,
