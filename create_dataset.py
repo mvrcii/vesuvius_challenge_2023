@@ -125,7 +125,7 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
                 skip_counter_low_ink += 1
                 continue
 
-            file_name = f"{x1}_{y1}_{x2}_{y2}.npy"
+            file_name = f"f{fragment_id}_{x1}_{y1}_{x2}_{y2}.npy"
             img_file_path = os.path.join(img_path, file_name)
             label_file_path = os.path.join(label_path, file_name)
 
