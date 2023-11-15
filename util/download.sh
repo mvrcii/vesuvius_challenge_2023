@@ -5,6 +5,13 @@ user="registeredusers"
 password="only"
 credentials="$user:$password"
 
+hostname=$(hostname)
+if [[ "$hostname" == "Marcels-MBP.fritz.box" ]]; then
+    baseOutputFolder="/Users/marcel/Documents/Git-Master/Private/kaggle1stReimp/data"
+else
+    baseOutputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data"
+fi
+
 # Check if an argument is provided
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <option>"
@@ -18,23 +25,23 @@ option=$1
 # Configuration based on option
 case $option in
     "fragment1")
-        outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment1/slices"
+        outputFolder="${baseOutputFolder}/fragments/fragment1/slices"
         baseUrl="http://dl.ash2txt.org/fragments/Frag1.volpkg/working/54keV_exposed_surface/surface_volume/"
         ;;
     "fragment2")
-        outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment2/slices"
+        outputFolder="${baseOutputFolder}/fragments/fragment2/slices"
         baseUrl="http://dl.ash2txt.org/fragments/Frag2.volpkg/working/54keV_exposed_surface/surface_volume/"
         ;;
     "fragment3")
-        outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment3/slices"
+        outputFolder="${baseOutputFolder}/fragments/fragment3/slices"
         baseUrl="http://dl.ash2txt.org/fragments/Frag3.volpkg/working/54keV_exposed_surface/surface_volume/"
         ;;
     "fragment4")
-        outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment4/slices"
+        outputFolder="${baseOutputFolder}/fragments/fragment4/slices"
         baseUrl="http://dl.ash2txt.org/fragments/Frag4.volpkg/working/54keV_exposed_surface/PHercParis1Fr39_54keV_surface_volume/"
         ;;
     "scroll1")
-        outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/segments/scroll1recto/slices"
+        outputFolder="${baseOutputFolder}/segments/scroll1recto/slices"
         baseUrl="http://dl.ash2txt.org/stephen-parsons-uploads/recto/Scroll1_part_1_wrap_recto_surface_volume/"
         ;;
     *)
@@ -45,9 +52,11 @@ case $option in
 esac
 
 # Other configurations
-# default 00024 00039 to get 16 slices
+# default 00023 00039 to get 16 slices
+#         00019 00043 to get 24 slices
 ranges=(
-    "00023 00039"
+    #"00023 00039"
+    "00019 00043"
     #"00000 00064"
 )
 overwriteExistingFiles=false
