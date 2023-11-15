@@ -52,19 +52,25 @@ def read_fragment(fragment_id):
 
 
 def infer_full_fragment(fragment_index, checkpoint_path):
-    images = read_fragment(fragment_index)
-
-    # Load your model
     model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b3", num_labels=1, num_channels=16,
                                                              ignore_mismatched_sizes=True)
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
+    # model.load_state_dict(checkpoint)
     print("Loaded model", checkpoint_path)
+
+    # Loading images
+    images = read_fragment(fragment_index)
+
     # Define the size of the patches
     patch_size = 512
     patch_size_out = 128
-    stride = patch_size // 2
+
+    stride_factor = 2
+    stride = patch_size // stride_factor
+    stride_out = patch_size_out // stride_factor
+
     height, width = images[0].shape
 
     # Calculate the number of patches needed, considering the stride
@@ -72,10 +78,10 @@ def infer_full_fragment(fragment_index, checkpoint_path):
     y_patches = int(np.ceil((height - patch_size) / stride)) + 1
 
     # Initialize arrays to hold the stitched result and count of predictions for each pixel
-    stitched_height = y_patches * stride // patch_size * patch_size_out
-    stitched_width = x_patches * stride // patch_size * patch_size_out
-    out_arr = np.zeros((stitched_height, stitched_width), dtype=np.float32)
-    pred_counts = np.zeros((stitched_height, stitched_width), dtype=np.int32)
+    out_height = y_patches * stride_out + patch_size_out
+    out_width = x_patches * stride_out + patch_size_out
+    out_arr = np.zeros((out_height, out_width), dtype=np.float32)
+    pred_counts = np.zeros((out_height, out_width), dtype=np.int32)
 
     progress_bar = tqdm(total=x_patches * y_patches, desc="Infer Full Fragment: Processing patches")
 
@@ -90,14 +96,9 @@ def infer_full_fragment(fragment_index, checkpoint_path):
 
             patch = images[:, y_start:y_end, x_start:x_end]
 
-            # If the patch size is smaller than the expected size, pad it
-            if patch.shape[1] < patch_size or patch.shape[2] < patch_size:
-                # Calculate padding for height and width
-                padding_height = max(patch_size - patch.shape[1], 0)
-                padding_width = max(patch_size - patch.shape[2], 0)
-
-                # Apply padding
-                patch = np.pad(patch, ((0, 0), (0, padding_height), (0, padding_width)), 'constant')
+            # If the patch size is smaller than the expected size, skip it
+            if patch.shape != (CFG.in_chans, patch_size, patch_size):
+                continue
 
             # Perform inference on the patch
             outputs = model(torch.tensor(patch).unsqueeze(0).float())
@@ -114,9 +115,9 @@ def infer_full_fragment(fragment_index, checkpoint_path):
             logits_np[:, -margin:] = 0  # Right margin
 
             # Determine the location in the stitched_result array
-            out_y_start = y * stride // patch_size * patch_size_out
+            out_y_start = y * stride_out
             out_y_end = out_y_start + patch_size_out
-            out_x_start = x * stride // patch_size * patch_size_out
+            out_x_start = x * stride_out
             out_x_end = out_x_start + patch_size_out
 
             # Add the result to the stitched_result array and increment prediction counts
