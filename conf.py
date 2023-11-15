@@ -1,11 +1,10 @@
 import albumentations as A
-from albumentations.pytorch import ToTensorV2
 
 
 class CFG:
-    local = False
-    marcel = False  # only relevant if local=True
-    marcel_mac = False
+    local = True
+    marcel = True  # only relevant if local=True
+    marcel_mac = True
 
     data_root_dir = "data"
     fragment_root_dir = "/scratch/medfm/vesuv/kaggle1stReimp/data"
@@ -43,9 +42,9 @@ class CFG:
     tile_size = 512
     stride = tile_size // 4
 
-    train_batch_size = 4  # 32
+    train_batch_size = 6  # 32
     val_batch_size = 6
-    num_workers = 10
+    num_workers = 2
 
     dataset_fraction = 1
 
