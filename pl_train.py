@@ -46,7 +46,7 @@ def main():
         mode="max",  # IoU should be maximized
         every_n_epochs=1,  # Save a checkpoint every epoch
     )
-
+    print("GPU DEVICES", find_usable_cuda_devices())
     trainer = Trainer(
         max_epochs=CFG.epochs,
         logger=wandb_logger,
