@@ -27,7 +27,7 @@ class CFG:
         Segformer b3:
             bs8 => 16GB (~3 min per epoch on gpu1b)
         Segformer B5:
-            bs5 
+            bs4 => 
     """
 
     # ============== training =============
@@ -45,7 +45,7 @@ class CFG:
     stride = tile_size // 4
 
     train_batch_size = 4  # 32
-    val_batch_size = 8
+    val_batch_size = 4
     num_workers = 2
 
     dataset_fraction = 1
