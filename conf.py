@@ -26,6 +26,8 @@ class CFG:
     V-Ram Usage:
         Segformer b3:
             bs8 => 16GB (~3 min per epoch on gpu1b)
+        Segformer B5:
+            bs5 
     """
 
     # ============== training =============
@@ -42,7 +44,7 @@ class CFG:
     tile_size = 512
     stride = tile_size // 4
 
-    train_batch_size = 5  # 32
+    train_batch_size = 4  # 32
     val_batch_size = 8
     num_workers = 2
 
@@ -79,6 +81,7 @@ class CFG:
     ]
 
     train_image_aug = [
+        # TODO: CRASHING -> Resizing doesn't work with those augmentations somehow
         # A.RandomResizedCrop(height=size, width=size, p=0.5),
         # A.OneOf([
         #     A.OpticalDistortion(p=0.5),
