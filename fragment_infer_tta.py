@@ -55,7 +55,7 @@ def infer_full_fragment(fragment_index, checkpoint_path):
     images = read_fragment(fragment_index)
 
     # Load your model
-    model = SegformerForSemanticSegmentation.from_pretrained(CFG.seg_pretrained, num_labels=1, num_channels=16,
+    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b3", num_labels=1, num_channels=16,
                                                              ignore_mismatched_sizes=True)
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
