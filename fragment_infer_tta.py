@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     print("Saved results to", results_dir)
     # save raw output
-    # np.save(f"frag_{fragment_num}_{date_time_string}result.npy", result)
+    np.save(os.path.join(results_dir, f"frag_{fragment_num}_{date_time_string}result.npy"), result)
 
     if CFG.local:
         plt.imshow(result, cmap='gray')
