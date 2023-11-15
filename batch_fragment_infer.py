@@ -68,15 +68,13 @@ def infer_full_fragment(fragment_index, checkpoint_path, batch_size=8, overlap_f
     stride = int(patch_size / overlap_factor)
     height, width = images[0].shape
 
-    # Calculate the number of patches needed, considering the stride
-    x_patches = int(np.ceil((width - patch_size) / stride)) + 1
-    y_patches = int(np.ceil((height - patch_size) / stride)) + 1
+    # Calculate the number of patches needed, ensuring coverage of the entire image
+    x_patches = int(np.ceil(width / patch_size))
+    y_patches = int(np.ceil(height / patch_size))
 
-    # Initialize the stitched result and vote count arrays
-    stitched_height = (y_patches - 1) * stride + patch_size
-    stitched_width = (x_patches - 1) * stride + patch_size
-    stitched_result = np.zeros((stitched_height, stitched_width), dtype=np.float32)
-    vote_count = np.zeros((stitched_height, stitched_width), dtype=np.int_)
+    # Initialize an empty array to hold the stitched result
+    stitched_result = np.zeros((y_patches * patch_size, x_patches * patch_size), dtype=np.float32)
+    vote_count = np.zeros((y_patches * patch_size, x_patches * patch_size), dtype=np.int_)
 
     progress_bar = tqdm(total=x_patches * y_patches, desc="Infer Full Fragment: Processing patches")
 
