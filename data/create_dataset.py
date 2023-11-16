@@ -13,7 +13,7 @@ from skimage.transform import resize
 from tqdm import tqdm
 from multiprocessing import Manager, Pool
 
-from conf import CFG
+from ..conf import CFG
 from util.train_utils import load_config, build_k_fold_folder
 
 

@@ -3,7 +3,8 @@ conf_local.py
 .idea
 *.xml
 
-data
+*.npy
+*.tif
 wandb
 
 venv
