@@ -60,7 +60,7 @@ def write_single_fold_cfg(_cfg):
 def write_k_fold_cfg(_cfg):
     logging.info("Starting k-fold dataset creation process...")
 
-    result_dir_name = f'k_fold_{str(_cfg.size)}px_{str(_cfg.dataset_in_chans)}'
+    result_dir_name = f'k_fold_{str(_cfg.size)}px_{str(_cfg.dataset_in_chans)}ch'
     path = os.path.join(_cfg.data_root_dir, result_dir_name)
 
     channel_ids = calc_original_channel_ids(_cfg.dataset_in_chans)
