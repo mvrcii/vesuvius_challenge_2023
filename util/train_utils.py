@@ -26,22 +26,14 @@ def get_device_configuration():
 def get_data_root_dir(config):
     if config.k_fold:
         print("Start training with k_fold data")
-        train_ids_str, val_ids_str = build_k_fold_folder(config.train_frag_ids, config.val_frag_ids)
-        data_root_dir = os.path.join(config.data_root_dir, f'k_fold_{train_ids_str}_{val_ids_str}', str(config.size))
+        dataset_name = f'k_fold_{config.size}px_{config.dataset_in_chans}ch'
+        data_root_dir = os.path.join(config.data_root_dir, dataset_name)
     else:
         print("Start training with single fragment data")
-        data_root_dir = os.path.join(config.data_root_dir, f'single_TF{config.single_train_frag_id}', str(config.size))
+        dataset_name = f'single_fold_{config.size}px_{config.dataset_in_chans}ch'
+        data_root_dir = os.path.join(config.data_root_dir, dataset_name)
 
     return data_root_dir
-
-
-def build_k_fold_folder(train_frag_ids, val_frag_ids):
-    train_ids_formatted = ['TF{}'.format(idx) for idx in train_frag_ids]
-    val_ids_formatted = ['VF{}'.format(idx) for idx in val_frag_ids]
-    train_ids_str = '_'.join(train_ids_formatted)
-    val_ids_str = '_'.join(val_ids_formatted)
-
-    return train_ids_str, val_ids_str
 
 
 def load_config(config):
