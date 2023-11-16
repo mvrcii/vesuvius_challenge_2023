@@ -22,6 +22,7 @@ class CFG:
     # ============== model =============
     in_chans = 16
     seg_pretrained = "nvidia/mit-b5"
+    SEGFORMER_OUTPUT_DIM = (128, 128)
     """
     V-Ram Usage:
         Segformer b3:
@@ -41,9 +42,9 @@ class CFG:
 
     # ============== dataset / dataloader =============
     dataset_in_chans = 24
-    size = 512
-    tile_size = 512
-    stride = tile_size // 4
+    patch_size = 512
+    stride = patch_size // 2
+    REQUIRED_LABEL_INK_PERCENTAGE = 0.1
 
     # single fragment dataset creation
     single_train_frag_id = 2

@@ -15,7 +15,7 @@ def print_model_parameters(model):
     total_params = 0
     print("Model Parameters:")
     for name, param in model.named_parameters():
-        print(f"Layer: {name} | Size: {param.size()} | Count: {param.nelement()}")
+        print(f"Layer: {name} | Size: {param.patch_size()} | Count: {param.nelement()}")
         total_params += param.nelement()
     print(f"Total number of parameters: {total_params}")
 

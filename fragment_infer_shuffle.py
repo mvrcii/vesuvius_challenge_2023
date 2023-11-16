@@ -35,8 +35,8 @@ def read_fragment(fragment_id):
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image"
 
-        pad0 = (CFG.tile_size - image.shape[0] % CFG.tile_size) % CFG.tile_size
-        pad1 = (CFG.tile_size - image.shape[1] % CFG.tile_size) % CFG.tile_size
+        pad0 = (CFG.patch_size - image.shape[0] % CFG.patch_size) % CFG.patch_size
+        pad1 = (CFG.patch_size - image.shape[1] % CFG.patch_size) % CFG.patch_size
 
         image = np.pad(image, [(0, pad0), (0, pad1)], constant_values=0)
 

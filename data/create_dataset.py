@@ -39,14 +39,14 @@ def write_config(_cfg):
 
 def write_single_fold_cfg(_cfg):
     logging.info("Starting single-fold dataset creation process...")
-    result_dir_name = f'single_fold_{str(_cfg.size)}px_{str(_cfg.dataset_in_chans)}ch'
+    result_dir_name = f'single_fold_{str(_cfg.patch_size)}px_{str(_cfg.dataset_in_chans)}ch'
     path = os.path.join(_cfg.data_root_dir, result_dir_name)
 
     channel_ids = calc_original_channel_ids(_cfg.dataset_in_chans)
 
     write_dataset_cfg(path,
                       single_train_frag_ids=_cfg.single_train_frag_id,
-                      patch_size=_cfg.size,
+                      patch_size=_cfg.patch_size,
                       channels=_cfg.dataset_in_chans,
                       channel_ids=channel_ids,
                       mode='single_fold')
@@ -60,7 +60,7 @@ def write_single_fold_cfg(_cfg):
 def write_k_fold_cfg(_cfg):
     logging.info("Starting k-fold dataset creation process...")
 
-    result_dir_name = f'k_fold_{str(_cfg.size)}px_{str(_cfg.dataset_in_chans)}ch'
+    result_dir_name = f'k_fold_{str(_cfg.patch_size)}px_{str(_cfg.dataset_in_chans)}ch'
     path = os.path.join(_cfg.data_root_dir, result_dir_name)
 
     channel_ids = calc_original_channel_ids(_cfg.dataset_in_chans)
@@ -68,7 +68,7 @@ def write_k_fold_cfg(_cfg):
     write_dataset_cfg(path,
                       train_frag_ids=_cfg.train_frag_ids,
                       val_frag_ids=_cfg.val_frag_ids,
-                      patch_size=_cfg.size,
+                      patch_size=_cfg.patch_size,
                       channels=_cfg.dataset_in_chans,
                       channel_ids=channel_ids,
                       k_fold=len(_cfg.train_frag_ids) + len(_cfg.val_frag_ids),
@@ -87,13 +87,10 @@ def read_fragment(fragment_dir, fragment_id):
 
     print(f"Using {CFG.dataset_in_chans} channels for the dataset")
 
-    mid = 65 // 2
-    start = mid - CFG.dataset_in_chans // 2
-    end = mid + CFG.dataset_in_chans // 2
-    layers = range(start, end)
+    channels = calc_original_channel_ids(CFG.dataset_in_chans)
 
-    for layer in tqdm(layers):
-        img_path = os.path.join(fragment_dir, "slices", f"{layer:05}.tif")
+    for channel in tqdm(channels):
+        img_path = os.path.join(fragment_dir, "slices", f"{channel:05}.tif")
         assert os.path.isfile(img_path), "Fragment file does not exist"
 
         image = cv2.imread(img_path, 0)
@@ -102,8 +99,8 @@ def read_fragment(fragment_dir, fragment_id):
             print("Image is empty or not loaded correctly:", img_path)
         assert 1 < np.asarray(image).max() <= 255, f"Invalid image"
 
-        pad0 = (CFG.tile_size - image.shape[0] % CFG.tile_size) % CFG.tile_size
-        pad1 = (CFG.tile_size - image.shape[1] % CFG.tile_size) % CFG.tile_size
+        pad0 = (CFG.patch_size - image.shape[0] % CFG.patch_size) % CFG.patch_size
+        pad1 = (CFG.patch_size - image.shape[1] % CFG.patch_size) % CFG.patch_size
         image = np.pad(image, [(0, pad0), (0, pad1)], constant_values=0)
 
         images.append(image)
@@ -127,7 +124,6 @@ def read_fragment(fragment_dir, fragment_id):
 
 def process_fragment(data_root_dir, fragment_id, data_type, progress_tracker):
     create_dataset(data_root_dir, fragment_id, data_type)
-
     progress_tracker.value += 1
 
 
@@ -135,9 +131,9 @@ def validate_fragments(_cfg):
     try:
         if _cfg.k_fold:
             for frag_id in _cfg.train_frag_ids:
-                validate_fragment(frag_id=frag_id, channels=_cfg.dataset_in_chans)
+                validate_fragment_files(frag_id=frag_id, channels=_cfg.dataset_in_chans)
         else:
-            validate_fragment(frag_id=_cfg.single_train_frag_id, channels=_cfg.dataset_in_chans)
+            validate_fragment_files(frag_id=_cfg.single_train_frag_id, channels=_cfg.dataset_in_chans)
 
     except (FileNotFoundError, NotADirectoryError) as e:
         print(f"Error: {e}")
@@ -151,7 +147,7 @@ def calc_original_channel_ids(channels):
     return list(range(start, end))
 
 
-def validate_fragment(frag_id, channels):
+def validate_fragment_files(frag_id, channels):
     used_channels = calc_original_channel_ids(channels)
 
     fragments_path = "data/fragments"
@@ -219,8 +215,8 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
 
     mask_arr = np.asarray(Image.open(mask_path))
 
-    x1_list = list(range(0, images.shape[2] - CFG.tile_size + 1, CFG.stride))
-    y1_list = list(range(0, images.shape[1] - CFG.tile_size + 1, CFG.stride))
+    x1_list = list(range(0, images.shape[2] - CFG.patch_size + 1, CFG.stride))
+    y1_list = list(range(0, images.shape[1] - CFG.patch_size + 1, CFG.stride))
 
     progress_bar = tqdm(total=len(x1_list) * len(y1_list),
                         desc=f"{data_type.capitalize()} Dataset Fragment {fragment_id}: Processing images "
@@ -231,12 +227,12 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
     skip_counter_low_ink_in_label = 0
     skip_counter_not_in_mask = 0
     requirement = (128 ** 2) * 0.1
-    segformer_output_dim = (128, 128)
+    segformer_output_dim = CFG.SEGFORMER_OUTPUT_DIM
 
     for y1 in y1_list:
         for x1 in x1_list:
-            y2 = y1 + CFG.tile_size
-            x2 = x1 + CFG.tile_size
+            y2 = y1 + CFG.patch_size
+            x2 = x1 + CFG.patch_size
             progress_bar.update(1)
 
             img_patch = images[:, y1:y2, x1:x2]

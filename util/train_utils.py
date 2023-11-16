@@ -26,11 +26,11 @@ def get_device_configuration():
 def get_data_root_dir(config):
     if config.k_fold:
         print("Start training with k_fold data")
-        dataset_name = f'k_fold_{config.size}px_{config.dataset_in_chans}ch'
+        dataset_name = f'k_fold_{config.patch_size}px_{config.dataset_in_chans}ch'
         data_root_dir = os.path.join(config.data_root_dir, dataset_name)
     else:
         print("Start training with single fragment data")
-        dataset_name = f'single_fold_{config.size}px_{config.dataset_in_chans}ch'
+        dataset_name = f'single_fold_{config.patch_size}px_{config.dataset_in_chans}ch'
         data_root_dir = os.path.join(config.data_root_dir, dataset_name)
 
     return data_root_dir
