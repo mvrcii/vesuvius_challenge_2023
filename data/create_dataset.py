@@ -109,7 +109,7 @@ def read_fragment(fragment_dir, fragment_id):
         images.append(image)
     images = np.stack(images, axis=0)
 
-    label_path = os.path.join(CFG.fragment_root_dir, f"../inklabels/fragment{fragment_id}/inklabels.png")
+    label_path = os.path.join(CFG.fragment_root_dir, fragment_dir, "inklabels.png")
     label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
 
     if label is None or label.shape[0] == 0:
