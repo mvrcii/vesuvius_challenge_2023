@@ -6,7 +6,7 @@ class CFG:
     marcel = False  # only relevant if local=True
     marcel_mac = False
 
-    data_root_dir = "data"
+    data_root_dir = "data/datasets"
     fragment_root_dir = "/scratch/medfm/vesuv/kaggle1stReimp/data"
     if local:
         if marcel:
@@ -20,7 +20,6 @@ class CFG:
     data_out_path = "data/train"
 
     # ============== model =============
-    dataset_in_chans = 24
     in_chans = 16
     seg_pretrained = "nvidia/mit-b5"
     """
@@ -41,15 +40,10 @@ class CFG:
     lr = 1e-4
 
     # ============== dataset / dataloader =============
+    dataset_in_chans = 24
     size = 512
     tile_size = 512
     stride = tile_size // 4
-
-    train_batch_size = 2  # 32
-    val_batch_size = 4
-    num_workers = 2
-
-    dataset_fraction = 1
 
     # single fragment dataset creation
     single_train_frag_id = 2
@@ -60,10 +54,11 @@ class CFG:
     train_frag_ids = [2, 3, 4]
     val_frag_ids = [1]
 
-    # ============== fixed =============
-    # min_lr = 1e-6
-    # weight_decay = 1e-6
-    # max_grad_norm = 1000
+    # ============ dataloader =============
+    dataset_fraction = 1
+    num_workers = 2
+    train_batch_size = 2  # 32
+    val_batch_size = 4
 
     # ============== augmentation =============
     use_cutmix = False
