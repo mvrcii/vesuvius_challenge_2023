@@ -264,7 +264,8 @@ def create_dataset(target_dir, fragment_id=2, data_type='train'):
 
     progress_bar.close()
 
-    process_mean_and_std(images, data_type, fragment_id, target_data_dir)
+    if _cfg.calc_mean_std:
+        process_mean_and_std(images, data_type, fragment_id, target_data_dir)
 
     del images, label
     gc.collect()

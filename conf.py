@@ -29,6 +29,7 @@ class CFG:
     lr = 1e-4
 
     # ============== dataset / dataloader =============
+    calc_mean_std = False
     dataset_in_chans = 24
     patch_size = 512
     stride = patch_size // 2
