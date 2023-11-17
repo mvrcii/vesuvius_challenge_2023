@@ -5,6 +5,7 @@ import albumentations as A
 
 class CFG:
     data_root_dir = "/scratch/medfm/vesuv/kaggle1stReimp/data"
+    base_label_dir = "data/base_label_files"
     dataset_target_dir = os.path.join(data_root_dir, "datasets")
 
     # ============== model =============
