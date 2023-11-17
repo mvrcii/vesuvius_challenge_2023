@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 # Basic authentication
 user="registeredusers"
@@ -9,7 +10,7 @@ hostname=$(hostname)
 if [[ "$hostname" == "Marcels-MBP.fritz.box" ]]; then
     baseOutputFolder="/Users/marcel/Documents/Git-Master/Private/kaggle1stReimp/data"
 elif [[ "$hostname" == "DESKTOP-LLUPIAQ" ]]; then
-baseOutputFolder="C:\Users\Marce\Git-Master\Privat\kaggle1stReimp\data"
+    baseOutputFolder ="data"
 else
     baseOutputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data"
 fi
@@ -17,7 +18,7 @@ fi
 # Check if an argument is provided
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <option>"
-    echo "Options: fragment1, fragment2, fragment3, fragment4, scroll1"
+    echo "Options: frag1, frag2, frag3, frag4, frag5, frag6, frag7"
     exit 1
 fi
 
@@ -26,29 +27,37 @@ option=$1
 
 # Configuration based on option
 case $option in
-    "fragment1")
-        outputFolder="${baseOutputFolder}/fragments/fragment1/slices"
-        baseUrl="http://dl.ash2txt.org/fragments/Frag1.volpkg/working/54keV_exposed_surface/surface_volume/"
+    "frag1")
+        outputFolder="data/fragments/20230522181603/slices"
+        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230522181603/layers/"
         ;;
-    "fragment2")
-        outputFolder="${baseOutputFolder}/fragments/fragment2/slices"
-        baseUrl="http://dl.ash2txt.org/fragments/Frag2.volpkg/working/54keV_exposed_surface/surface_volume/"
+    "frag2")
+        outputFolder="data/fragments/20230702185752_superseded/slices"
+        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230702185752_superseded/layers/"
         ;;
-    "fragment3")
-        outputFolder="${baseOutputFolder}/fragments/fragment3/slices"
-        baseUrl="http://dl.ash2txt.org/fragments/Frag3.volpkg/working/54keV_exposed_surface/surface_volume/"
+    "frag3")
+        outputFolder="data/fragments/20230827161847/slices"
+        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230827161847/layers/"
         ;;
-    "fragment4")
-        outputFolder="${baseOutputFolder}/fragments/fragment4/slices"
-        baseUrl="http://dl.ash2txt.org/fragments/Frag4.volpkg/working/54keV_exposed_surface/PHercParis1Fr39_54keV_surface_volume/"
+    "frag4")
+        outputFolder="data/fragments/20230904135535/slices"
+        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230904135535/layers/"
         ;;
-    "scroll1")
-        outputFolder="${baseOutputFolder}/segments/scroll1recto/slices"
-        baseUrl="http://dl.ash2txt.org/stephen-parsons-uploads/recto/Scroll1_part_1_wrap_recto_surface_volume/"
+    "frag5")
+        outputFolder="data/fragments/20230905134255/slices"
+        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230905134255/layers/"
+        ;;
+    "frag6")
+        outputFolder="data/fragments/20230909121925/slices"
+        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230909121925/layers/"
+        ;;
+    "frag7")
+        outputFolder="data/fragments/20231024093300/slices"
+        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20231024093300/layers/"
         ;;
     *)
         echo "Invalid option: $option"
-        echo "Valid options: fragment1, fragment2, fragment3, fragment4, scroll1"
+        echo "Valid options: frag1, frag2, frag3, frag4, frag5, frag6, frag7"
         exit 1
         ;;
 esac
@@ -59,6 +68,7 @@ esac
 ranges=(
     #"00023 00039"
 #    "00019 00043"
+#    "00015 00044"
     "00000 00064"
 )
 overwriteExistingFiles=false
@@ -73,7 +83,7 @@ download_file() {
 
     if $overwriteExistingFiles || [ ! -f "$outputFile" ]; then
         echo "Downloading file: $outputFile"
-        curl -s -u "$credentials" -o "$outputFile" "$url" || echo "Error downloading file: $outputFile"
+        curl -s -u "$credentials" -o "$outputFile" "$url" || echo "Error downloading file: $outputFile $url"
     else
         echo "File $outputFile already exists, skipping download."
     fi
@@ -88,6 +98,7 @@ for range in "${ranges[@]}"; do
     for ((i=10#$start; i<=10#$end; i++)); do
         printf -v formattedIndex "%02d" $i
         url="${baseUrl}${formattedIndex}.tif"
+        echo "Test ${outputFolder}"
         outputFile="${outputFolder}/0$(printf "%04d" $i).tif"
         download_file "$url" "$outputFile" &
     done
