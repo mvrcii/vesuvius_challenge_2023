@@ -28,7 +28,7 @@ def read_fragment():
     idxs = range(start, end)
 
     for i in tqdm(idxs):
-        img_path = os.path.join(CFG.fragment_root_dir, "segments", "scroll1recto", "slices", f"{i:05}.tif")
+        img_path = os.path.join(CFG.data_root_dir, "segments", "scroll1recto", "slices", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image"

@@ -40,7 +40,7 @@ def write_config(_cfg):
 def write_single_fold_cfg(_cfg):
     logging.info("Starting single-fold dataset creation process...")
     result_dir_name = f'single_fold_{str(_cfg.patch_size)}px_{str(_cfg.dataset_in_chans)}ch'
-    path = os.path.join(_cfg.data_root_dir, result_dir_name)
+    path = os.path.join(_cfg.dataset_target_dir, result_dir_name)
 
     channel_ids = calc_original_channel_ids(_cfg.dataset_in_chans)
 
@@ -61,7 +61,7 @@ def write_k_fold_cfg(_cfg):
     logging.info("Starting k-fold dataset creation process...")
 
     result_dir_name = f'k_fold_{str(_cfg.patch_size)}px_{str(_cfg.dataset_in_chans)}ch'
-    path = os.path.join(_cfg.data_root_dir, result_dir_name)
+    path = os.path.join(_cfg.dataset_target_dir, result_dir_name)
 
     channel_ids = calc_original_channel_ids(_cfg.dataset_in_chans)
 
@@ -81,7 +81,7 @@ def write_k_fold_cfg(_cfg):
     return path
 
 
-def read_fragment(fragment_dir, fragment_id):
+def read_fragment(fragment_dir):
     images = []
     pad0, pad1 = None, None
 
@@ -106,7 +106,7 @@ def read_fragment(fragment_dir, fragment_id):
         images.append(image)
     images = np.stack(images, axis=0)
 
-    label_path = os.path.join(CFG.fragment_root_dir, fragment_dir, "inklabels.png")
+    label_path = os.path.join(CFG.data_root_dir, fragment_dir, "inklabels.png")
     label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
 
     if label is None or label.shape[0] == 0:
@@ -123,7 +123,7 @@ def read_fragment(fragment_dir, fragment_id):
 
 
 def process_fragment(data_root_dir, fragment_id, data_type, progress_tracker):
-    create_dataset(data_root_dir, fragment_id, data_type)
+    create_dataset(target_dir=data_root_dir, fragment_id=fragment_id, data_type=data_type)
     progress_tracker.value += 1
 
 
@@ -169,7 +169,7 @@ def build_dataset(_cfg):
 def build_single_fold_dataset(_cfg):
     target_dir = write_config(_cfg=_cfg)
 
-    create_dataset(data_root_dir=target_dir, fragment_id=_cfg.single_train_frag_id)
+    create_dataset(target_dir=target_dir, fragment_id=_cfg.single_train_frag_id)
     create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
     plot_mean_std(target_dir)
 
@@ -197,21 +197,21 @@ def build_k_fold_dataset(_cfg):
     plot_mean_std(target_dir)
 
 
-def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
-    data_dir = os.path.join(data_root_dir, data_type)
+def create_dataset(target_dir, fragment_id=2, data_type='train'):
+    target_data_dir = os.path.join(target_dir, data_type)
 
-    img_path = os.path.join(data_dir, "images")
-    label_path = os.path.join(data_dir, "labels")
+    img_path = os.path.join(target_data_dir, "images")
+    label_path = os.path.join(target_data_dir, "labels")
     os.makedirs(img_path, exist_ok=True)
     os.makedirs(label_path, exist_ok=True)
 
-    fragment_dir = os.path.join(CFG.fragment_root_dir, "fragments", f"fragment{fragment_id}")
+    fragment_dir = os.path.join(CFG.data_root_dir, "fragments", f"fragment{fragment_id}")
     assert os.path.isdir(fragment_dir), "Fragment directory does not exist"
 
     mask_path = os.path.join(fragment_dir, "mask.png")
     assert os.path.isfile(mask_path), "Mask file does not exist for fragment"
 
-    images, label = read_fragment(fragment_dir, fragment_id)
+    images, label = read_fragment(fragment_dir)
 
     mask_arr = np.asarray(Image.open(mask_path))
 
@@ -222,11 +222,9 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
                         desc=f"{data_type.capitalize()} Dataset Fragment {fragment_id}: Processing images "
                              f"and labels")
 
-    skip_counter_full_black_in_patch = 0
-    skip_counter_unary_class_in_label = 0
-    skip_counter_low_ink_in_label = 0
+    # skip_counter_unary_class_in_label = 0
+    # skip_counter_low_ink_in_label = 0
     skip_counter_not_in_mask = 0
-    requirement = (128 ** 2) * 0.1
     segformer_output_dim = CFG.SEGFORMER_OUTPUT_DIM
 
     for y1 in y1_list:
@@ -237,13 +235,9 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
 
             img_patch = images[:, y1:y2, x1:x2]
 
-            if mask_arr[y1:y2, x1:x2].all() == 1:  # Patch is contained in mask
+            if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is contained in mask
                 skip_counter_not_in_mask += 1
-                continue
-
-            # Check that the train image is not full black
-            if img_patch.max() == 0:
-                skip_counter_full_black_in_patch += 1
+                # plot_2d_arrays(label=label[y1:y2, x1:x2], image=img_patch)
                 continue
 
             # Scale label down to match segformer output
@@ -251,13 +245,14 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
                                  anti_aliasing=False)
 
             # Check that the label has two classes
-            if len(np.unique(label_patch)) != 2:
-                skip_counter_unary_class_in_label += 1
-                continue
+            # if len(np.unique(label_patch)) != 2:
+            #     skip_counter_unary_class_in_label += 1
+            #     continue
 
             # Check that the label contains at least 10% ink
-            if label_patch.sum() <= requirement:
-                skip_counter_low_ink_in_label += 1
+            if label_patch.sum() >= np.prod(label_patch.shape) * 0.5:
+                # skip_counter_low_ink_in_label += 1
+                plot_2d_arrays(label=label[y1:y2, x1:x2], image=img_patch)
                 continue
 
             file_name = f"f{fragment_id}_{x1}_{y1}_{x2}_{y2}.npy"
@@ -269,14 +264,11 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
 
     progress_bar.close()
 
-    process_mean_and_std(images, data_type, fragment_id, data_root_dir)
+    process_mean_and_std(images, data_type, fragment_id, target_data_dir)
 
     del images, label
     gc.collect()
 
-    print("Patches skipped due to unary class in label:", skip_counter_unary_class_in_label)
-    print("Patches skipped due to full black in patch:", skip_counter_full_black_in_patch)
-    print("Patches skipped due to low ink in label:", skip_counter_low_ink_in_label)
     print("Patches skipped due to not in mask:", skip_counter_not_in_mask)
 
 
@@ -362,6 +354,36 @@ def merge_cfg_and_args(_args, _cfg):
         _cfg.k_fold = args.k_fold
 
 
+def plot_2d_arrays(label, image=None):
+    """
+    Plots one or two 2D numpy arrays as images. If two arrays are provided,
+    they are plotted side by side.
+
+    Parameters:
+    array_1 (numpy.ndarray): The first 2D numpy array.
+    array_2 (numpy.ndarray, optional): The second 2D numpy array. Default is None.
+
+    Returns:
+    None
+    """
+    if image is not None:
+        fig, axs = plt.subplots(1, 2, figsize=(12, 12))
+
+        axs[0].imshow(label, cmap='gray')
+        axs[0].set_title("Label")
+        axs[0].axis('off')
+
+        axs[1].imshow(image[12], cmap='gray')
+        axs[1].set_title("Image")
+        axs[1].axis('off')
+    else:
+        plt.imshow(label, cmap='gray')
+        plt.title("Label")
+        plt.axis('off')
+
+    plt.show()
+
+
 def plot_mean_std(data_root_dir):
     mean_std_path = os.path.join(data_root_dir, 'fragments_mean_std.json')
 
@@ -422,7 +444,6 @@ def plot_mean_std(data_root_dir):
     plt.show()
 
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Run k-fold or single train-val dataset creation.")
     parser.add_argument('--k_fold', type=bool, default=None,
@@ -439,5 +460,3 @@ if __name__ == '__main__':
 
     # Build dataset
     build_dataset(_cfg=config)
-
-

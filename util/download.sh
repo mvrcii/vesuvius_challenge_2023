@@ -8,6 +8,8 @@ credentials="$user:$password"
 hostname=$(hostname)
 if [[ "$hostname" == "Marcels-MBP.fritz.box" ]]; then
     baseOutputFolder="/Users/marcel/Documents/Git-Master/Private/kaggle1stReimp/data"
+elif [[ "$hostname" == "DESKTOP-LLUPIAQ" ]]; then
+baseOutputFolder="C:\Users\Marce\Git-Master\Privat\kaggle1stReimp\data"
 else
     baseOutputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data"
 fi
@@ -56,8 +58,8 @@ esac
 #         00019 00043 to get 24 slices
 ranges=(
     #"00023 00039"
-    "00019 00043"
-    #"00000 00064"
+#    "00019 00043"
+    "00000 00064"
 )
 overwriteExistingFiles=false
 
