@@ -9,7 +9,7 @@ class CFG:
     dataset_target_dir = os.path.join(data_root_dir, "datasets")
 
     # ============== model =============
-    in_chans = 16
+    in_chans = 64
     seg_pretrained = "nvidia/mit-b5"
     SEGFORMER_OUTPUT_DIM = (128, 128)
     """
@@ -22,12 +22,12 @@ class CFG:
 
     # ============== training =============
     device = 'cuda'
-    seed = 17
-    epochs = 100
+    seed = 42
+    epochs = 25
 
     # ========= optimizer =========
-    weight_decay = 0.01
-    lr = 1e-4
+    weight_decay = 0.05
+    lr = 1e-3
 
     # ============== dataset / dataloader =============
     calc_mean_std = False
@@ -42,8 +42,16 @@ class CFG:
 
     # k_fold fragment dataset creation
     k_fold = True
-    train_frag_ids = [2, 3, 4]
-    val_frag_ids = [1]
+
+    micha_frag = "20231024093300"
+    marcel_frag = "20230702185752"
+    first_letter_frags = ["20230522181603",
+                          # "20230702185752",
+                          "20230827161847", "20230904135535",
+                          "20230905134255", "20230909121925"]
+
+    train_frag_ids = [frag for frag in first_letter_frags]
+    val_frag_ids = [micha_frag, marcel_frag]
 
     # ============ dataloader =============
     dataset_fraction = 1
