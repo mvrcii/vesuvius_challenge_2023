@@ -359,18 +359,22 @@ def plot_2d_arrays(label, image=None):
     Returns:
     None
     """
-    if image is not None:
-        fig, axs = plt.subplots(1, 2, figsize=(12, 12))
+    dpi = 80.0
+    height, width = label.shape
+    figsize = width / float(dpi), height / float(dpi)
 
-        axs[0].imshow(label, cmap='gray')
+    if image is not None:
+        fig, axs = plt.subplots(1, 2, figsize=figsize)
+        axs[0].imshow(label, cmap='gray', interpolation='none')
         axs[0].set_title("Label")
         axs[0].axis('off')
 
-        axs[1].imshow(image[12], cmap='gray')
+        axs[1].imshow(image[12], cmap='gray', interpolation='none')
         axs[1].set_title("Image")
         axs[1].axis('off')
     else:
-        plt.imshow(label, cmap='gray')
+        plt.figure(figsize=figsize)
+        plt.imshow(label, cmap='gray', interpolation='none')
         plt.title("Label")
         plt.axis('off')
 
