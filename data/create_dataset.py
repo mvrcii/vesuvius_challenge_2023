@@ -269,9 +269,6 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
     del images, label
     gc.collect()
 
-    print("Patches skipped due to unary class in label:", skip_counter_unary_class_in_label)
-    print("Patches skipped due to full black in patch:", skip_counter_full_black_in_patch)
-    print("Patches skipped due to low ink in label:", skip_counter_low_ink_in_label)
     print("Patches skipped due to not in mask:", skip_counter_not_in_mask)
 
 
