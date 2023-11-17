@@ -1,23 +1,11 @@
+import os
+
 import albumentations as A
 
 
 class CFG:
-    local = False
-    marcel = False  # only relevant if local=True
-    marcel_mac = False
-
-    data_root_dir = "data/datasets"
-    fragment_root_dir = "/scratch/medfm/vesuv/kaggle1stReimp/data"
-    if local:
-        if marcel:
-            if marcel_mac:
-                fragment_root_dir = r"/Users/marcel/Documents/Git-Master/Private/kaggle1stReimp/data"
-            else:
-                fragment_root_dir = r"C:\Users\Marce\Git-Master\Privat\vesuv\data"
-        else:
-            fragment_root_dir = r"A:\projects_a\Python\vesuv\data"
-
-    data_out_path = "data/train"
+    data_root_dir = "/scratch/medfm/vesuv/kaggle1stReimp/data"
+    dataset_target_dir = os.path.join(data_root_dir, "datasets")
 
     # ============== model =============
     in_chans = 16
