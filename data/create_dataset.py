@@ -271,9 +271,9 @@ def create_dataset(dataset_information, fragment_id, data_type='train'):
                 # plot_2d_arrays(label=label_patch, image=img_patch)
                 continue
 
-            if label_patch.sum() >= np.prod(label_patch.shape) * 0.25:
-                plot_2d_arrays(label=label_patch, image=img_patch_resized)
-                continue
+            # if label_patch.sum() >= np.prod(label_patch.shape) * 0.25:
+            #     # plot_2d_arrays(label=label_patch, image=img_patch_resized)
+            #     continue
 
             file_name = f"f{fragment_id}_{x1}_{y1}_{x2}_{y2}.npy"
             img_file_path = os.path.join(img_path, file_name)

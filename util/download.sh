@@ -28,31 +28,31 @@ option=$1
 # Configuration based on option
 case $option in
     "frag1")
-        outputFolder="data/fragments/20230522181603/slices"
+        outputFolder="data/fragments/fragment20230522181603/slices"
         baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230522181603/layers/"
         ;;
     "frag2")
-        outputFolder="data/fragments/20230702185752_superseded/slices"
+        outputFolder="data/fragments/fragment20230702185752_superseded/slices"
         baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230702185752_superseded/layers/"
         ;;
     "frag3")
-        outputFolder="data/fragments/20230827161847/slices"
+        outputFolder="data/fragments/fragment20230827161847/slices"
         baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230827161847/layers/"
         ;;
     "frag4")
-        outputFolder="data/fragments/20230904135535/slices"
+        outputFolder="data/fragments/fragment20230904135535/slices"
         baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230904135535/layers/"
         ;;
     "frag5")
-        outputFolder="data/fragments/20230905134255/slices"
+        outputFolder="data/fragments/fragment20230905134255/slices"
         baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230905134255/layers/"
         ;;
     "frag6")
-        outputFolder="data/fragments/20230909121925/slices"
+        outputFolder="data/fragments/fragment20230909121925/slices"
         baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230909121925/layers/"
         ;;
     "frag7")
-        outputFolder="data/fragments/20231024093300/slices"
+        outputFolder="data/fragments/fragment20231024093300/slices"
         baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20231024093300/layers/"
         ;;
     *)
