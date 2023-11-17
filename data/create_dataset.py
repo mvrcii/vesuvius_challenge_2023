@@ -21,6 +21,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from conf import CFG
 from util.train_utils import load_config
 
+Image.MAX_IMAGE_PIXELS = None
+
 
 def write_dataset_cfg(path, **kwargs):
     os.makedirs(path, exist_ok=True)
@@ -81,12 +83,12 @@ def write_k_fold_cfg(_cfg):
     return path
 
 
-def read_fragment(fragment_dir, _cfg):
+def read_fragment(fragment_dir, data_root_dir, dataset_in_chans, patch_size):
     images = []
     pad0, pad1 = None, None
 
-    print(f"Using {_cfg.dataset_in_chans} channels for the dataset")
-    channels = calc_original_channel_ids(_cfg.dataset_in_chans)
+    print(f"Using {dataset_in_chans} channels for the dataset")
+    channels = calc_original_channel_ids(dataset_in_chans)
 
     for channel in tqdm(channels):
         img_path = os.path.join(fragment_dir, "slices", f"{channel:05}.tif")
@@ -98,14 +100,14 @@ def read_fragment(fragment_dir, _cfg):
             print("Image is empty or not loaded correctly:", img_path)
         assert 1 < np.asarray(image).max() <= 255, f"Invalid image"
 
-        pad0 = (_cfg.patch_size - image.shape[0] % _cfg.patch_size) % _cfg.patch_size
-        pad1 = (_cfg.patch_size - image.shape[1] % _cfg.patch_size) % _cfg.patch_size
+        pad0 = (patch_size - image.shape[0] % patch_size) % patch_size
+        pad1 = (patch_size - image.shape[1] % patch_size) % patch_size
         image = np.pad(image, [(0, pad0), (0, pad1)], constant_values=0)
 
         images.append(image)
     images = np.stack(images, axis=0)
 
-    label_path = os.path.join(_cfg.data_root_dir, fragment_dir, "inklabels.png")
+    label_path = os.path.join(data_root_dir, fragment_dir, "inklabels.png")
     label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
 
     if label is None or label.shape[0] == 0:
@@ -121,8 +123,9 @@ def read_fragment(fragment_dir, _cfg):
     return images, label
 
 
-def process_fragment(data_root_dir, fragment_id, data_type, cfg, progress_tracker):
-    create_dataset(target_dir=data_root_dir, fragment_id=fragment_id, _cfg=cfg, data_type=data_type)
+def process_fragment(dataset_information, fragment_id, data_type, progress_tracker):
+    print(f"\nStart processing fragment {fragment_id} for {data_type} dataset..")
+    create_dataset(dataset_information=dataset_information, fragment_id=fragment_id, data_type=data_type)
     progress_tracker.value += 1
 
 
@@ -149,7 +152,7 @@ def calc_original_channel_ids(channels):
 def validate_fragment_files(frag_id, channels):
     used_channels = calc_original_channel_ids(channels)
 
-    fragments_path = "data/fragments"
+    fragments_path = os.path.join("data", "fragments")
     frag_dir = os.path.join(fragments_path, f"fragment{frag_id}")
     if not os.path.isdir(frag_dir):
         raise NotADirectoryError(f"Required fragment directory '{frag_dir}' does not exist.")
@@ -170,7 +173,9 @@ def build_single_fold_dataset(_cfg):
 
     create_dataset(target_dir=target_dir, fragment_id=_cfg.single_train_frag_id, _cfg=_cfg)
     create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
-    plot_mean_std(target_dir)
+
+    if _cfg.calc_mean_std:
+        plot_mean_std(target_dir)
 
 
 def build_k_fold_dataset(_cfg):
@@ -180,8 +185,16 @@ def build_k_fold_dataset(_cfg):
         progress_tracker = manager.Value('i', 0)  # Shared integer for progress tracking
         total_tasks = len(_cfg.train_frag_ids) + len(_cfg.val_frag_ids)
 
-        all_args = [(target_dir, frag_id, 'train', _cfg, progress_tracker) for frag_id in _cfg.train_frag_ids]
-        all_args += [(target_dir, frag_id, 'val', _cfg, progress_tracker) for frag_id in _cfg.val_frag_ids]
+        dataset_information = {
+            "target_dir": target_dir,
+            "data_root_dir": _cfg.data_root_dir,
+            "dataset_in_chans": _cfg.dataset_in_chans,
+            "patch_size": _cfg.patch_size,
+            "calc_mean_std": _cfg.calc_mean_std
+        }
+
+        all_args = [(dataset_information, frag_id, 'train', progress_tracker) for frag_id in _cfg.train_frag_ids]
+        all_args += [(dataset_information, frag_id, 'val', progress_tracker) for frag_id in _cfg.val_frag_ids]
 
         with Pool() as pool:
             # Use asynchronous map with callback to update the progress
@@ -197,7 +210,13 @@ def build_k_fold_dataset(_cfg):
         plot_mean_std(target_dir)
 
 
-def create_dataset(target_dir, fragment_id, _cfg, data_type='train'):
+def create_dataset(dataset_information, fragment_id, data_type='train'):
+    target_dir = dataset_information["target_dir"]
+    data_root_dir = dataset_information["data_root_dir"]
+    dataset_in_chans = dataset_information["dataset_in_chans"]
+    patch_size = dataset_information["patch_size"]
+    calc_mean_std = dataset_information["calc_mean_std"]
+
     target_data_dir = os.path.join(target_dir, data_type)
 
     img_path = os.path.join(target_data_dir, "images")
@@ -205,13 +224,15 @@ def create_dataset(target_dir, fragment_id, _cfg, data_type='train'):
     os.makedirs(img_path, exist_ok=True)
     os.makedirs(label_path, exist_ok=True)
 
-    fragment_dir = os.path.join(_cfg.data_root_dir, "fragments", f"fragment{fragment_id}")
-    assert os.path.isdir(fragment_dir), "Fragment directory does not exist"
+    fragment_dir = os.path.join(data_root_dir, "fragments", f"fragment{fragment_id}")
+    if not os.path.isdir(fragment_dir):
+        raise ValueError(f"Fragment directory does not exist: {fragment_dir}")
 
     mask_path = os.path.join(fragment_dir, f"mask.png")
-    assert os.path.isfile(mask_path), "Mask file does not exist for fragment"
+    if not os.path.isfile(mask_path):
+        raise ValueError(f"Mask file does not exist for fragment: {mask_path}")
 
-    images, label = read_fragment(fragment_dir, _cfg=_cfg)
+    images, label = read_fragment(fragment_dir, data_root_dir, dataset_in_chans, patch_size)
 
     mask_arr = np.asarray(Image.open(mask_path))
 
@@ -233,18 +254,25 @@ def create_dataset(target_dir, fragment_id, _cfg, data_type='train'):
 
             img_patch = images[:, y1:y2, x1:x2]
 
-            if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is contained in mask
+            if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
                 skip_counter_not_in_mask += 1
                 # plot_2d_arrays(label=label[y1:y2, x1:x2], image=img_patch)
                 continue
 
             # Scale label down to match segformer output
-            label_patch = resize(label[y1:y2, x1:x2], segformer_output_dim, order=0, preserve_range=True,
+            label_patch = resize(label[y1:y2, x1:x2], (128, 128), order=0, preserve_range=True,
+                                 anti_aliasing=False)
+
+            img_patch_resized = resize(images[:, y1:y2, x1:x2], (64, 128, 128), order=0, preserve_range=True,
                                  anti_aliasing=False)
 
             # Check that the label contains at least 10% ink
-            if label_patch.sum() >= np.prod(label_patch.shape) * 0.5:
-                plot_2d_arrays(label=label[y1:y2, x1:x2], image=img_patch)
+            if label_patch.sum() < np.prod(label_patch.shape) * CFG.REQUIRED_LABEL_INK_PERCENTAGE:
+                # plot_2d_arrays(label=label_patch, image=img_patch)
+                continue
+
+            if label_patch.sum() >= np.prod(label_patch.shape) * 0.25:
+                plot_2d_arrays(label=label_patch, image=img_patch_resized)
                 continue
 
             file_name = f"f{fragment_id}_{x1}_{y1}_{x2}_{y2}.npy"
@@ -256,7 +284,7 @@ def create_dataset(target_dir, fragment_id, _cfg, data_type='train'):
 
     progress_bar.close()
 
-    if _cfg.calc_mean_std:
+    if calc_mean_std:
         process_mean_and_std(images, data_type, fragment_id, target_data_dir)
 
     del images, label
@@ -359,9 +387,7 @@ def plot_2d_arrays(label, image=None):
     Returns:
     None
     """
-    dpi = 80.0
-    height, width = label.shape
-    figsize = width / float(dpi), height / float(dpi)
+    figsize = 15, 15
 
     if image is not None:
         fig, axs = plt.subplots(1, 2, figsize=figsize)
@@ -369,7 +395,7 @@ def plot_2d_arrays(label, image=None):
         axs[0].set_title("Label")
         axs[0].axis('off')
 
-        axs[1].imshow(image[12], cmap='gray', interpolation='none')
+        axs[1].imshow(image[33], cmap='gray', interpolation='none')
         axs[1].set_title("Image")
         axs[1].axis('off')
     else:

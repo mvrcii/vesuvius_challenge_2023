@@ -39,10 +39,11 @@ def main():
     trainer = Trainer(
         max_epochs=CFG.epochs,
         logger=wandb_logger,
-        callbacks=[LearningRateMonitor(logging_interval='step'), checkpoint_callback],
+        callbacks=[LearningRateMonitor(logging_interval='epoch'), checkpoint_callback],
         accelerator="auto",
         devices=devices,
-        enable_progress_bar=True
+        enable_progress_bar=True,
+        # log_every_n_steps=5,
     )
 
     trainer.fit(model, data_module)
