@@ -31,7 +31,7 @@ class CFG:
 
     # ============== dataset / dataloader =============
     calc_mean_std = False
-    dataset_in_chans = 24
+    dataset_in_chans = 64
     patch_size = 512
     stride = patch_size // 2
     REQUIRED_LABEL_INK_PERCENTAGE = 0.1
