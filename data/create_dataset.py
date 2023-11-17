@@ -123,7 +123,7 @@ def read_fragment(fragment_dir):
 
 
 def process_fragment(data_root_dir, fragment_id, data_type, progress_tracker):
-    create_dataset(data_root_dir, fragment_id, data_type)
+    create_dataset(target_dir=data_root_dir, fragment_id=fragment_id, data_type=data_type)
     progress_tracker.value += 1
 
 
@@ -169,7 +169,7 @@ def build_dataset(_cfg):
 def build_single_fold_dataset(_cfg):
     target_dir = write_config(_cfg=_cfg)
 
-    create_dataset(data_root_dir=target_dir, fragment_id=_cfg.single_train_frag_id)
+    create_dataset(target_dir=target_dir, fragment_id=_cfg.single_train_frag_id)
     create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
     plot_mean_std(target_dir)
 
@@ -197,11 +197,11 @@ def build_k_fold_dataset(_cfg):
     plot_mean_std(target_dir)
 
 
-def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
-    data_dir = os.path.join(data_root_dir, data_type)
+def create_dataset(target_dir, fragment_id=2, data_type='train'):
+    target_data_dir = os.path.join(target_dir, data_type)
 
-    img_path = os.path.join(data_dir, "images")
-    label_path = os.path.join(data_dir, "labels")
+    img_path = os.path.join(target_data_dir, "images")
+    label_path = os.path.join(target_data_dir, "labels")
     os.makedirs(img_path, exist_ok=True)
     os.makedirs(label_path, exist_ok=True)
 
@@ -264,7 +264,7 @@ def create_dataset(data_root_dir, fragment_id=2, data_type='train'):
 
     progress_bar.close()
 
-    process_mean_and_std(images, data_type, fragment_id, data_root_dir)
+    process_mean_and_std(images, data_type, fragment_id, target_data_dir)
 
     del images, label
     gc.collect()
