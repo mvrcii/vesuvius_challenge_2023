@@ -10,7 +10,7 @@ class CFG:
 
     # ============== model =============
     in_chans = 64
-    seg_pretrained = "nvidia/mit-b5"
+    seg_pretrained = "nvidia/mit-b3"
     SEGFORMER_OUTPUT_DIM = (128, 128)
     """
     V-Ram Usage:
@@ -33,7 +33,7 @@ class CFG:
     calc_mean_std = False
     dataset_in_chans = 64
     patch_size = 512
-    stride = patch_size // 2
+    stride = patch_size // 4
     REQUIRED_LABEL_INK_PERCENTAGE = 0.1
 
     # single fragment dataset creation
@@ -45,19 +45,29 @@ class CFG:
 
     micha_frag = "20231024093300"
     marcel_frag = "20230702185752"
-    first_letter_frags = ["20230522181603",
-                          # "20230702185752",
-                          "20230827161847", "20230904135535",
-                          "20230905134255", "20230909121925"]
 
-    train_frag_ids = [frag for frag in first_letter_frags]
-    val_frag_ids = [micha_frag, marcel_frag]
+    # train_frag_ids = [
+    #     "20230702185752",
+    #     "20230827161847",
+    #     "20230904135535",
+    #     "20230905134255",
+    #     "20230909121925"
+    # ]
+    # val_frag_ids = ["20230522181603"]
+
+    train_frag_ids = [
+        "20230522181603",
+        "20230827161847",
+        "20230904135535",
+        "20230905134255",
+        "20230909121925"]
+    val_frag_ids = ["20230702185752"]
 
     # ============ dataloader =============
     dataset_fraction = 1
-    num_workers = 2
-    train_batch_size = 2  # 32
-    val_batch_size = 4
+    num_workers = 10
+    train_batch_size = 32  # 32
+    val_batch_size = 32
 
     # ============== augmentation =============
     use_cutmix = False
@@ -72,7 +82,7 @@ class CFG:
             A.RandomRotate90(),
             A.Transpose(),
         ], p=0.5),
-        # A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
+        A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
     ]
 
     train_image_aug = [
@@ -91,5 +101,5 @@ class CFG:
     ]
 
     val_image_aug = [
-        # A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
+        A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
     ]
