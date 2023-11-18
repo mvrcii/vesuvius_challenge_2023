@@ -10,7 +10,7 @@ class CFG:
 
     # ============== model =============
     in_chans = 64
-    seg_pretrained = "nvidia/mit-b3"
+    seg_pretrained = "nvidia/mit-b0"
     SEGFORMER_OUTPUT_DIM = (128, 128)
     """
     V-Ram Usage:
@@ -23,11 +23,11 @@ class CFG:
     # ============== training =============
     device = 'cuda'
     seed = 42
-    epochs = 25
+    epochs = 50
 
     # ========= optimizer =========
-    weight_decay = 0.05
-    lr = 1e-3
+    weight_decay = 0.01
+    lr = 1e-4
 
     # ============== dataset / dataloader =============
     calc_mean_std = False
@@ -64,10 +64,10 @@ class CFG:
     val_frag_ids = ["20230702185752"]
 
     # ============ dataloader =============
-    dataset_fraction = 1
-    num_workers = 10
-    train_batch_size = 8  # 32
-    val_batch_size = 8
+    dataset_fraction = 0.4
+    num_workers = 4
+    train_batch_size = 4  # 32
+    val_batch_size = 4
 
     # ============== augmentation =============
     use_cutmix = False
