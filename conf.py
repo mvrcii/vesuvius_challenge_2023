@@ -23,28 +23,28 @@ class CFG:
     # ============== training =============
     device = 'cuda'
     seed = 3
-    epochs = 50
+    epochs = 100
 
     # ========= optimizer =========
     weight_decay = 0.01
-    lr = 2e-3
+    lr = 2e-4
 
     # ============== dataset / dataloader =============
     calc_mean_std = False
     dataset_in_chans = 64
     patch_size = 512  # 64
-    stride = patch_size // 4  # 64 / 2 = 32
-    REQUIRED_LABEL_INK_PERCENTAGE = 0.01
-
-    # single fragment dataset creation
-    single_train_frag_id = 2
-    train_split = 0.8
-
-    # k_fold fragment dataset creation
-    k_fold = True
+    stride = patch_size // 2  # 64 / 2 = 32
+    REQUIRED_LABEL_INK_PERCENTAGE = 0.05
 
     micha_frag = "20231024093300"
     marcel_frag = "20230702185752"
+
+    # single fragment dataset creation
+    single_train_frag_id = micha_frag
+    train_split = 0.8
+
+    # k_fold fragment dataset creation
+    k_fold = False
 
     # train_frag_ids = [
     #     "20230702185752",
@@ -66,7 +66,7 @@ class CFG:
     # ============ dataloader =============
     dataset_fraction = 1
     num_workers = 4
-    train_batch_size = 4  # 32
+    train_batch_size = 2  # 32
     val_batch_size = 4
 
     # ============== augmentation =============
