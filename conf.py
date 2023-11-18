@@ -10,7 +10,7 @@ class CFG:
 
     # ============== model =============
     in_chans = 64
-    seg_pretrained = "nvidia/mit-b0"
+    seg_pretrained = "nvidia/mit-b2"
     SEGFORMER_OUTPUT_DIM = (128, 128)
     """
     V-Ram Usage:
@@ -87,7 +87,8 @@ class CFG:
 
     train_image_aug = [
         # TODO: CRASHING -> Resizing doesn't work with those augmentations somehow
-        # A.RandomResizedCrop(height=size, width=size, p=0.5),
+        # Scale = Percentage of images (min, max); Ratio (1, 1) = Square Crop
+        A.RandomResizedCrop(height=patch_size, width=patch_size, scale=(0.4, 0.9), ratio=(1, 1), p=0.5),
         # A.OneOf([
         #     A.OpticalDistortion(p=0.5),
         #     A.GridDistortion(p=0.5),
