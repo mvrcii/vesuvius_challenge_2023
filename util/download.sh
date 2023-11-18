@@ -18,7 +18,7 @@ fi
 # Check if an argument is provided
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <option>"
-    echo "Options: frag1, frag2, frag3, frag4, frag5, frag6, frag7"
+    echo "Options: frag1, frag2, frag3, frag4, frag5, frag6, frag7, frag8"
     exit 1
 fi
 
@@ -55,9 +55,13 @@ case $option in
         outputFolder="data/fragments/fragment20231024093300/slices"
         baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20231024093300/layers/"
         ;;
+    "frag8")
+        outputFolder="data/fragments/fragment20231016151000/slices"
+        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20231016151000/layers/"
+        ;;
     *)
         echo "Invalid option: $option"
-        echo "Valid options: frag1, frag2, frag3, frag4, frag5, frag6, frag7"
+        echo "Valid options: frag1, frag2, frag3, frag4, frag5, frag6, frag7, frag8"
         exit 1
         ;;
 esac
