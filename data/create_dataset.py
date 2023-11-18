@@ -171,7 +171,15 @@ def build_dataset(_cfg):
 def build_single_fold_dataset(_cfg):
     target_dir = write_config(_cfg=_cfg)
 
-    create_dataset(target_dir=target_dir, fragment_id=_cfg.single_train_frag_id, _cfg=_cfg)
+    dataset_information = {
+        "target_dir": target_dir,
+        "data_root_dir": _cfg.data_root_dir,
+        "dataset_in_chans": _cfg.dataset_in_chans,
+        "patch_size": _cfg.patch_size,
+        "calc_mean_std": _cfg.calc_mean_std
+    }
+
+    create_dataset(dataset_information=dataset_information, fragment_id=_cfg.single_train_frag_id)
     create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
 
     if _cfg.calc_mean_std:
