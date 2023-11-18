@@ -66,8 +66,8 @@ class CFG:
     # ============ dataloader =============
     dataset_fraction = 1
     num_workers = 10
-    train_batch_size = 32  # 32
-    val_batch_size = 32
+    train_batch_size = 8  # 32
+    val_batch_size = 8
 
     # ============== augmentation =============
     use_cutmix = False
