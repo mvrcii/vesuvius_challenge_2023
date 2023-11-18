@@ -40,7 +40,7 @@ class CFG:
     marcel_frag = "20230702185752"
 
     # single fragment dataset creation
-    single_train_frag_id = micha_frag
+    single_train_frag_id = [micha_frag, marcel_frag]
     train_split = 0.8
 
     # k_fold fragment dataset creation
