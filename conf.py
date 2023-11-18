@@ -10,7 +10,7 @@ class CFG:
 
     # ============== model =============
     in_chans = 64
-    seg_pretrained = "nvidia/mit-b0"
+    seg_pretrained = "nvidia/mit-b2"
     SEGFORMER_OUTPUT_DIM = (128, 128)
     """
     V-Ram Usage:
