@@ -32,9 +32,9 @@ class CFG:
     # ============== dataset / dataloader =============
     calc_mean_std = False
     dataset_in_chans = 64
-    patch_size = 512
-    stride = patch_size // 4
-    REQUIRED_LABEL_INK_PERCENTAGE = 0.1
+    patch_size = 512  # 64
+    stride = patch_size // 4  # 64 / 2 = 32
+    REQUIRED_LABEL_INK_PERCENTAGE = 0.01
 
     # single fragment dataset creation
     single_train_frag_id = 2
