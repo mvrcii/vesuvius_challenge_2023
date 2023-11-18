@@ -11,6 +11,7 @@ from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 
 from conf import CFG
+from util.train_utils import load_config
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -19,23 +20,23 @@ from conf import CFG
 '''
 
 
-def read_fragment(fragment_id):
+def read_fragment(fragment_id, cfg):
     images = []
 
     mid = 65 // 2
 
-    start = mid - CFG.in_chans // 2
-    end = mid + CFG.in_chans // 2
+    start = mid - cfg.in_chans // 2
+    end = mid + cfg.in_chans // 2
     idxs = range(start, end)
 
     for i in tqdm(idxs):
-        img_path = os.path.join(CFG.data_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+        img_path = os.path.join(cfg.data_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image"
 
-        pad0 = (CFG.patch_size - image.shape[0] % CFG.patch_size) % CFG.patch_size
-        pad1 = (CFG.patch_size - image.shape[1] % CFG.patch_size) % CFG.patch_size
+        pad0 = (cfg.patch_size - image.shape[0] % cfg.patch_size) % cfg.patch_size
+        pad1 = (cfg.patch_size - image.shape[1] % cfg.patch_size) % cfg.patch_size
 
         image = np.pad(image, [(0, pad0), (0, pad1)], constant_values=0)
 
@@ -52,11 +53,11 @@ def read_fragment(fragment_id):
     return images
 
 
-def infer_full_fragment(fragment_index, checkpoint_path):
-    images = read_fragment(fragment_index)
+def infer_full_fragment(fragment_index, checkpoint_path, cfg):
+    images = read_fragment(fragment_index, cfg)
 
     # Load your model
-    model = SegformerForSemanticSegmentation.from_pretrained(CFG.seg_pretrained, num_labels=1, num_channels=16,
+    model = SegformerForSemanticSegmentation.from_pretrained(cfg.seg_pretrained, num_labels=1, num_channels=16,
                                                              ignore_mismatched_sizes=True)
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
@@ -121,8 +122,10 @@ if __name__ == '__main__':
     checkpoint_path = sys.argv[1]
     fragment_num = sys.argv[2]
 
+    cfg = load_config(CFG)
+
     # inference
-    result = infer_full_fragment(fragment_num, checkpoint_path)
+    result = infer_full_fragment(fragment_num, checkpoint_path, cfg)
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     results_dir = os.path.join("inference", "results", f"fragment{fragment_num}", date_time_string)
@@ -140,9 +143,4 @@ if __name__ == '__main__':
 
     print("Saved results to", results_dir)
     # save raw output
-    # np.save(f"frag_{fragment_num}_{date_time_string}result.npy", result)
-
-    if CFG.local:
-        plt.imshow(result, cmap='gray')
-        plt.imshow(result > 0.5, cmap='gray')
-        plt.show()
+    np.save(f"frag_{fragment_num}_{date_time_string}result.npy", result)
