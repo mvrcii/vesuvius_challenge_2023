@@ -10,7 +10,7 @@ class CFG:
 
     # ============== model =============
     in_chans = 64
-    seg_pretrained = "nvidia/mit-b2"
+    seg_pretrained = "nvidia/mit-b0"
     SEGFORMER_OUTPUT_DIM = (128, 128)
     """
     V-Ram Usage:
@@ -27,7 +27,7 @@ class CFG:
 
     # ========= optimizer =========
     weight_decay = 0.01
-    lr = 1e-4
+    lr = 2e-3
 
     # ============== dataset / dataloader =============
     calc_mean_std = False
