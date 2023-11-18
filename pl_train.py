@@ -1,5 +1,8 @@
+import importlib.util
+import os
+import pprint
 from datetime import datetime
-
+import sys
 import torch
 from lightning import seed_everything
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
@@ -11,7 +14,7 @@ from pl_segformer_datamodule import SegFormerDataModule
 from util.config_handler import save_config, load_config
 from util.train_utils import get_device_configuration, get_data_root_dir
 from pl_segformer_lightning import SegFormerLightningModule
-from util.train_utils import get_device_configuration, get_data_root_dir, load_config
+torch.set_float32_matmul_precision('medium')
 
 
 def main():
