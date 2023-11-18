@@ -10,6 +10,7 @@ from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 
 from conf import CFG
+from util.train_utils import load_config
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -51,8 +52,8 @@ def read_fragment(fragment_id):
     return images
 
 
-def infer_full_fragment(fragment_index, checkpoint_path):
-    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b5", num_labels=1, num_channels=16,
+def infer_full_fragment(fragment_index, checkpoint_path, cfg):
+    model = SegformerForSemanticSegmentation.from_pretrained(cfg.seg_pretrained, num_labels=1, num_channels=cfg.in_chans,
                                                              ignore_mismatched_sizes=True)
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
@@ -64,9 +65,9 @@ def infer_full_fragment(fragment_index, checkpoint_path):
     images = read_fragment(fragment_index)
 
     # Define the size of the patches
-    patch_size = 512
+    patch_size = cfg.patch_size
     expected_patch_shape = (CFG.in_chans, patch_size, patch_size)
-    patch_size_out = 128
+    patch_size_out = cfg.SEGFORMER_OUTPUT_DIM[0]
 
     margin = int(0.1 * patch_size_out)
     mask = np.ones((patch_size_out, patch_size_out), dtype=bool)
@@ -137,11 +138,13 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Usage: python infer_full_fragment.py <checkpoint_path> <fragment_num>")
 
+    cfg = load_config(CFG)
+
     checkpoint_path = sys.argv[1]
     fragment_num = sys.argv[2]
 
     # inference
-    result = infer_full_fragment(fragment_num, checkpoint_path)
+    result = infer_full_fragment(fragment_num, checkpoint_path, cfg)
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     results_dir = os.path.join("inference", "results", f"fragment{fragment_num}", date_time_string)
@@ -160,8 +163,3 @@ if __name__ == '__main__':
     print("Saved results to", results_dir)
     # save raw output
     np.save(os.path.join(results_dir, f"frag_{fragment_num}_{date_time_string}result.npy"), result)
-
-    if CFG.local:
-        plt.imshow(result, cmap='gray')
-        plt.imshow(result > 0.5, cmap='gray')
-        plt.show()

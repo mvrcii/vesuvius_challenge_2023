@@ -57,7 +57,7 @@ def infer_full_fragment(fragment_index, checkpoint_path, cfg):
     images = read_fragment(fragment_index, cfg)
 
     # Load your model
-    model = SegformerForSemanticSegmentation.from_pretrained(cfg.seg_pretrained, num_labels=1, num_channels=16,
+    model = SegformerForSemanticSegmentation.from_pretrained(cfg.seg_pretrained, num_labels=1, num_channels=cfg.in_chans,
                                                              ignore_mismatched_sizes=True)
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
