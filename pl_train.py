@@ -18,11 +18,9 @@ torch.set_float32_matmul_precision('medium')
 
 
 def main():
-    cfg = load_config(CFG)
+    cfg = CFG()
 
-    torch.set_float32_matmul_precision('medium')
-
-    seed_value = CFG.seed
+    seed_value = cfg.seed
     seed_everything(seed_value)
 
     wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
