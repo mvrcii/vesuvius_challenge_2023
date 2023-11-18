@@ -1,4 +1,3 @@
-import argparse
 import gc
 import json
 import logging
@@ -6,7 +5,6 @@ import os
 import random
 import shutil
 import sys
-import time
 from multiprocessing import Manager, Pool
 
 import cv2
@@ -16,10 +14,10 @@ from matplotlib import pyplot as plt
 from skimage.transform import resize
 from tqdm import tqdm
 
+from config_handler import Config
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from conf import CFG
-from util.train_utils import load_config
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -42,19 +40,19 @@ def write_config(_cfg):
 def write_single_fold_cfg(_cfg):
     logging.info("Starting single-fold dataset creation process...")
     result_dir_name = f'single_fold_{str(_cfg.patch_size)}px_{str(_cfg.dataset_in_chans)}ch'
-    path = os.path.join(_cfg.dataset_target_dir, result_dir_name)
+    path = os.path.join(_cfg.dataset_target_dir,  result_dir_name)
 
     channel_ids = calc_original_channel_ids(_cfg.dataset_in_chans)
 
     write_dataset_cfg(path,
-                      single_train_frag_ids=_cfg.single_train_frag_id,
+                      single_train_frag_ids=_cfg.train_frag_ids,
                       patch_size=_cfg.patch_size,
                       channels=_cfg.dataset_in_chans,
                       channel_ids=channel_ids,
                       mode='single_fold')
 
     logging.info(f"Data root directory for single-fold dataset: {path}")
-    logging.info(f"Creating single-fold dataset with fragment ids {_cfg.single_train_frag_id}")
+    logging.info(f"Creating single-fold dataset with fragment ids {_cfg.train_frag_ids}")
 
     return path
 
@@ -83,11 +81,10 @@ def write_k_fold_cfg(_cfg):
     return path
 
 
-def read_fragment(fragment_dir, data_root_dir, dataset_in_chans, patch_size):
+def read_fragment(fragment_dir, dataset_in_chans, patch_size):
     images = []
     pad0, pad1 = None, None
 
-    print(f"Using {dataset_in_chans} channels for the dataset")
     channels = calc_original_channel_ids(dataset_in_chans)
 
     for channel in tqdm(channels):
@@ -107,7 +104,12 @@ def read_fragment(fragment_dir, data_root_dir, dataset_in_chans, patch_size):
         images.append(image)
     images = np.stack(images, axis=0)
 
-    label_path = os.path.join(data_root_dir, fragment_dir, "inklabels.png")
+    label_path = os.path.join(fragment_dir, "inklabels.png")
+
+    if not os.path.isfile(label_path):
+        print("Label file not found:", label_path)
+        sys.exit(1)
+
     label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
 
     if label is None or label.shape[0] == 0:
@@ -124,19 +126,19 @@ def read_fragment(fragment_dir, data_root_dir, dataset_in_chans, patch_size):
 
 
 def process_fragment(dataset_information, fragment_id, data_type, progress_tracker):
-    print(f"\nStart processing fragment {fragment_id} for {data_type} dataset..")
-    create_dataset(dataset_information=dataset_information, fragment_ids=[fragment_id], data_type=data_type)
-    progress_tracker.value += 1
+    try:
+        patch_count = create_dataset(dataset_information=dataset_information, fragment_ids=[fragment_id], data_type=data_type)
+        progress_tracker.value += 1
+
+        return {"fragment_id": fragment_id, "patch_count": patch_count}
+    except Exception as e:
+        return {"fragment_id": fragment_id, "error": e}
 
 
 def validate_fragments(_cfg):
     try:
-        if _cfg.k_fold:
-            for frag_id in _cfg.train_frag_ids:
-                validate_fragment_files(frag_id=frag_id, channels=_cfg.dataset_in_chans)
-        else:
-            for frag_id in _cfg.single_train_frag_id:
-                validate_fragment_files(frag_id=frag_id, channels=_cfg.dataset_in_chans)
+        for frag_id in _cfg.train_frag_ids:
+            validate_fragment_files(frag_id=frag_id, channels=_cfg.dataset_in_chans)
 
     except (FileNotFoundError, NotADirectoryError) as e:
         print(f"Error: {e}")
@@ -170,6 +172,7 @@ def build_dataset(_cfg):
 
 
 def build_single_fold_dataset(_cfg):
+    print("Dataset Type: Single-Fold")
     target_dir = write_config(_cfg=_cfg)
 
     dataset_information = {
@@ -177,11 +180,34 @@ def build_single_fold_dataset(_cfg):
         "data_root_dir": _cfg.data_root_dir,
         "dataset_in_chans": _cfg.dataset_in_chans,
         "patch_size": _cfg.patch_size,
+        "stride": _cfg.stride,
+        "ink_ratio": _cfg.ink_ratio,
         "calc_mean_std": _cfg.calc_mean_std
     }
 
-    create_dataset(dataset_information=dataset_information, fragment_ids=_cfg.single_train_frag_id)
-    create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
+    with Manager() as manager:
+        progress_tracker = manager.Value('i', 0)
+
+        # Prepare arguments for multiprocessing
+        all_args = [(dataset_information, frag_id, 'train', progress_tracker) for frag_id in _cfg.train_frag_ids]
+
+        with Pool() as pool:
+            result = pool.starmap_async(process_fragment, all_args)
+            results = result.get()
+
+        patch_counts = {}
+        for res in results:
+            if "error" in res:
+                print(f"Error in fragment {res['fragment_id']}: {res['error']}")
+                continue
+
+            fragment_id = res["fragment_id"]
+            patch_count = res["patch_count"]
+            patch_counts[fragment_id] = patch_count
+
+        print("Patch counts per fragment:", patch_counts)
+
+        create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
 
     if _cfg.calc_mean_std:
         plot_mean_std(target_dir)
@@ -189,6 +215,7 @@ def build_single_fold_dataset(_cfg):
 
 def build_k_fold_dataset(_cfg):
     target_dir = write_config(_cfg=_cfg)
+    print("Dataset Type: K-Fold")
 
     with Manager() as manager:
         progress_tracker = manager.Value('i', 0)  # Shared integer for progress tracking
@@ -199,6 +226,8 @@ def build_k_fold_dataset(_cfg):
             "data_root_dir": _cfg.data_root_dir,
             "dataset_in_chans": _cfg.dataset_in_chans,
             "patch_size": _cfg.patch_size,
+            "stride": _cfg.stride,
+            "ink_ratio": _cfg.ink_ratio,
             "calc_mean_std": _cfg.calc_mean_std
         }
 
@@ -206,14 +235,20 @@ def build_k_fold_dataset(_cfg):
         all_args += [(dataset_information, frag_id, 'val', progress_tracker) for frag_id in _cfg.val_frag_ids]
 
         with Pool() as pool:
-            # Use asynchronous map with callback to update the progress
             result = pool.starmap_async(process_fragment, all_args)
+            results = result.get()
 
-            while not result.ready():
-                time.sleep(1)  # Update interval
-                print(f"\rProgress: {progress_tracker.value}/{total_tasks}", end="")
+        patch_counts = {}
+        for res in results:
+            if "error" in res:
+                print(f"Error in fragment {res['fragment_id']}: {res['error']}")
+                continue
 
-        print("\nAll tasks completed.")
+            fragment_id = res["fragment_id"]
+            patch_count = res["patch_count"]
+            patch_counts[fragment_id] = patch_count
+
+    print("Patch counts per fragment:", patch_counts)
 
     if _cfg.calc_mean_std:
         plot_mean_std(target_dir)
@@ -224,6 +259,8 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
     data_root_dir = dataset_information["data_root_dir"]
     dataset_in_chans = dataset_information["dataset_in_chans"]
     patch_size = dataset_information["patch_size"]
+    stride = dataset_information["stride"]
+    ink_ratio = dataset_information["ink_ratio"]
     calc_mean_std = dataset_information["calc_mean_std"]
 
     target_data_dir = os.path.join(target_dir, data_type)
@@ -233,8 +270,11 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
     os.makedirs(img_path, exist_ok=True)
     os.makedirs(label_path, exist_ok=True)
 
+    total_patch_count = 0
+
     for frag_id in fragment_ids:
         fragment_dir = os.path.join(data_root_dir, "fragments", f"fragment{frag_id}")
+
         if not os.path.isdir(fragment_dir):
             raise ValueError(f"Fragment directory does not exist: {fragment_dir}")
 
@@ -242,47 +282,37 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         if not os.path.isfile(mask_path):
             raise ValueError(f"Mask file does not exist for fragment: {mask_path}")
 
-        images, label = read_fragment(fragment_dir, data_root_dir, dataset_in_chans, patch_size)
+        images, label = read_fragment(fragment_dir, dataset_in_chans, patch_size)
 
         mask_arr = np.asarray(Image.open(mask_path))
 
-        x1_list = list(range(0, images.shape[2] - CFG.patch_size + 1, CFG.stride))
-        y1_list = list(range(0, images.shape[1] - CFG.patch_size + 1, CFG.stride))
+        x1_list = list(range(0, images.shape[2] - patch_size + 1, stride))
+        y1_list = list(range(0, images.shape[1] - patch_size + 1, stride))
 
         progress_bar = tqdm(total=len(x1_list) * len(y1_list),
                             desc=f"{data_type.capitalize()} Dataset Fragment {frag_id}: Processing images "
                                  f"and labels")
 
-        skip_counter_not_in_mask = 0
+        patch_count_for_fragment = 0
 
         for y1 in y1_list:
             for x1 in x1_list:
-                y2 = y1 + CFG.patch_size
-                x2 = x1 + CFG.patch_size
+                y2 = y1 + patch_size
+                x2 = x1 + patch_size
                 progress_bar.update(1)
 
                 img_patch = images[:, y1:y2, x1:x2]
 
                 if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
-                    skip_counter_not_in_mask += 1
-                    # plot_2d_arrays(label=label[y1:y2, x1:x2], image=img_patch)
                     continue
 
                 # Scale label down to match segformer output
                 label_patch = resize(label[y1:y2, x1:x2], (128, 128), order=0, preserve_range=True,
                                      anti_aliasing=False)
 
-                img_patch_resized = resize(images[:, y1:y2, x1:x2], (64, 128, 128), order=0, preserve_range=True,
-                                     anti_aliasing=False)
-
                 # Check that the label contains at least 10% ink
-                if label_patch.sum() < np.prod(label_patch.shape) * CFG.REQUIRED_LABEL_INK_PERCENTAGE:
-                    # plot_2d_arrays(label=label_patch, image=img_patch)
+                if label_patch.sum() < np.prod(label_patch.shape) * ink_ratio:
                     continue
-
-                # if label_patch.sum() >= np.prod(label_patch.shape) * 0.25:
-                #     # plot_2d_arrays(label=label_patch, image=img_patch_resized)
-                #     continue
 
                 file_name = f"f{frag_id}_{x1}_{y1}_{x2}_{y2}.npy"
                 img_file_path = os.path.join(img_path, file_name)
@@ -290,6 +320,10 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
 
                 np.save(img_file_path, img_patch)
                 np.save(label_file_path, label_patch)
+
+                patch_count_for_fragment += 1
+
+        total_patch_count += patch_count_for_fragment
 
         progress_bar.close()
 
@@ -299,7 +333,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         del images, label
         gc.collect()
 
-        print("Patches skipped due to not in mask:", skip_counter_not_in_mask)
+        return total_patch_count
 
 
 def process_mean_and_std(images, data_type, frag_id, data_root_dir):
@@ -373,15 +407,6 @@ def create_single_val_dataset(data_root_dir, train_split=0.8):
     move_files(train_label_dir, val_label_dir, selected_files, pbar=progress_bar)
 
     progress_bar.close()
-
-
-def merge_cfg_and_args(_args, _cfg):
-    # Load config and eventually merge local config
-    _cfg = load_config(CFG)
-
-    if _args.k_fold is not None:
-        logging.info(f"K-fold dataset creation mode set to {_cfg.k_fold} from command line argument.")
-        _cfg.k_fold = args.k_fold
 
 
 def plot_2d_arrays(label, image=None):
@@ -476,19 +501,20 @@ def plot_mean_std(data_root_dir):
     plt.show()
 
 
+def get_sys_args():
+    if len(sys.argv) < 2:
+        print("Usage: python ./data/create_dataset.py <config_path>")
+        sys.exit(1)
+
+    return sys.argv[1]
+
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Run k-fold or single train-val dataset creation.")
-    parser.add_argument('--k_fold', type=bool, default=None,
-                        help='Enable k_fold dataset creation. Overrides CFG.k_fold if provided.')
+    # Process command arguments
+    config_path = get_sys_args()
 
-    # Parse the arguments
-    args = parser.parse_args()
-
-    # Load the config and merge with local config
-    config = load_config(CFG)
-
-    # Merge config with arguments
-    merge_cfg_and_args(_args=args, _cfg=config)
+    # Load config
+    config = Config.load_from_file(config_path)
 
     # Build dataset
     build_dataset(_cfg=config)

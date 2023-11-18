@@ -67,7 +67,7 @@ def infer_full_fragment(fragment_index, checkpoint_path, cfg):
     # Define the size of the patches
     patch_size = cfg.patch_size
     expected_patch_shape = (CFG.in_chans, patch_size, patch_size)
-    patch_size_out = cfg.SEGFORMER_OUTPUT_DIM[0]
+    patch_size_out = 128
 
     margin = int(0.1 * patch_size_out)
     mask = np.ones((patch_size_out, patch_size_out), dtype=bool)

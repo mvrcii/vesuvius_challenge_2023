@@ -1,4 +1,5 @@
 import os
+import sys
 
 import albumentations as A
 import numpy as np
@@ -6,37 +7,87 @@ from lightning.pytorch import LightningDataModule
 from skimage.transform import resize
 from torch.utils.data import Dataset, DataLoader
 
-from conf import CFG
-
 
 class SegFormerDataModule(LightningDataModule):
-    def __init__(self, data_root_dir: str):
+    """
+    Data module for SegFormer using PyTorch Lightning.
+
+    Args:
+        cfg: Config.
+    """
+
+    def __init__(self, cfg):
         super().__init__()
-        self.data_root_dir = data_root_dir
+        self.cfg = cfg
+        self.data_root_dir = self._get_data_root_dir(cfg)
 
-    def train_dataloader(self):
-        return build_dataloader(
-            data_root_dir=self.data_root_dir,
-            dataset_type='train')
+    @staticmethod
+    def _get_data_root_dir(config):
+        if config.dataset_in_chans != config.in_chans:
+            print(f"Input channels of dataset {config.dataset_in_chans} != Input channels of model {config.in_chans}")
+            sys.exit(1)
 
-    def val_dataloader(self):
-        return build_dataloader(
-            data_root_dir=self.data_root_dir,
-            dataset_type='val')
+        if config.k_fold:
+            print("Start training with k_fold data")
+            dataset_name = f'k_fold_{config.patch_size}px_{config.dataset_in_chans}ch'
+            data_root_dir = os.path.join(config.dataset_target_dir, dataset_name)
+        else:
+            print("Start training with single fragment data")
+            dataset_name = f'single_fold_{config.patch_size}px_{config.dataset_in_chans}ch'
+            data_root_dir = os.path.join(config.dataset_target_dir, dataset_name)
 
-    # Implement test_dataloader if needed
+        return data_root_dir
+
+    def _build_data_loader(self, dataset_type: str) -> DataLoader:
+        """
+        Build and return a data loader for the specified dataset type.
+
+        Args:
+            dataset_type (str): Type of the dataset ('train' or 'val').
+
+        Returns:
+            DataLoader: The data loader for the specified dataset type.
+        """
+        try:
+            return build_dataloader(data_root_dir=self.data_root_dir, cfg=self.cfg, dataset_type=dataset_type)
+        except DataLoaderError as e:
+            print(f"\nCritical error in data loading: {e}")
+            sys.exit(1)
+
+    def train_dataloader(self) -> DataLoader:
+        """Returns the training data loader."""
+        return self._build_data_loader(dataset_type='train')
+
+    def val_dataloader(self) -> DataLoader:
+        """Returns the validation data loader."""
+        return self._build_data_loader(dataset_type='val')
 
 
-def build_dataloader(data_root_dir, dataset_type='train'):
+class DataLoaderError(Exception):
+    """Custom exception class for data loader errors."""
+    pass
+
+
+def build_dataloader(data_root_dir, cfg, dataset_type='train'):
     data_dir = os.path.join(data_root_dir, dataset_type)
 
     img_dir = os.path.join(data_dir, 'images')
     label_dir = os.path.join(data_dir, 'labels')
 
-    images_list = os.listdir(img_dir)
-    label_list = os.listdir(label_dir)
+    try:
+        images_list = os.listdir(img_dir)
+    except FileNotFoundError:
+        raise DataLoaderError(f"Image directory not found: {img_dir}")
 
-    num_samples = int(len(images_list) * CFG.dataset_fraction)
+    try:
+        label_list = os.listdir(label_dir)
+    except FileNotFoundError:
+        raise DataLoaderError(f"Label directory not found: {label_dir}")
+
+    if not images_list or not label_list:
+        raise DataLoaderError(f"One or both directories (images, labels) of {data_dir} are empty.")
+
+    num_samples = int(len(images_list) * cfg.dataset_fraction)
 
     images_list.sort()
     label_list.sort()
@@ -45,22 +96,22 @@ def build_dataloader(data_root_dir, dataset_type='train'):
     label_list = label_list[:num_samples]
 
     # Get transformations
-    common_aug, image_aug = get_transforms(dataset_type, CFG)
+    common_aug, image_aug = get_transforms(dataset_type, cfg)
 
     dataset = WuesuvDataset(data_dir=data_dir,
                             img_dir=img_dir,
                             label_dir=label_dir,
                             images=images_list,
                             labels=label_list,
-                            cfg=CFG,
+                            cfg=cfg,
                             common_aug=common_aug,
                             image_aug=image_aug,
                             train=(dataset_type == 'train'))
 
     data_loader = DataLoader(dataset,
-                             batch_size=CFG.train_batch_size if dataset_type == 'train' else CFG.val_batch_size,
+                             batch_size=cfg.train_batch_size if dataset_type == 'train' else cfg.val_batch_size,
                              shuffle=(dataset_type == 'train'),
-                             num_workers=CFG.num_workers,
+                             num_workers=cfg.num_workers,
                              pin_memory=True,
                              drop_last=False,
                              persistent_workers=True)
@@ -111,12 +162,12 @@ class WuesuvDataset(Dataset):
         label = resize(label, (512, 512), order=0, preserve_range=True, anti_aliasing=False)
 
         # Apply common augmentations to both image and label
-        if self.common_aug and CFG.use_aug:
+        if self.common_aug:
             augmented = self.common_aug(image=image, mask=label)
             image, label = augmented['image'], augmented['mask']
 
         # Apply image-specific augmentations (like resizing)
-        if self.image_aug and CFG.use_aug:
+        if self.image_aug:
             augmented = self.image_aug(image=image)
             image = augmented['image']
 

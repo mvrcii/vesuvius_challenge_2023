@@ -7,17 +7,17 @@ from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryR
                                          BinaryAccuracy, BinaryAUROC, BinaryJaccardIndex as IoU, BinaryAveragePrecision)
 from transformers import SegformerForSemanticSegmentation
 from util.losses import BinaryDiceLoss
-from conf import CFG
 
 
 class SegFormerLightningModule(LightningModule):
-    def __init__(self):
+    def __init__(self, cfg):
         super().__init__()
-        self.save_hyperparameters()
+        self.lr = cfg.lr
+        self.weight_decay = cfg.weight_decay
         self.model = SegformerForSemanticSegmentation.from_pretrained(
-            CFG.seg_pretrained,
+            cfg.from_pretrained,
             num_labels=1,
-            num_channels=CFG.in_chans,
+            num_channels=cfg.in_chans,
             ignore_mismatched_sizes=True,
         )
 
@@ -33,7 +33,7 @@ class SegFormerLightningModule(LightningModule):
         self.map = BinaryAveragePrecision()
 
     def configure_optimizers(self):
-        optimizer = AdamW(self.parameters(), lr=CFG.lr, weight_decay=CFG.weight_decay)
+        optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         # scheduler = StepLR(optimizer, step_size=1, gamma=0.999)
         # scheduler = ReduceLROnPlateau(
         #     optimizer,

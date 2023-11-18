@@ -9,7 +9,6 @@ from termcolor import colored
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from conf import CFG
-from util.train_utils import load_config
 
 
 def process_image(img_src_path, target_dir):
