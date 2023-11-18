@@ -8,6 +8,8 @@ from lightning.pytorch.trainer import Trainer
 
 from conf import CFG
 from pl_segformer_datamodule import SegFormerDataModule
+from util.config_handler import save_config, load_config
+from util.train_utils import get_device_configuration, get_data_root_dir
 from pl_segformer_lightning import SegFormerLightningModule
 from util.train_utils import get_device_configuration, get_data_root_dir, load_config
 
@@ -24,12 +26,15 @@ def main():
     wandb_run_name = wandb_logger.experiment.name
     timestamp = datetime.now().strftime("%y%m%d-%H%M")  # Format: YYMMDD-HHMM
 
+    model_run_dir = os.path.join("checkpoints", f"{timestamp}-{wandb_run_name}")
+    save_config(config=cfg, model_run_dir=model_run_dir)
+
     model = SegFormerLightningModule()
     data_module = SegFormerDataModule(data_root_dir=get_data_root_dir(cfg))
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=f"checkpoints/{timestamp}-{wandb_run_name}",
-        filename="best-checkpoint-{epoch}-{val_iou:.2f}",
+        filename="best-checkpoint-{epoch}-{val_iou:.2f}--{val_auc:.2f}",
         save_top_k=1,
         monitor="val_iou",
         mode="max",
@@ -40,13 +45,12 @@ def main():
     print("Using Devices:", devices)
 
     trainer = Trainer(
-        max_epochs=CFG.epochs,
+        max_epochs=cfg.epochs,
         logger=wandb_logger,
         callbacks=[LearningRateMonitor(logging_interval='epoch'), checkpoint_callback],
         accelerator="auto",
         devices=devices,
         enable_progress_bar=True,
-        # log_every_n_steps=5,
     )
 
     trainer.fit(model, data_module)
