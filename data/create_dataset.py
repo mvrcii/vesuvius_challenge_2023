@@ -54,7 +54,7 @@ def write_single_fold_cfg(_cfg):
                       mode='single_fold')
 
     logging.info(f"Data root directory for single-fold dataset: {path}")
-    logging.info(f"Creating single-fold dataset with fragment id {_cfg.single_train_frag_id}")
+    logging.info(f"Creating single-fold dataset with fragment ids {_cfg.single_train_frag_id}")
 
     return path
 
@@ -125,7 +125,7 @@ def read_fragment(fragment_dir, data_root_dir, dataset_in_chans, patch_size):
 
 def process_fragment(dataset_information, fragment_id, data_type, progress_tracker):
     print(f"\nStart processing fragment {fragment_id} for {data_type} dataset..")
-    create_dataset(dataset_information=dataset_information, fragment_id=fragment_id, data_type=data_type)
+    create_dataset(dataset_information=dataset_information, fragment_ids=[fragment_id], data_type=data_type)
     progress_tracker.value += 1
 
 
@@ -135,7 +135,8 @@ def validate_fragments(_cfg):
             for frag_id in _cfg.train_frag_ids:
                 validate_fragment_files(frag_id=frag_id, channels=_cfg.dataset_in_chans)
         else:
-            validate_fragment_files(frag_id=_cfg.single_train_frag_id, channels=_cfg.dataset_in_chans)
+            for frag_id in _cfg.single_train_frag_id:
+                validate_fragment_files(frag_id=frag_id, channels=_cfg.dataset_in_chans)
 
     except (FileNotFoundError, NotADirectoryError) as e:
         print(f"Error: {e}")
@@ -179,7 +180,7 @@ def build_single_fold_dataset(_cfg):
         "calc_mean_std": _cfg.calc_mean_std
     }
 
-    create_dataset(dataset_information=dataset_information, fragment_id=_cfg.single_train_frag_id)
+    create_dataset(dataset_information=dataset_information, fragment_ids=_cfg.single_train_frag_id)
     create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
 
     if _cfg.calc_mean_std:
@@ -218,7 +219,7 @@ def build_k_fold_dataset(_cfg):
         plot_mean_std(target_dir)
 
 
-def create_dataset(dataset_information, fragment_id, data_type='train'):
+def create_dataset(dataset_information, fragment_ids, data_type='train'):
     target_dir = dataset_information["target_dir"]
     data_root_dir = dataset_information["data_root_dir"]
     dataset_in_chans = dataset_information["dataset_in_chans"]
@@ -232,73 +233,73 @@ def create_dataset(dataset_information, fragment_id, data_type='train'):
     os.makedirs(img_path, exist_ok=True)
     os.makedirs(label_path, exist_ok=True)
 
-    fragment_dir = os.path.join(data_root_dir, "fragments", f"fragment{fragment_id}")
-    if not os.path.isdir(fragment_dir):
-        raise ValueError(f"Fragment directory does not exist: {fragment_dir}")
+    for frag_id in fragment_ids:
+        fragment_dir = os.path.join(data_root_dir, "fragments", f"fragment{frag_id}")
+        if not os.path.isdir(fragment_dir):
+            raise ValueError(f"Fragment directory does not exist: {fragment_dir}")
 
-    mask_path = os.path.join(fragment_dir, f"mask.png")
-    if not os.path.isfile(mask_path):
-        raise ValueError(f"Mask file does not exist for fragment: {mask_path}")
+        mask_path = os.path.join(fragment_dir, f"mask.png")
+        if not os.path.isfile(mask_path):
+            raise ValueError(f"Mask file does not exist for fragment: {mask_path}")
 
-    images, label = read_fragment(fragment_dir, data_root_dir, dataset_in_chans, patch_size)
+        images, label = read_fragment(fragment_dir, data_root_dir, dataset_in_chans, patch_size)
 
-    mask_arr = np.asarray(Image.open(mask_path))
+        mask_arr = np.asarray(Image.open(mask_path))
 
-    x1_list = list(range(0, images.shape[2] - CFG.patch_size + 1, CFG.stride))
-    y1_list = list(range(0, images.shape[1] - CFG.patch_size + 1, CFG.stride))
+        x1_list = list(range(0, images.shape[2] - CFG.patch_size + 1, CFG.stride))
+        y1_list = list(range(0, images.shape[1] - CFG.patch_size + 1, CFG.stride))
 
-    progress_bar = tqdm(total=len(x1_list) * len(y1_list),
-                        desc=f"{data_type.capitalize()} Dataset Fragment {fragment_id}: Processing images "
-                             f"and labels")
+        progress_bar = tqdm(total=len(x1_list) * len(y1_list),
+                            desc=f"{data_type.capitalize()} Dataset Fragment {frag_id}: Processing images "
+                                 f"and labels")
 
-    skip_counter_not_in_mask = 0
-    segformer_output_dim = CFG.SEGFORMER_OUTPUT_DIM
+        skip_counter_not_in_mask = 0
 
-    for y1 in y1_list:
-        for x1 in x1_list:
-            y2 = y1 + CFG.patch_size
-            x2 = x1 + CFG.patch_size
-            progress_bar.update(1)
+        for y1 in y1_list:
+            for x1 in x1_list:
+                y2 = y1 + CFG.patch_size
+                x2 = x1 + CFG.patch_size
+                progress_bar.update(1)
 
-            img_patch = images[:, y1:y2, x1:x2]
+                img_patch = images[:, y1:y2, x1:x2]
 
-            if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
-                skip_counter_not_in_mask += 1
-                # plot_2d_arrays(label=label[y1:y2, x1:x2], image=img_patch)
-                continue
+                if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
+                    skip_counter_not_in_mask += 1
+                    # plot_2d_arrays(label=label[y1:y2, x1:x2], image=img_patch)
+                    continue
 
-            # Scale label down to match segformer output
-            label_patch = resize(label[y1:y2, x1:x2], (128, 128), order=0, preserve_range=True,
-                                 anti_aliasing=False)
+                # Scale label down to match segformer output
+                label_patch = resize(label[y1:y2, x1:x2], (128, 128), order=0, preserve_range=True,
+                                     anti_aliasing=False)
 
-            img_patch_resized = resize(images[:, y1:y2, x1:x2], (64, 128, 128), order=0, preserve_range=True,
-                                 anti_aliasing=False)
+                img_patch_resized = resize(images[:, y1:y2, x1:x2], (64, 128, 128), order=0, preserve_range=True,
+                                     anti_aliasing=False)
 
-            # Check that the label contains at least 10% ink
-            if label_patch.sum() < np.prod(label_patch.shape) * CFG.REQUIRED_LABEL_INK_PERCENTAGE:
-                # plot_2d_arrays(label=label_patch, image=img_patch)
-                continue
+                # Check that the label contains at least 10% ink
+                if label_patch.sum() < np.prod(label_patch.shape) * CFG.REQUIRED_LABEL_INK_PERCENTAGE:
+                    # plot_2d_arrays(label=label_patch, image=img_patch)
+                    continue
 
-            # if label_patch.sum() >= np.prod(label_patch.shape) * 0.25:
-            #     # plot_2d_arrays(label=label_patch, image=img_patch_resized)
-            #     continue
+                # if label_patch.sum() >= np.prod(label_patch.shape) * 0.25:
+                #     # plot_2d_arrays(label=label_patch, image=img_patch_resized)
+                #     continue
 
-            file_name = f"f{fragment_id}_{x1}_{y1}_{x2}_{y2}.npy"
-            img_file_path = os.path.join(img_path, file_name)
-            label_file_path = os.path.join(label_path, file_name)
+                file_name = f"f{frag_id}_{x1}_{y1}_{x2}_{y2}.npy"
+                img_file_path = os.path.join(img_path, file_name)
+                label_file_path = os.path.join(label_path, file_name)
 
-            np.save(img_file_path, img_patch)
-            np.save(label_file_path, label_patch)
+                np.save(img_file_path, img_patch)
+                np.save(label_file_path, label_patch)
 
-    progress_bar.close()
+        progress_bar.close()
 
-    if calc_mean_std:
-        process_mean_and_std(images, data_type, fragment_id, target_data_dir)
+        if calc_mean_std:
+            process_mean_and_std(images, data_type, frag_id, target_data_dir)
 
-    del images, label
-    gc.collect()
+        del images, label
+        gc.collect()
 
-    print("Patches skipped due to not in mask:", skip_counter_not_in_mask)
+        print("Patches skipped due to not in mask:", skip_counter_not_in_mask)
 
 
 def process_mean_and_std(images, data_type, frag_id, data_root_dir):
