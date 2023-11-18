@@ -131,7 +131,28 @@ def infer_full_fragment(fragment_index, checkpoint_path, cfg):
     # Average the predictions
     out_arr = np.where(pred_counts > 0, out_arr / pred_counts, 0)
 
-    return out_arr
+    return out_arr, images[0].shape
+
+def save_logits_scaled_normalized(image, result_path, image_shape):
+    # Load the logits file
+    file = np.array(image)
+
+    # Find the min and max values in the array
+    min_val = file.min()
+    max_val = file.max()
+
+    # Normalize the logits to the range 0-255
+    normalized_logits = (file - min_val) / (max_val - min_val) * 255
+
+    # Convert to uint8 for image representation
+    image_data = normalized_logits.astype(np.uint8)
+
+    # Resize the image to the desired dimensions
+    height, width = image_shape
+    resized_image = cv2.resize(image_data, (width, height), interpolation=cv2.INTER_LINEAR)
+
+    # Save the resized image as grayscale
+    cv2.imwrite(result_path, resized_image)
 
 
 if __name__ == '__main__':
@@ -144,7 +165,8 @@ if __name__ == '__main__':
     fragment_num = sys.argv[2]
 
     # inference
-    result = infer_full_fragment(fragment_num, checkpoint_path, cfg)
+    result, image_shape = infer_full_fragment(fragment_num, checkpoint_path, cfg)
+
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     results_dir = os.path.join("inference", "results", f"fragment{fragment_num}", date_time_string)
@@ -154,6 +176,9 @@ if __name__ == '__main__':
     plt.imshow(result, cmap='gray')
     logit_path = os.path.join(results_dir, f"logits_fragment{fragment_num}_{date_time_string}.png")
     plt.savefig(logit_path, bbox_inches='tight', dpi=500, pad_inches=0)
+
+    result_path = os.path.join(results_dir, f"logits_fragment{fragment_num}_{date_time_string}_scaled_norm.png")
+    save_logits_scaled_normalized(result, result_path, image_shape)
 
     # save binary
     plt.imshow(result > 0.5, cmap='gray')
