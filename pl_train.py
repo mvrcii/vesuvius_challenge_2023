@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import torch
 from lightning import seed_everything
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
@@ -13,6 +14,8 @@ from util.train_utils import get_device_configuration, get_data_root_dir, load_c
 
 def main():
     cfg = load_config(CFG)
+
+    torch.set_float32_matmul_precision('medium')
 
     seed_value = CFG.seed
     seed_everything(seed_value)
