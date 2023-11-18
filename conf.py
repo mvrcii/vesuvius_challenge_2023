@@ -8,7 +8,7 @@ class CFG:
     base_label_dir = "data/base_label_files"
     dataset_target_dir = os.path.join(data_root_dir, "datasets")
 
-    # ============== model =============
+    # ============= MODEL =============
     in_chans = 64
     seg_pretrained = "nvidia/mit-b1"
     SEGFORMER_OUTPUT_DIM = (128, 128)
@@ -20,16 +20,15 @@ class CFG:
             bs4 => 
     """
 
-    # ============== training =============
-    device = 'cuda'
+    # ============= TRAINING =============
     seed = 3
     epochs = 100
 
-    # ========= optimizer =========
+    # ============= OPTIMIZER =============
     weight_decay = 0.01
     lr = 2e-4
 
-    # ============== dataset / dataloader =============
+    # ============= DATASET =============
     calc_mean_std = False
     dataset_in_chans = 64
     patch_size = 512  # 64
@@ -63,13 +62,13 @@ class CFG:
         "20230909121925"]
     val_frag_ids = ["20230702185752"]
 
-    # ============ dataloader =============
+    # ============= DATALOADER =============
     dataset_fraction = 1
     num_workers = 4
-    train_batch_size = 2  # 32
+    train_batch_size = 2
     val_batch_size = 4
 
-    # ============== augmentation =============
+    # ============= AUGMENTATION =============
     use_cutmix = False
     use_mixup = False
     use_aug = True
