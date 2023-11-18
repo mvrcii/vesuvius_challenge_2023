@@ -17,7 +17,7 @@ class SegFormerLightningModule(LightningModule):
         self.model = SegformerForSemanticSegmentation.from_pretrained(
             CFG.seg_pretrained,
             num_labels=1,
-            num_channels=64,
+            num_channels=CFG.in_chans,
             ignore_mismatched_sizes=True,
         )
 
