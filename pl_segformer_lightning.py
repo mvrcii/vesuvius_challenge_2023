@@ -2,10 +2,11 @@ import torch
 from einops import rearrange
 from lightning import LightningModule
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau, CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryAUROC, BinaryJaccardIndex as IoU, BinaryAveragePrecision)
 from transformers import SegformerForSemanticSegmentation
+
 from util.losses import BinaryDiceLoss
 
 
@@ -14,12 +15,6 @@ class SegFormerLightningModule(LightningModule):
         super().__init__()
         self.lr = cfg.lr
         self.weight_decay = cfg.weight_decay
-        # TODO: Knallt noch irgendwie wegen self.save_hyperparameters()
-        # TODO: Weil etwas mit pickle() gespeichert/geladen werden soll das ein Module ist -> geht nicht
-        # TODO: Weiß noch nicht genau worans liegt, früher hatten wir alle Werte (lr und weight decay über nen static
-        # TODO: import gelöst (from conf import CFG), aber das geht nicht mehr weil wir genau die Parameter von unserer
-        # TDOO: Train config nutzen wollen
-        # self.save_hyperparameters()
         self.model = SegformerForSemanticSegmentation.from_pretrained(
             cfg.from_pretrained,
             num_labels=1,

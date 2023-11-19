@@ -103,7 +103,7 @@ def build_dataloader(data_root_dir, cfg, dataset_type='train'):
                             label_dir=label_dir,
                             images=images_list,
                             labels=label_list,
-                            cfg=cfg,
+                            in_chans=cfg.in_chans,
                             common_aug=common_aug,
                             image_aug=image_aug,
                             train=(dataset_type == 'train'))
@@ -128,10 +128,9 @@ def get_transforms(data, cfg):
 
 
 class WuesuvDataset(Dataset):
-    def __init__(self, data_dir, img_dir, label_dir, images, cfg, labels=None, common_aug=None, image_aug=None,
+    def __init__(self, data_dir, img_dir, label_dir, images, in_chans, labels=None, common_aug=None, image_aug=None,
                  train=True):
         self.images = np.array(images)
-        self.cfg = cfg
         self.labels = labels
         self.data_dir = data_dir
         self.img_dir = img_dir
@@ -139,6 +138,7 @@ class WuesuvDataset(Dataset):
         self.common_aug = common_aug
         self.image_aug = image_aug
         self.train = train
+        self.in_chans = in_chans
 
     def __len__(self):
         return len(self.images)
@@ -152,9 +152,9 @@ class WuesuvDataset(Dataset):
 
         # Randomly select 16 consecutive channels
         total_channels = image.shape[2]  # Assuming the last dimension is channels
-        max_start = total_channels - self.cfg.in_chans  # cfg.in_channels is 16 in this case
+        max_start = total_channels - self.in_chans  # cfg.in_channels is 16 in this case
         start_channel = np.random.randint(0, max_start + 1)
-        image = image[:, :, start_channel:start_channel + self.cfg.in_chans]
+        image = image[:, :, start_channel:start_channel + self.in_chans]
 
         # print("Channels from {} to {}".format(start_channel, start_channel + self.cfg.in_chans))
 
