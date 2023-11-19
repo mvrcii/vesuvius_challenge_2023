@@ -153,8 +153,9 @@ def validate_fragments(_cfg):
         else:
             all_valids.extend([f"Fragment: '{get_frag_name_from_id(frag_id)}' - {frag_id}"])
 
-    if all_errors and all_valids:
-        print_checks(all_errors, all_valids)
+    print_checks(all_errors, all_valids)
+
+    if all_errors:
         sys.exit(1)
 
 
