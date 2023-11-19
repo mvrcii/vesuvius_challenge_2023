@@ -106,7 +106,6 @@ for range in "${ranges[@]}"; do
     for ((i=10#$start; i<=10#$end; i++)); do
         printf -v formattedIndex "%02d" $i
         url="${baseUrl}${formattedIndex}.tif"
-        echo "Test ${outputFolder}"
         outputFile="${outputFolder}/0$(printf "%04d" $i).tif"
         download_file "$url" "$outputFile" &
     done

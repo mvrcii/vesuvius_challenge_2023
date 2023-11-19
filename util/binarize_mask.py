@@ -8,8 +8,6 @@ import numpy as np
 from termcolor import colored
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from conf import CFG
-from util.train_utils import load_config
 
 
 def process_image(img_src_path):
@@ -46,10 +44,8 @@ def process_image(img_src_path):
 
 
 def main():
-    config = load_config(CFG)
-
     parser = argparse.ArgumentParser(description='Process binary mask images in a directory.')
-    parser.add_argument('directory', nargs='?', type=str, default=config.base_label_dir,
+    parser.add_argument('directory', nargs='?', type=str, default="data/base_label_files",
                         help='Path to the directory with source images. '
                              'Defaults to cfg.base_label_dir if not provided.')
 
