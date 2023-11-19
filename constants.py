@@ -8,7 +8,7 @@ SOUNDWAVE_FRAG_ID = "20230904135535"
 IRONHIDE_FRAG_ID = "20230905134255"
 RATCHET_FRAG_ID = "20230909121925"
 JAZZ_FRAG_ID = "20231016151000"
-
+ULTRA_MAGNUS_FRAG_ID = "20231106155351"
 
 # Additional Transformers character names for IDs
 # ULTRA_MAGNUS_FRAG_ID = "your_id_here_1"  # Replace 'your_id_here_1' with the actual ID
