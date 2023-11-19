@@ -11,7 +11,8 @@ data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")
 
 model_type = "b0"
-model_name = f"segformer-{model_type}"
+architecture = 'segformer'
+model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 64
 seed = 3

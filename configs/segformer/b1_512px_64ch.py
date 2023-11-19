@@ -10,7 +10,9 @@ base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")
 
-model_name = "segformer-b2"
+model_type = "b1"
+architecture = 'segformer'
+model_name = f"{architecture}-{model_type}"
 from_pretrained = "nvidia/mit-b2"
 in_chans = 64
 seed = 3
