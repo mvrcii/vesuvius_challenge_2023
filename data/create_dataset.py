@@ -127,7 +127,7 @@ def read_fragment(fragment_dir, dataset_in_chans, patch_size):
 
 def process_fragment(dataset_information, fragment_id, data_type, progress_tracker):
     try:
-        patch_count = create_dataset(dataset_information=dataset_information, fragment_ids=[fragment_id], data_type=data_type)
+        patch_count = create_dataset(dataset_information=dataset_information, fragment_ids=fragment_id, data_type=data_type)
         progress_tracker.value += 1
 
         return {"fragment_id": fragment_id, "patch_count": patch_count}
@@ -189,7 +189,7 @@ def build_single_fold_dataset(_cfg):
         progress_tracker = manager.Value('i', 0)
 
         # Prepare arguments for multiprocessing
-        all_args = [(dataset_information, frag_id, 'train', progress_tracker) for frag_id in _cfg.train_frag_ids]
+        all_args = [(dataset_information, _cfg.train_frag_ids, 'train', progress_tracker)]
 
         with Pool() as pool:
             result = pool.starmap_async(process_fragment, all_args)
@@ -333,7 +333,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         del images, label
         gc.collect()
 
-        return total_patch_count
+    return total_patch_count
 
 
 def process_mean_and_std(images, data_type, frag_id, data_root_dir):
