@@ -15,9 +15,9 @@ from skimage.transform import resize
 from tqdm import tqdm
 
 from config_handler import Config
+from constants import get_frag_name_from_id
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -40,7 +40,7 @@ def write_config(_cfg):
 def write_single_fold_cfg(_cfg):
     logging.info("Starting single-fold dataset creation process...")
     result_dir_name = f'single_fold_{str(_cfg.patch_size)}px_{str(_cfg.dataset_in_chans)}ch'
-    path = os.path.join(_cfg.dataset_target_dir,  result_dir_name)
+    path = os.path.join(_cfg.dataset_target_dir, result_dir_name)
 
     channel_ids = calc_original_channel_ids(_cfg.dataset_in_chans)
 
@@ -127,22 +127,13 @@ def read_fragment(fragment_dir, dataset_in_chans, patch_size):
 
 def process_fragment(dataset_information, fragment_id, data_type, progress_tracker):
     try:
-        patch_count = create_dataset(dataset_information=dataset_information, fragment_ids=fragment_id, data_type=data_type)
+        patch_count = create_dataset(dataset_information=dataset_information, fragment_ids=fragment_id,
+                                     data_type=data_type)
         progress_tracker.value += 1
 
         return {"fragment_id": fragment_id, "patch_count": patch_count}
     except Exception as e:
         return {"fragment_id": fragment_id, "error": e}
-
-
-def validate_fragments(_cfg):
-    try:
-        for frag_id in _cfg.train_frag_ids:
-            validate_fragment_files(frag_id=frag_id, channels=_cfg.dataset_in_chans)
-
-    except (FileNotFoundError, NotADirectoryError) as e:
-        print(f"Error: {e}")
-        sys.exit(1)
 
 
 def calc_original_channel_ids(channels):
@@ -152,18 +143,85 @@ def calc_original_channel_ids(channels):
     return list(range(start, end))
 
 
+def validate_fragments(_cfg):
+    all_errors = []
+    all_valids = []
+    for frag_id in _cfg.train_frag_ids:
+        errors = validate_fragment_files(frag_id=frag_id, channels=_cfg.dataset_in_chans)
+        if errors:
+            all_errors.extend(errors)
+        else:
+            all_valids.extend([f"Fragment: '{get_frag_name_from_id(frag_id)}' - {frag_id}"])
+
+    if all_errors and all_valids:
+        print_checks(all_errors, all_valids)
+        sys.exit(1)
+
+
+def print_checks(errors, valids):
+    for valid in valids:
+        print(f"\033[92mValid: {valid}\033[0m")
+    for error in errors:
+        print(f"\033[91mError: {error}\033[0m")
+
+
 def validate_fragment_files(frag_id, channels):
+    errors = []  # List to store error messages
     used_channels = calc_original_channel_ids(channels)
 
     fragments_path = os.path.join("data", "fragments")
     frag_dir = os.path.join(fragments_path, f"fragment{frag_id}")
-    if not os.path.isdir(frag_dir):
-        raise NotADirectoryError(f"Required fragment directory '{frag_dir}' does not exist.")
+    frag_name = get_frag_name_from_id(frag_id)
 
+    # Check if the fragment directory exists
+    if not os.path.isdir(frag_dir):
+        errors.append(f"Required fragment directory '{frag_name}' does not exist.")
+
+    # Check if the 'slices' folder exists inside the fragment directory
+    slices_dir = os.path.join(frag_dir, "slices")
+    if not os.path.isdir(slices_dir):
+        errors.append(f"Required 'slices' directory does not exist in fragment '{frag_name}'.")
+
+    # Check for the existence of 'inklabels.png' file and 'mask.png' file
+    required_files = ['inklabels.png', 'mask.png']
+    for file in required_files:
+        file_path = os.path.join(frag_dir, file)
+        if not os.path.isfile(file_path):
+            errors.append(f"Required file '{file}' does not exist in fragment '{frag_name}'.")
+
+    # Check for the required channel files and aggregate missing channels
+    missing_channels = []
     for ch_idx in used_channels:
-        ch_file_path = os.path.join(frag_dir, 'slices', f"{ch_idx:05d}.tif")
+        ch_file_path = os.path.join(slices_dir, f"{ch_idx:05d}.tif")
         if not os.path.isfile(ch_file_path):
-            raise FileNotFoundError(f"Required channel {ch_idx} for fragment {frag_id} does not exist.")
+            missing_channels.append(ch_idx)
+
+    if missing_channels:
+        errors.append(f"Missing channel files for fragment '{frag_name}': {format_ranges(missing_channels)}")
+
+    if errors.__len__() > 0:
+        errors.insert(0, f"Fragment: '{frag_name}' - {frag_id}")
+
+    return errors
+
+
+def format_ranges(numbers):
+    """Convert a list of numbers into a string of ranges."""
+    if not numbers:
+        return ""
+
+    ranges = []
+    start = end = numbers[0]
+
+    for n in numbers[1:]:
+        if n - 1 == end:  # Part of the range
+            end = n
+        else:  # New range
+            ranges.append((start, end))
+            start = end = n
+    ranges.append((start, end))
+
+    return ', '.join([f"{s:05d}.tif - {e:05d}.tif" if s != e else f"{s:05d}.tif" for s, e in ranges])
 
 
 def build_dataset(_cfg):
