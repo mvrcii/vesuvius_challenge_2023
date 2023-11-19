@@ -127,13 +127,12 @@ def read_fragment(fragment_dir, dataset_in_chans, patch_size):
 
 def process_fragment(dataset_information, fragment_id, data_type, progress_tracker):
     try:
-        patch_count = create_dataset(dataset_information=dataset_information, fragment_ids=fragment_id,
-                                     data_type=data_type)
+        create_dataset(dataset_information=dataset_information, fragment_ids=fragment_id, data_type=data_type)
         progress_tracker.value += 1
 
-        return {"fragment_id": fragment_id, "patch_count": patch_count}
+        return True
     except Exception as e:
-        return {"fragment_id": fragment_id, "error": e}
+        return e
 
 
 def calc_original_channel_ids(channels):
@@ -254,17 +253,14 @@ def build_single_fold_dataset(_cfg):
             result = pool.starmap_async(process_fragment, all_args)
             results = result.get()
 
-        patch_counts = {}
-        for res in results:
-            if "error" in res:
-                print(f"Error in fragment {res['fragment_id']}: {res['error']}")
-                continue
+        errors = []
+        for i, res in enumerate(results):
+            if isinstance(res, Exception):
+                print(f"Error in processing fragment {all_args[i][1]}: {res}")
+                errors.append(res)
 
-            fragment_id = res["fragment_id"]
-            patch_count = res["patch_count"]
-            patch_counts[fragment_id] = patch_count
-
-        print("Patch counts per fragment:", patch_counts)
+        if errors:
+            print(f"Errors occurred in {len(errors)} fragments.")
 
         create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
 
@@ -278,7 +274,6 @@ def build_k_fold_dataset(_cfg):
 
     with Manager() as manager:
         progress_tracker = manager.Value('i', 0)  # Shared integer for progress tracking
-        total_tasks = len(_cfg.train_frag_ids) + len(_cfg.val_frag_ids)
 
         dataset_information = {
             "target_dir": target_dir,
@@ -297,17 +292,16 @@ def build_k_fold_dataset(_cfg):
             result = pool.starmap_async(process_fragment, all_args)
             results = result.get()
 
-        patch_counts = {}
-        for res in results:
-            if "error" in res:
-                print(f"Error in fragment {res['fragment_id']}: {res['error']}")
-                continue
+        errors = []
+        for i, res in enumerate(results):
+            if isinstance(res, Exception):
+                print(f"Error in processing fragment {all_args[i][1]}: {res}")
+                errors.append(res)
 
-            fragment_id = res["fragment_id"]
-            patch_count = res["patch_count"]
-            patch_counts[fragment_id] = patch_count
-
-    print("Patch counts per fragment:", patch_counts)
+        if errors:
+            print(f"Errors occurred in {len(errors)} fragments.")
+        else:
+            print("All fragments processed successfully.")
 
     if _cfg.calc_mean_std:
         plot_mean_std(target_dir)
@@ -332,6 +326,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
     total_patch_count = 0
 
     for frag_id in fragment_ids:
+
         fragment_dir = os.path.join(data_root_dir, "fragments", f"fragment{frag_id}")
 
         if not os.path.isdir(fragment_dir):
@@ -392,7 +387,8 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         del images, label
         gc.collect()
 
-    return total_patch_count
+        print(f"Patch Count for Fragment '{get_frag_name_from_id(frag_id)}'", patch_count_for_fragment)
+    print("Total Patch Count:", total_patch_count)
 
 
 def process_mean_and_std(images, data_type, frag_id, data_root_dir):
