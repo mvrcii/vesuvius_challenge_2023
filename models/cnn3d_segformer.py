@@ -5,7 +5,7 @@ from transformers import SegformerForSemanticSegmentation, SegformerConfig
 
 class CNN3D_Segformer(nn.Module):
     def __init__(self, cfg):
-        super().__init__(cfg=cfg)
+        super().__init__()
 
         self.conv3d_1 = nn.Conv3d(1, 4, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
         self.conv3d_2 = nn.Conv3d(4, 8, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
@@ -14,7 +14,8 @@ class CNN3D_Segformer(nn.Module):
 
         from_pretrained = cfg.from_pretrained
         self.xy_encoder_2d = SegformerForSemanticSegmentation.from_pretrained(from_pretrained,
-                                                                              config=cnn_3d_segformer_b1_config,
+                                                                              num_labels=1,
+                                                                              num_channels=cfg.in_chans,
                                                                               ignore_mismatched_sizes=True)
 
     def forward(self, image):
