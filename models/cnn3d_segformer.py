@@ -4,16 +4,16 @@ from transformers import SegformerForSemanticSegmentation, SegformerConfig
 
 
 class CNN3D_Segformer(nn.Module):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, cfg):
+        super().__init__(cfg=cfg)
 
         self.conv3d_1 = nn.Conv3d(1, 4, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
         self.conv3d_2 = nn.Conv3d(4, 8, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
         self.conv3d_3 = nn.Conv3d(8, 16, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
         self.conv3d_4 = nn.Conv3d(16, 32, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
 
-        ckpt_path = "nvidia/segformer-b1-finetuned-ade-512-512"
-        self.xy_encoder_2d = SegformerForSemanticSegmentation.from_pretrained(ckpt_path,
+        from_pretrained = cfg.from_pretrained
+        self.xy_encoder_2d = SegformerForSemanticSegmentation.from_pretrained(from_pretrained,
                                                                               config=cnn_3d_segformer_b1_config,
                                                                               ignore_mismatched_sizes=True)
 
