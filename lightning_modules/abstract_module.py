@@ -6,7 +6,6 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryAUROC, BinaryJaccardIndex as IoU, BinaryAveragePrecision)
 from transformers import SegformerForSemanticSegmentation
-from models.cnn3d_segformer import CNN3D_Segformer
 
 from util.losses import BinaryDiceLoss
 
@@ -81,25 +80,3 @@ class AbstractVesuvLightningModule(LightningModule):
         self.log('val_auc', self.auc(output, target.int()), on_epoch=True, prog_bar=True)
         self.log('val_iou', self.iou(output, target.int()), on_epoch=True, prog_bar=True)
         self.log('val_map', self.map(output, target.int()), on_epoch=True, prog_bar=False)
-
-
-class SegformerModule(AbstractVesuvLightningModule):
-    def __init__(self, cfg):
-        super().__init__(cfg=cfg)
-        self.model = SegformerForSemanticSegmentation.from_pretrained(
-            cfg.from_pretrained,
-            num_labels=1,
-            num_channels=cfg.in_chans,
-            ignore_mismatched_sizes=True,
-        )
-
-
-class CNN3D_SegformerModule(AbstractVesuvLightningModule):
-    def __init__(self, cfg):
-        super().__init__(cfg=cfg)
-        self.model = CNN3D_Segformer()
-
-    def forward(self, x):
-        output = self.model(x.unsqueeze(1).float())
-
-        return output

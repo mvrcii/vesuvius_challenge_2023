@@ -1,6 +1,6 @@
 import torch
-from transformers import SegformerFeatureExtractor, SegformerForSemanticSegmentation, SegformerConfig
 import torch.nn as nn
+from transformers import SegformerForSemanticSegmentation, SegformerConfig
 
 
 class CNN3D_Segformer(nn.Module):

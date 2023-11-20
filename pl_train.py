@@ -10,8 +10,9 @@ from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
 
 from config_handler import Config
+from lightning_modules.cnn3d_segformer_module import CNN3D_SegformerModule
+from lightning_modules.segformer_module import SegformerModule
 from pl_segformer_datamodule import SegFormerDataModule
-from pl_segformer_lightning import CNN3D_SegformerModule, SegformerModule
 from util.train_utils import get_device_configuration
 
 torch.set_float32_matmul_precision('medium')
