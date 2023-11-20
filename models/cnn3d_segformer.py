@@ -17,8 +17,6 @@ class CNN3D_Segformer(nn.Module):
         self.xy_encoder_2d = SegformerForSemanticSegmentation.from_pretrained(ckpt_path,
                                                                               config=cnn_3d_segformer_b1_config,
                                                                               ignore_mismatched_sizes=True)
-        self.upscaler1 = nn.ConvTranspose2d(1, 1, kernel_size=(4, 4), stride=2, padding=1)
-        self.upscaler2 = nn.ConvTranspose2d(1, 1, kernel_size=(4, 4), stride=2, padding=1)
 
     def forward(self, image):
         output = self.conv3d_1(image)
@@ -26,8 +24,6 @@ class CNN3D_Segformer(nn.Module):
         output = self.conv3d_3(output)
         output = self.conv3d_4(output).max(axis=2)[0]
         output = self.xy_encoder_2d(output).logits
-        output = self.upscaler1(output)
-        output = self.upscaler2(output)
 
         output = output.squeeze(1)
         output = torch.sigmoid(output)
