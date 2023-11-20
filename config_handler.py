@@ -63,11 +63,12 @@ class Config:
 
         model_config = import_config_from_path(config_path)
         config = {}
-        for base_path in model_config._base_:
-            base_config = import_config_from_path(base_path)
-            config.update({k: v for k, v in vars(base_config).items() if not k.startswith('__')})
+        # for base_path in model_config._base_:
+        #     base_config = import_config_from_path(base_path)
+        #     config.update({k: v for k, v in vars(base_config).items() if not k.startswith('__')})
 
         config.update({k: v for k, v in vars(model_config).items() if not k.startswith('__')})
+        print(config)
 
         # Check for and apply local configuration overrides
         local_config_path = 'conf_local.py'
