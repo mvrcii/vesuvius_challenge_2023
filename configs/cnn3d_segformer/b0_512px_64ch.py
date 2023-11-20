@@ -21,8 +21,8 @@ epochs = -1
 
 dataset_fraction = 0.2
 num_workers = 4
-train_batch_size = 8
-val_batch_size = 8
+train_batch_size = 2
+val_batch_size = 2
 
 lr = 1e-3
 weight_decay = 0.05
