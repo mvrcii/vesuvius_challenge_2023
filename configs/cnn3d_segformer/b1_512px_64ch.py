@@ -13,10 +13,10 @@ dataset_target_dir = os.path.join("data", "datasets")
 model_type = "b1"
 architecture = 'cnn3d_segformer'
 model_name = f"{architecture}-{model_type}"
-from_pretrained = f"nvidia/mit-{model_type}" # TODO: Refactor hardcoded from pretrained!
+from_pretrained = f"nvidia/mit-{model_type}"  # TODO: Refactor hardcoded from pretrained!
 in_chans = 64
-seed = 3
-epochs = 100
+seed = 177
+epochs = -1
 
 dataset_fraction = 1
 num_workers = 4

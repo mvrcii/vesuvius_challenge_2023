@@ -39,7 +39,7 @@ class AbstractVesuvLightningModule(LightningModule):
         scheduler = CosineAnnealingLR(
             optimizer,
             T_max=100,
-            eta_min=0
+            eta_min=1e-6
         )
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
 
