@@ -27,7 +27,7 @@ def main():
     --gres=gpu:{gpu_resource} \
     --wrap="{cmd_str}" \
     -o "slurm_logs/slurm-%j.out"'
-    print(slurm_cmd)
+
     subprocess.run(slurm_cmd, shell=True)
 
 
