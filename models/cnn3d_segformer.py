@@ -15,7 +15,7 @@ class CNN3D_Segformer(nn.Module):
         from_pretrained = cfg.from_pretrained
         self.xy_encoder_2d = SegformerForSemanticSegmentation.from_pretrained(from_pretrained,
                                                                               num_labels=1,
-                                                                              num_channels=cfg.in_chans,
+                                                                              num_channels=32,
                                                                               ignore_mismatched_sizes=True)
 
     def forward(self, image):
