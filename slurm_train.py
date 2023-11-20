@@ -21,11 +21,14 @@ def main():
 
     gpu_resource = gpu_mapping[args.gpu_type]
 
-    # Construct the sbatch command
-    sbatch_cmd = f"sbatch -p ls6 --gres=gpu:{gpu_resource} --wrap=\"python pl_train.py {args.config_path}\" -o \"slurm_logs/slurm-%j.out\""
+    cmd_str = f"python pl_train.py {args.config_path}"
 
-    # Execute the sbatch command
-    subprocess.run(sbatch_cmd, shell=True)
+    slurm_cmd = f'sbatch -p ls6 \
+    --gres=gpu:{gpu_resource} \
+    --wrap="{cmd_str}" \
+    -o "slurm_logs/slurm-%j.out"'
+
+    subprocess.run(slurm_cmd, shell=True)
 
 
 if __name__ == "__main__":
