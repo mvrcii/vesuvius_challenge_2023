@@ -53,8 +53,11 @@ class Config:
 
         def import_config_from_path(path):
             module_name = os.path.basename(path).split('.')[0]
+            print(module_name)
             spec = importlib.util.spec_from_file_location(module_name, path)
+            print(spec)
             module = importlib.util.module_from_spec(spec)
+            print(module)
             spec.loader.exec_module(module)
             return module
 
