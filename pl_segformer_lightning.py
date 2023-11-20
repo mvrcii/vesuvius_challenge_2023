@@ -60,7 +60,7 @@ class AbstractVesuvLightningModule(LightningModule):
         # Log learning rate
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
         self.log('learning_rate', lr, on_step=True, on_epoch=False, prog_bar=True, sync_dist=True)
-        self.log('train_loss', total_loss, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log('train_loss', total_loss, on_epoch=True, prog_bar=False, sync_dist=True)
 
         return total_loss
 
