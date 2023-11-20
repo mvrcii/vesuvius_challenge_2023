@@ -169,7 +169,9 @@ def validate_fragment_files(frag_id, channels):
     errors = []  # List to store error messages
     used_channels = calc_original_channel_ids(channels)
 
-    fragments_path = os.path.join("data", "fragments")
+    # todo adjust based on local/slurm
+    # fragments_path = os.path.join("data", "fragments")
+    fragments_path = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stRepim", "data", "fragments")
     frag_dir = os.path.join(fragments_path, f"fragment{frag_id}")
     frag_name = get_frag_name_from_id(frag_id)
 
