@@ -179,6 +179,7 @@ def validate_fragment_files(frag_id, channels):
 
     # Check if the 'slices' folder exists inside the fragment directory
     slices_dir = os.path.join(frag_dir, "slices")
+    print("Searching for slices directory in", frag_dir)
     if not os.path.isdir(slices_dir):
         errors.append(f"Required 'slices' directory does not exist in fragment '{frag_name}'.")
 
