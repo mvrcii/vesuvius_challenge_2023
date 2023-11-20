@@ -11,7 +11,7 @@ from lightning.pytorch.trainer import Trainer
 
 from config_handler import Config
 from pl_segformer_datamodule import SegFormerDataModule
-from pl_segformer_lightning import SegFormerLightningModule
+from pl_segformer_lightning import CNN3D_SegformerModule, SegformerModule
 from util.train_utils import get_device_configuration
 
 torch.set_float32_matmul_precision('medium')
@@ -32,6 +32,18 @@ def get_sys_args():
     return sys.argv[1]
 
 
+def get_model(config):
+    architecture = config.architecture
+
+    if architecture == 'segformer':
+        return SegformerModule(cfg=config)
+    elif architecture == 'cnn3d_segformer':
+        return CNN3D_SegformerModule(cfg=config)
+    else:
+        print("Invalid architecture:", architecture)
+        sys.exit(1)
+
+
 def main():
     config_path = get_sys_args()
     config = Config.load_from_file(config_path)
@@ -44,7 +56,7 @@ def main():
 
     model_run_dir = os.path.join("checkpoints", f"{wandb_logger.experiment.name}-{datetime.now().strftime('%y%m%d-%H%M%S')}")
 
-    model = SegFormerLightningModule(cfg=config)
+    model = get_model(config=config)
     data_module = SegFormerDataModule(cfg=config)
 
     checkpoint_callback = ModelCheckpoint(
