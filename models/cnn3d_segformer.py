@@ -1,10 +1,10 @@
 import torch
-from transformers import SegformerFeatureExtractor, SegformerForSemanticSegmentation, SegformerConfig
 import torch.nn as nn
+from transformers import SegformerForSemanticSegmentation, SegformerConfig
 
 
 class CNN3D_Segformer(nn.Module):
-    def __init__(self):
+    def __init__(self, cfg):
         super().__init__()
 
         self.conv3d_1 = nn.Conv3d(1, 4, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
@@ -12,9 +12,10 @@ class CNN3D_Segformer(nn.Module):
         self.conv3d_3 = nn.Conv3d(8, 16, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
         self.conv3d_4 = nn.Conv3d(16, 32, kernel_size=(3, 3, 3), stride=1, padding=(1, 1, 1))
 
-        ckpt_path = "nvidia/segformer-b1-finetuned-ade-512-512"
-        self.xy_encoder_2d = SegformerForSemanticSegmentation.from_pretrained(ckpt_path,
-                                                                              config=cnn_3d_segformer_b1_config,
+        from_pretrained = cfg.from_pretrained
+        self.xy_encoder_2d = SegformerForSemanticSegmentation.from_pretrained(from_pretrained,
+                                                                              num_labels=1,
+                                                                              num_channels=32,
                                                                               ignore_mismatched_sizes=True)
 
     def forward(self, image):

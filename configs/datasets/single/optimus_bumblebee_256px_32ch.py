@@ -13,8 +13,6 @@ k_fold = False
 train_frag_ids = [OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID]
 val_frag_ids = []
 train_split = 0.8
-dataset_target_dir = os.path.join("data", "datasets")
-data_root_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp", "data")
 
 use_cutmix = False
 use_mixup = False

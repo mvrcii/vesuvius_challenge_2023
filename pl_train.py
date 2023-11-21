@@ -10,8 +10,9 @@ from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
 
 from config_handler import Config
+from lightning_modules.cnn3d_segformer_module import CNN3D_SegformerModule
+from lightning_modules.segformer_module import SegformerModule
 from pl_segformer_datamodule import SegFormerDataModule
-from pl_segformer_lightning import CNN3D_SegformerModule, SegformerModule
 from util.train_utils import get_device_configuration
 
 torch.set_float32_matmul_precision('medium')
@@ -51,10 +52,15 @@ def main():
     seed_value = config.seed
     seed_everything(seed_value)
 
-    model_run_name = config.model_name if hasattr(config, 'model_name') else None
-    wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv", name=model_run_name)
+    wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
 
-    model_run_dir = os.path.join("checkpoints", f"{wandb_logger.experiment.name}-{datetime.now().strftime('%y%m%d-%H%M%S')}")
+    # Model name related stuff
+    timestamp = datetime.now().strftime('%y%m%d-%H%M%S')
+    model_name = config.model_name if hasattr(config, 'model_name') else "default_model"
+    wandb_generated_name = wandb_logger.experiment.name
+    model_run_name = f"{wandb_generated_name}-{model_name}-{timestamp}"
+    wandb_logger.experiment.name = model_run_name
+    model_run_dir = os.path.join("checkpoints", model_run_name)
 
     model = get_model(config=config)
     data_module = SegFormerDataModule(cfg=config)

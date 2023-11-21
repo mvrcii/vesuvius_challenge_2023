@@ -16,7 +16,7 @@ def main():
         "a": "rtx3090:1",
         "b": "rtx3090:1",
         "c": "rtx4090:1",
-        "8a": "rtx2080ti:8"
+        "8a": "rtx2080ti:7"
     }
 
     gpu_resource = gpu_mapping[args.gpu_type]

@@ -1,7 +1,7 @@
 import os
 
 _base_ = [
-    "configs/datasets/single/optimus_bumblebee_512px_64ch.py",
+    "configs/datasets/single/optimus_bumblebee_256px_32ch.py",
     "configs/schedules/adamw_cosine_lr.py",
 ]
 
@@ -15,10 +15,8 @@ architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 32
-dataset_in_chans = 32
 seed = 42
 epochs = 100
-patch_size = 256
 
 dataset_fraction = 1
 num_workers = 4
