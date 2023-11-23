@@ -6,10 +6,10 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from conf import CFG
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 
-from conf import CFG
 from util.train_utils import load_config
 
 '''
@@ -52,8 +52,15 @@ def read_fragment(fragment_id):
     return images
 
 
+# Inference depends on:
+# - model
+# - in_channels
+# - patch_size_in
+# - patch_size_out
+
 def infer_full_fragment(fragment_index, checkpoint_path, cfg):
-    model = SegformerForSemanticSegmentation.from_pretrained(cfg.seg_pretrained, num_labels=1, num_channels=cfg.in_chans,
+    model = SegformerForSemanticSegmentation.from_pretrained(cfg.seg_pretrained, num_labels=1,
+                                                             num_channels=cfg.in_chans,
                                                              ignore_mismatched_sizes=True)
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
@@ -67,15 +74,18 @@ def infer_full_fragment(fragment_index, checkpoint_path, cfg):
     # Define the size of the patches
     patch_size = cfg.patch_size
     expected_patch_shape = (CFG.in_chans, patch_size, patch_size)
-    patch_size_out = 128
 
-    margin = int(0.1 * patch_size_out)
+    # Todo get these from config?
+    patch_size_out = 128
+    margin_percent = 0.1
+    stride_factor = 2
+
+    margin = int(margin_percent * patch_size_out)
     mask = np.ones((patch_size_out, patch_size_out), dtype=bool)
     mask[margin:-margin, margin:-margin] = False
 
-    stride_factor = 2
-    stride = patch_size // stride_factor
-    stride_out = patch_size_out // stride_factor
+    stride = patch_size // stride_factor  # => 256
+    stride_out = patch_size_out // stride_factor  # => 64
 
     height, width = images[0].shape
 
@@ -133,6 +143,7 @@ def infer_full_fragment(fragment_index, checkpoint_path, cfg):
 
     return out_arr, images[0].shape
 
+
 def save_logits_scaled_normalized(image, result_path, image_shape):
     # Load the logits file
     file = np.array(image)
@@ -166,7 +177,6 @@ if __name__ == '__main__':
 
     # inference
     result, image_shape = infer_full_fragment(fragment_num, checkpoint_path, cfg)
-
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     results_dir = os.path.join("inference", "results", f"fragment{fragment_num}", date_time_string)
