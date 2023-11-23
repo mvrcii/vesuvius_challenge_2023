@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
+import albumentations as A
 
 from config_handler import Config
 from constants import get_frag_name_from_id
@@ -16,6 +17,10 @@ from constants import get_frag_name_from_id
 
         Runs inference on full image, by slicing it into patches.
 '''
+
+val_image_aug = [
+    A.Normalize(mean=[0], std=[1]),
+]
 
 
 def read_fragment(work_dir, fragment_id, layer_start, layer_count):
@@ -129,12 +134,16 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
             # When batch is full, process it
             if len(batches) == batch_size:
-                batch_tensor = torch.tensor(np.stack(batches)).float()
+                # Augmentation
+                transform = A.Compose(val_image_aug, is_check_shapes=False)
+                transformed_images = [transform(image=image)['image'] for image in batches]
+
+                batch_tensor = torch.tensor(np.stack(transformed_images)).float()
                 batch_tensor = batch_tensor.to("cuda")
                 outputs = model(batch_tensor)
                 logits = outputs.logits
-                logits_np = logits.detach().squeeze().cpu().numpy()
-                # logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
+                # logits_np = logits.detach().squeeze().cpu().numpy()
+                logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
 
                 for idx, (x, y) in enumerate(batch_indices):
                     process_patch(logits_np[idx], x, y)  # Function to process each patch
@@ -144,11 +153,15 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
     # Process any remaining patches
     if batches:
-        batch_tensor = torch.tensor(np.stack(batches)).float()
+        # Augmentation
+        transform = A.Compose(val_image_aug, is_check_shapes=False)
+        transformed_images = [transform(image=image)['image'] for image in batches]
+
+        batch_tensor = torch.tensor(np.stack(transformed_images)).float()
         outputs = model(batch_tensor)
         logits = outputs.logits
-        logits_np = logits.detach().squeeze().cpu().numpy()
-        # logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
+        # logits_np = logits.detach().squeeze().cpu().numpy()
+        logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
 
         for idx, (x, y) in enumerate(batch_indices):
             process_patch(logits_np[idx], x, y)
