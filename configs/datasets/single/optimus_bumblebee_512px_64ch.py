@@ -14,9 +14,6 @@ train_frag_ids = [OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID]
 val_frag_ids = []
 train_split = 0.8
 
-use_cutmix = False
-use_mixup = False
-
 # Train augmentations suitable for images + labels
 train_common_aug = [
     A.OneOf([
