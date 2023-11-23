@@ -1,4 +1,4 @@
-from constants import OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID
+from constants import ULTRA_MAGNUS_FRAG_ID
 import albumentations as A
 
 calc_mean_std = False
