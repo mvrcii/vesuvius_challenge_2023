@@ -11,6 +11,7 @@ import albumentations as A
 
 from config_handler import Config
 from constants import get_frag_name_from_id
+import matplotlib.pyplot as plt
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -67,12 +68,12 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
     # Hyperparams
     label_size = config.label_size
-    # margin_percent = 0.1
+    margin_percent = 0.1
     stride_factor = 1
 
-    # margin = int(margin_percent * label_size)
-    # mask = np.ones((label_size, label_size), dtype=bool)
-    # mask[margin:-margin, margin:-margin] = False
+    margin = int(margin_percent * label_size)
+    mask = np.ones((label_size, label_size), dtype=bool)
+    mask[margin:-margin, margin:-margin] = False
 
     stride = patch_size // stride_factor
     stride_out = label_size // stride_factor
@@ -99,10 +100,8 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
     def process_patch(logits_np, x, y):
         # Calculate the margin to ignore (10% of the patch size)
-        # margin = int(0.1 * label_size)
-
         # Set the outer 10% of averaged_logits to zero
-        # logits_np[mask] = 0
+        logits_np[mask] = 0
 
         # Determine the location in the stitched_result array
         out_y_start = y * stride_out
@@ -112,7 +111,7 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
         # Add the result to the stitched_result array and increment prediction counts
         out_arr[out_y_start:out_y_end, out_x_start:out_x_end] += logits_np
-        # pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
+        pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
 
     for y in range(y_patches):
         for x in range(x_patches):
@@ -142,7 +141,6 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
                 batch_tensor = batch_tensor.to("cuda")
                 outputs = model(batch_tensor)
                 logits = outputs.logits
-                # logits_np = logits.detach().squeeze().cpu().numpy()
                 logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
 
                 for idx, (x, y) in enumerate(batch_indices):
@@ -160,7 +158,6 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
         batch_tensor = torch.tensor(np.stack(transformed_images)).float()
         outputs = model(batch_tensor)
         logits = outputs.logits
-        # logits_np = logits.detach().squeeze().cpu().numpy()
         logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
 
         for idx, (x, y) in enumerate(batch_indices):
@@ -169,7 +166,7 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
     progress_bar.close()
 
     # Average the predictions
-    # out_arr = np.where(pred_counts > 0, out_arr / pred_counts, 0)
+    out_arr = np.where(pred_counts > 0, out_arr / pred_counts, 0)
 
     return out_arr
 
@@ -191,6 +188,7 @@ if __name__ == '__main__':
     os.makedirs(results_dir, exist_ok=True)
     print(f"Created directory {results_dir}")
 
+    arrs = []
     # inference
     for i in range(0, 61, channels):
         print(f"Inferring layer {0} to {config.in_chans - 1}")
@@ -199,21 +197,11 @@ if __name__ == '__main__':
                                                    checkpoint_path=checkpoint_path,
                                                    config=config,
                                                    layer_start=i)
-
+        arrs.append(sigmoid_logits)
         np.save(os.path.join(results_dir, f"sigmoid_logits_{i}_{i + channels - 1}.npy"), sigmoid_logits)
+    maxed_arr = np.maximum.reduce(arrs)
+    plt.imshow(maxed_arr, cmap='gray')  # Change colormap if needed
+    plt.colorbar()
+    plt.savefig(os.path.join(results_dir, "maxed_logits.png"), dpi=500,)
+    np.save(os.path.join(results_dir, "maxed_logits.npy"), maxed_arr)
 
-        # # save logits
-        # plt.imshow(result, cmap='gray')
-        # logit_path = os.path.join(results_dir, f"logits_{i}_{cfg.in_channels-1}.png")
-        # plt.savefig(logit_path, bbox_inches='tight', dpi=500, pad_inches=0)
-        #
-        # result_path = os.path.join(results_dir, f"logits_fragment{fragment_num}_{date_time_string}_scaled_norm.png")
-        # save_logits_scaled_normalized(result, result_path, image_shape)
-        #
-        # # save binary
-        # plt.imshow(result > 0.5, cmap='gray')
-        # binary_bath = os.path.join(results_dir, f"binarized_fragment{fragment_num}_{date_time_string}.png")
-        # plt.savefig(binary_bath, bbox_inches='tight', dpi=1500, pad_inches=0)
-        #
-        # print("Saved results to", results_dir)
-        # # save raw output
