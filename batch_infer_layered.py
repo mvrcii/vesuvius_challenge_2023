@@ -62,12 +62,12 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
     # Hyperparams
     label_size = config.label_size
-    margin_percent = 0.1
-    stride_factor = 2
+    # margin_percent = 0.1
+    stride_factor = 1
 
-    margin = int(margin_percent * label_size)
-    mask = np.ones((label_size, label_size), dtype=bool)
-    mask[margin:-margin, margin:-margin] = False
+    # margin = int(margin_percent * label_size)
+    # mask = np.ones((label_size, label_size), dtype=bool)
+    # mask[margin:-margin, margin:-margin] = False
 
     stride = patch_size // stride_factor
     stride_out = label_size // stride_factor
@@ -94,10 +94,10 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
     def process_patch(logits_np, x, y):
         # Calculate the margin to ignore (10% of the patch size)
-        margin = int(0.1 * label_size)
+        # margin = int(0.1 * label_size)
 
         # Set the outer 10% of averaged_logits to zero
-        logits_np[mask] = 0
+        # logits_np[mask] = 0
 
         # Determine the location in the stitched_result array
         out_y_start = y * stride_out
@@ -107,7 +107,7 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
         # Add the result to the stitched_result array and increment prediction counts
         out_arr[out_y_start:out_y_end, out_x_start:out_x_end] += logits_np
-        pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
+        # pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
 
     for y in range(y_patches):
         for x in range(x_patches):
@@ -133,7 +133,8 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
                 batch_tensor = batch_tensor.to("cuda")
                 outputs = model(batch_tensor)
                 logits = outputs.logits
-                logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
+                logits_np = logits.detach().squeeze().cpu().numpy()
+                # logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
 
                 for idx, (x, y) in enumerate(batch_indices):
                     process_patch(logits_np[idx], x, y)  # Function to process each patch
@@ -146,7 +147,8 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
         batch_tensor = torch.tensor(np.stack(batches)).float()
         outputs = model(batch_tensor)
         logits = outputs.logits
-        logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
+        logits_np = logits.detach().squeeze().cpu().numpy()
+        # logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
 
         for idx, (x, y) in enumerate(batch_indices):
             process_patch(logits_np[idx], x, y)
@@ -154,7 +156,7 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
     progress_bar.close()
 
     # Average the predictions
-    out_arr = np.where(pred_counts > 0, out_arr / pred_counts, 0)
+    # out_arr = np.where(pred_counts > 0, out_arr / pred_counts, 0)
 
     return out_arr
 
