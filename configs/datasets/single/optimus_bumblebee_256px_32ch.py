@@ -22,7 +22,7 @@ train_common_aug = [
         A.RandomRotate90(),
         A.Transpose(),
     ], p=0.5),
-    A.Normalize(mean=[0] * dataset_in_chans, std=[1] * dataset_in_chans),
+    A.Normalize(mean=[0], std=[1]),
 ]
 
 train_image_aug = [
@@ -41,5 +41,5 @@ val_common_aug = [
 ]
 
 val_image_aug = [
-    A.Normalize(mean=[0] * dataset_in_chans, std=[1] * dataset_in_chans),
+    A.Normalize(mean=[0], std=[1]),
 ]
