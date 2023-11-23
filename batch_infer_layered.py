@@ -8,9 +8,7 @@ import torch
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 
-import conf_local as CFG
 from config_handler import Config
-from pl_train import get_sys_args
 from constants import get_frag_name_from_id
 
 '''
@@ -20,12 +18,12 @@ from constants import get_frag_name_from_id
 '''
 
 
-def read_fragment(fragment_id, layer_start, layer_count):
+def read_fragment(work_dir, fragment_id, layer_start, layer_count):
     images = []
     print(f"attempting to read fragment {fragment_id} from layer {layer_start} to {layer_count - 1}")
 
     for i in tqdm(range(layer_start, layer_start + layer_count)):
-        img_path = os.path.join(CFG.data_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+        img_path = os.path.join(work_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
         print(img_path)
 
         image = cv2.imread(img_path, 0)
@@ -60,7 +58,7 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
     print("Loaded model", checkpoint_path)
 
     # Loading images
-    images = read_fragment(fragment_id=fragment_id, layer_start=layer_start, layer_count=config.in_chans)
+    images = read_fragment(work_dir=config.work_dir, fragment_id=fragment_id, layer_start=layer_start, layer_count=config.in_chans)
 
     # Hyperparams
     label_size = config.label_size
