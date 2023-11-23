@@ -150,8 +150,13 @@ class WuesuvDataset(Dataset):
         # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
         image = np.transpose(image, (1, 2, 0))
 
+        # Get original dimensions
+        patch_size = image.shape[0]
+        label_size = label.shape[0]
+
         # Scale up label to match image size
-        label = resize(label, (512, 512), order=0, preserve_range=True, anti_aliasing=False)
+        if label_size != patch_size:
+            label = resize(label, (patch_size, patch_size), order=0, preserve_range=True, anti_aliasing=False)
 
         # Apply common augmentations to both image and label
         if self.common_aug:
@@ -163,46 +168,14 @@ class WuesuvDataset(Dataset):
             augmented = self.image_aug(image=image)
             image = augmented['image']
 
-        # if self.train and random.random() < 0.5:  # 50% prob to apply mixup/cutmix
-        #     image2, label2 = self.load_image_and_mask(random.randint(0, self.__len__() - 1))
-        #     if random.random() < 0.5:  # Another 50% prob to choose between mixup/cutmix
-        #         if self.cfg.use_mixup:
-        #             image, label = self.apply_mixup(image, label, image2, label2)
-        #     else:
-        #         if self.cfg.use_cutmix:
-        #             image, label = self.apply_cutmix(image, label, image2, label2)
-
         # Rearrange image back to (channels, height, width) from (height, width, channels) to work with segformer input
         image = np.transpose(image, (2, 0, 1))
 
         # Scale down label to match segformer output
-        label = resize(label, (128, 128), order=0, preserve_range=True, anti_aliasing=False)
+        if label_size != patch_size:
+            label = resize(label, (label_size, label_size), order=0, preserve_range=True, anti_aliasing=False)
+
         return image, label
-
-    @staticmethod
-    def apply_mixup(image1, label1, image2, label2):
-        # Generate mixing factor from Beta distribution
-        alpha = 0.2  # This can be a hyperparameter
-        lam = np.random.beta(alpha, alpha)
-        mixed_image = lam * image1 + (1 - lam) * image2
-        mixed_label = lam * label1 + (1 - lam) * label2
-        return mixed_image, mixed_label
-
-    @staticmethod
-    def apply_cutmix(image1, label1, image2, label2):
-        # Randomly choose the region
-        h, w = image1.shape[0], image1.shape[1]
-        cx, cy = np.random.randint(w), np.random.randint(h)
-        w2, h2 = np.random.randint(w // 2), np.random.randint(h // 2)
-        x1, x2 = np.clip(cx - w2 // 2, 0, w), np.clip(cx + w2 // 2, 0, w)
-        y1, y2 = np.clip(cy - h2 // 2, 0, h), np.clip(cy + h2 // 2, 0, h)
-
-        mixed_image = np.array(image1)
-        mixed_label = np.array(label1)
-        mixed_image[y1:y2, x1:x2] = image2[y1:y2, x1:x2]
-        mixed_label[y1:y2, x1:x2] = label2[y1:y2, x1:x2]
-
-        return mixed_image, mixed_label
 
     def load_image_and_mask(self, idx):
         image = np.load(os.path.join(self.img_dir, self.images[idx]))
