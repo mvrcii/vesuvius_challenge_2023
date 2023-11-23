@@ -1,10 +1,11 @@
-from constants import OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID
+from constants import OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, SHOCKWAVE_FRAG_ID
 import albumentations as A
 import os
 
 calc_mean_std = False
 
 patch_size = 256
+label_size = patch_size // 4  # 1/4 of patch_size if segformer is used as decoder
 stride = patch_size // 2
 dataset_in_chans = 32
 ink_ratio = 0.01

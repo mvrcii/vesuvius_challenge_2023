@@ -4,6 +4,7 @@ import albumentations as A
 calc_mean_std = False
 
 patch_size = 512
+label_size = patch_size // 4  # 1/4 of patch_size if segformer is used as decoder
 stride = patch_size // 2
 dataset_in_chans = 64
 ink_ratio = 0.05
