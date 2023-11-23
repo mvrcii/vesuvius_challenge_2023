@@ -185,7 +185,7 @@ if __name__ == '__main__':
                                                    config=config,
                                                    layer_start=i)
 
-        np.save(os.path.join(results_dir, f"sigmoid_logits_{i}_{channels - 1}.npy"), sigmoid_logits)
+        np.save(os.path.join(results_dir, f"sigmoid_logits_{i}_{i + channels - 1}.npy"), sigmoid_logits)
 
         # # save logits
         # plt.imshow(result, cmap='gray')
