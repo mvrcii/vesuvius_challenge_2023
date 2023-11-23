@@ -160,7 +160,7 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print("Usage: python batch_infer_layered.py <config_path> <checkpoint_path> <fragment_id>")
         sys.exit(1)
 
