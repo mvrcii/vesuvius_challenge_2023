@@ -27,6 +27,7 @@ class AbstractVesuvLightningModule(LightningModule):
         super().__init__()
         self.lr = cfg.lr
         self.weight_decay = cfg.weight_decay
+        self.optimizer = cfg.optimizer
         self.model = SegformerForSemanticSegmentation.from_pretrained(
             cfg.from_pretrained,
             num_labels=1,
@@ -50,7 +51,11 @@ class AbstractVesuvLightningModule(LightningModule):
         self.map = BinaryAveragePrecision()
 
     def configure_optimizers(self):
-        optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        if self.optimizer == 'adamw':
+            optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        else:
+            raise NotImplementedError()
+
         scheduler = CosineAnnealingLR(
             optimizer,
             T_max=100,

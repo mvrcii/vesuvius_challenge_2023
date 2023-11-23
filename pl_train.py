@@ -4,6 +4,7 @@ from datetime import datetime
 import warnings
 
 import torch
+import wandb
 from lightning import seed_everything
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
@@ -45,6 +46,27 @@ def get_model(config):
         sys.exit(1)
 
 
+def log_wandb_hyperparams(config):
+    # scheduler
+    wandb.config.learning_rate = config.lr
+    wandb.config.weight_decay = config.weight_decay
+    wandb.config.optimizer = config.optimizer
+    wandb.config.pos_weight = config.pos_weight
+    wandb.config.label_smoothing = config.label_smoothing
+    # model params
+    wandb.config.seed = config.seed
+    wandb.config.in_chans = config.in_chans
+    wandb.config.model_name = config.model_name
+    wandb.config.from_pretrained = config.from_pretrained
+    wandb.config.epochs = config.epochs
+    wandb.config.model_type = config.model_type
+    # train params
+    wandb.config.train_batch_size = config.train_batch_size
+    # dataset params
+    wandb.config.patch_size = config.patch_size
+    wandb.config.ink_ratio = config.ink_ratio
+
+
 def main():
     config_path = get_sys_args()
     config = Config.load_from_file(config_path)
@@ -53,6 +75,8 @@ def main():
     seed_everything(seed_value)
 
     wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
+
+    log_wandb_hyperparams(config)
 
     # Model name related stuff
     timestamp = datetime.now().strftime('%y%m%d-%H%M%S')
