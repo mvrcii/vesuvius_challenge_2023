@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime
 
 import cv2
@@ -7,7 +8,8 @@ import torch
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 
-import conf_local as CFG
+from config_handler import Config
+from constants import get_frag_name_from_id
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -16,18 +18,17 @@ import conf_local as CFG
 '''
 
 
-def read_fragment(fragment_id, layer_start, layer_count):
+def read_fragment(work_dir, fragment_id, layer_start, layer_count):
     images = []
     print(f"attempting to read fragment {fragment_id} from layer {layer_start} to {layer_count - 1}")
 
     for i in tqdm(range(layer_start, layer_start + layer_count)):
-        img_path = os.path.join(CFG.data_root_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+        img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
         print(img_path)
 
         image = cv2.imread(img_path, 0)
         print(image.shape)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image"
-
 
         images.append(image)
     images = np.stack(images, axis=0)
@@ -41,37 +42,35 @@ def read_fragment(fragment_id, layer_start, layer_count):
 # - patch_size_in
 # - patch_size_out
 
-def infer_full_fragment_layer(fragment_index, checkpoint_path, cfg, layer_start, layer_count=4):
-    # todo read checkpoint / channels from config
-    model = SegformerForSemanticSegmentation.from_pretrained("nvidia/mit-b0", num_labels=1,
-                                                             num_channels=4,
+def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, layer_start):
+    patch_size = config.patch_size
+    expected_patch_shape = (config.in_chans, patch_size, patch_size)
+
+    model = SegformerForSemanticSegmentation.from_pretrained(config.from_pretrained,
+                                                             num_labels=1,
+                                                             num_channels=config.in_chans,
                                                              ignore_mismatched_sizes=True)
     model = model.to("cuda")
-    # checkpoint = torch.load(checkpoint_path)
-    # state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-    # model.load_state_dict(state_dict)
-    # model.load_state_dict(checkpoint)
-    # print("Loaded model", checkpoint_path)
+
+    checkpoint = torch.load(checkpoint_path)
+    state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    print("Loaded model", checkpoint_path)
 
     # Loading images
-    images = read_fragment(fragment_index, layer_start, layer_count)
+    images = read_fragment(work_dir=config.work_dir, fragment_id=fragment_id, layer_start=layer_start, layer_count=config.in_chans)
 
-    # Define the size of the patches
-    patch_size = cfg.patch_size
-    expected_patch_shape = (CFG.in_channels, patch_size, patch_size)
-
-    # Todo get these from config?
-
-    patch_size_out = cfg.label_size
+    # Hyperparams
+    label_size = config.label_size
     margin_percent = 0.1
     stride_factor = 2
 
-    margin = int(margin_percent * patch_size_out)
-    mask = np.ones((patch_size_out, patch_size_out), dtype=bool)
+    margin = int(margin_percent * label_size)
+    mask = np.ones((label_size, label_size), dtype=bool)
     mask[margin:-margin, margin:-margin] = False
 
-    stride = patch_size // stride_factor  # => 256
-    stride_out = patch_size_out // stride_factor  # => 64
+    stride = patch_size // stride_factor
+    stride_out = label_size // stride_factor
 
     height, width = images[0].shape
 
@@ -80,30 +79,31 @@ def infer_full_fragment_layer(fragment_index, checkpoint_path, cfg, layer_start,
     y_patches = int(np.ceil((height - patch_size) / stride)) + 1
 
     # Initialize arrays to hold the stitched result and count of predictions for each pixel
-    out_height = y_patches * stride_out + patch_size_out
-    out_width = x_patches * stride_out + patch_size_out
+    out_height = y_patches * stride_out + label_size
+    out_width = x_patches * stride_out + label_size
     out_arr = np.zeros((out_height, out_width), dtype=np.float32)
     pred_counts = np.zeros((out_height, out_width), dtype=np.int32)
 
-    progress_bar = tqdm(total=x_patches * y_patches, desc="Infer Full Fragment: Processing patches")
+    progress_bar = tqdm(total=x_patches * y_patches, desc=f"Infer Full Fragment "
+                                                          f"{get_frag_name_from_id(fragment_id)}: Processing patches")
 
     # todo read batch_size_infer from config
-    batch_size = 4
+    batch_size = config.train_batch_size
     batches = []
     batch_indices = []
 
     def process_patch(logits_np, x, y):
         # Calculate the margin to ignore (10% of the patch size)
-        margin = int(0.1 * patch_size_out)
+        margin = int(0.1 * label_size)
 
         # Set the outer 10% of averaged_logits to zero
         logits_np[mask] = 0
 
         # Determine the location in the stitched_result array
         out_y_start = y * stride_out
-        out_y_end = out_y_start + patch_size_out
+        out_y_end = out_y_start + label_size
         out_x_start = x * stride_out
-        out_x_end = out_x_start + patch_size_out
+        out_x_end = out_x_start + label_size
 
         # Add the result to the stitched_result array and increment prediction counts
         out_arr[out_y_start:out_y_end, out_x_start:out_x_end] += logits_np
@@ -152,6 +152,7 @@ def infer_full_fragment_layer(fragment_index, checkpoint_path, cfg, layer_start,
             process_patch(logits_np[idx], x, y)
 
     progress_bar.close()
+
     # Average the predictions
     out_arr = np.where(pred_counts > 0, out_arr / pred_counts, 0)
 
@@ -159,27 +160,32 @@ def infer_full_fragment_layer(fragment_index, checkpoint_path, cfg, layer_start,
 
 
 if __name__ == '__main__':
-    # if len(sys.argv) != 2:
-    #     print("Usage: python infer_full_fragment.py <checkpoint_path> <fragment_num> <config>")
+    if len(sys.argv) != 4:
+        print("Usage: python batch_infer_layered.py <config_path> <checkpoint_path> <fragment_id>")
+        sys.exit(1)
 
-    # cfg = load_config(CFG)
-    # checkpoint_path = sys.argv[1]
-    # fragment_num = sys.argv[2]
-    fragment_num = 2
-    cfg = CFG
-    checkpoint_path = ""
+    config_path = sys.argv[1]
+    checkpoint_path = sys.argv[2]
+    fragment_id = sys.argv[3]
+
+    config = Config.load_from_file(config_path)
+    channels = config.in_chans
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
-    results_dir = os.path.join("inference", "results", f"fragment{fragment_num}", date_time_string)
+    results_dir = os.path.join("inference", "results", f"fragment{fragment_id}", date_time_string)
     os.makedirs(results_dir, exist_ok=True)
     print(f"Created directory {results_dir}")
-    # inference
-    for i in range(0, 61, cfg.in_channels):
-        print(f"Inferring layer {0} to {cfg.in_channels - 1}")
-        sigmoid_logits = infer_full_fragment_layer(fragment_num, checkpoint_path, cfg, layer_start=i,
-                                                   layer_count=cfg.in_channels)
 
-        np.save(os.path.join(results_dir, f"sigmoid_logits_{i}_{cfg.in_channels - 1}.npy"), sigmoid_logits)
+    # inference
+    for i in range(0, 61, channels):
+        print(f"Inferring layer {0} to {config.in_chans - 1}")
+
+        sigmoid_logits = infer_full_fragment_layer(fragment_id=fragment_id,
+                                                   checkpoint_path=checkpoint_path,
+                                                   config=config,
+                                                   layer_start=i)
+
+        np.save(os.path.join(results_dir, f"sigmoid_logits_{i}_{channels - 1}.npy"), sigmoid_logits)
 
         # # save logits
         # plt.imshow(result, cmap='gray')
