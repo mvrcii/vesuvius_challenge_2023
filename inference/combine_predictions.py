@@ -1,38 +1,28 @@
 import os
 import sys
 
+import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image
+from tqdm import tqdm
 
 
-def combine_arrays_to_image(directory, output_filename):
-    # List all files in the directory
-    files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+def combine_and_plot_arrays(directory_path, save_path):
+    arrays = []
 
-    # Initialize an array to store the combined result
-    combined_array = None
+    # Load all numpy arrays from the directory
+    for filename in tqdm(os.listdir(directory_path)):
+        if filename.endswith('.npy'):
+            file_path = os.path.join(directory_path, filename)
+            array = np.load(file_path)
+            arrays.append(array)
 
-    for file in files:
-        # Load the numpy array from file
-        array = np.load(os.path.join(directory, file))
+    # Combine arrays by taking the maximum for each pixel
+    combined_array = np.maximum.reduce(arrays)
 
-        if combined_array is None:
-            # Initialize the combined array with the first array
-            combined_array = array
-        else:
-            # Take the maximum of the current and the new array
-            combined_array = np.maximum(combined_array, array)
-
-    # Normalize the combined array to the range 0-255
-    combined_array = (combined_array * 255).astype(np.uint8)
-
-    # Create an image from the array
-    image = Image.fromarray(combined_array)
-
-    # Save the image
-    image.save(output_filename)
-
-    return output_filename
+    # Display and save the plot
+    plt.imshow(combined_array, cmap='gray')  # Change colormap if needed
+    plt.colorbar()
+    plt.savefig(save_path)
 
 
 if __name__ == "__main__":
@@ -42,4 +32,5 @@ if __name__ == "__main__":
     else:
         # Example usage:
         folder_path = sys.argv[1]
-        combine_arrays_to_image(folder_path, folder_path + 'max_combined_image.png')
+        combine_and_plot_arrays(folder_path, folder_path + 'max_combined_image.png')
+        print("Saved image to " + folder_path + "/max_combined_image.png")
