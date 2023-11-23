@@ -1,7 +1,7 @@
 import os
 
 _base_ = [
-    "configs/datasets/single/optimus_bumblebee_512px_64ch.py",
+    "configs/datasets/single/ultra_magnus_512px_64ch.py",
     "configs/schedules/adamw_cosine_lr.py",
 ]
 
