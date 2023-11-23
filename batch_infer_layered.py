@@ -23,7 +23,7 @@ def read_fragment(work_dir, fragment_id, layer_start, layer_count):
     print(f"attempting to read fragment {fragment_id} from layer {layer_start} to {layer_count - 1}")
 
     for i in tqdm(range(layer_start, layer_start + layer_count)):
-        img_path = os.path.join(work_dir, "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+        img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
         print(img_path)
 
         image = cv2.imread(img_path, 0)
