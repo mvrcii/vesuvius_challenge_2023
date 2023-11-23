@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 from einops import rearrange
 from lightning import LightningModule
 from torch.optim import AdamW
@@ -8,6 +9,17 @@ from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryR
 from transformers import SegformerForSemanticSegmentation
 
 from util.losses import BinaryDiceLoss
+
+
+class BCEWithLogitsLossWithLabelSmoothing(torch.nn.Module):
+    def __init__(self, label_smoothing=0.1, pos_weight=None):
+        super().__init__()
+        self.label_smoothing = label_smoothing
+        self.pos_weight = pos_weight
+
+    def forward(self, inputs, targets):
+        targets_smooth = targets * (1 - self.label_smoothing) + 0.5 * self.label_smoothing
+        return F.binary_cross_entropy_with_logits(inputs, targets_smooth, pos_weight=self.pos_weight)
 
 
 class AbstractVesuvLightningModule(LightningModule):
@@ -21,8 +33,10 @@ class AbstractVesuvLightningModule(LightningModule):
             num_channels=cfg.in_chans,
             ignore_mismatched_sizes=True,
         )
-
-        self.bce_loss = torch.nn.BCEWithLogitsLoss()
+        # False Negatives (FNs) are twice as impactful on the loss as False Positives (FPs)
+        # TODO: Validate different pos_weight values (have an eye on recall & f1 score)
+        pos_weight = torch.tensor([2])
+        self.bce_loss = BCEWithLogitsLossWithLabelSmoothing(label_smoothing=0.1, pos_weight=pos_weight)
         self.dice_loss = BinaryDiceLoss(from_logits=True)
 
         self.f1 = BinaryF1Score()
@@ -52,8 +66,11 @@ class AbstractVesuvLightningModule(LightningModule):
         data, target = batch
         output = self.forward(data)
 
+        # Compute both BCE loss (with label smoothing) and Dice loss
         bce_loss = self.bce_loss(output, target.float())
         dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
+
+        # Combine the losses
         total_loss = bce_loss + dice_loss
 
         # Log learning rate
@@ -67,8 +84,11 @@ class AbstractVesuvLightningModule(LightningModule):
         data, target = batch
         output = self.forward(data)
 
+        # Compute both BCE loss (with label smoothing) and Dice loss
         bce_loss = self.bce_loss(output, target.float())
         dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
+
+        # Combine the losses
         total_loss = bce_loss + dice_loss
 
         # Update metrics
