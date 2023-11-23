@@ -38,11 +38,11 @@ class AbstractVesuvLightningModule(LightningModule):
             classifier_dropout_prob=0.3,
             num_labels=1,
             num_channels=cfg.in_chans,
-            ignore_mismatched_sizes=True,
         )
 
         self.model = SegformerForSemanticSegmentation.from_pretrained(
             pretrained_model_name_or_path=cfg.from_pretrained,
+            ignore_mismatched_sizes=True,
             config=segformer_config
         )
 
