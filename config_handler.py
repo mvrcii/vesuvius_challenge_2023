@@ -103,10 +103,19 @@ class Config:
             if file_path is None:
                 raise ValueError("Target file path not specified and original config path unknown.")
 
+        keys_to_ignore = [
+            'config_file_name',
+            'train_common_aug',
+            'train_image_aug',
+            'val_image_aug',
+            'val_common_aug'
+            'os'
+        ]
+
         file_path = os.path.join(model_run_dir, self.config_file_name)
         with open(file_path, 'w') as f:
             for key, value in self.__dict__.items():
-                if key != 'config_file_name':  # Avoid saving the config_path attribute
+                if key not in keys_to_ignore:
                     f.write(f'{key} = {repr(value)}\n')
 
     def __str__(self):
