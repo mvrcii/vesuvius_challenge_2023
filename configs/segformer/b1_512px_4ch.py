@@ -1,7 +1,7 @@
 import os
 
 _base_ = [
-    "configs/datasets/single/ultra_magnus_512px_64ch.py",
+    "configs/datasets/single/ultra_magnus_512px.py",
     "configs/schedules/adamw_cosine_lr.py",
 ]
 
@@ -10,7 +10,7 @@ base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")
 
-model_type = "b0"
+model_type = "b1"
 architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
