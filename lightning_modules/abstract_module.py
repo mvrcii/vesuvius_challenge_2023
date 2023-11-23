@@ -38,7 +38,7 @@ class AbstractVesuvLightningModule(LightningModule):
         # TODO: Validate different pos_weight values (have an eye on recall & f1 score)
         pos_weight = torch.tensor([2.0]).to(device='cuda')
 
-        self.bce_loss = BCEWithLogitsLossWithLabelSmoothing(label_smoothing=0.1, pos_weight=pos_weight)
+        self.bce_loss = BCEWithLogitsLossWithLabelSmoothing(label_smoothing=0.0, pos_weight=pos_weight)
         self.dice_loss = BinaryDiceLoss(from_logits=True)
 
         self.f1 = BinaryF1Score()
