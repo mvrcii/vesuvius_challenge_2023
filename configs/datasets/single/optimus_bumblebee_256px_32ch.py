@@ -3,7 +3,6 @@ import albumentations as A
 from constants import OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID
 
 calc_mean_std = False
-layered_labels = True
 
 patch_size = 256
 label_size = patch_size // 4  # 1/4 of patch_size if segformer is used as decoder
