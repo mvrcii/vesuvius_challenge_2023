@@ -6,6 +6,7 @@ import random
 import re
 import shutil
 import sys
+from collections import defaultdict
 from multiprocessing import Manager, Pool
 
 import cv2
@@ -31,25 +32,23 @@ def write_dataset_cfg(path, **kwargs):
         json.dump(kwargs, file, indent=4)
 
 
-def write_config(_cfg):
+def write_config(_cfg, frag_2_channels):
     """
     Wrapper for config writing. Returns the target directory for the dataset.
     """
-    return write_k_fold_cfg(_cfg) if _cfg.k_fold else write_single_fold_cfg(_cfg)
+    return write_k_fold_cfg(_cfg, frag_2_channels) if _cfg.k_fold else write_single_fold_cfg(_cfg, frag_2_channels)
 
 
-def write_single_fold_cfg(_cfg):
+def write_single_fold_cfg(_cfg, frag_2_channels):
     logging.info("Starting single-fold dataset creation process...")
-    result_dir_name = f'single_fold_{str(_cfg.patch_size)}px_{str(_cfg.dataset_in_chans)}ch'
+    result_dir_name = f'single_fold_{str(_cfg.patch_size)}px'
     path = os.path.join(_cfg.dataset_target_dir, result_dir_name)
-
-    channel_ids = calc_original_channel_ids(_cfg.dataset_in_chans)
 
     write_dataset_cfg(path,
                       single_train_frag_ids=_cfg.train_frag_ids,
+                      frag_2_channels=frag_2_channels,
                       patch_size=_cfg.patch_size,
-                      channels=_cfg.dataset_in_chans,
-                      channel_ids=channel_ids,
+                      label_size=_cfg.label_size,
                       mode='single_fold')
 
     logging.info(f"Data root directory for single-fold dataset: {path}")
@@ -58,20 +57,18 @@ def write_single_fold_cfg(_cfg):
     return path
 
 
-def write_k_fold_cfg(_cfg):
+def write_k_fold_cfg(_cfg, frag_2_channels):
     logging.info("Starting k-fold dataset creation process...")
 
-    result_dir_name = f'k_fold_{str(_cfg.patch_size)}px_{str(_cfg.dataset_in_chans)}ch'
+    result_dir_name = f'k_fold_{str(_cfg.patch_size)}px'
     path = os.path.join(_cfg.dataset_target_dir, result_dir_name)
 
-    channel_ids = calc_original_channel_ids(_cfg.dataset_in_chans)
-
     write_dataset_cfg(path,
+                      frag_2_channels=frag_2_channels,
                       train_frag_ids=_cfg.train_frag_ids,
                       val_frag_ids=_cfg.val_frag_ids,
                       patch_size=_cfg.patch_size,
-                      channels=_cfg.dataset_in_chans,
-                      channel_ids=channel_ids,
+                      label_size=_cfg.label_size,
                       k_fold=len(_cfg.train_frag_ids) + len(_cfg.val_frag_ids),
                       mode='k_fold')
 
@@ -82,11 +79,10 @@ def write_k_fold_cfg(_cfg):
     return path
 
 
-def read_fragment(fragment_dir, dataset_in_chans, patch_size):
+def read_fragment(fragment_dir, channels, patch_size):
     images = []
+    labels = []
     pad0, pad1 = None, None
-
-    channels = calc_original_channel_ids(dataset_in_chans)
 
     for channel in tqdm(channels):
         img_path = os.path.join(fragment_dir, "slices", f"{channel:05}.tif")
@@ -103,27 +99,31 @@ def read_fragment(fragment_dir, dataset_in_chans, patch_size):
         image = np.pad(image, [(0, pad0), (0, pad1)], constant_values=0)
 
         images.append(image)
+
+    for channel in range(min(channels), max(channels), 4):
+        label_path = os.path.join(fragment_dir, 'layered', f"inklabels_{channel}_{channel + 3}.png")
+
+        if not os.path.isfile(label_path):
+            print("Label file not found:", label_path)
+            sys.exit(1)
+
+        label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
+
+        if label is None or label.shape[0] == 0:
+            print("Label is empty or not loaded correctly:", label_path)
+
+        assert pad0 is not None and pad1 is not None, "Padding is None or not set"
+
+        label = np.pad(label, [(0, pad0), (0, pad1)], mode='constant', constant_values=0)
+        label = (label / 255).astype(np.uint8)
+        assert set(np.unique(np.array(label))) == {0, 1}, "Invalid label"
+
+        labels.append(label)
+
     images = np.stack(images, axis=0)
+    labels = np.stack(labels, axis=0)
 
-    label_path = os.path.join(fragment_dir, "inklabels.png")
-
-    if not os.path.isfile(label_path):
-        print("Label file not found:", label_path)
-        sys.exit(1)
-
-    label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
-
-    if label is None or label.shape[0] == 0:
-        print("Label is empty or not loaded correctly:", label_path)
-
-    assert pad0 is not None and pad1 is not None, "Padding is None or not set"
-
-    label = np.pad(label, [(0, pad0), (0, pad1)], mode='constant', constant_values=0)
-    label = (label / 255).astype(np.uint8)
-
-    assert set(np.unique(np.array(label))) == {0, 1}, "Invalid label"
-
-    return images, label
+    return images, labels
 
 
 def process_fragment(dataset_information, fragment_id, data_type, progress_tracker):
@@ -145,24 +145,23 @@ def calc_original_channel_ids(channels):
 
 def validate_fragments(_cfg):
     all_errors = []
+    frag_2_channels = {}
 
     for frag_id in _cfg.train_frag_ids:
-        errors = []
-        valid = []
+        val_errors, frag_channels = validate_fragment_files(frag_id=frag_id, cfg=_cfg)
+        frag_2_channels[frag_id] = frag_channels
 
-        errors.extend(validate_fragment_files(frag_id=frag_id, cfg=_cfg))
         frag_str = f"Fragment: '{get_frag_name_from_id(frag_id)} ({frag_id})'"
-
-        if errors:
-            all_errors.extend(errors)
-            errors.insert(0, frag_str)
+        if val_errors:
+            all_errors.extend(val_errors)
+            print_checks([frag_str] + val_errors, [])
         else:
-            valid.insert(0, frag_str)
-
-        print_checks(errors, valid)
+            print_checks([], [frag_str])
 
     if all_errors:
         sys.exit(1)
+
+    return frag_2_channels
 
 
 def print_checks(errors, valids):
@@ -176,15 +175,15 @@ def print_checks(errors, valids):
 def validate_fragment_files(frag_id, cfg):
     errors = []
     frag_dir = os.path.join(cfg.work_dir, "data", "fragments", f"fragment{frag_id}")
-    frag_name = get_frag_name_from_id(frag_id)
-    channels = calc_original_channel_ids(cfg.in_chans)
 
     errors.extend(validate_fragment_dir(frag_dir))
-    errors.extend(validate_slices(frag_dir, channels))
-    errors.extend(validate_labels(frag_dir, channels))
+
+    valid_errors, valid_channels = validate_labels(frag_dir)
+    errors.extend(valid_errors)
+
     errors.extend(validate_masks(frag_dir))
 
-    return errors
+    return errors, valid_channels
 
 
 def validate_fragment_dir(frag_dir):
@@ -194,7 +193,7 @@ def validate_fragment_dir(frag_dir):
     return []
 
 
-def extract_indices(directory):
+def extract_label_indices(directory):
     ranges = []
     pattern = r'inklabels_(\d+)_(\d+).png'
 
@@ -212,6 +211,27 @@ def extract_indices(directory):
     return indices
 
 
+def extract_indices(directory, pattern):
+    indices = []
+
+    for filename in os.listdir(directory):
+        match = re.match(pattern, filename)
+        if match:
+            groups = match.groups()
+            if len(groups) == 1:
+                # Single number (e.g., \d+.tif)
+                number = int(groups[0])
+                indices.append(number)
+            elif len(groups) == 2:
+                # Range of numbers (e.g., inklabels_(\d+)_(\d+).png)
+                start_layer, end_layer = map(int, groups)
+                indices.extend(range(start_layer, end_layer + 1))
+
+    indices = list(set(indices))  # Remove duplicates if any
+    indices.sort()  # Sort the indices in ascending order
+    return indices
+
+
 def is_valid_png(file_path):
     try:
         with Image.open(file_path) as img:
@@ -220,45 +240,49 @@ def is_valid_png(file_path):
         return False
 
 
-def validate_labels(frag_dir, required_channels):
+def validate_labels(frag_dir):
     errors = []
-    layered_label_dir = os.path.join(frag_dir, 'layered')
+    label_dir = os.path.join(frag_dir, 'layered')
+    slice_dir = os.path.join(frag_dir, 'slices')
 
-    # Check if the 'layered' folder exists inside the fragment directory
-    if os.path.isdir(layered_label_dir):
-        errors.append(f"Missing 'layered' directory")
+    if not os.path.isdir(label_dir):
+        errors.append(f"Missing '{label_dir}' directory")
+        return errors, []
 
-        # If layered label dir and files exist, use it
-        existing_channels = set(extract_indices(layered_label_dir))
-        required_channels = set(required_channels)
-        missing_channels = required_channels - existing_channels
+    if not os.path.isdir(slice_dir):
+        errors.append(f"Missing '{slice_dir}' directory")
+        return errors, []
 
-        if missing_channels:
-            formatted_ranges = format_ranges(sorted(list(missing_channels)), file_ending="png")
-            errors.append(f"Missing label files: {formatted_ranges}")
+    existing_label_channels = set(extract_indices(label_dir, pattern=r'inklabels_(\d+)_(\d+).png'))
+    existing_slice_channels = set(extract_indices(slice_dir, pattern=r'(\d+).tif'))
 
-    return errors
+    missing_slice_channels = existing_label_channels - existing_slice_channels
+    valid_channels = existing_slice_channels.intersection(existing_label_channels)
+
+    if missing_slice_channels:
+        errors.append(
+            f"Missing slice channel files: {format_ranges(sorted(list(missing_slice_channels)), file_ending='png')}")
+
+    return errors, sorted(list(valid_channels))
 
 
-def validate_slices(frag_dir, channels):
+def calc_req_dataset_channels(slice_dir, label_dir):
     errors = []
+    required_dirs = [slice_dir, label_dir]
+    req_dirs_present = True
 
-    # Check if the 'slices' folder exists inside the fragment directory
-    slices_dir = os.path.join(frag_dir, "slices")
-    if not os.path.isdir(slices_dir):
-        errors.append(f"Missing 'slices' directory")
+    for req_dir in required_dirs:
+        if not os.path.isdir(req_dir):
+            errors.append(f"Missing '{req_dir}' directory")
+            req_dirs_present = False
 
-    # Check for the required channel files and aggregate missing channels
-    missing_channels = []
-    for ch_idx in channels:
-        ch_file_path = os.path.join(slices_dir, f"{ch_idx:05d}.tif")
-        if not os.path.isfile(ch_file_path):
-            missing_channels.append(ch_idx)
+    if req_dirs_present:
+        existing_label_channels = set(extract_indices(label_dir, pattern=r'inklabels_(\d+)_(\d+).png'))
+        existing_slice_channels = set(extract_indices(slice_dir, pattern=r'\d+.tif'))
 
-    if missing_channels:
-        errors.append(f"Missing slice files: {format_ranges(missing_channels)}")
+        return errors, existing_slice_channels, existing_label_channels
 
-    return errors
+    return errors, None, None
 
 
 def validate_masks(frag_dir):
@@ -290,18 +314,18 @@ def format_ranges(numbers, file_ending="tif"):
 
 
 def build_dataset(_cfg):
-    validate_fragments(_cfg=_cfg)
-    build_k_fold_dataset(_cfg) if _cfg.k_fold else build_single_fold_dataset(_cfg)
+    frag_2_channels = validate_fragments(_cfg=_cfg)
+    build_k_fold_dataset(_cfg, frag_2_channels) if _cfg.k_fold else build_single_fold_dataset(_cfg, frag_2_channels)
 
 
-def build_single_fold_dataset(_cfg):
+def build_single_fold_dataset(_cfg, frag_2_channels):
     print("Dataset Type: Single-Fold")
-    target_dir = write_config(_cfg=_cfg)
+    target_dir = write_config(_cfg=_cfg, frag_2_channels=frag_2_channels)
 
     dataset_information = {
         "target_dir": target_dir,
         "data_root_dir": _cfg.data_root_dir,
-        "dataset_in_chans": _cfg.dataset_in_chans,
+        "frag_2_channels": frag_2_channels,
         "patch_size": _cfg.patch_size,
         "stride": _cfg.stride,
         "ink_ratio": _cfg.ink_ratio,
@@ -311,7 +335,6 @@ def build_single_fold_dataset(_cfg):
     with Manager() as manager:
         progress_tracker = manager.Value('i', 0)
 
-        # Prepare arguments for multiprocessing
         all_args = [(dataset_information, _cfg.train_frag_ids, 'train', progress_tracker)]
 
         with Pool() as pool:
@@ -333,8 +356,8 @@ def build_single_fold_dataset(_cfg):
         plot_mean_std(target_dir)
 
 
-def build_k_fold_dataset(_cfg):
-    target_dir = write_config(_cfg=_cfg)
+def build_k_fold_dataset(_cfg, frag_2_channels):
+    target_dir = write_config(_cfg=_cfg, frag_2_channels=frag_2_channels)
     print("Dataset Type: K-Fold")
 
     with Manager() as manager:
@@ -343,7 +366,7 @@ def build_k_fold_dataset(_cfg):
         dataset_information = {
             "target_dir": target_dir,
             "data_root_dir": _cfg.data_root_dir,
-            "dataset_in_chans": _cfg.dataset_in_chans,
+            "frag_2_channels": frag_2_channels,
             "patch_size": _cfg.patch_size,
             "stride": _cfg.stride,
             "ink_ratio": _cfg.ink_ratio,
@@ -375,7 +398,7 @@ def build_k_fold_dataset(_cfg):
 def create_dataset(dataset_information, fragment_ids, data_type='train'):
     target_dir = dataset_information["target_dir"]
     data_root_dir = dataset_information["data_root_dir"]
-    dataset_in_chans = dataset_information["dataset_in_chans"]
+    frag_2_channels = dataset_information["frag_2_channels"]
     patch_size = dataset_information["patch_size"]
     stride = dataset_information["stride"]
     ink_ratio = dataset_information["ink_ratio"]
@@ -389,9 +412,9 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
     os.makedirs(label_path, exist_ok=True)
 
     total_patch_count = 0
+    label_size = patch_size // 4
 
     for frag_id in fragment_ids:
-
         fragment_dir = os.path.join(data_root_dir, "fragments", f"fragment{frag_id}")
 
         if not os.path.isdir(fragment_dir):
@@ -400,51 +423,64 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         mask_path = os.path.join(fragment_dir, f"mask.png")
         if not os.path.isfile(mask_path):
             raise ValueError(f"Mask file does not exist for fragment: {mask_path}")
-
-        images, label = read_fragment(fragment_dir, dataset_in_chans, patch_size)
-
         mask_arr = np.asarray(Image.open(mask_path))
+
+        channels = frag_2_channels[frag_id]
+        assert len(channels) % 4 == 0, "Channels are not divisible by 4"
+
+        images, label = read_fragment(fragment_dir, frag_2_channels[frag_id], patch_size)
 
         x1_list = list(range(0, images.shape[2] - patch_size + 1, stride))
         y1_list = list(range(0, images.shape[1] - patch_size + 1, stride))
 
-        progress_bar = tqdm(total=len(x1_list) * len(y1_list),
-                            desc=f"{data_type.capitalize()} Dataset Fragment {frag_id}: Processing images "
+        progress_bar = tqdm(total=len(x1_list) * len(y1_list) * len(channels) // 4,
+                            desc=f"{data_type.capitalize()} Dataset Fragment "
+                                 f"'{get_frag_name_from_id(frag_id)} ({frag_id})': Processing images "
                                  f"and labels")
 
         patch_count_for_fragment = 0
+
+        patch_count_for_label_layer = defaultdict(int)
 
         for y1 in y1_list:
             for x1 in x1_list:
                 y2 = y1 + patch_size
                 x2 = x1 + patch_size
-                progress_bar.update(1)
 
-                img_patch = images[:, y1:y2, x1:x2]
+                for channel in range(min(channels), max(channels), 4):
+                    progress_bar.update(1)
 
-                if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
-                    continue
+                    img_patch = images[channel:channel + 4, y1:y2, x1:x2]
 
-                # Scale label down to match segformer output
-                label_patch = resize(label[y1:y2, x1:x2], (128, 128), order=0, preserve_range=True,
-                                     anti_aliasing=False)
+                    if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
+                        continue
 
-                # Check that the label contains at least 10% ink
-                if label_patch.sum() < np.prod(label_patch.shape) * ink_ratio:
-                    continue
+                    # Scale label down to match segformer output
+                    label_idx = channel // 4
+                    label_patch = label[label_idx, y1:y2, x1:x2]
+                    label_patch = resize(label_patch,
+                                         (label_size, label_size),
+                                         order=0, preserve_range=True, anti_aliasing=False)
 
-                file_name = f"f{frag_id}_{x1}_{y1}_{x2}_{y2}.npy"
-                img_file_path = os.path.join(img_path, file_name)
-                label_file_path = os.path.join(label_path, file_name)
+                    # Check that the label contains at least N % ink
+                    if label_patch.sum() < np.prod(label_patch.shape) * ink_ratio:
+                        continue
 
-                np.save(img_file_path, img_patch)
-                np.save(label_file_path, label_patch)
+                    file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
+                    img_file_path = os.path.join(img_path, file_name)
+                    label_file_path = os.path.join(label_path, file_name)
 
-                patch_count_for_fragment += 1
+                    np.save(img_file_path, img_patch)
+                    np.save(label_file_path, label_patch)
+
+                    patch_count_for_fragment += 1
+                    patch_count_for_label_layer[label_idx] += 1
 
         total_patch_count += patch_count_for_fragment
 
         progress_bar.close()
+
+        plot_patch_count_per_label_layer(dict(sorted(patch_count_for_label_layer.items())))
 
         if calc_mean_std:
             process_mean_and_std(images, data_type, frag_id, target_data_dir)
@@ -454,6 +490,16 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
 
         print(f"Patch Count for Fragment '{get_frag_name_from_id(frag_id)}'", patch_count_for_fragment)
     print("Total Patch Count:", total_patch_count)
+
+
+def plot_patch_count_per_label_layer(data):
+    plt.figure(figsize=(10, 5))
+    plt.bar(data.keys(), data.values(), color='skyblue')
+    plt.xlabel('Label Layer')
+    plt.ylabel('Patch Count')
+    plt.title('Patch Count per Label Layer')
+    plt.xticks(list(data.keys()))
+    plt.show()
 
 
 def process_mean_and_std(images, data_type, frag_id, data_root_dir):

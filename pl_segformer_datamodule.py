@@ -23,17 +23,13 @@ class SegFormerDataModule(LightningDataModule):
 
     @staticmethod
     def _get_data_root_dir(config):
-        if config.dataset_in_chans != config.in_chans:
-            print(f"Input channels of dataset {config.dataset_in_chans} != Input channels of model {config.in_chans}")
-            sys.exit(1)
-
         if config.k_fold:
             print("Start training with k_fold data")
-            dataset_name = f'k_fold_{config.patch_size}px_{config.dataset_in_chans}ch'
+            dataset_name = f'k_fold_{config.patch_size}px'
             data_root_dir = os.path.join(config.dataset_target_dir, dataset_name)
         else:
             print("Start training with single fragment data")
-            dataset_name = f'single_fold_{config.patch_size}px_{config.dataset_in_chans}ch'
+            dataset_name = f'single_fold_{config.patch_size}px'
             data_root_dir = os.path.join(config.dataset_target_dir, dataset_name)
 
         return data_root_dir
