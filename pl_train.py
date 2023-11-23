@@ -1,10 +1,10 @@
 import os
 import sys
+import types
 from datetime import datetime
 import warnings
 
 import torch
-import wandb
 from lightning import seed_everything
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
@@ -67,6 +67,18 @@ def log_wandb_hyperparams(config, wandb_logger):
     # wandb.config.patch_size = config.patch_size
     # wandb.config.ink_ratio = config.ink_ratio
 
+def log_wandb_hyperparams(config, wandb_logger):
+    config_dict = vars(config)  # Convert config object to a dictionary
+
+    # Remove non-serializable items
+    cleaned_config = {k: v for k, v in config_dict.items() if not isinstance(v, types.ModuleType)}
+
+    # Optionally, further clean the dictionary
+    # e.g., by removing other non-serializable types or converting them to strings
+
+    # Log the cleaned hyperparameters
+    wandb_logger.log_hyperparams(cleaned_config)
+
 
 def main():
     config_path = get_sys_args()
@@ -77,8 +89,7 @@ def main():
 
     wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
 
-    wandb_logger.log_hyperparams(vars(config))
-    # log_wandb_hyperparams(config, wandb_logger)
+    log_wandb_hyperparams(config=config, wandb_logger=wandb_logger)
 
     # Model name related stuff
     timestamp = datetime.now().strftime('%y%m%d-%H%M%S')
