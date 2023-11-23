@@ -6,7 +6,7 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryAUROC, BinaryJaccardIndex as IoU, BinaryAveragePrecision)
-from transformers import SegformerForSemanticSegmentation
+from transformers import SegformerForSemanticSegmentation, SegformerConfig
 
 from util.losses import BinaryDiceLoss
 
@@ -25,21 +25,32 @@ class BCEWithLogitsLossWithLabelSmoothing(torch.nn.Module):
 class AbstractVesuvLightningModule(LightningModule):
     def __init__(self, cfg):
         super().__init__()
+        self.epochs = cfg.epochs
         self.lr = cfg.lr
+        self.eta_min = cfg.eta_min
         self.weight_decay = cfg.weight_decay
         self.optimizer = cfg.optimizer
+
+        segformer_config = SegformerConfig(
+            hidden_dropout_prob=0.3,
+            drop_path_rate=0.3,
+            attention_probs_dropout_prob=0.3,
+            classifier_dropout_prob=0.3
+        )
+
         self.model = SegformerForSemanticSegmentation.from_pretrained(
             cfg.from_pretrained,
             num_labels=1,
             num_channels=cfg.in_chans,
             ignore_mismatched_sizes=True,
+            config=segformer_config
         )
 
         # False Negatives (FNs) are twice as impactful on the loss as False Positives (FPs)
         # TODO: Validate different pos_weight values (have an eye on recall & f1 score)
-        pos_weight = torch.tensor([2.0]).to(device='cuda')
+        pos_weight = torch.tensor([cfg.pos_weight]).to(device='cuda')
 
-        self.bce_loss = BCEWithLogitsLossWithLabelSmoothing(label_smoothing=0.0, pos_weight=pos_weight)
+        self.bce_loss = BCEWithLogitsLossWithLabelSmoothing(label_smoothing=cfg.label_smoothing, pos_weight=pos_weight)
         self.dice_loss = BinaryDiceLoss(from_logits=True)
 
         self.f1 = BinaryF1Score()
@@ -58,8 +69,8 @@ class AbstractVesuvLightningModule(LightningModule):
 
         scheduler = CosineAnnealingLR(
             optimizer,
-            T_max=100,
-            eta_min=1e-6
+            T_max=self.epochs,
+            eta_min=self.eta_min
         )
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
 
