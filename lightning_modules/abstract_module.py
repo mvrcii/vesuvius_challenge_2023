@@ -35,14 +35,14 @@ class AbstractVesuvLightningModule(LightningModule):
             hidden_dropout_prob=0.3,
             drop_path_rate=0.3,
             attention_probs_dropout_prob=0.3,
-            classifier_dropout_prob=0.3
-        )
-
-        self.model = SegformerForSemanticSegmentation.from_pretrained(
-            cfg.from_pretrained,
+            classifier_dropout_prob=0.3,
             num_labels=1,
             num_channels=cfg.in_chans,
             ignore_mismatched_sizes=True,
+        )
+
+        self.model = SegformerForSemanticSegmentation.from_pretrained(
+            pretrained_model_name_or_path=cfg.from_pretrained,
             config=segformer_config
         )
 
