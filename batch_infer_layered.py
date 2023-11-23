@@ -94,7 +94,7 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
                                                           f"{get_frag_name_from_id(fragment_id)}: Processing patches")
 
     # todo read batch_size_infer from config
-    batch_size = config.train_batch_size
+    batch_size = 4
     batches = []
     batch_indices = []
 
