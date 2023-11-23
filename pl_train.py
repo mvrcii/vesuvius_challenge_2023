@@ -46,25 +46,26 @@ def get_model(config):
         sys.exit(1)
 
 
-def log_wandb_hyperparams(config):
-    # scheduler
-    wandb.config.learning_rate = config.lr
-    wandb.config.weight_decay = config.weight_decay
-    wandb.config.optimizer = config.optimizer
-    wandb.config.pos_weight = config.pos_weight
-    wandb.config.label_smoothing = config.label_smoothing
-    # model params
-    wandb.config.seed = config.seed
-    wandb.config.in_chans = config.in_chans
-    wandb.config.model_name = config.model_name
-    wandb.config.from_pretrained = config.from_pretrained
-    wandb.config.epochs = config.epochs
-    wandb.config.model_type = config.model_type
-    # train params
-    wandb.config.train_batch_size = config.train_batch_size
-    # dataset params
-    wandb.config.patch_size = config.patch_size
-    wandb.config.ink_ratio = config.ink_ratio
+def log_wandb_hyperparams(config, wandb_logger):
+    wandb_logger.log_hyperparams(vars(config))
+    # # scheduler
+    # wandb.config.learning_rate = config.lr
+    # wandb.config.weight_decay = config.weight_decay
+    # wandb.config.optimizer = config.optimizer
+    # wandb.config.pos_weight = config.pos_weight
+    # wandb.config.label_smoothing = config.label_smoothing
+    # # model params
+    # wandb.config.seed = config.seed
+    # wandb.config.in_chans = config.in_chans
+    # wandb.config.model_name = config.model_name
+    # wandb.config.from_pretrained = config.from_pretrained
+    # wandb.config.epochs = config.epochs
+    # wandb.config.model_type = config.model_type
+    # # train params
+    # wandb.config.train_batch_size = config.train_batch_size
+    # # dataset params
+    # wandb.config.patch_size = config.patch_size
+    # wandb.config.ink_ratio = config.ink_ratio
 
 
 def main():
@@ -76,7 +77,8 @@ def main():
 
     wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
 
-    log_wandb_hyperparams(config)
+    wandb_logger.log_hyperparams(vars(config))
+    # log_wandb_hyperparams(config, wandb_logger)
 
     # Model name related stuff
     timestamp = datetime.now().strftime('%y%m%d-%H%M%S')
