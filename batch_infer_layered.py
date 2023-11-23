@@ -69,7 +69,7 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
     # Hyperparams
     label_size = config.label_size
     margin_percent = 0.1
-    stride_factor = 1
+    stride_factor = 2
 
     margin = int(margin_percent * label_size)
     mask = np.ones((label_size, label_size), dtype=bool)
