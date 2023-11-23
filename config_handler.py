@@ -60,9 +60,11 @@ class Config:
 
         model_config = import_config_from_path(config_path)
         config = {}
-        for base_path in model_config._base_:
-            base_config = import_config_from_path(base_path)
-            config.update({k: v for k, v in vars(base_config).items() if not k.startswith('__')})
+        # todo is this the right way to handle this? was necessary to add since my dataset configs don't have base
+        if hasattr(model_config, '_base_'):
+            for base_path in model_config._base_:
+                base_config = import_config_from_path(base_path)
+                config.update({k: v for k, v in vars(base_config).items() if not k.startswith('__')})
 
         config.update({k: v for k, v in vars(model_config).items() if not k.startswith('__')})
 

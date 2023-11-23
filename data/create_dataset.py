@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import random
+import re
 import shutil
 import sys
 from multiprocessing import Manager, Pool
@@ -144,15 +145,21 @@ def calc_original_channel_ids(channels):
 
 def validate_fragments(_cfg):
     all_errors = []
-    all_valids = []
+
     for frag_id in _cfg.train_frag_ids:
-        errors = validate_fragment_files(frag_id=frag_id, channels=_cfg.dataset_in_chans)
+        errors = []
+        valid = []
+
+        errors.extend(validate_fragment_files(frag_id=frag_id, cfg=_cfg))
+        frag_str = f"Fragment: '{get_frag_name_from_id(frag_id)} ({frag_id})'"
+
         if errors:
             all_errors.extend(errors)
+            errors.insert(0, frag_str)
         else:
-            all_valids.extend([f"Fragment: '{get_frag_name_from_id(frag_id)}' - {frag_id}"])
+            valid.insert(0, frag_str)
 
-    print_checks(all_errors, all_valids)
+        print_checks(errors, valid)
 
     if all_errors:
         sys.exit(1)
@@ -163,49 +170,106 @@ def print_checks(errors, valids):
         print(f"\033[92mValid: {valid}\033[0m")
     for error in errors:
         print(f"\033[91mError: {error}\033[0m")
+    print("\n")
 
 
-def validate_fragment_files(frag_id, channels):
-    errors = []  # List to store error messages
-    used_channels = calc_original_channel_ids(channels)
-
-    fragments_path = os.path.join("data", "fragments")
-    frag_dir = os.path.join(fragments_path, f"fragment{frag_id}")
+def validate_fragment_files(frag_id, cfg):
+    errors = []
+    frag_dir = os.path.join(cfg.work_dir, "data", "fragments", f"fragment{frag_id}")
     frag_name = get_frag_name_from_id(frag_id)
+    channels = calc_original_channel_ids(cfg.in_chans)
 
-    # Check if the fragment directory exists
+    errors.extend(validate_fragment_dir(frag_dir))
+    errors.extend(validate_slices(frag_dir, channels))
+    errors.extend(validate_labels(frag_dir, channels))
+    errors.extend(validate_masks(frag_dir))
+
+    return errors
+
+
+def validate_fragment_dir(frag_dir):
     if not os.path.isdir(frag_dir):
-        errors.append(f"Required fragment directory '{frag_name}' does not exist.")
+        return [f"Fragment directory '{frag_dir}' does not exist"]
+
+    return []
+
+
+def extract_indices(directory):
+    ranges = []
+    pattern = r'inklabels_(\d+)_(\d+).png'
+
+    for filename in os.listdir(directory):
+        match = re.match(pattern, filename)
+        if match:
+            start_layer, end_layer = map(int, match.groups())
+            ranges.append((start_layer, end_layer))
+
+    indices = []
+    for start, end in ranges:
+        indices.extend(range(start, end + 1))
+    indices.sort()
+
+    return indices
+
+
+def is_valid_png(file_path):
+    try:
+        with Image.open(file_path) as img:
+            return img.format == "PNG"
+    except IOError:
+        return False
+
+
+def validate_labels(frag_dir, required_channels):
+    errors = []
+    layered_label_dir = os.path.join(frag_dir, 'layered')
+
+    # Check if the 'layered' folder exists inside the fragment directory
+    if os.path.isdir(layered_label_dir):
+        errors.append(f"Missing 'layered' directory")
+
+        # If layered label dir and files exist, use it
+        existing_channels = set(extract_indices(layered_label_dir))
+        required_channels = set(required_channels)
+        missing_channels = required_channels - existing_channels
+
+        if missing_channels:
+            formatted_ranges = format_ranges(sorted(list(missing_channels)), file_ending="png")
+            errors.append(f"Missing label files: {formatted_ranges}")
+
+    return errors
+
+
+def validate_slices(frag_dir, channels):
+    errors = []
 
     # Check if the 'slices' folder exists inside the fragment directory
     slices_dir = os.path.join(frag_dir, "slices")
     if not os.path.isdir(slices_dir):
-        errors.append(f"Required 'slices' directory does not exist in fragment '{frag_name}'.")
-
-    # Check for the existence of 'inklabels.png' file and 'mask.png' file
-    required_files = ['inklabels.png', 'mask.png']
-    for file in required_files:
-        file_path = os.path.join(frag_dir, file)
-        if not os.path.isfile(file_path):
-            errors.append(f"Required file '{file}' does not exist in fragment '{frag_name}'.")
+        errors.append(f"Missing 'slices' directory")
 
     # Check for the required channel files and aggregate missing channels
     missing_channels = []
-    for ch_idx in used_channels:
+    for ch_idx in channels:
         ch_file_path = os.path.join(slices_dir, f"{ch_idx:05d}.tif")
         if not os.path.isfile(ch_file_path):
             missing_channels.append(ch_idx)
 
     if missing_channels:
-        errors.append(f"Missing channel files for fragment '{frag_name}': {format_ranges(missing_channels)}")
-
-    if errors.__len__() > 0:
-        errors.insert(0, f"Fragment: '{frag_name}' - {frag_id}")
+        errors.append(f"Missing slice files: {format_ranges(missing_channels)}")
 
     return errors
 
 
-def format_ranges(numbers):
+def validate_masks(frag_dir):
+    file = 'mask.png'
+    if not os.path.isfile(os.path.join(frag_dir, file)):
+        return [f"Missing '{file}' file"]
+
+    return []
+
+
+def format_ranges(numbers, file_ending="tif"):
     """Convert a list of numbers into a string of ranges."""
     if not numbers:
         return ""
@@ -221,7 +285,8 @@ def format_ranges(numbers):
             start = end = n
     ranges.append((start, end))
 
-    return ', '.join([f"{s:05d}.tif - {e:05d}.tif" if s != e else f"{s:05d}.tif" for s, e in ranges])
+    return ', '.join(
+        [f"{s:05d}.{file_ending} - {e:05d}.{file_ending}" if s != e else f"{s:05d}.tif" for s, e in ranges])
 
 
 def build_dataset(_cfg):

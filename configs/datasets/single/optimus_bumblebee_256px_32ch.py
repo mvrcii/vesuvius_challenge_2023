@@ -1,21 +1,19 @@
-from constants import OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID
 import albumentations as A
+
+from constants import OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID
 
 calc_mean_std = False
 
-patch_size = 512
+patch_size = 256
 label_size = patch_size // 4  # 1/4 of patch_size if segformer is used as decoder
 stride = patch_size // 2
-dataset_in_chans = 64
-ink_ratio = 0.05
+dataset_in_chans = 32
+ink_ratio = 0.01
 
-k_fold = True
-train_frag_ids = [OPTIMUS_FRAG_ID]
-val_frag_ids = [BUMBLEBEE_FRAG_ID]
-train_split = None
-
-use_cutmix = False
-use_mixup = False
+k_fold = False
+train_frag_ids = [OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID]
+val_frag_ids = []
+train_split = 0.8
 
 # Train augmentations suitable for images + labels
 train_common_aug = [
