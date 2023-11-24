@@ -15,6 +15,7 @@ class AbstractVesuvLightningModuleTest(LightningModule):
         self.lr = cfg.lr
         self.eta_min = cfg.eta_min
         self.optimizer = cfg.optimizer
+        self.weight_decay = cfg.weight_decay
 
         self.model = SegformerForSemanticSegmentation.from_pretrained(
             pretrained_model_name_or_path=cfg.from_pretrained,
