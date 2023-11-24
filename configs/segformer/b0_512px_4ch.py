@@ -15,8 +15,8 @@ architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 4
-seed = 42
-epochs = 50
+seed = 187
+epochs = 150
 
 dataset_fraction = 1
 num_workers = 4
