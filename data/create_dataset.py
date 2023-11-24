@@ -340,7 +340,7 @@ def build_single_fold_dataset(_cfg, frag_2_channels):
         if errors:
             print(f"Errors occurred in {len(errors)} fragments.")
 
-        create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
+        # create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
 
 
 def build_k_fold_dataset(_cfg, frag_2_channels):
@@ -421,35 +421,38 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                                  f"and labels")
 
         patch_count_skipped_mask = 0
-        try:
+        patch_count_white = 0
+        patch_count_black = 0
+
+        for channel in range(0, max(channels) - min(channels) + 1, 4):
+            start_coord_list = [(x, y) for x in x1_list for y in y1_list]
+            label_idx = channel // 4
+
             for y1 in y1_list:
                 for x1 in x1_list:
                     y2 = y1 + patch_size
                     x2 = x1 + patch_size
 
-                    for channel in range(0, max(channels) - min(channels) + 1, 4):
-                        progress_bar.update(1)
+                    progress_bar.update(1)
 
-                        img_patch = images[channel:channel + 4, y1:y2, x1:x2]
+                    img_patch = images[channel:channel + 4, y1:y2, x1:x2]
 
-                        if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
-                            patch_count_skipped_mask += 1
-                            continue
+                    if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
+                        patch_count_skipped_mask += 1
+                        start_coord_list.remove((x1, y1))
+                        continue
 
-                        label_idx = channel // 4
-                        label_patch = label[label_idx, y1:y2, x1:x2]
+                    # Scale label down to match segformer output
+                    label_patch = label[label_idx, y1:y2, x1:x2]
+                    label_patch = resize(label_patch,
+                                         (label_size, label_size),
+                                         order=0, preserve_range=True, anti_aliasing=False)
 
-                        # Scale label down to match segformer output
-                        label_patch = resize(label_patch,
-                                             (label_size, label_size),
-                                             order=0, preserve_range=True, anti_aliasing=False)
-
-                        # Patch with Ink
-                        if label_patch.sum() > np.prod(label_patch.shape) * ink_ratio:
-                            file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}_w.npy"
-                        # Full black Patch
-                        else:
-                            file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}_b.npy"
+                    # Patch with sufficient Ink
+                    if label_patch.sum() > np.prod(label_patch.shape) * ink_ratio:
+                        patch_count_white += 1
+                        start_coord_list.remove((x1, y1))
+                        file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
 
                         img_file_path = os.path.join(img_path, file_name)
                         label_file_path = os.path.join(label_path, file_name)
@@ -457,41 +460,63 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                         np.save(img_file_path, img_patch)
                         np.save(label_file_path, label_patch)
 
-            progress_bar.close()
+            black_start_coords = random.sample(start_coord_list, min(patch_count_white, len(start_coord_list)))
+            for x1, y1 in tqdm(black_start_coords):
+                y2 = y1 + patch_size
+                x2 = x1 + patch_size
 
-            all_white_files = set([x for x in os.listdir(img_path) if x.endswith('w.npy')])
-            all_black_files = set([x for x in os.listdir(img_path) if x.endswith('b.npy')])
+                img_patch = images[channel:channel + 4, y1:y2, x1:x2]
+                label_patch = label[label_idx, y1:y2, x1:x2]
 
-            print(f"Before Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
-                  f"Ink={len(all_white_files)}, "
-                  f"Black={len(all_black_files)}")
+                # Scale label down to match segformer output
+                label_patch = resize(label_patch, (label_size, label_size),
+                                     order=0, preserve_range=True, anti_aliasing=False)
 
-            black_files_to_keep = set(random.sample(all_black_files, min(len(all_white_files), len(all_black_files))))
-            black_files_to_delete = all_black_files - black_files_to_keep
+                patch_count_black += 1
 
-            for file in black_files_to_delete:
-                for path in [img_path, label_path]:
-                    os.remove(os.path.join(path, file))
+                file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
 
-            all_white_files = set([x for x in os.listdir(img_path) if x.endswith('w.npy')])
-            all_black_files = set([x for x in os.listdir(img_path) if x.endswith('b.npy')])
+                img_file_path = os.path.join(img_path, file_name)
+                label_file_path = os.path.join(label_path, file_name)
 
-            print(f"After Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
-                  f"Ink={len(all_white_files)}, "
-                  f"Black={len(all_black_files)}")
+                np.save(img_file_path, img_patch)
+                np.save(label_file_path, label_patch)
 
-            del images, label
-            gc.collect()
+        print(f"After Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
+              f"Ink={patch_count_white}, "
+              f"Black={patch_count_black}")
 
-            fragment_patch_count = len(all_white_files) + len(all_black_files)
-            total_patch_count += fragment_patch_count
+        # all_white_files = set([x for x in os.listdir(img_path) if x.endswith('w.npy')])
+        # all_black_files = set([x for x in os.listdir(img_path) if x.endswith('b.npy')])
+        #
+        # print(f"Before Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
+        #       f"Ink={len(all_white_files)}, "
+        #       f"Black={len(all_black_files)}")
+        #
+        # black_files_to_keep = set(random.sample(all_black_files, min(len(all_white_files), len(all_black_files))))
+        # black_files_to_delete = all_black_files - black_files_to_keep
+        #
+        # for file in black_files_to_delete:
+        #     for path in [img_path, label_path]:
+        #         os.remove(os.path.join(path, file))
+        #
+        # all_white_files = set([x for x in os.listdir(img_path) if x.endswith('w.npy')])
+        # all_black_files = set([x for x in os.listdir(img_path) if x.endswith('b.npy')])
+        #
+        # print(f"After Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
+        #       f"Ink={len(all_white_files)}, "
+        #       f"Black={len(all_black_files)}")
 
-            print(f"After Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
-                  f"Total={(len(all_white_files) + len(all_black_files))}")
-            print(f"After Masking: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
-                  f"Mask={patch_count_skipped_mask}")
-        except RuntimeError as e:
-            print(e)
+        del images, label
+        gc.collect()
+
+        # fragment_patch_count = len(all_white_files) + len(all_black_files)
+        # total_patch_count += fragment_patch_count
+        #
+        # print(f"After Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
+        #       f"Total={(len(all_white_files) + len(all_black_files))}")
+        print(f"After Masking: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
+              f"Mask={patch_count_skipped_mask}")
 
     print("Total Patch Count:", total_patch_count)
 
