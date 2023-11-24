@@ -1,15 +1,15 @@
-from constants import ULTRA_MAGNUS_FRAG_ID
+from constants import ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, STARSCREAM_FRAG_ID
 import albumentations as A
 
 calc_mean_std = False
 
 patch_size = 512
 label_size = patch_size // 4  # 1/4 of patch_size if segformer is used as decoder
-stride = patch_size // 2
-ink_ratio = 0.05
+stride = patch_size
+ink_ratio = 0.0
 
 k_fold = False
-train_frag_ids = [ULTRA_MAGNUS_FRAG_ID]
+train_frag_ids = [OPTIMUS_FRAG_ID, STARSCREAM_FRAG_ID, ULTRA_MAGNUS_FRAG_ID]
 val_frag_ids = []
 train_split = 0.8
 
