@@ -1,6 +1,6 @@
-weight_decay = 0.05
-lr = 1e-3
+weight_decay = 0.01
+lr = 2e-4
 eta_min = 1e-6
-label_smoothing = 0.0
-pos_weight = 1.0
+label_smoothing = 0.05
+pos_weight = 1.05
 optimizer = 'adamw'

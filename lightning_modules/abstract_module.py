@@ -32,10 +32,10 @@ class AbstractVesuvLightningModule(LightningModule):
         self.optimizer = cfg.optimizer
 
         segformer_config = SegformerConfig(
-            hidden_dropout_prob=0.3,
-            drop_path_rate=0.3,
-            attention_probs_dropout_prob=0.3,
-            classifier_dropout_prob=0.3,
+            hidden_dropout_prob=0.05,
+            drop_path_rate=0.05,
+            attention_probs_dropout_prob=0.05,
+            classifier_dropout_prob=0.05,
             num_labels=1,
             num_channels=cfg.in_chans,
         )
