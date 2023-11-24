@@ -11,7 +11,6 @@ from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
 
 from config_handler import Config
-from lightning_modules.abstract_module_test import AbstractVesuvLightningModuleTest
 from lightning_modules.cnn3d_segformer_module import CNN3D_SegformerModule
 from lightning_modules.segformer_module import SegformerModule
 from pl_segformer_datamodule import SegFormerDataModule
