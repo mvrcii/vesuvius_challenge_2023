@@ -40,27 +40,28 @@ def main():
     success_count = 0
     failure_count = 0
 
-    dir = "data/base_label_files/layered"
+    layer_dir = os.path.join("data", "base_label_files", "layered")
 
-    if len(os.listdir(dir)) == 0:
-        print("Error: No sub-directories found for:", dir)
+    if len(os.listdir(layer_dir)) == 0:
+        print("Error: No sub-directories found for:", layer_dir)
         return
 
-    for fragment_id in os.listdir(dir):
+    valid_file_count = 0
+    for fragment_id in os.listdir(layer_dir):
 
         # Only process fragment directories within the layered folder
-        dir = os.path.join(dir, fragment_id)
-        if not os.path.isdir(dir):
+        sub_dir = os.path.join(layer_dir, fragment_id)
+        print(sub_dir)
+        if not os.path.isdir(sub_dir):
             print("Skipping element ", fragment_id)
             continue
 
-        valid_file_count = 0
-        for file in os.listdir(dir):
+        for file in os.listdir(sub_dir):
             if not file.endswith(".png") or not "inklabels" in file:
                 continue
 
             valid_file_count += 1
-            success, message = process_image(img_src_dir=dir, img_src_name=file, frag_id=fragment_id)
+            success, message = process_image(img_src_dir=sub_dir, img_src_name=file, frag_id=fragment_id)
 
             if success:
                 print(colored(f"Success: Processed {message}", "green"))
