@@ -1,8 +1,8 @@
 import torch
 import torch.nn.functional as F
+from bitsandbytes.optim import Adam8bit
 from einops import rearrange
 from lightning import LightningModule
-from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryAUROC, BinaryJaccardIndex as IoU, BinaryAveragePrecision)
@@ -46,7 +46,8 @@ class AbstractVesuvLightningModule(LightningModule):
 
     def configure_optimizers(self):
         if self.optimizer == 'adamw':
-            optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+            optimizer = Adam8bit(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+            # optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         else:
             raise NotImplementedError()
 
