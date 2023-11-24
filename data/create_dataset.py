@@ -415,25 +415,23 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         x1_list = list(range(0, images.shape[2] - patch_size + 1, stride))
         y1_list = list(range(0, images.shape[1] - patch_size + 1, stride))
 
-        progress_bar = tqdm(total=len(x1_list) * len(y1_list) * (len(channels) // 4),
-                            desc=f"{data_type.capitalize()} Dataset Fragment "
-                                 f"'{get_frag_name_from_id(frag_id)} ({frag_id})': Processing images "
-                                 f"and labels")
+        pbar_channels = tqdm(total=(len(channels) // 4),
+                             desc=f"Fragment {get_frag_name_from_id(frag_id)} ({frag_id})': Processing channels")
 
         patch_count_skipped_mask = 0
-        patch_count_white = 0
-        patch_count_black = 0
 
         for channel in range(0, max(channels) - min(channels) + 1, 4):
+
+            patch_count_white = 0
+            patch_count_black = 0
             start_coord_list = [(x, y) for x in x1_list for y in y1_list]
             label_idx = channel // 4
+            pbar_channels.update(1)
 
             for y1 in y1_list:
                 for x1 in x1_list:
                     y2 = y1 + patch_size
                     x2 = x1 + patch_size
-
-                    progress_bar.update(1)
 
                     img_patch = images[channel:channel + 4, y1:y2, x1:x2]
 
@@ -461,7 +459,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                         np.save(label_file_path, label_patch)
 
             black_start_coords = random.sample(start_coord_list, min(patch_count_white, len(start_coord_list)))
-            for x1, y1 in tqdm(black_start_coords):
+            for x1, y1 in black_start_coords:
                 y2 = y1 + patch_size
                 x2 = x1 + patch_size
 
@@ -482,41 +480,11 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                 np.save(img_file_path, img_patch)
                 np.save(label_file_path, label_patch)
 
-        print(f"After Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
-              f"Ink={patch_count_white}, "
-              f"Black={patch_count_black}")
-
-        # all_white_files = set([x for x in os.listdir(img_path) if x.endswith('w.npy')])
-        # all_black_files = set([x for x in os.listdir(img_path) if x.endswith('b.npy')])
-        #
-        # print(f"Before Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
-        #       f"Ink={len(all_white_files)}, "
-        #       f"Black={len(all_black_files)}")
-        #
-        # black_files_to_keep = set(random.sample(all_black_files, min(len(all_white_files), len(all_black_files))))
-        # black_files_to_delete = all_black_files - black_files_to_keep
-        #
-        # for file in black_files_to_delete:
-        #     for path in [img_path, label_path]:
-        #         os.remove(os.path.join(path, file))
-        #
-        # all_white_files = set([x for x in os.listdir(img_path) if x.endswith('w.npy')])
-        # all_black_files = set([x for x in os.listdir(img_path) if x.endswith('b.npy')])
-        #
-        # print(f"After Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
-        #       f"Ink={len(all_white_files)}, "
-        #       f"Black={len(all_black_files)}")
-
         del images, label
         gc.collect()
 
-        # fragment_patch_count = len(all_white_files) + len(all_black_files)
-        # total_patch_count += fragment_patch_count
-        #
-        # print(f"After Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
-        #       f"Total={(len(all_white_files) + len(all_black_files))}")
-        print(f"After Masking: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
-              f"Mask={patch_count_skipped_mask}")
+        pbar_channels.close()
+        print(f"After Masking: Patch Count Fragment {get_frag_name_from_id(frag_id)}: Mask={patch_count_skipped_mask}")
 
     print("Total Patch Count:", total_patch_count)
 
