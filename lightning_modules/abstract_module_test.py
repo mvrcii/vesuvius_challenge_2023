@@ -54,7 +54,7 @@ class AbstractVesuvLightningModuleTest(LightningModule):
         bce_loss = self.bce_loss(output, target.float())
 
         # Log learning rate
-        self.log('train_loss', bce_loss, on_epoch=False, prog_bar=False)
+        self.log('train_loss', bce_loss, on_step=True, prog_bar=False)
 
         return bce_loss
 
@@ -66,5 +66,5 @@ class AbstractVesuvLightningModuleTest(LightningModule):
         bce_loss = self.bce_loss(output, target.float())
 
         # Update metrics
-        self.log('val_loss', bce_loss, on_epoch=False, prog_bar=True)
-        self.log('val_f1', self.f1(output, target.int()), on_epoch=False, prog_bar=True)
+        self.log('val_loss', bce_loss, on_step=True, prog_bar=True)
+        self.log('val_f1', self.f1(output, target.int()), on_step=True, prog_bar=True)
