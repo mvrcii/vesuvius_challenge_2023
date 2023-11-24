@@ -6,14 +6,16 @@ from datetime import datetime
 
 import torch
 from lightning import seed_everything
-from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
+from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
 
 from config_handler import Config
 from lightning_modules.cnn3d_segformer_module import CNN3D_SegformerModule
+from lightning_modules.unetplusplus_module import UnetPlusPlusModule
 from lightning_modules.segformer_module import SegformerModule
 from pl_segformer_datamodule import SegFormerDataModule
+from pl_unetplusplus_datamodule import UnetPlusPlusDataModule
 from util.train_utils import get_device_configuration
 
 torch.set_float32_matmul_precision('medium')
@@ -34,15 +36,17 @@ def get_sys_args():
     return sys.argv[1]
 
 
-def get_model(config):
+def get_model(config: Config):
     architecture = config.architecture
 
     if architecture == 'segformer':
         return SegformerModule(cfg=config)
     elif architecture == 'cnn3d_segformer':
         return CNN3D_SegformerModule(cfg=config)
+    elif architecture == 'unetplusplus':
+        return UnetPlusPlusModule(cfg=config)
     else:
-        print("Invalid architecture:", architecture)
+        print("Invalid architecture for model:", architecture)
         sys.exit(1)
 
 
@@ -54,6 +58,18 @@ def log_wandb_hyperparams(config, wandb_logger):
 
     # Log the cleaned hyperparameters
     wandb_logger.log_hyperparams(cleaned_config)
+
+
+def get_data_module(config: Config):
+    architecture = config.architecture
+
+    if architecture == "segformer":
+        return SegFormerDataModule(cfg=config)
+    elif architecture == "unetplusplus":
+        return UnetPlusPlusDataModule(cfg=config)
+    else:
+        print("Invalid architecture for data module:", architecture)
+        sys.exit(1)
 
 
 def main():
@@ -76,12 +92,12 @@ def main():
     model_run_dir = os.path.join("checkpoints", model_run_name)
 
     model = get_model(config=config)
-    data_module = SegFormerDataModule(cfg=config)
+    data_module = get_data_module(config=config)
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=model_run_dir,
         filename="best-checkpoint-{epoch}-{val_iou:.2f}--{val_auc:.2f}",
-        save_top_k=1,
+        save_top_k=2,
         monitor="val_iou",
         mode="max",
         every_n_epochs=1,
