@@ -40,8 +40,6 @@ def get_model(config):
 
     if architecture == 'segformer':
         return SegformerModule(cfg=config)
-    elif architecture == 'segformer-test':
-        return AbstractVesuvLightningModuleTest(cfg=config)
     elif architecture == 'cnn3d_segformer':
         return CNN3D_SegformerModule(cfg=config)
     else:
