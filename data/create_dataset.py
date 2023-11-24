@@ -419,9 +419,10 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                              desc=f"Fragment {get_frag_name_from_id(frag_id)} ({frag_id})': Processing channels")
 
         patch_count_skipped_mask = 0
+        patch_count_white_total = 0
+        patch_count_black_total = 0
 
         for channel in range(0, max(channels) - min(channels) + 1, 4):
-
             patch_count_white = 0
             patch_count_black = 0
             start_coord_list = [(x, y) for x in x1_list for y in y1_list]
@@ -480,10 +481,14 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                 np.save(img_file_path, img_patch)
                 np.save(label_file_path, label_patch)
 
+            patch_count_white_total += patch_count_white
+            patch_count_black_total += patch_count_black
+
         del images, label
         gc.collect()
 
         pbar_channels.close()
+        print(f"Balanced: Patch Count Fragment {get_frag_name_from_id(frag_id)}: Ink={patch_count_white_total}, Black={patch_count_black_total}")
         print(f"After Masking: Patch Count Fragment {get_frag_name_from_id(frag_id)}: Mask={patch_count_skipped_mask}")
 
     print("Total Patch Count:", total_patch_count)
