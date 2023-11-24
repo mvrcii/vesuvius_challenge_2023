@@ -441,54 +441,58 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         patch_count_for_fragment = 0
 
         patch_count_for_label_layer = defaultdict(int)
+        try:
+            for y1 in y1_list:
+                for x1 in x1_list:
+                    y2 = y1 + patch_size
+                    x2 = x1 + patch_size
 
-        for y1 in y1_list:
-            for x1 in x1_list:
-                y2 = y1 + patch_size
-                x2 = x1 + patch_size
 
-                for channel in range(min(channels), max(channels), 4):
-                    progress_bar.update(1)
+                    for channel in range(0, max(channels) - min(channels) + 1, 4):
+                        progress_bar.update(1)
 
-                    img_patch = images[channel:channel + 4, y1:y2, x1:x2]
+                        img_patch = images[channel:channel + 4, y1:y2, x1:x2]
 
-                    if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
-                        continue
+                        if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
+                            continue
 
-                    # Scale label down to match segformer output
-                    label_idx = channel // 4
-                    label_patch = label[label_idx, y1:y2, x1:x2]
-                    label_patch = resize(label_patch,
-                                         (label_size, label_size),
-                                         order=0, preserve_range=True, anti_aliasing=False)
+                        # Scale label down to match segformer output
+                        label_idx = channel // 4
+                        label_patch = label[label_idx, y1:y2, x1:x2]
+                        label_patch = resize(label_patch,
+                                             (label_size, label_size),
+                                             order=0, preserve_range=True, anti_aliasing=False)
 
-                    # Check that the label contains at least N % ink
-                    if label_patch.sum() < np.prod(label_patch.shape) * ink_ratio:
-                        continue
+                        # Check that the label contains at least N % ink
+                        if label_patch.sum() < np.prod(label_patch.shape) * ink_ratio:
+                            continue
 
-                    file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
-                    img_file_path = os.path.join(img_path, file_name)
-                    label_file_path = os.path.join(label_path, file_name)
+                        file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
+                        img_file_path = os.path.join(img_path, file_name)
+                        label_file_path = os.path.join(label_path, file_name)
 
-                    np.save(img_file_path, img_patch)
-                    np.save(label_file_path, label_patch)
+                        np.save(img_file_path, img_patch)
+                        np.save(label_file_path, label_patch)
 
-                    patch_count_for_fragment += 1
-                    patch_count_for_label_layer[label_idx] += 1
+                        patch_count_for_fragment += 1
+                        patch_count_for_label_layer[label_idx] += 1
 
-        total_patch_count += patch_count_for_fragment
+            total_patch_count += patch_count_for_fragment
 
-        progress_bar.close()
+            progress_bar.close()
 
-        plot_patch_count_per_label_layer(dict(sorted(patch_count_for_label_layer.items())))
+            plot_patch_count_per_label_layer(dict(sorted(patch_count_for_label_layer.items())))
 
-        if calc_mean_std:
-            process_mean_and_std(images, data_type, frag_id, target_data_dir)
+            if calc_mean_std:
+                process_mean_and_std(images, data_type, frag_id, target_data_dir)
 
-        del images, label
-        gc.collect()
+            del images, label
+            gc.collect()
 
-        print(f"Patch Count for Fragment '{get_frag_name_from_id(frag_id)}'", patch_count_for_fragment)
+            print(f"Patch Count for Fragment '{get_frag_name_from_id(frag_id)}'", patch_count_for_fragment)
+        except RuntimeError as e:
+            print(e)
+
     print("Total Patch Count:", total_patch_count)
 
 
