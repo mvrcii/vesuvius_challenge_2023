@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 
 import albumentations as A
@@ -142,6 +143,10 @@ class WuesuvDataset(Dataset):
     def __getitem__(self, idx):
         image = np.load(os.path.join(self.img_dir, self.images[idx]))
         label = np.load(os.path.join(self.label_dir, self.labels[idx]))
+
+        # Add random augmentation on the layer axis
+        if random.random() < 0.5:
+            np.random.shuffle(image)
 
         # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
         image = np.transpose(image, (1, 2, 0))
