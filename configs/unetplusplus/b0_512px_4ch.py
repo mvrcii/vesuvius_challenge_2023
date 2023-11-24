@@ -19,6 +19,6 @@ seed = 187
 epochs = 150
 
 dataset_fraction = 1
-num_workers = 4
-train_batch_size = 24
-val_batch_size = 24
+num_workers = 8
+train_batch_size = 16
+val_batch_size = 16
