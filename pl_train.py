@@ -93,7 +93,7 @@ def main():
     trainer = Trainer(
         max_epochs=config.epochs,
         logger=wandb_logger,
-        callbacks=[LearningRateMonitor(logging_interval='step'), checkpoint_callback],
+        callbacks=[checkpoint_callback],
         accelerator="auto",
         devices=devices,
         enable_progress_bar=True,
