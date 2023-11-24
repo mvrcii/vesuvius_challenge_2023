@@ -340,7 +340,7 @@ def build_single_fold_dataset(_cfg, frag_2_channels):
         if errors:
             print(f"Errors occurred in {len(errors)} fragments.")
 
-        # create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
+        create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
 
 
 def build_k_fold_dataset(_cfg, frag_2_channels):
