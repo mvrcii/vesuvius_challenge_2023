@@ -3,6 +3,9 @@
 # Source
 https://www.kaggle.com/code/ryches/1st-place-solution#dataset
 
+
+https://smp.readthedocs.io/en/latest/index.html
+
 # Configs
 By default, the git-tracked main config `conf.py` is being used. In the case that a local config file with the correct 
 naming scheme is present, variables within the main config will be overwritten. If no local config is present, the main 
