@@ -439,6 +439,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                                  f"and labels")
 
         patch_count_for_fragment = 0
+        patch_count_skipped_mask = 0
 
         patch_count_for_label_layer = defaultdict(int)
         try:
@@ -453,6 +454,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                         img_patch = images[channel:channel + 4, y1:y2, x1:x2]
 
                         if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
+                            patch_count_skipped_mask += 1
                             continue
 
                         # Scale label down to match segformer output
@@ -489,6 +491,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
             gc.collect()
 
             print(f"Patch Count for Fragment '{get_frag_name_from_id(frag_id)}'", patch_count_for_fragment)
+            print(f"Skipped Mask Patches for Fragment '{get_frag_name_from_id(frag_id)}'", patch_count_skipped_mask)
         except RuntimeError as e:
             print(e)
 
