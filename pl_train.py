@@ -1,8 +1,8 @@
 import os
 import sys
 import types
-from datetime import datetime
 import warnings
+from datetime import datetime
 
 import torch
 from lightning import seed_everything
@@ -47,34 +47,10 @@ def get_model(config):
 
 
 def log_wandb_hyperparams(config, wandb_logger):
-    wandb_logger.log_hyperparams(vars(config))
-    # # scheduler
-    # wandb.config.learning_rate = config.lr
-    # wandb.config.weight_decay = config.weight_decay
-    # wandb.config.optimizer = config.optimizer
-    # wandb.config.pos_weight = config.pos_weight
-    # wandb.config.label_smoothing = config.label_smoothing
-    # # model params
-    # wandb.config.seed = config.seed
-    # wandb.config.in_chans = config.in_chans
-    # wandb.config.model_name = config.model_name
-    # wandb.config.from_pretrained = config.from_pretrained
-    # wandb.config.epochs = config.epochs
-    # wandb.config.model_type = config.model_type
-    # # train params
-    # wandb.config.train_batch_size = config.train_batch_size
-    # # dataset params
-    # wandb.config.patch_size = config.patch_size
-    # wandb.config.ink_ratio = config.ink_ratio
-
-def log_wandb_hyperparams(config, wandb_logger):
     config_dict = vars(config)  # Convert config object to a dictionary
 
     # Remove non-serializable items
     cleaned_config = {k: v for k, v in config_dict.items() if not isinstance(v, types.ModuleType)}
-
-    # Optionally, further clean the dictionary
-    # e.g., by removing other non-serializable types or converting them to strings
 
     # Log the cleaned hyperparameters
     wandb_logger.log_hyperparams(cleaned_config)
@@ -121,13 +97,15 @@ def main():
         accelerator="auto",
         devices=devices,
         enable_progress_bar=True,
+        precision='16-mixed',
+        gradient_clip_val=1.0,
+        gradient_clip_algorithm="norm",
     )
 
     trainer.fit(model, data_module)
 
     os.makedirs(model_run_dir, exist_ok=True)
     config.save_to_file(model_run_dir)
-    wandb_logger.experiment.log_artifact(os.path.join(model_run_dir, config.config_file_name), type='config')
 
 
 if __name__ == '__main__':

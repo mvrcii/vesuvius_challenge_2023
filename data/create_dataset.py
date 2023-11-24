@@ -6,7 +6,6 @@ import random
 import re
 import shutil
 import sys
-from collections import defaultdict
 from multiprocessing import Manager, Pool
 
 import cv2
@@ -136,13 +135,6 @@ def process_fragment(dataset_information, fragment_id, data_type, progress_track
         return e
 
 
-def calc_original_channel_ids(channels):
-    mid = 65 // 2
-    start = mid - channels // 2
-    end = mid + channels // 2
-    return list(range(start, end))
-
-
 def validate_fragments(_cfg):
     all_errors = []
     frag_2_channels = {}
@@ -169,7 +161,6 @@ def print_checks(errors, valids):
         print(f"\033[92mValid: {valid}\033[0m")
     for error in errors:
         print(f"\033[91mError: {error}\033[0m")
-    print("\n")
 
 
 def validate_fragment_files(frag_id, cfg):
@@ -329,7 +320,6 @@ def build_single_fold_dataset(_cfg, frag_2_channels):
         "patch_size": _cfg.patch_size,
         "stride": _cfg.stride,
         "ink_ratio": _cfg.ink_ratio,
-        "calc_mean_std": _cfg.calc_mean_std
     }
 
     with Manager() as manager:
@@ -352,9 +342,6 @@ def build_single_fold_dataset(_cfg, frag_2_channels):
 
         create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
 
-    if _cfg.calc_mean_std:
-        plot_mean_std(target_dir)
-
 
 def build_k_fold_dataset(_cfg, frag_2_channels):
     target_dir = write_config(_cfg=_cfg, frag_2_channels=frag_2_channels)
@@ -370,7 +357,6 @@ def build_k_fold_dataset(_cfg, frag_2_channels):
             "patch_size": _cfg.patch_size,
             "stride": _cfg.stride,
             "ink_ratio": _cfg.ink_ratio,
-            "calc_mean_std": _cfg.calc_mean_std
         }
 
         all_args = [(dataset_information, frag_id, 'train', progress_tracker) for frag_id in _cfg.train_frag_ids]
@@ -391,9 +377,6 @@ def build_k_fold_dataset(_cfg, frag_2_channels):
         else:
             print("All fragments processed successfully.")
 
-    if _cfg.calc_mean_std:
-        plot_mean_std(target_dir)
-
 
 def create_dataset(dataset_information, fragment_ids, data_type='train'):
     target_dir = dataset_information["target_dir"]
@@ -402,7 +385,6 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
     patch_size = dataset_information["patch_size"]
     stride = dataset_information["stride"]
     ink_ratio = dataset_information["ink_ratio"]
-    calc_mean_std = dataset_information["calc_mean_std"]
 
     target_data_dir = os.path.join(target_dir, data_type)
 
@@ -438,10 +420,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                                  f"'{get_frag_name_from_id(frag_id)} ({frag_id})': Processing images "
                                  f"and labels")
 
-        patch_count_for_fragment = 0
         patch_count_skipped_mask = 0
-
-        patch_count_for_label_layer = defaultdict(int)
         try:
             for y1 in y1_list:
                 for x1 in x1_list:
@@ -457,41 +436,60 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                             patch_count_skipped_mask += 1
                             continue
 
-                        # Scale label down to match segformer output
                         label_idx = channel // 4
                         label_patch = label[label_idx, y1:y2, x1:x2]
+
+                        # Scale label down to match segformer output
                         label_patch = resize(label_patch,
                                              (label_size, label_size),
                                              order=0, preserve_range=True, anti_aliasing=False)
 
-                        # Check that the label contains at least N % ink
-                        if label_patch.sum() < np.prod(label_patch.shape) * ink_ratio:
-                            continue
+                        # Patch with Ink
+                        if label_patch.sum() > np.prod(label_patch.shape) * ink_ratio:
+                            file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}_w.npy"
+                        # Full black Patch
+                        else:
+                            file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}_b.npy"
 
-                        file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
                         img_file_path = os.path.join(img_path, file_name)
                         label_file_path = os.path.join(label_path, file_name)
 
                         np.save(img_file_path, img_patch)
                         np.save(label_file_path, label_patch)
 
-                        patch_count_for_fragment += 1
-                        patch_count_for_label_layer[label_idx] += 1
-
-            total_patch_count += patch_count_for_fragment
-
             progress_bar.close()
 
-            plot_patch_count_per_label_layer(dict(sorted(patch_count_for_label_layer.items())))
+            all_white_files = set([x for x in os.listdir(img_path) if x.endswith('w.npy')])
+            all_black_files = set([x for x in os.listdir(img_path) if x.endswith('b.npy')])
 
-            if calc_mean_std:
-                process_mean_and_std(images, data_type, frag_id, target_data_dir)
+            print(f"Before Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
+                  f"Ink={len(all_white_files)}, "
+                  f"Black={len(all_black_files)}")
+
+            black_files_to_keep = set(random.sample(all_black_files, min(len(all_white_files), len(all_black_files))))
+            black_files_to_delete = all_black_files - black_files_to_keep
+
+            for file in black_files_to_delete:
+                for path in [img_path, label_path]:
+                    os.remove(os.path.join(path, file))
+
+            all_white_files = set([x for x in os.listdir(img_path) if x.endswith('w.npy')])
+            all_black_files = set([x for x in os.listdir(img_path) if x.endswith('b.npy')])
+
+            print(f"After Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
+                  f"Ink={len(all_white_files)}, "
+                  f"Black={len(all_black_files)}")
 
             del images, label
             gc.collect()
 
-            print(f"Patch Count for Fragment '{get_frag_name_from_id(frag_id)}'", patch_count_for_fragment)
-            print(f"Skipped Mask Patches for Fragment '{get_frag_name_from_id(frag_id)}'", patch_count_skipped_mask)
+            fragment_patch_count = len(all_white_files) + len(all_black_files)
+            total_patch_count += fragment_patch_count
+
+            print(f"After Balancing: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
+                  f"Total={(len(all_white_files) + len(all_black_files))}")
+            print(f"After Masking: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
+                  f"Mask={patch_count_skipped_mask}")
         except RuntimeError as e:
             print(e)
 
@@ -506,37 +504,6 @@ def plot_patch_count_per_label_layer(data):
     plt.title('Patch Count per Label Layer')
     plt.xticks(list(data.keys()))
     plt.show()
-
-
-def process_mean_and_std(images, data_type, frag_id, data_root_dir):
-    if data_type != 'train':
-        return
-
-    mean_ch_wise = np.mean(images, axis=(1, 2), dtype=np.float64)
-    std_ch_wise = np.std(images, axis=(1, 2), dtype=np.float64)
-
-    json_file_path = os.path.join(data_root_dir, 'fragments_mean_std.json')
-
-    if os.path.exists(json_file_path):
-        with open(json_file_path, 'r') as f:
-            data = json.load(f)
-    else:
-        data = {}
-
-    channels = images.shape[0]
-    channel_ids = calc_original_channel_ids(channels=channels)
-
-    channel_stats = {}
-    for i, ch_id in enumerate(channel_ids):
-        channel_stats[str(ch_id)] = {
-            'mean': mean_ch_wise[i],
-            'std': std_ch_wise[i]
-        }
-
-    data[f'fragment{frag_id}'] = channel_stats
-
-    with open(json_file_path, 'w') as f:
-        json.dump(data, f, indent=4)
 
 
 def move_files(src_dir, dest_dir, files, pbar):
@@ -609,66 +576,6 @@ def plot_2d_arrays(label, image=None):
         plt.imshow(label, cmap='gray', interpolation='none')
         plt.title("Label")
         plt.axis('off')
-
-    plt.show()
-
-
-def plot_mean_std(data_root_dir):
-    mean_std_path = os.path.join(data_root_dir, 'fragments_mean_std.json')
-
-    with open(mean_std_path, 'r') as f:
-        data = json.load(f)
-
-    # Assume you know the number of channels, or extract it dynamically
-    N_channels = max(len(fragment_channels) for fragment_channels in data.values())
-
-    # Number of fragments
-    M_fragments = len(data)
-
-    # Initialize arrays to store data
-    means = np.zeros((M_fragments, N_channels))
-    stds = np.zeros((M_fragments, N_channels))
-    fragments = [str(frag.replace('fragment', '')) for frag in data.keys()]
-
-    channel_indices = {}
-    for fragment_channels in data.values():
-        for ch_id in fragment_channels.keys():
-            if ch_id not in channel_indices:
-                channel_indices[ch_id] = len(channel_indices)
-
-    for i, (fragment_id, channels_data) in enumerate(data.items()):
-        for ch_id, stats in channels_data.items():
-            channel_index = channel_indices[ch_id]
-            means[i, channel_index] = stats['mean']
-            stds[i, channel_index] = stats['std']
-
-    # Create subplots for mean and standard deviation
-    fig, ax = plt.subplots(1, 2, figsize=(10, 10))
-    plot_type = 'scatter' if M_fragments == 1 else 'line'
-
-    # Plot
-    for ch_id, channel_index in channel_indices.items():
-        if plot_type == 'scatter':
-            ax[0].scatter(fragments, means[:, channel_index], label=f'Channel {ch_id}')
-            ax[1].scatter(fragments, stds[:, channel_index], label=f'Channel {ch_id}')
-        else:
-            ax[0].plot(fragments, means[:, channel_index], label=f'Channel {ch_id}')
-            ax[1].plot(fragments, stds[:, channel_index], label=f'Channel {ch_id}')
-
-    ax[0].set_title('Channel-wise Mean across Fragments')
-    ax[0].set_xlabel('Fragment')
-    ax[0].set_ylabel('Mean')
-    ax[0].legend()
-
-    ax[1].set_title('Channel-wise Std across Fragments')
-    ax[1].set_xlabel('Fragment')
-    ax[1].set_ylabel('Std')
-    ax[1].legend()
-
-    plt.tight_layout()
-
-    img_path = os.path.join(data_root_dir, 'mean_std.png')
-    plt.savefig(img_path, dpi=300)
 
     plt.show()
 
