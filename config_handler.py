@@ -1,7 +1,6 @@
 import importlib.util
 import os.path
 import pprint
-import types
 
 
 class Config:
@@ -59,24 +58,21 @@ class Config:
             spec.loader.exec_module(module)
             return module
 
-        def filter_config(config_dict):
-            return {k: v for k, v in config_dict.items() if not isinstance(v, types.ModuleType)}
-
         model_config = import_config_from_path(config_path)
         config = {}
         # todo is this the right way to handle this? was necessary to add since my dataset configs don't have base
         if hasattr(model_config, '_base_'):
             for base_path in model_config._base_:
                 base_config = import_config_from_path(base_path)
-                config.update(filter_config(vars(base_config)))
+                config.update({k: v for k, v in vars(base_config).items() if not k.startswith('__')})
 
-        config.update(filter_config(vars(model_config)))
+        config.update({k: v for k, v in vars(model_config).items() if not k.startswith('__')})
 
         # Check for and apply local configuration overrides
         local_config_path = 'conf_local.py'
         if os.path.exists(local_config_path):
             local_config = import_config_from_path(local_config_path)
-            config.update(filter_config(vars(local_config)))
+            config.update({k: v for k, v in vars(local_config).items() if not k.startswith('__')})
 
         config_file_name = config_path.split(os.sep)[-1]
         return cls(config, config_file_name)
