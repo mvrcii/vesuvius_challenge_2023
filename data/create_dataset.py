@@ -433,7 +433,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         x1_list = list(range(0, images.shape[2] - patch_size + 1, stride))
         y1_list = list(range(0, images.shape[1] - patch_size + 1, stride))
 
-        progress_bar = tqdm(total=len(x1_list) * len(y1_list) * len(channels) // 4,
+        progress_bar = tqdm(total=len(x1_list) * len(y1_list) * (len(channels) // 4),
                             desc=f"{data_type.capitalize()} Dataset Fragment "
                                  f"'{get_frag_name_from_id(frag_id)} ({frag_id})': Processing images "
                                  f"and labels")
@@ -446,7 +446,6 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                 for x1 in x1_list:
                     y2 = y1 + patch_size
                     x2 = x1 + patch_size
-
 
                     for channel in range(0, max(channels) - min(channels) + 1, 4):
                         progress_bar.update(1)
