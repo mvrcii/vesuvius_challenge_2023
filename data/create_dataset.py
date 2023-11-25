@@ -15,10 +15,10 @@ from matplotlib import pyplot as plt
 from skimage.transform import resize
 from tqdm import tqdm
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from config_handler import Config
 from constants import get_frag_name_from_id
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 Image.MAX_IMAGE_PIXELS = None
 
