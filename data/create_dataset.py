@@ -393,7 +393,8 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
     os.makedirs(img_path, exist_ok=True)
     os.makedirs(label_path, exist_ok=True)
 
-    total_patch_count = 0
+    total_patch_count_white = 0
+    total_patch_count_black = 0
     label_size = patch_size // 4
 
     for frag_id in fragment_ids:
@@ -491,7 +492,12 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
             f"Balanced: Patch Count Fragment {get_frag_name_from_id(frag_id)}: Ink={patch_count_white_total}, Black={patch_count_black_total}")
         print(f"After Masking: Patch Count Fragment {get_frag_name_from_id(frag_id)}: Mask={patch_count_skipped_mask}")
 
-    print("Total Patch Count:", total_patch_count)
+        total_patch_count_white += patch_count_white_total
+        total_patch_count_black += patch_count_black_total
+    print("\n================== SUMMARY ==================")
+    print("Total Patch Count White:\t", total_patch_count_white)
+    print("Total Patch Count Black:\t", total_patch_count_black)
+    print("Total Patch Count:\t", total_patch_count_white + total_patch_count_black)
 
 
 def plot_patch_count_per_label_layer(data):
