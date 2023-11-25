@@ -1,7 +1,7 @@
 import segmentation_models_pytorch as smp
 import torch
 
-from models.abstract_module import AbstractVesuvLightningModule
+from models.abstract_model import AbstractVesuvLightningModule
 
 
 class UnetPlusPlusModule(AbstractVesuvLightningModule):

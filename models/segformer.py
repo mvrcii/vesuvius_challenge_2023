@@ -1,6 +1,6 @@
 from transformers import SegformerForSemanticSegmentation, SegformerConfig
 
-from models.abstract_module import AbstractVesuvLightningModule
+from models.abstract_model import AbstractVesuvLightningModule
 
 
 class SegformerModule(AbstractVesuvLightningModule):
