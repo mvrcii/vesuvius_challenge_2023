@@ -10,15 +10,17 @@ base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")
 
-model_type = "base"
+# Encoder List: https://smp.readthedocs.io/en/latest/encoders.html
+# encoder_name_and_weights = ("resnet34", "imagenet")
+encoder_name_and_weights = ("timm-resnest14d", "imagenet")
+
 architecture = 'unetplusplus'
-model_name = f"{architecture}-{model_type}"
-from_pretrained = "imagenet"
+model_name = f"{architecture}"
 in_chans = 4
 seed = 187
-epochs = 150
+epochs = 100
 
 dataset_fraction = 1
-num_workers = 8
-train_batch_size = 16
-val_batch_size = 16
+num_workers = 16
+train_batch_size = 8
+val_batch_size = 8
