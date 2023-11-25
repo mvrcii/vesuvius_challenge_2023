@@ -11,8 +11,8 @@ data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")
 
 # Encoder List: https://smp.readthedocs.io/en/latest/encoders.html
-# encoder_name_and_weights = ("resnet34", "imagenet")
-encoder_name_and_weights = ("timm-resnest14d", "imagenet")
+encoder_name_and_weights = ("resnet34", "imagenet")
+# encoder_name_and_weights = ("timm-resnest14d", "imagenet")
 
 architecture = 'unetplusplus'
 model_name = f"{architecture}"
