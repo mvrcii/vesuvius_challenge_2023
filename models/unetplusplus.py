@@ -1,4 +1,5 @@
 import segmentation_models_pytorch as smp
+from segmentation_models_pytorch.losses import SoftBCEWithLogitsLoss, DiceLoss
 import torch
 
 from models.abstract_model import AbstractVesuvLightningModule
@@ -16,6 +17,8 @@ class UnetPlusPlusModule(AbstractVesuvLightningModule):
             in_channels=cfg.in_chans,
             classes=1,
         )
+
+        self.loss_fn = DiceLoss(smp.losses.BINARY_MODE, from_logits=True)
 
         # Get normalization params
         params = smp.encoders.get_preprocessing_params(encoder_name)
@@ -37,11 +40,21 @@ class UnetPlusPlusModule(AbstractVesuvLightningModule):
 
     def training_step(self, batch, batch_idx):
         batch, batch_idx = self.assert_dims(batch, batch_idx)
-        super().training_step(batch, batch_idx)
+
+        image, target = batch
+        logits_mask = self.forward(image)
+        loss = self.loss_fn(logits_mask, target)
+
+        super().update_training_metrics(loss)
 
     def validation_step(self, batch, batch_idx):
         batch, batch_idx = self.assert_dims(batch, batch_idx)
-        super().validation_step(batch, batch_idx)
+
+        image, target = batch
+        logits_mask = self.forward(image)
+        loss = self.loss_fn(logits_mask, target)
+
+        super().update_validation_metrics(loss, logits_mask, target)
 
     @staticmethod
     def assert_dims(batch, batch_idx):

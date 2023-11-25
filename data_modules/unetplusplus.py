@@ -78,10 +78,12 @@ class WuesuvDataset(Dataset):
         image = np.load(os.path.join(self.img_dir, self.images[idx]))
         label = np.load(os.path.join(self.label_dir, self.labels[idx]))
 
-        patch_size = image.shape[1]
-        label_size = label.shape[0]
+        # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
+        #image = np.transpose(image, (1, 2, 0))
 
-        if label_size != patch_size:
-            label = resize(label, (patch_size, patch_size), order=0, preserve_range=True, anti_aliasing=False)
+        # (H,W) -> (1,H,W)
+        label = np.expand_dims(label, axis=0)
+
+        assert image.ndim == 3 and label.ndim == 3
 
         return image, label
