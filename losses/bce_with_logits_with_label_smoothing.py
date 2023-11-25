@@ -16,9 +16,4 @@ class BCEWithLogitsLossWithLabelSmoothing(torch.nn.Module):
         """
         y_true_smooth = y_true * (1 - self.label_smoothing) + 0.5 * self.label_smoothing
 
-        # Allows y_true with a Tensor shape of (N, H, W) or (N, C, H, W)
-        assert y_pred.ndim == 4
-        if y_true_smooth.ndim != y_pred.ndim:
-            y_true_smooth = y_true_smooth.unsqueeze(1)
-
         return F.binary_cross_entropy_with_logits(y_pred, y_true_smooth, pos_weight=self.pos_weight)
