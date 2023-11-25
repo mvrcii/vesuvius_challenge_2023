@@ -1,12 +1,11 @@
 import torch
 import torch.nn.functional as F
-from bitsandbytes.optim import Adam8bit
 from einops import rearrange
 from lightning import LightningModule
+from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
-                                         BinaryAccuracy, BinaryAUROC, BinaryJaccardIndex as IoU, BinaryAveragePrecision)
-
+                                         BinaryAccuracy, BinaryJaccardIndex as IoU)
 
 from util.losses import BinaryDiceLoss
 
@@ -41,14 +40,11 @@ class AbstractVesuvLightningModule(LightningModule):
         self.accuracy = BinaryAccuracy()
         self.precision = BinaryPrecision()
         self.recall = BinaryRecall()
-        self.auc = BinaryAUROC(thresholds=None)
         self.iou = IoU()
-        self.map = BinaryAveragePrecision()
 
     def configure_optimizers(self):
         if self.optimizer == 'adamw':
-            optimizer = Adam8bit(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-            # optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+            optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         else:
             raise NotImplementedError()
 
@@ -99,8 +95,5 @@ class AbstractVesuvLightningModule(LightningModule):
         self.log('val_accuracy', self.accuracy(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_precision', self.precision(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_recall', self.recall(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
-
         self.log('val_f1', self.f1(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
         self.log('val_iou', self.iou(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
-        # self.log('val_auc', self.auc(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
-        # self.log('val_map', self.map(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
