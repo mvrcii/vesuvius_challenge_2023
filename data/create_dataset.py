@@ -513,7 +513,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
     print("\n================== SUMMARY TRAIN DATASET ==================")
     print("Total Patch Count White:\t", total_patch_count_white)
     print("Total Patch Count Black:\t", total_patch_count_black)
-    print("Total Patch Count:\t\t", total_patch_count_white + total_patch_count_black)
+    print("Total Patch Count:\t\t\t", total_patch_count_white + total_patch_count_black)
 
     return foo
 
@@ -528,10 +528,9 @@ def plot_patch_count_per_label_layer(data):
     plt.show()
 
 
-def move_files(src_dir, dest_dir, files, pbar):
+def move_files(src_dir, dest_dir, files):
     for file in files:
         shutil.move(os.path.join(src_dir, file), os.path.join(dest_dir, file))
-        pbar.update(1)
 
 
 def create_single_val_dataset(patch_size, data_root_dir, train_coord_dict, train_split=0.8):
@@ -550,11 +549,12 @@ def create_single_val_dataset(patch_size, data_root_dir, train_coord_dict, train
     os.makedirs(val_img_dir, exist_ok=True)
     os.makedirs(val_label_dir, exist_ok=True)
 
-    selected_files = {}
+    total_patch_count_white = 0
+    total_patch_count_black = 0
+
     for frag_id, channels in train_coord_dict.items():
         for channel, coord_lists in channels.items():
             for list_name, coords in coord_lists.items():
-                selected_files[list_name] = {}
                 num_coords_to_select = int(len(coords) * (1 - train_split))
                 sampled_coords = random.sample(coords, min(num_coords_to_select, len(coords)))
 
@@ -565,24 +565,22 @@ def create_single_val_dataset(patch_size, data_root_dir, train_coord_dict, train
                     label_idx = channel // 4
                     file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
                     files.append(file_name)
-                selected_files[list_name] = files
 
-    white_count = len(selected_files['white_coord_list'])
-    black_count = len(selected_files['black_coord_list'])
-    total_count = white_count + black_count
+                for file in files:
+                    shutil.move(os.path.join(train_img_dir, file), os.path.join(val_img_dir, file))
+                    shutil.move(os.path.join(train_label_dir, file), os.path.join(val_label_dir, file))
 
-    progress_bar = tqdm(total=total_count, desc="Validation Dataset: Processing images and labels")
+                if list_name == 'black_coord_list':
+                    total_patch_count_black += len(files)
+                elif list_name == 'white_coord_list':
+                    total_patch_count_white += len(files)
 
-    # Move the selected image and label files
-    selected_files = selected_files['white_coord_list'] + selected_files['black_coord_list']
-    move_files(train_img_dir, val_img_dir, selected_files, pbar=progress_bar)
-    move_files(train_label_dir, val_label_dir, selected_files, pbar=progress_bar)
+    total_count = total_patch_count_white + total_patch_count_black
 
-    progress_bar.close()
-
-    print("Total Patch Count White:\t", white_count)
-    print("Total Patch Count Black:\t", black_count)
-    print("Total Patch Count:\t\t", total_count)
+    print("\n================== SUMMARY VAL DATASET ==================")
+    print("Total Patch Count White:\t", total_patch_count_white)
+    print("Total Patch Count Black:\t", total_patch_count_black)
+    print("Total Patch Count:\t\t\t", total_count)
 
 
 

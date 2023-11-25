@@ -78,7 +78,7 @@ class AbstractVesuvLightningModule(LightningModule):
 
         self.update_validation_metrics(loss=total_loss, output_logits=output, target=target)
 
-    def update_training_metrics(self, loss,):
+    def update_training_metrics(self, loss):
         """
         Update and log training metrics.
 
