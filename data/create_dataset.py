@@ -443,9 +443,9 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
 
                     # Scale label down to match segformer output
                     label_patch = label[label_idx, y1:y2, x1:x2]
-                    label_patch = resize(label_patch,
-                                         (label_size, label_size),
-                                         order=0, preserve_range=True, anti_aliasing=False)
+                    # label_patch = resize(label_patch,
+                    #                      (label_size, label_size),
+                    #                      order=0, preserve_range=True, anti_aliasing=False)
 
                     # Patch with sufficient Ink
                     if label_patch.sum() > np.prod(label_patch.shape) * ink_ratio:
@@ -488,7 +488,8 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         gc.collect()
 
         pbar_channels.close()
-        print(f"Balanced: Patch Count Fragment {get_frag_name_from_id(frag_id)}: Ink={patch_count_white_total}, Black={patch_count_black_total}")
+        print(
+            f"Balanced: Patch Count Fragment {get_frag_name_from_id(frag_id)}: Ink={patch_count_white_total}, Black={patch_count_black_total}")
         print(f"After Masking: Patch Count Fragment {get_frag_name_from_id(frag_id)}: Mask={patch_count_skipped_mask}")
 
     print("Total Patch Count:", total_patch_count)
