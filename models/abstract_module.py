@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 from einops import rearrange
 from lightning import LightningModule
 from torch.optim import AdamW
@@ -7,18 +6,8 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryJaccardIndex as IoU)
 
+from losses.bce_with_logits_with_label_smoothing import BCEWithLogitsLossWithLabelSmoothing
 from util.losses import BinaryDiceLoss
-
-
-class BCEWithLogitsLossWithLabelSmoothing(torch.nn.Module):
-    def __init__(self, label_smoothing=0.1, pos_weight=None):
-        super().__init__()
-        self.label_smoothing = label_smoothing
-        self.pos_weight = pos_weight
-
-    def forward(self, inputs, targets):
-        targets_smooth = targets * (1 - self.label_smoothing) + 0.5 * self.label_smoothing
-        return F.binary_cross_entropy_with_logits(inputs, targets_smooth, pos_weight=self.pos_weight)
 
 
 class AbstractVesuvLightningModule(LightningModule):
@@ -72,10 +61,7 @@ class AbstractVesuvLightningModule(LightningModule):
         # Combine the losses
         total_loss = bce_loss + dice_loss
 
-        # Log learning rate
-        lr = self.trainer.optimizers[0].param_groups[0]['lr']
-        self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log('train_loss', total_loss, on_step=False, on_epoch=True, prog_bar=False, sync_dist=True)
+        self.update_training_metrics(loss=total_loss)
 
         return total_loss
 
@@ -90,10 +76,39 @@ class AbstractVesuvLightningModule(LightningModule):
         # Combine the losses
         total_loss = bce_loss + dice_loss
 
-        # Update metrics
-        self.log('val_loss', total_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log('val_accuracy', self.accuracy(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val_precision', self.precision(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val_recall', self.recall(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val_f1', self.f1(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
-        self.log('val_iou', self.iou(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
+        self.update_validation_metrics(loss=total_loss, output_logits=output, target=target)
+
+    def update_training_metrics(self, loss,):
+        """
+        Update and log training metrics.
+
+        This function logs the learning rate and training loss. The metrics are logged at the end of each epoch.
+
+        :param loss: The loss value computed during the training phase.
+        """
+        lr = self.trainer.optimizers[0].param_groups[0]['lr']
+
+        self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=False, sync_dist=True)
+
+    def update_validation_metrics(self, loss, output_logits, target):
+        """
+        Update and log validation metrics.
+
+        This function logs validation loss and calculates metrics such as accuracy, precision, recall, F1 score, and
+        IOU. These metrics are logged at the end of each epoch.
+
+        :param loss:            The loss value computed during the validation phase.
+        :param output_logits:   Tensor of shape (N, C, H, W).
+        :param target:          Tensor of shape (N, H, W) or (N, C, H, W).
+        """
+        if target.ndim != output_logits.ndim and target.ndim == 3 and output_logits.ndim == 4:
+            target = target.unsqueeze(1)
+        target = target.int()
+
+        self.log('val_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log('val_accuracy', self.accuracy(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
+        self.log('val_precision', self.precision(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
+        self.log('val_recall', self.recall(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
+        self.log('val_f1', self.f1(output_logits, target), on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val_iou', self.iou(output_logits, target), on_step=False, on_epoch=True, prog_bar=True)
