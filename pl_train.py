@@ -94,14 +94,14 @@ def main():
     model = get_model(config=config)
     data_module = get_data_module(config=config)
 
-    checkpoint_callback = ModelCheckpoint(
-        dirpath=model_run_dir,
-        filename="best-checkpoint-{epoch}-{val_iou:.2f}--{val_auc:.2f}",
-        save_top_k=2,
-        monitor="val_iou",
-        mode="max",
-        every_n_epochs=1,
-    )
+    # checkpoint_callback = ModelCheckpoint(
+    #     dirpath=model_run_dir,
+    #     filename="best-checkpoint-{epoch}-{val_iou:.2f}--{val_auc:.2f}",
+    #     save_top_k=2,
+    #     monitor="val_iou",
+    #     mode="max",
+    #     every_n_epochs=1
+    # )
 
     devices = get_device_configuration()
     print("Using Devices:", devices)
@@ -109,7 +109,7 @@ def main():
     trainer = Trainer(
         max_epochs=config.epochs,
         logger=wandb_logger,
-        callbacks=[checkpoint_callback],
+        # callbacks=[checkpoint_callback],
         accelerator="auto",
         devices=devices,
         enable_progress_bar=True,
