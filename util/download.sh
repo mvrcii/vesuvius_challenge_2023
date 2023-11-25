@@ -17,58 +17,16 @@ fi
 
 # Check if an argument is provided
 if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <option>"
-    echo "Options: frag1, frag2, frag3, frag4, frag5, frag6, frag7, frag8, frag9"
+    echo "Usage: $0 <fragmentID>"
     exit 1
 fi
 
 # Assign the first argument to a variable
-option=$1
+fragmentID=$1
 
 # Configuration based on option
-case $option in
-    "frag1")
-        outputFolder="data/fragments/fragment20230522181603/slices"
-        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230522181603/layers/"
-        ;;
-    "frag2")
-        outputFolder="data/fragments/fragment20230702185752_superseded/slices"
-        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230702185752_superseded/layers/"
-        ;;
-    "frag3")
-        outputFolder="data/fragments/fragment20230827161847/slices"
-        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230827161847/layers/"
-        ;;
-    "frag4")
-        outputFolder="data/fragments/fragment20230904135535/slices"
-        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230904135535/layers/"
-        ;;
-    "frag5")
-        outputFolder="data/fragments/fragment20230905134255/slices"
-        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230905134255/layers/"
-        ;;
-    "frag6")
-        outputFolder="data/fragments/fragment20230909121925/slices"
-        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20230909121925/layers/"
-        ;;
-    "frag7")
-        outputFolder="data/fragments/fragment20231024093300/slices"
-        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20231024093300/layers/"
-        ;;
-    "frag8")
-        outputFolder="data/fragments/fragment20231016151000/slices"
-        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20231016151000/layers/"
-        ;;
-    "frag9")
-        outputFolder="data/fragments/fragment20231106155351/slices"
-        baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/20231106155351/layers/"
-        ;;
-    *)
-        echo "Invalid option: $option"
-        echo "Valid options: frag1, frag2, frag3, frag4, frag5, frag6, frag7, frag8, frag9"
-        exit 1
-        ;;
-esac
+outputFolder="data/fragments/fragment${fragmentID}/slices"
+baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/${fragmentID}/layers/"
 
 # Other configurations
 # default 00023 00039 to get 16 slices
