@@ -22,5 +22,5 @@ epochs = 100
 
 dataset_fraction = 1
 num_workers = 16
-train_batch_size = 16
-val_batch_size = 16
+train_batch_size = 24
+val_batch_size = 24
