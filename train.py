@@ -11,11 +11,11 @@ from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
 
 from config_handler import Config
-from models.cnn3d_segformer_module import CNN3D_SegformerModule
-from models.unetplusplus_module import UnetPlusPlusModule
-from models.segformer_module import SegformerModule
-from data_modules.pl_segformer_datamodule import SegFormerDataModule
-from data_modules.pl_unetplusplus_datamodule import UnetPlusPlusDataModule
+from data_modules.segformer import SegFormerDataModule
+from data_modules.unetplusplus import UnetPlusPlusDataModule
+from models.cnn3d_segformer import CNN3D_SegformerModule
+from models.segformer import SegformerModule
+from models.unetplusplus import UnetPlusPlusModule
 from util.train_utils import get_device_configuration
 
 torch.set_float32_matmul_precision('medium')
