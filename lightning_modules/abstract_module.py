@@ -86,6 +86,9 @@ class AbstractVesuvLightningModule(LightningModule):
         data, target = batch
         output = self.forward(data)
 
+        output = output.detach()
+        target = target.detach()
+
         # Compute both BCE loss (with label smoothing) and Dice loss
         # bce_loss = self.bce_loss(output, target.float())
         # dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
