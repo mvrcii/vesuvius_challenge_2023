@@ -3,7 +3,6 @@ import torch.nn.functional as F
 from bitsandbytes.optim import Adam8bit
 from einops import rearrange
 from lightning import LightningModule
-from lightning.pytorch.utilities.memory import garbage_collection_cuda
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryAUROC, BinaryJaccardIndex as IoU, BinaryAveragePrecision)
@@ -97,12 +96,10 @@ class AbstractVesuvLightningModule(LightningModule):
 
         # Update metrics
         # self.log('val_loss', total_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log('val_accuracy', self.accuracy(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val_precision', self.precision(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val_recall', self.recall(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
-        self.log('val_f1', self.f1(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
-        self.log('val_auc', self.auc(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
+        # self.log('val_accuracy', self.accuracy(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
+        # self.log('val_precision', self.precision(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
+        # self.log('val_recall', self.recall(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
+        # self.log('val_f1', self.f1(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
+        # self.log('val_auc', self.auc(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
         self.log('val_iou', self.iou(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
-        self.log('val_map', self.map(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
-
-        garbage_collection_cuda()
+        # self.log('val_map', self.map(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
