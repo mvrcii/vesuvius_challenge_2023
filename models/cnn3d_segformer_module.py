@@ -1,5 +1,5 @@
-from lightning_modules.abstract_module import AbstractVesuvLightningModule
-from models.cnn3d_segformer import CNN3D_Segformer
+from models.abstract_module import AbstractVesuvLightningModule
+from archive_models.cnn3d_segformer import CNN3D_Segformer
 
 
 class CNN3D_SegformerModule(AbstractVesuvLightningModule):
