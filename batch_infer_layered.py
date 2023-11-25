@@ -160,6 +160,8 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
         outputs = model(batch_tensor)
         logits = outputs.logits
         logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
+        if len(batches) == 1:
+            logits_np = np.expand_dims(logits_np, axis=0)
 
         for idx, (x, y) in enumerate(batch_indices):
             process_patch(logits_np[idx], x, y)
