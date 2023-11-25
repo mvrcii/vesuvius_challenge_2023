@@ -479,10 +479,6 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                 img_patch = images[channel:channel + 4, y1:y2, x1:x2]
                 label_patch = label[label_idx, y1:y2, x1:x2]
 
-                # Scale label down to match segformer output
-                label_patch = resize(label_patch, (label_size, label_size),
-                                     order=0, preserve_range=True, anti_aliasing=False)
-
                 patch_count_black += 1
 
                 file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
