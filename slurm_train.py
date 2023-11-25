@@ -21,7 +21,7 @@ def main():
 
     gpu_resource = gpu_mapping[args.gpu_type]
 
-    cmd_str = f"python pl_train.py {args.config_path}"
+    cmd_str = f"python train.py {args.config_path}"
 
     slurm_cmd = f'sbatch -p ls6 \
     --gres=gpu:{gpu_resource} \
