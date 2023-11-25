@@ -14,8 +14,8 @@ from config_handler import Config
 from models.cnn3d_segformer_module import CNN3D_SegformerModule
 from models.unetplusplus_module import UnetPlusPlusModule
 from models.segformer_module import SegformerModule
-from pl_segformer_datamodule import SegFormerDataModule
-from pl_unetplusplus_datamodule import UnetPlusPlusDataModule
+from data_modules.pl_segformer_datamodule import SegFormerDataModule
+from data_modules.pl_unetplusplus_datamodule import UnetPlusPlusDataModule
 from util.train_utils import get_device_configuration
 
 torch.set_float32_matmul_precision('medium')
