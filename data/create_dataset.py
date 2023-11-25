@@ -415,8 +415,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         x1_list = list(range(0, images.shape[2] - patch_size + 1, stride))
         y1_list = list(range(0, images.shape[1] - patch_size + 1, stride))
 
-        pbar_channels = tqdm(total=(len(channels) // 4),
-                             desc=f"Fragment {get_frag_name_from_id(frag_id)} ({frag_id})': Processing channels")
+        pbar_channels = tqdm(total=(len(channels)), desc=f"Fragment {get_frag_name_from_id(frag_id)} ({frag_id})': Processing channels")
 
         patch_count_skipped_mask = 0
         patch_count_white_total = 0
