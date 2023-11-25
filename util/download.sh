@@ -6,15 +6,6 @@ user="registeredusers"
 password="only"
 credentials="$user:$password"
 
-hostname=$(hostname)
-if [[ "$hostname" == "Marcels-MBP.fritz.box" ]]; then
-    baseOutputFolder="/Users/marcel/Documents/Git-Master/Private/kaggle1stReimp/data"
-elif [[ "$hostname" == "DESKTOP-LLUPIAQ" ]]; then
-    baseOutputFolder ="data"
-else
-    baseOutputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data"
-fi
-
 # Check if an argument is provided
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <fragmentID>"
