@@ -151,13 +151,8 @@ class WuesuvDataset(Dataset):
         # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
         image = np.transpose(image, (1, 2, 0))
 
-        # Get original dimensions
-        patch_size = image.shape[0]
+        # Get original dimension
         label_size = label.shape[0]
-
-        # Scale up label to match image size
-        if label_size != patch_size:
-            label = resize(label, (patch_size, patch_size), order=0, preserve_range=True, anti_aliasing=False)
 
         # Apply common augmentations to both image and label
         if self.common_aug:
@@ -173,8 +168,7 @@ class WuesuvDataset(Dataset):
         image = np.transpose(image, (2, 0, 1))
 
         # Scale down label to match segformer output
-        if label_size != patch_size:
-            label = resize(label, (label_size, label_size), order=0, preserve_range=True, anti_aliasing=False)
+        label = resize(label, (label_size, label_size), order=0, preserve_range=True, anti_aliasing=False)
 
         return image, label
 
