@@ -103,4 +103,4 @@ class AbstractVesuvLightningModule(LightningModule):
         self.log('val_f1', self.f1(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
         # self.log('val_auc', self.auc(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
         self.log('val_iou', self.iou(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
-        # self.log('val_map', self.map(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
+        self.log('val_map', self.map(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
