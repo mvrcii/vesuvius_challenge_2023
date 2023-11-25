@@ -18,7 +18,7 @@ in_chans = 4
 seed = 187
 epochs = 150
 
-dataset_fraction = 0.1
+dataset_fraction = 0.05
 num_workers = 4
 train_batch_size = 32
 val_batch_size = 32
