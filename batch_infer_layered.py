@@ -156,6 +156,7 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
         transformed_images = [transform(image=image)['image'] for image in batches]
 
         batch_tensor = torch.tensor(np.stack(transformed_images)).float()
+        batch_tensor = batch_tensor.to("cuda")
         outputs = model(batch_tensor)
         logits = outputs.logits
         logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
