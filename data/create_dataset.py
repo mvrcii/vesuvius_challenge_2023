@@ -6,6 +6,7 @@ import random
 import re
 import shutil
 import sys
+from collections import defaultdict
 from multiprocessing import Manager, Pool
 
 import cv2
@@ -127,12 +128,13 @@ def read_fragment(fragment_dir, channels, patch_size):
 
 def process_fragment(dataset_information, fragment_id, data_type, progress_tracker):
     try:
-        create_dataset(dataset_information=dataset_information, fragment_ids=fragment_id, data_type=data_type)
+        foo = create_dataset(dataset_information=dataset_information, fragment_ids=fragment_id, data_type=data_type)
         progress_tracker.value += 1
+        return True, foo
 
-        return True
     except Exception as e:
-        return e
+        print("Exception", e)
+        return e, None
 
 
 def validate_fragments(_cfg):
@@ -332,15 +334,21 @@ def build_single_fold_dataset(_cfg, frag_2_channels):
             results = result.get()
 
         errors = []
-        for i, res in enumerate(results):
-            if isinstance(res, Exception):
-                print(f"Error in processing fragment {all_args[i][1]}: {res}")
-                errors.append(res)
+        successful_results = []
+
+        for i, (success, train_coord_dict) in enumerate(results):
+            if not success:
+                print(f"Error in processing fragment {all_args[i][1]}")
+            else:
+                successful_results.append(train_coord_dict)
 
         if errors:
             print(f"Errors occurred in {len(errors)} fragments.")
 
-        create_single_val_dataset(data_root_dir=target_dir, train_split=_cfg.train_split)
+        create_single_val_dataset(patch_size=_cfg.patch_size,
+                                  data_root_dir=target_dir,
+                                  train_split=_cfg.train_split,
+                                  train_coord_dict=successful_results[0])
 
 
 def build_k_fold_dataset(_cfg, frag_2_channels):
@@ -397,7 +405,10 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
     total_patch_count_black = 0
     label_size = patch_size // 4
 
+    foo = {}
+
     for frag_id in fragment_ids:
+        foo[frag_id] = {}
         fragment_dir = os.path.join(data_root_dir, "fragments", f"fragment{frag_id}")
 
         if not os.path.isdir(fragment_dir):
@@ -423,11 +434,13 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         patch_count_black_total = 0
 
         for channel in range(0, max(channels) - min(channels) + 1, 4):
+            foo[frag_id][channel] = {}
             patch_count_white = 0
             patch_count_black = 0
             start_coord_list = [(x, y) for x in x1_list for y in y1_list]
+            white_start_coords = []
             label_idx = channel // 4
-            pbar_channels.update(1)
+            pbar_channels.update(4)
 
             for y1 in y1_list:
                 for x1 in x1_list:
@@ -443,14 +456,13 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
 
                     # Scale label down to match segformer output
                     label_patch = label[label_idx, y1:y2, x1:x2]
-                    # label_patch = resize(label_patch,
-                    #                      (label_size, label_size),
-                    #                      order=0, preserve_range=True, anti_aliasing=False)
 
                     # Patch with sufficient Ink
                     if label_patch.sum() > np.prod(label_patch.shape) * ink_ratio:
                         patch_count_white += 1
-                        start_coord_list.remove((x1, y1))
+                        coord = (x1, y1)
+                        start_coord_list.remove(coord)
+                        white_start_coords.append(coord)
                         file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
 
                         img_file_path = os.path.join(img_path, file_name)
@@ -481,6 +493,9 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                 np.save(img_file_path, img_patch)
                 np.save(label_file_path, label_patch)
 
+            foo[frag_id][channel]['white_coord_list'] = white_start_coords
+            foo[frag_id][channel]['black_coord_list'] = black_start_coords
+
             patch_count_white_total += patch_count_white
             patch_count_black_total += patch_count_black
 
@@ -494,10 +509,13 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
 
         total_patch_count_white += patch_count_white_total
         total_patch_count_black += patch_count_black_total
-    print("\n================== SUMMARY ==================")
+
+    print("\n================== SUMMARY TRAIN DATASET ==================")
     print("Total Patch Count White:\t", total_patch_count_white)
     print("Total Patch Count Black:\t", total_patch_count_black)
-    print("Total Patch Count:\t", total_patch_count_white + total_patch_count_black)
+    print("Total Patch Count:\t\t", total_patch_count_white + total_patch_count_black)
+
+    return foo
 
 
 def plot_patch_count_per_label_layer(data):
@@ -516,7 +534,7 @@ def move_files(src_dir, dest_dir, files, pbar):
         pbar.update(1)
 
 
-def create_single_val_dataset(data_root_dir, train_split=0.8):
+def create_single_val_dataset(patch_size, data_root_dir, train_coord_dict, train_split=0.8):
     train_dir = os.path.join(data_root_dir, 'train')
     train_img_dir = os.path.join(train_dir, 'images')
     train_label_dir = os.path.join(train_dir, 'labels')
@@ -532,24 +550,40 @@ def create_single_val_dataset(data_root_dir, train_split=0.8):
     os.makedirs(val_img_dir, exist_ok=True)
     os.makedirs(val_label_dir, exist_ok=True)
 
-    # List all files in the train images and labels directories
-    image_files = os.listdir(train_img_dir)
-    label_files = os.listdir(train_label_dir)
+    selected_files = {}
+    for frag_id, channels in train_coord_dict.items():
+        for channel, coord_lists in channels.items():
+            for list_name, coords in coord_lists.items():
+                selected_files[list_name] = {}
+                num_coords_to_select = int(len(coords) * (1 - train_split))
+                sampled_coords = random.sample(coords, min(num_coords_to_select, len(coords)))
 
-    # Assuming the image and label files have a one-to-one correspondence and the same naming convention
-    assert len(image_files) == len(label_files)
+                files = []
+                for coord in sampled_coords:
+                    x1, y1 = coord
+                    x2, y2 = x1 + patch_size, y1 + patch_size
+                    label_idx = channel // 4
+                    file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
+                    files.append(file_name)
+                selected_files[list_name] = files
 
-    # Randomly select 20% of the files
-    num_files_to_select = int(len(image_files) * (1 - train_split))
-    selected_files = random.sample(image_files, num_files_to_select)
+    white_count = len(selected_files['white_coord_list'])
+    black_count = len(selected_files['black_coord_list'])
+    total_count = white_count + black_count
 
-    progress_bar = tqdm(total=num_files_to_select * 2, desc="Validation Dataset: Processing images and labels")
+    progress_bar = tqdm(total=total_count, desc="Validation Dataset: Processing images and labels")
 
     # Move the selected image and label files
+    selected_files = selected_files['white_coord_list'] + selected_files['black_coord_list']
     move_files(train_img_dir, val_img_dir, selected_files, pbar=progress_bar)
     move_files(train_label_dir, val_label_dir, selected_files, pbar=progress_bar)
 
     progress_bar.close()
+
+    print("Total Patch Count White:\t", white_count)
+    print("Total Patch Count Black:\t", black_count)
+    print("Total Patch Count:\t\t", total_count)
+
 
 
 def plot_2d_arrays(label, image=None):
