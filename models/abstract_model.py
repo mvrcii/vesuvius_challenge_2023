@@ -2,7 +2,7 @@ import torch
 from einops import rearrange
 from lightning import LightningModule
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryJaccardIndex as IoU)
 
@@ -37,11 +37,18 @@ class AbstractVesuvLightningModule(LightningModule):
         else:
             raise NotImplementedError()
 
-        scheduler = CosineAnnealingLR(
-            optimizer,
-            T_max=self.epochs,
-            eta_min=self.eta_min
-        )
+        if self.epochs == -1:
+            scheduler = StepLR(
+                optimizer,
+                step_size=2,
+                gamma=0.99
+            )
+        else:
+            scheduler = CosineAnnealingLR(
+                optimizer,
+                T_max=self.epochs,
+                eta_min=self.eta_min
+            )
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
 
     def forward(self, x):
