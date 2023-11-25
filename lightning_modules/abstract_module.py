@@ -3,9 +3,11 @@ import torch.nn.functional as F
 from bitsandbytes.optim import Adam8bit
 from einops import rearrange
 from lightning import LightningModule
+from lightning.pytorch.utilities.memory import garbage_collection_cuda
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryAUROC, BinaryJaccardIndex as IoU, BinaryAveragePrecision)
+
 
 from util.losses import BinaryDiceLoss
 
@@ -86,9 +88,6 @@ class AbstractVesuvLightningModule(LightningModule):
         data, target = batch
         output = self.forward(data)
 
-        output = output.detach()
-        target = target.detach()
-
         # Compute both BCE loss (with label smoothing) and Dice loss
         # bce_loss = self.bce_loss(output, target.float())
         # dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
@@ -105,3 +104,5 @@ class AbstractVesuvLightningModule(LightningModule):
         self.log('val_auc', self.auc(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
         self.log('val_iou', self.iou(output, target.int()), on_step=False, on_epoch=True, prog_bar=True)
         self.log('val_map', self.map(output, target.int()), on_step=False, on_epoch=True, prog_bar=False)
+
+        garbage_collection_cuda()
