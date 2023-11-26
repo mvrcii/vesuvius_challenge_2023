@@ -8,7 +8,7 @@ FRAGMENTS = {
     "RATCHET": "20230909121925",
     "JAZZ": "20231016151000",
     "ULTRA_MAGNUS": "20231106155351",
-
+    "JETFIRE": "20231005123336",
     "SHOCKWAVE": "2"
 }
 
@@ -21,6 +21,7 @@ IRONHIDE_FRAG_ID = FRAGMENTS["IRONHIDE"]
 RATCHET_FRAG_ID = FRAGMENTS["RATCHET"]
 JAZZ_FRAG_ID = FRAGMENTS["JAZZ"]
 ULTRA_MAGNUS_FRAG_ID = FRAGMENTS["ULTRA_MAGNUS"]
+JETFIRE_FRAG_ID = FRAGMENTS["JETFIRE"]
 
 SHOCKWAVE_FRAG_ID = FRAGMENTS["SHOCKWAVE"]
 
@@ -32,8 +33,6 @@ def get_frag_name_from_id(frag_id):
     return "Unknown Fragment"
 
 # Additional Transformers character names for IDs
-# ULTRA_MAGNUS_FRAG_ID = "your_id_here_1"  # Replace 'your_id_here_1' with the actual ID
-# SHOCKWAVE_FRAG_ID = "your_id_here_2"  # Replace 'your_id_here_2' with the actual ID
 # HOT_ROD_FRAG_ID = "your_id_here_3"  # Replace 'your_id_here_3' with the actual ID
 # JETFIRE_FRAG_ID = "your_id_here_4"  # Replace 'your_id_here_4' with the actual ID
 # WHEELJACK_FRAG_ID = "your_id_here_5"  # Replace 'your_id_here_5' with the actual ID

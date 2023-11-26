@@ -89,7 +89,7 @@ def main():
     wandb_generated_name = wandb_logger.experiment.name
     model_run_name = f"{wandb_generated_name}-{model_name}-{timestamp}"
     wandb_logger.experiment.name = model_run_name
-    model_run_dir = os.path.join("checkpoints", model_run_name)
+    model_run_dir = os.path.join(config.work_dir, "checkpoints", model_run_name)
 
     model = get_model(config=config)
     data_module = get_data_module(config=config)

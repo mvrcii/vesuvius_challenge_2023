@@ -118,4 +118,4 @@ class AbstractVesuvLightningModule(LightningModule):
         self.log('val_precision', self.precision(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_recall', self.recall(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_f1', self.f1(output_logits, target), on_step=False, on_epoch=True, prog_bar=True)
-        self.log('val_iou', self.iou(output_logits, target), on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val_iou', self.iou(output_logits, target), on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
