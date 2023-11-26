@@ -6,14 +6,12 @@ import random
 import re
 import shutil
 import sys
-from collections import defaultdict
 from multiprocessing import Manager, Pool
 
 import cv2
 import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt
-from skimage.transform import resize
 from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -427,7 +425,8 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         x1_list = list(range(0, images.shape[2] - patch_size + 1, stride))
         y1_list = list(range(0, images.shape[1] - patch_size + 1, stride))
 
-        pbar_channels = tqdm(total=(len(channels)), desc=f"Fragment {get_frag_name_from_id(frag_id)} ({frag_id})': Processing channels")
+        pbar_channels = tqdm(total=(len(channels)),
+                             desc=f"Fragment {get_frag_name_from_id(frag_id)} ({frag_id})': Processing channels")
 
         patch_count_skipped_mask = 0
         patch_count_white_total = 0
@@ -577,7 +576,6 @@ def create_single_val_dataset(patch_size, data_root_dir, train_coord_dict, train
     print("Total Patch Count White:\t", total_patch_count_white)
     print("Total Patch Count Black:\t", total_patch_count_black)
     print("Total Patch Count:\t\t\t", total_count)
-
 
 
 def plot_2d_arrays(label, image=None):

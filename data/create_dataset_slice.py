@@ -1,32 +1,38 @@
 import os
 import shutil
 import sys
+from random import random, sample
 
 import cv2
 import numpy as np
 from tqdm import tqdm
-from random import random, sample
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config_handler import Config
 from PIL import Image
 
+Image.MAX_IMAGE_PIXELS = None
+
 
 def read_fragment(work_dir, fragment_id, depth):
     images = []
-    print(f"attempting to read fragment {fragment_id}")
 
-    for i in tqdm(range(0, depth)):
-        img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
-        print(img_path)
+    # Create a tqdm object with the range
+    with tqdm(range(0, depth)) as t:
+        for i in t:
+            img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
-        image = cv2.imread(img_path, 0)
-        assert 1 < np.asarray(image).max() <= 255, "Invalid image"
-        images.append(image)
+            # Set the description of the tqdm object to the current file ID
+            t.set_description(f"Processing {i:05}.tif")
+
+            image = cv2.imread(img_path, 0)
+            assert 1 < np.asarray(image).max() <= 255, "Invalid image"
+            images.append(image)
+
     images = np.stack(images, axis=0)
-
     return images
+
 
 def create_single_val_dataset(data_root_dir, train_split=0.8):
     train_dir = os.path.join(data_root_dir, 'train')
@@ -51,6 +57,12 @@ def create_single_val_dataset(data_root_dir, train_split=0.8):
         shutil.move(os.path.join(train_img_dir, image), os.path.join(val_img_dir, image))
 
     print(f"Moved {num_to_select} patch images from train to val")
+
+
+def calculate_mean_std(sums, squares, total_pixels):
+    mean = sums / total_pixels
+    std = np.sqrt((squares / total_pixels) - (mean ** 2))
+    return mean, std
 
 
 def get_sys_args():
@@ -89,6 +101,11 @@ if __name__ == '__main__':
     label_arr = (label_arr / 255).astype(np.uint8)
 
     progress_bar = tqdm(total=config.count, desc="Searching patches", unit="iteration")
+
+    # Mean and std variables
+    sum_pixels = 0.0
+    sum_squares = 0.0
+    total_pixels = 0
 
     big_ink_slices = 0
     small_ink_slices = 0
@@ -136,12 +153,18 @@ if __name__ == '__main__':
         saved_samples += 1
         progress_bar.update(1)
 
+        sum_pixels += np.sum(patch)
+        sum_squares += np.sum(patch ** 2)
+        total_pixels += patch.size
+
     print(f"Total:\t\t\t\t{config.count}")
     print(f"Slices with > 50% ink:\t\t{big_ink_slices}")
     print(f"Slices with 1-50% ink:\t\t{small_ink_slices}")
     print(f"Slices with 0% ink:\t\t{no_ink_slices}")
 
-    create_single_val_dataset(data_root_dir=target_path,
-                              )
+    # Calculate mean and standard deviation
+    mean, std = calculate_mean_std(sum_pixels, sum_squares, total_pixels)
+    stats_path = os.path.join(target_path, 'train', "norm_params.npz")
+    np.savez(stats_path, mean=mean, std=std)
 
-
+    create_single_val_dataset(data_root_dir=target_path)
