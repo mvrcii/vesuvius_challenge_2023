@@ -8,6 +8,7 @@ from tqdm import tqdm
 arrays = []
 threshold = 0.5
 slider = None
+inverted = False
 
 
 def process_image(array, threshold, max_size=(1800, 1000)):
@@ -18,6 +19,8 @@ def process_image(array, threshold, max_size=(1800, 1000)):
 
     # reverse threshold
     processed[processed < threshold] = 0
+    if inverted:
+        processed = 1 - processed
     # processed = array
 
     image = Image.fromarray(np.uint8(processed * 255), 'L')
@@ -37,7 +40,6 @@ def process_image(array, threshold, max_size=(1800, 1000)):
 
 
 def update_image(value):
-
     if mode_var.get() == 2:
         layer = int(value)
         global array
@@ -159,6 +161,10 @@ def mode_changed():
         normalized_array = (combined_array - min_value) / (max_value - min_value)
         array = normalized_array
         update_image(threshold)
+        slider.config(resolution=0.001)
+        slider.config(from_=0)
+        slider.config(to=1)
+        slider.set(0.5)
     elif mode == 1:
         combined_array = np.sum(arrays, axis=0)
         min_value = combined_array.min()
@@ -166,6 +172,10 @@ def mode_changed():
         normalized_array = (combined_array - min_value) / (max_value - min_value)
         array = normalized_array
         update_image(threshold)
+        slider.config(resolution=0.001)
+        slider.config(from_=0)
+        slider.config(to=1)
+        slider.set(0.5)
     elif mode == 2:
         slider.config(resolution=1)
         slider.config(from_=0)
@@ -174,6 +184,19 @@ def mode_changed():
         array = arrays[0]
         threshold = 0
         update_image(threshold)
+
+
+def save_snapshot():
+    new_img = process_image(array, threshold)
+    os.makedirs("snapshots", exist_ok=True)
+    new_img.save(os.path.join("snapshots", f"snapshot_{threshold}.png"))
+    pass
+
+
+def invert_colors():
+    global inverted
+    inverted = not inverted
+    update_image(threshold)
 
 
 if __name__ == "__main__":
@@ -191,6 +214,14 @@ if __name__ == "__main__":
 
     # Variable to hold the selected mode
     mode_var = IntVar(value=0)  # Default to mode 0
+
+    # Utility frame
+    utility_frame = Frame(root)
+    utility_frame.pack(side='top')
+    save_button = Button(utility_frame, text="Save Snapshot", command=save_snapshot)
+    save_button.pack(side="left")
+    invert_button = Button(utility_frame, text="Invert colors", command=invert_colors)
+    invert_button.pack(side="left")
 
     # Create a frame for the mode selection buttons
     mode_frame = Frame(root)
