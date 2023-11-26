@@ -76,8 +76,8 @@ def main():
     config_path = get_sys_args()
     config = Config.load_from_file(config_path)
 
-    seed_value = config.seed
-    seed_everything(seed_value)
+    if config.seed != -1:
+        seed_everything(config.seed)
 
     wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
 
