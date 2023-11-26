@@ -101,6 +101,7 @@ def build_dataloader(data_root_dir, cfg, dataset_type='train'):
                             images=images_list,
                             labels=label_list,
                             in_chans=cfg.in_chans,
+                            label_size=cfg.label_size,
                             common_aug=common_aug,
                             image_aug=image_aug,
                             train=(dataset_type == 'train'))
@@ -125,7 +126,8 @@ def get_transforms(data, cfg):
 
 
 class WuesuvDataset(Dataset):
-    def __init__(self, data_dir, img_dir, label_dir, images, in_chans, labels=None, common_aug=None, image_aug=None,
+    def __init__(self, data_dir, img_dir, label_dir, images, in_chans, label_size, labels=None, common_aug=None,
+                 image_aug=None,
                  train=True):
         self.images = np.array(images)
         self.labels = labels
@@ -136,6 +138,7 @@ class WuesuvDataset(Dataset):
         self.image_aug = image_aug
         self.train = train
         self.in_chans = in_chans
+        self.label_shape = (label_size, label_size)
 
     def __len__(self):
         return len(self.images)
@@ -151,9 +154,6 @@ class WuesuvDataset(Dataset):
         # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
         image = np.transpose(image, (1, 2, 0))
 
-        # Get original dimension
-        label_size = label.shape[0]
-
         # Apply common augmentations to both image and label
         if self.common_aug:
             augmented = self.common_aug(image=image, mask=label)
@@ -168,7 +168,7 @@ class WuesuvDataset(Dataset):
         image = np.transpose(image, (2, 0, 1))
 
         # Scale down label to match segformer output
-        label = resize(label, (label_size, label_size), order=0, preserve_range=True, anti_aliasing=False)
+        label = resize(label, self.label_shape, order=0, preserve_range=True, anti_aliasing=False)
 
         return image, label
 
