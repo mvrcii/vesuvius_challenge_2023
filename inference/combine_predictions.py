@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 arrays = []
 threshold = 0.5
+slider = None
 
 
 def process_image(array, threshold, max_size=(1800, 1000)):
@@ -18,14 +19,6 @@ def process_image(array, threshold, max_size=(1800, 1000)):
     # reverse threshold
     processed[processed < threshold] = 0
     # processed = array
-
-    # Brightness
-    # image = array
-    # current_min = np.min(image)
-    # current_max = np.max(image)
-    # new_max = 1
-    # new_min = threshold
-    # processed = (image - current_min) / (current_max - current_min) * (new_max - new_min) + new_min
 
     image = Image.fromarray(np.uint8(processed * 255), 'L')
 
@@ -44,9 +37,21 @@ def process_image(array, threshold, max_size=(1800, 1000)):
 
 
 def update_image(value):
+
+    if mode_var.get() == 2:
+        layer = int(value)
+        global array
+        array = arrays[layer]
+        print("setting to layers", layer)
+        new_img = process_image(array, 0)
+        imgtk = ImageTk.PhotoImage(image=new_img)
+        label.imgtk = imgtk
+        label.config(image=imgtk)
+        return
+
     global threshold
-    # Update the image based on the slider's value
     threshold = float(value)
+    # Update the image based on the slider's value
     new_img = process_image(array, threshold)
     imgtk = ImageTk.PhotoImage(image=new_img)
     label.imgtk = imgtk
@@ -116,21 +121,31 @@ def combine_arrays(directory_path, ignore_percent=0):
 
 
 def increase_slider():
+    step = 0.001
+    max_val = 1
+    if mode_var.get() == 2:
+        step = 1
+        max_val = len(arrays) - 1
     current_value = slider.get()
-    new_value = min(current_value + 0.001, 1)  # Ensure the value does not exceed the maximum
+    new_value = min(current_value + step, max_val)  # Ensure the value does not exceed the maximum
     slider.set(new_value)
     update_image(new_value)
 
 
 def decrease_slider():
+    step = 0.001
+    if mode_var.get() == 2:
+        step = 1
     current_value = slider.get()
-    new_value = max(current_value - 0.001, 0)  # Ensure the value does not go below the minimum
+    new_value = max(current_value - step, 0)  # Ensure the value does not go below the minimum
     slider.set(new_value)
     update_image(new_value)
 
 
 def mode_changed():
+    global slider
     global array
+    global threshold
     # This function will be called when the mode is changed.
     # You can use mode_var.get() to get the current mode value.
     mode = mode_var.get()
@@ -143,20 +158,29 @@ def mode_changed():
         max_value = combined_array.max()
         normalized_array = (combined_array - min_value) / (max_value - min_value)
         array = normalized_array
+        update_image(threshold)
     elif mode == 1:
         combined_array = np.sum(arrays, axis=0)
         min_value = combined_array.min()
         max_value = combined_array.max()
         normalized_array = (combined_array - min_value) / (max_value - min_value)
         array = normalized_array
-    update_image(threshold)
+        update_image(threshold)
+    elif mode == 2:
+        slider.config(resolution=1)
+        slider.config(from_=0)
+        slider.config(to=len(arrays) - 1)
+        slider.set(0)
+        array = arrays[0]
+        threshold = 0
+        update_image(threshold)
 
 
 if __name__ == "__main__":
     # folder_path = r"A:\handlabel\test\20231123-205540"  # big (330?)
-    folder_path = r"A:\handlabel\test\20231123-212933"  # small (35)
-    # folder_path = r"A:\handlabel\test\20231125-220804"  # huge 336
-    array = combine_arrays(folder_path, ignore_percent=0.25)
+    # folder_path = r"A:\handlabel\test\20231123-212933"  # small (35)
+    folder_path = r"A:\handlabel\test\20231125-220804"  # huge 336
+    array = combine_arrays(folder_path, ignore_percent=0)
     # print(array.shape)
     # exit()
 
@@ -172,7 +196,7 @@ if __name__ == "__main__":
     mode_frame.pack(side='top')
 
     # List of modes
-    modes = ["Sum", "Max"]
+    modes = ["Sum", "Max", "Layers"]
 
     # Create a Radiobutton for each mode
     for index, mode in enumerate(modes):
