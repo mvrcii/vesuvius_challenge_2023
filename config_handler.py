@@ -1,6 +1,7 @@
 import importlib.util
 import os.path
 import pprint
+import sys
 
 
 class Config:
@@ -74,7 +75,13 @@ class Config:
             local_config = import_config_from_path(local_config_path)
             config.update({k: v for k, v in vars(local_config).items() if not k.startswith('__')})
 
-        config_file_name = config_path.split(os.sep)[-1]
+        if config_path.__contains__('/'):
+            config_file_name = config_path.split('/')[-1]
+        elif config_path.__contains__('\\'):
+            config_file_name = config_path.split('\\')[-1]
+        else:
+            print("Error: Config path incorrect.")
+            sys.exit(1)
         return cls(config, config_file_name)
 
     def save_to_file(self, model_run_dir, file_path=None):
