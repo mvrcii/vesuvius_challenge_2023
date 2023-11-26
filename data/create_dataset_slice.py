@@ -1,10 +1,11 @@
 import os
+import shutil
 import sys
-from random import random
 
 import cv2
 import numpy as np
 from tqdm import tqdm
+from random import random, sample
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -28,6 +29,30 @@ def read_fragment(work_dir, fragment_id, depth):
 
     return images
 
+def create_single_val_dataset(data_root_dir, train_split=0.8):
+    train_dir = os.path.join(data_root_dir, 'train')
+    train_img_dir = os.path.join(train_dir, 'images')
+
+    if not (os.path.exists(train_dir) and os.path.exists(train_img_dir)):
+        print("Train directory, images, or labels are missing!")
+        sys.exit(1)
+
+    val_dir = os.path.join(data_root_dir, 'val')
+    val_img_dir = os.path.join(val_dir, 'images')
+
+    # Create val directories if they don't exist
+    os.makedirs(val_img_dir, exist_ok=True)
+
+    train_images = os.listdir(train_img_dir)
+
+    num_to_select = int(len(train_images) * (1 - train_split))
+    sampled_images = sample(train_images, min(num_to_select, len(train_images)))
+
+    for image in sampled_images:
+        shutil.move(os.path.join(train_img_dir, image), os.path.join(val_img_dir, image))
+
+    print(f"Moved {num_to_select} patch images from train to val")
+
 
 def get_sys_args():
     if len(sys.argv) < 2:
@@ -50,8 +75,10 @@ if __name__ == '__main__':
     mask_path = os.path.join(fragment_dir, f"mask.png")
     label_path = os.path.join(fragment_dir, f"inklabels.png")
     target_path = os.path.join(config.work_dir, "data", "datasets", "slice")
+    target_train_img_path = os.path.join(target_path, "train", "images")
 
     os.makedirs(target_path, exist_ok=True)
+    os.makedirs(target_train_img_path, exist_ok=True)
 
     if not os.path.isfile(mask_path):
         raise ValueError(f"Mask file does not exist for fragment: {mask_path}")
@@ -87,6 +114,8 @@ if __name__ == '__main__':
             continue
 
         patch = stack[:, x:x + length, y:y + width]
+        patch = patch.reshape((slice_length, slice_length))
+
         label_patch = label_arr[x:x + length, y:y + width]
         label = label_patch.sum() / (length * width)
         label = int(label * 100)
@@ -103,7 +132,7 @@ if __name__ == '__main__':
 
         # Set filename to label, with 2 decimals
         filename = f"{saved_samples}_{label}.npy"
-        patch_path = os.path.join(target_path, filename)
+        patch_path = os.path.join(target_train_img_path, filename)
         np.save(patch_path, patch)
         saved_samples += 1
         progress_bar.update(1)
@@ -112,3 +141,8 @@ if __name__ == '__main__':
     print(f"Slices with > 50% ink:\t\t{big_ink_slices}")
     print(f"Slices with 1-50% ink:\t\t{small_ink_slices}")
     print(f"Slices with 0% ink:\t\t{no_ink_slices}")
+
+    create_single_val_dataset(data_root_dir=target_path,
+                              )
+
+
