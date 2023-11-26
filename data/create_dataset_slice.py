@@ -6,6 +6,8 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from config_handler import Config
 from PIL import Image
 
@@ -29,7 +31,7 @@ def read_fragment(work_dir, fragment_id, depth):
 
 def get_sys_args():
     if len(sys.argv) < 2:
-        print("Usage: python ./data/create_dataset.py <config_path>")
+        print("Usage: python ./data/create_dataset_slice.py <config_path>")
         sys.exit(1)
 
     return sys.argv[1]
