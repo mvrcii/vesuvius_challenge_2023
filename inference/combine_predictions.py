@@ -179,7 +179,8 @@ def mode_changed():
 if __name__ == "__main__":
     # folder_path = r"A:\handlabel\test\20231123-205540"  # big (330?)
     # folder_path = r"A:\handlabel\test\20231123-212933"  # small (35)
-    folder_path = r"A:\handlabel\test\20231125-220804"  # huge 336
+    # folder_path = r"A:\handlabel\test\20231125-220804"  # huge 336
+    folder_path = r"C:\Users\Marce\Git-Master\Privat\kaggle1stReimp\inference\results\fragment20231005123336\20231126-150506"
     array = combine_arrays(folder_path, ignore_percent=0)
     # print(array.shape)
     # exit()
