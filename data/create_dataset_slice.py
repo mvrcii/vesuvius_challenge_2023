@@ -22,7 +22,6 @@ def read_fragment(work_dir, fragment_id, depth):
         print(img_path)
 
         image = cv2.imread(img_path, 0)
-        print(image.shape)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image"
         images.append(image)
     images = np.stack(images, axis=0)
