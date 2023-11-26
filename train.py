@@ -96,7 +96,7 @@ def main():
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=model_run_dir,
-        filename="best-checkpoint-{epoch}-{val_iou:.2f}--{val_auc:.2f}",
+        filename="best-checkpoint-{epoch}-{val_iou:.2f}",
         save_top_k=1,
         monitor="val_iou",
         mode="max",
