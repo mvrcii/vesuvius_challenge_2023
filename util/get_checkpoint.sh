@@ -15,7 +15,7 @@ SERVER_PATH="/scratch/medfm/vesuv/kaggle1stReimp/checkpoints"
 FULL_SERVER_PATH="$SERVER_PATH/$FOLDER_NAME"
 
 # Define the local path where you want to save the folder
-LOCAL_PATH="$(pwd)/checkpionts/"
+LOCAL_PATH="$(pwd)/checkpoints/$FOLDER_NAME"
 
 
 # Using scp to copy the directory. -r flag is used for recursive copy.
