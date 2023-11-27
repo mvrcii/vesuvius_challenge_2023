@@ -40,6 +40,8 @@ def get_sys_args():
 
     return sys.argv[1]
 
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
 
 if __name__ == '__main__':
     # Load config
@@ -72,6 +74,9 @@ if __name__ == '__main__':
 
     ink_7_27 = 0.411844052997497
     no_ink_7_27 = 0.40435661216492697
+
+    midpoint = (ink_7_27 + no_ink_7_27) / 2
+    scale = ink_7_27 - midpoint  # Adjust scale for steepness
     # ink_10_29 = 0.41478473769614066
     # no_ink_10_29 = 0.40962726891154916
     # ink_30_46 = 0.3767836464618817
@@ -90,8 +95,14 @@ if __name__ == '__main__':
             cube = stack[:, y:y + slice_length, x:x + slice_length]
             mean_stack = np.mean(cube, axis=(1, 2))
             mean_7_27 = np.mean(mean_stack[7:28])
-            if abs(ink_7_27 - mean_7_27) < abs(no_ink_7_27 - mean_7_27):
-                result[out_y, out_x] = 1
+            # if abs(ink_7_27 - mean_7_27) < abs(no_ink_7_27 - mean_7_27):
+            #     result[out_y, out_x] = 1
+            # else:
+            #     result[out_y, out_x] = 0
+
+            # Inside your loop
+            scaled_value = (mean_7_27 - midpoint) / scale
+            result[out_y, out_x] = sigmoid(scaled_value)
 
             y += slice_length
             out_y += 1
