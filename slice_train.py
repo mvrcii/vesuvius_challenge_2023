@@ -43,10 +43,10 @@ def main():
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=model_run_dir,
-        filename="best-checkpoint-{epoch}-{val_mse_metric:.2f}",
+        filename="best-checkpoint-{epoch}-{val_acc:.2f}",
         save_top_k=1,
         save_weights_only=True,
-        monitor="val_mse_metric",
+        monitor="val_acc",
         mode="max",
         every_n_epochs=1
     )
