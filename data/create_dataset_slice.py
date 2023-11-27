@@ -72,6 +72,7 @@ if __name__ == '__main__':
     config = Config.load_from_file(config_path)
     slice_length = config.slice_length
     slice_depth = config.slice_depth
+    binary = config.binary
 
     fragment_id = "2"
     fragment_dir = os.path.join(config.work_dir, "data", "fragments", f"fragment{fragment_id}")
@@ -121,11 +122,18 @@ if __name__ == '__main__':
         patch = stack[:, x:x + length, y:y + width]
         patch = patch.reshape((slice_length, slice_length))
 
+        # Remove patches with large black areas
+        if np.count_nonzero(patch) < 0.9 * slice_length * slice_length:
+            continue
+
         label_patch = label_arr[x:x + length, y:y + width]
         label = label_patch.sum() / (length * width)
         label = int(label * 100)
 
         if label == 0 and (big_ink_slices + small_ink_slices) < no_ink_slices:
+            continue
+
+        if binary and (0 < label < 100):
             continue
 
         if label > 50:
