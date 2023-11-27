@@ -26,7 +26,6 @@ def read_fragment(work_dir, fragment_id, depth):
             t.set_description(f"Processing {i:05}.tif")
 
             image = np.asarray(cv2.imread(img_path, 0))
-            image = image / 255
             images.append(image)
 
     images = np.stack(images, axis=0)
@@ -72,8 +71,8 @@ if __name__ == '__main__':
     progress_bar = tqdm(total=out_height*out_width, desc="Doing inference", unit="iteration")
     result = np.zeros((out_height + 10, out_width + 10))
 
-    ink_7_27 = 0.411844052997497
-    no_ink_7_27 = 0.40435661216492697
+    ink_7_27 = 105.00308336463952
+    no_ink_7_27 = 103.92927717094145
 
     midpoint = (ink_7_27 + no_ink_7_27) / 2
     scale = ink_7_27 - midpoint  # Adjust scale for steepness
@@ -83,6 +82,8 @@ if __name__ == '__main__':
     # no_ink_30_46 = 0.37998289621719006
 
     while x < width - slice_length:
+        y = 0
+        out_y = 0
         while y < height - slice_length:
             progress_bar.update(1)
             # Check if patch is valid
@@ -108,5 +109,6 @@ if __name__ == '__main__':
             out_y += 1
         x += slice_length
         out_x += 1
-    plt.imshow(result, cmap='gray')
+    np.save("result.npy", result)
+    plt.imshow(result, cmap='gray', interpolation='none')
     plt.show()
