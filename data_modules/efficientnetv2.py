@@ -5,7 +5,7 @@ from lightning.pytorch import LightningDataModule
 from torch.utils.data import Dataset, DataLoader
 
 
-class ResNet50DataModule(LightningDataModule):
+class EfficientNetV2DataModule(LightningDataModule):
     def __init__(self, cfg):
         super().__init__()
         self.cfg = cfg
@@ -22,26 +22,16 @@ class ResNet50DataModule(LightningDataModule):
         return self.build_dataloader(dataset_type='val')
 
     def build_dataloader(self, dataset_type):
-        data_dir = os.path.join(self.data_root_dir, dataset_type)
-        img_dir = os.path.join(data_dir, 'images')
+        img_dir = os.path.join(self.data_root_dir, dataset_type, 'images')
 
-        assert os.path.isdir(img_dir)
+        norm_params = np.load(os.path.join(self.data_root_dir, 'train', "norm_params.npz"))
+        mean = norm_params['mean']
+        std = norm_params['std']
 
-        images_list = os.listdir(img_dir)
+        dataset = SliceDataset(img_dir=img_dir, mean=mean, std=std)
 
-        if not images_list:
-            raise ValueError(f"One or both directories (images) of {data_dir} are empty.")
-
-        images_list.sort()
-
-        dataset = SliceDataset(
-            img_dir=img_dir,
-            images=images_list,
-        )
-
-        batch_size = self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size
         data_loader = DataLoader(dataset,
-                                 batch_size=batch_size,
+                                 batch_size=self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size,
                                  shuffle=(dataset_type == 'train'),
                                  num_workers=self.cfg.num_workers,
                                  pin_memory=True,
@@ -52,9 +42,11 @@ class ResNet50DataModule(LightningDataModule):
 
 
 class SliceDataset(Dataset):
-    def __init__(self, img_dir, images):
-        self.images = np.array(images)
+    def __init__(self, img_dir, mean, std):
+        self.images = np.array(os.listdir(img_dir))
         self.img_dir = img_dir
+        self.mean = mean
+        self.std = std
 
     def __len__(self):
         return len(self.images)
@@ -62,8 +54,17 @@ class SliceDataset(Dataset):
     def __getitem__(self, idx):
         image = np.load(os.path.join(self.img_dir, self.images[idx]))
 
-        label = float(int(self.images[idx].split('.')[0].split('_')[1]) / 100)
+        # Expand dims to create a single-channel image
+        image = np.expand_dims(image, 0)
 
-        assert image.ndim == 2
+        assert image.ndim == 3
+
+        # mean = [0.485, 0.456, 0.406] and std = [0.229, 0.224, 0.225].
+
+        if self.mean is None or self.std is None:
+            raise RuntimeError("Mean and standard deviation have to be provided for normalization.")
+        image = (image - self.mean) / self.std
+
+        label = float(int(self.images[idx].split('.')[0].split('_')[1]) / 100)
 
         return image, label

@@ -58,13 +58,6 @@ def create_single_val_dataset(data_root_dir, train_split=0.8):
 
     print(f"Moved {num_to_select} patch images from train to val")
 
-
-def calculate_mean_std(sums, squares, total_pixels):
-    mean = sums / total_pixels
-    std = np.sqrt((squares / total_pixels) - (mean ** 2))
-    return mean, std
-
-
 def get_sys_args():
     if len(sys.argv) < 2:
         print("Usage: python ./data/create_dataset_slice.py <config_path>")
@@ -102,16 +95,12 @@ if __name__ == '__main__':
 
     progress_bar = tqdm(total=config.count, desc="Searching patches", unit="iteration")
 
-    # Mean and std variables
-    sum_pixels = 0.0
-    sum_squares = 0.0
-    total_pixels = 0
-
     big_ink_slices = 0
     small_ink_slices = 0
     no_ink_slices = 0
     saved_samples = 0
 
+    image_patches = []
     while saved_samples < config.count:
         # Randomly select a patch
         x = np.random.randint(0, stack.shape[1] - slice_length)
@@ -150,12 +139,9 @@ if __name__ == '__main__':
         filename = f"{saved_samples}_{label}.npy"
         patch_path = os.path.join(target_train_img_path, filename)
         np.save(patch_path, patch)
+        image_patches.append(patch)
         saved_samples += 1
         progress_bar.update(1)
-
-        sum_pixels += np.sum(patch)
-        sum_squares += np.sum(patch ** 2)
-        total_pixels += patch.size
 
     print(f"Total:\t\t\t\t{config.count}")
     print(f"Slices with > 50% ink:\t\t{big_ink_slices}")
@@ -163,7 +149,13 @@ if __name__ == '__main__':
     print(f"Slices with 0% ink:\t\t{no_ink_slices}")
 
     # Calculate mean and standard deviation
-    mean, std = calculate_mean_std(sum_pixels, sum_squares, total_pixels)
+    image_patches = np.array(image_patches)
+    mean = np.mean(image_patches)
+    std = np.std(image_patches)
+
+    print("Mean:", mean)
+    print("Standard Deviation:", std)
+
     stats_path = os.path.join(target_path, 'train', "norm_params.npz")
     np.savez(stats_path, mean=mean, std=std)
 

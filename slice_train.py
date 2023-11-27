@@ -1,14 +1,23 @@
 import os
 from datetime import datetime
 
+import numpy as np
 from lightning import seed_everything, Trainer
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 
 from config_handler import Config
-from data_modules.resnet50 import ResNet50DataModule
-from models.resnet50 import ResNet50Module
+from data_modules.efficientnetv2 import EfficientNetV2DataModule
+from models.efficientnetv2 import EfficientNetV2Module
 from train import get_sys_args, log_wandb_hyperparams
+
+
+def load_norm_params(cfg):
+    stats = np.load(os.path.join(cfg.dataset_target_dir, "stats.npz"))
+    mean = stats['mean']
+    std = stats['std']
+
+    return mean, std
 
 
 def main():
@@ -29,8 +38,8 @@ def main():
     wandb_logger.experiment.name = model_run_name
     model_run_dir = os.path.join(config.work_dir, "checkpoints", model_run_name)
 
-    model = ResNet50Module(cfg=config)
-    data_module = ResNet50DataModule(cfg=config)
+    model = EfficientNetV2Module(cfg=config)
+    data_module = EfficientNetV2DataModule(cfg=config)
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=model_run_dir,

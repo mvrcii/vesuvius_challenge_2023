@@ -9,13 +9,18 @@ data_root_dir = "data"
 dataset_target_dir = "data/datasets"
 
 
-model_type = "50"
-architecture = 'resnet'
+model_type = "s"
+architecture = 'tf_efficientnetv2_s'
 model_name = f"{architecture}-{model_type}"
+from_pretrained = f"tf_efficientnetv2_s"
 in_chans = 1
-seed = 123456
+seed = 235235
 epochs = 50
 
 num_workers = 4
-train_batch_size = 64
-val_batch_size = 64
+train_batch_size = 4
+val_batch_size = 4
+
+lr = 2e-3
+eta_min = 1e-4
+weight_decay = 0.05
