@@ -18,8 +18,8 @@ seed = 235235
 epochs = 50
 
 num_workers = 4
-train_batch_size = 4
-val_batch_size = 4
+train_batch_size = 96
+val_batch_size = 96
 
 lr = 2e-3
 eta_min = 1e-4
