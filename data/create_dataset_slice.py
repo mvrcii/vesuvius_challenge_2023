@@ -71,6 +71,7 @@ if __name__ == '__main__':
     config_path = get_sys_args()
     config = Config.load_from_file(config_path)
     slice_length = config.slice_length
+    slice_width = config.slice_width
     slice_depth = config.slice_depth
     binary = config.binary
 
@@ -108,19 +109,19 @@ if __name__ == '__main__':
         y = np.random.randint(0, stack.shape[2] - slice_length)
 
         length = slice_length
-        width = 1
+        width = slice_width
 
         # Randomly slice horizontally or vertically
-        if random() < 0.5:
-            length, width = width, length
+        # if random() < 0.5:
+        #     length, width = width, length
 
         # Check if patch is valid
         mask_patch = mask_arr[x:x + length, y:y + width]
-        if mask_patch.sum() == 0:
+        if mask_patch.sum() != slice_length * slice_length:
             continue
 
         patch = stack[:, x:x + length, y:y + width]
-        patch = patch.reshape((slice_length, slice_length))
+        # patch = patch.reshape((slice_length, slice_length))
 
         # Remove patches with large black areas
         if np.count_nonzero(patch) < 0.9 * slice_length * slice_length:
