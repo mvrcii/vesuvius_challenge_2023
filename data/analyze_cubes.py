@@ -13,16 +13,14 @@ means_no_ink = np.zeros(64)
 counts_no_ink = 0
 
 for file in tqdm(ink_files):
-    arr = np.load(os.path.join("train/images", file))
-    arr = arr / 255
+    arr = np.load(os.path.join("datasets/slice/train/images", file))
     mean = np.mean(arr, axis=(1, 2))
     means_ink += mean
     counts_ink += 1
 means_ink = means_ink / counts_ink
 
 for file in tqdm(no_ink_files):
-    arr = np.load(os.path.join("train/images", file))
-    arr = arr / 255
+    arr = np.load(os.path.join("datasets/slice/train/images", file))
     mean = np.mean(arr, axis=(1, 2))
     means_no_ink += mean
     counts_no_ink += 1
@@ -30,6 +28,9 @@ means_no_ink = means_no_ink / counts_no_ink
 
 print(f"Ink mean: {np.mean(means_ink)}")
 print(f"No-Ink mean: {np.mean(means_no_ink)}")
+
+print(f"Ink mean 7-27: {np.mean(means_ink[7:28])}")
+print(f"No-Ink mean 7-27: {np.mean(means_no_ink[7:28])}")
 
 print(f"Ink mean 10-29: {np.mean(means_ink[10:29])}")
 print(f"No-Ink mean 10-29: {np.mean(means_no_ink[10:29])}")
