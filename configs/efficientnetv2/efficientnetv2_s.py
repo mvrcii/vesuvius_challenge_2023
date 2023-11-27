@@ -18,9 +18,9 @@ seed = 235235
 epochs = 50
 
 num_workers = 4
-train_batch_size = 96
-val_batch_size = 96
+train_batch_size = 128
+val_batch_size = 128
 
-lr = 2e-3
-eta_min = 1e-4
-weight_decay = 0.05
+lr = 1e-4
+eta_min = 1e-5
+weight_decay = 0.01

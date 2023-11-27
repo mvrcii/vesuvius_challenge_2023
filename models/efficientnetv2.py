@@ -1,10 +1,10 @@
 import timm
 from lightning import LightningModule
 from torch import nn
-from torch.nn import MSELoss
+from torch.nn import BCEWithLogitsLoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from torchmetrics.regression import MeanSquaredError
+from torchmetrics.classification import BinaryAccuracy
 
 
 class EfficientNetV2Module(LightningModule):
@@ -31,12 +31,12 @@ class EfficientNetV2Module(LightningModule):
             nn.Flatten(),
             nn.Linear(in_features=1280, out_features=128),
             nn.ReLU(),
-            nn.Dropout(0.5),
+            nn.Dropout(0.1),
             nn.Linear(128, 1)
         )
 
-        self.mse_loss = MSELoss()
-        self.mse_metric = MeanSquaredError()
+        self.loss = BCEWithLogitsLoss()
+        self.accuracy = BinaryAccuracy()
 
     def forward(self, data):
         features = self.feature_extractor(data)
@@ -55,27 +55,25 @@ class EfficientNetV2Module(LightningModule):
     def training_step(self, batch, batch_idx):
         images, labels = batch
         images = images.float()
-        labels = (labels >= 0.4).view(-1, 1).float()
+        labels = (labels >= 0.5).view(-1, 1).float()
 
         outputs = self.forward(images)
 
-        mse_loss = self.mse_loss(outputs, labels).float()
-        self.log("train_mse_loss", mse_loss, on_step=False, on_epoch=True, prog_bar=True)
+        loss = self.loss(outputs, labels).float()
+        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
-        return mse_loss
+        return loss
 
     def validation_step(self, batch, batch_idx):
         images, labels = batch
         images = images.float()
-        labels = (labels >= 0.4).view(-1, 1).float()
+        labels = (labels >= 0.5).view(-1, 1).float()
 
         outputs = self.forward(images)
 
-        mse_loss = self.mse_loss(outputs, labels).float()
-        self.log("train_mse_loss", mse_loss, on_step=False, on_epoch=True, prog_bar=True)
+        loss = self.loss(outputs, labels).float()
 
-        mse_loss = self.mse_loss(outputs, labels).float()
-        mse_metric = self.mse_metric(outputs, labels)
+        acc = self.accuracy(outputs, labels)
 
-        self.log('val_mse_loss', mse_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log('val_mse_metric', mse_metric, on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val_loss', loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log('val_acc', acc, on_step=False, on_epoch=True, prog_bar=True)

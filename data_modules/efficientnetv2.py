@@ -57,12 +57,12 @@ class SliceDataset(Dataset):
         # Expand dims to create a single-channel image
         image = np.expand_dims(image, 0)
 
-        assert image.ndim == 3
-
-        # mean = [0.485, 0.456, 0.406] and std = [0.229, 0.224, 0.225].
+        self.mean = 0.5
+        self.std = 0.5
 
         if self.mean is None or self.std is None:
             raise RuntimeError("Mean and standard deviation have to be provided for normalization.")
+
         image = (image - self.mean) / self.std
 
         label = float(int(self.images[idx].split('.')[0].split('_')[1]) / 100)

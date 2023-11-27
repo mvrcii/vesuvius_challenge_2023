@@ -112,16 +112,16 @@ if __name__ == '__main__':
         width = slice_width
 
         # Randomly slice horizontally or vertically
-        # if random() < 0.5:
-        #     length, width = width, length
+        if random() < 0.5:
+            length, width = width, length
 
         # Check if patch is valid
         mask_patch = mask_arr[x:x + length, y:y + width]
-        if mask_patch.sum() != slice_length * slice_length:
+        if mask_patch.sum() != slice_length:
             continue
 
         patch = stack[:, x:x + length, y:y + width]
-        # patch = patch.reshape((slice_length, slice_length))
+        patch = patch.reshape((slice_length, slice_length))
 
         # Remove patches with large black areas
         if np.count_nonzero(patch) < 0.9 * slice_length * slice_length:
