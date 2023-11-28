@@ -1,4 +1,4 @@
-from transformers import SegformerForSemanticSegmentation, SegformerConfig
+from transformers import SegformerForSemanticSegmentation
 
 from models.abstract_model import AbstractVesuvLightningModule
 

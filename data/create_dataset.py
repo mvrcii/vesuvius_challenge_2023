@@ -37,10 +37,17 @@ def write_config(_cfg, frag_2_channels):
     return write_k_fold_cfg(_cfg, frag_2_channels) if _cfg.k_fold else write_single_fold_cfg(_cfg, frag_2_channels)
 
 
+def build_dataset_dir_from_config(config):
+    train_frags = [get_frag_name_from_id(frag_id) for frag_id in config.train_frag_ids]
+    result_dir_name = '_'.join(train_frags)
+    k_fold_str = 'k_fold' if config.k_fold else 'single'
+
+    return os.path.join(config.dataset_target_dir, k_fold_str, f"{str(config.patch_size)}px", result_dir_name)
+
+
 def write_single_fold_cfg(_cfg, frag_2_channels):
     logging.info("Starting single-fold dataset creation process...")
-    result_dir_name = f'single_fold_{str(_cfg.patch_size)}px'
-    path = os.path.join(_cfg.dataset_target_dir, result_dir_name)
+    path = build_dataset_dir_from_config(config=_cfg)
 
     write_dataset_cfg(path,
                       single_train_frag_ids=_cfg.train_frag_ids,
@@ -57,9 +64,7 @@ def write_single_fold_cfg(_cfg, frag_2_channels):
 
 def write_k_fold_cfg(_cfg, frag_2_channels):
     logging.info("Starting k-fold dataset creation process...")
-
-    result_dir_name = f'k_fold_{str(_cfg.patch_size)}px'
-    path = os.path.join(_cfg.dataset_target_dir, result_dir_name)
+    path = build_dataset_dir_from_config(config=_cfg)
 
     write_dataset_cfg(path,
                       frag_2_channels=frag_2_channels,
