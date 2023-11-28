@@ -1,9 +1,9 @@
-from constants import ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, STARSCREAM_FRAG_ID
+from constants import ULTRA_MAGNUS_FRAG_ID
 import albumentations as A
 
 calc_mean_std = False
 
-patch_size = 512
+patch_size = 256
 label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 0.05

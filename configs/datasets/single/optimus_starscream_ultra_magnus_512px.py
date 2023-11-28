@@ -13,32 +13,18 @@ train_frag_ids = [OPTIMUS_FRAG_ID, STARSCREAM_FRAG_ID, ULTRA_MAGNUS_FRAG_ID]
 val_frag_ids = []
 train_split = 0.8
 
-# Train augmentations suitable for images + labels
-train_common_aug = [
+train_aug = [
     A.OneOf([
         A.HorizontalFlip(),
         A.VerticalFlip(),
         A.RandomRotate90(),
         A.Transpose(),
     ], p=0.5),
-    A.Normalize(mean=[0], std=[1]),
-]
-
-train_image_aug = [
-    # Scale = Percentage of images (min, max); Ratio (1, 1) = Square Crop
     A.RandomResizedCrop(height=patch_size, width=patch_size, scale=(0.4, 0.9), ratio=(1, 1), p=0.5),
-    # A.OneOf([
-    #     A.OpticalDistortion(p=0.5),
-    #     A.GridDistortion(p=0.5),
-    # ], p=0.25),
     # A.RandomScale(scale_limit=0.1, p=0.5),
     # A.CenterCrop(height=size, width=size, p=0.5),
-    # A.Normalize(mean=[0] * in_chans, std=[1] * in_chans),
 ]
 
-val_common_aug = [
+val_aug = [
 ]
 
-val_image_aug = [
-    A.Normalize(mean=[0], std=[1]),
-]
