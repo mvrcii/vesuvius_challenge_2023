@@ -12,6 +12,7 @@ k_fold = False
 train_frag_ids = [ULTRA_MAGNUS_FRAG_ID]
 val_frag_ids = []
 train_split = 0.8
+min_negative_patches_per_channel_block = 20
 
 train_aug = [
     A.OneOf([

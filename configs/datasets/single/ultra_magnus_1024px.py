@@ -7,6 +7,7 @@ patch_size = 1024
 label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 0.05
+min_negative_patches_per_channel_block = 20
 
 k_fold = False
 train_frag_ids = [ULTRA_MAGNUS_FRAG_ID]

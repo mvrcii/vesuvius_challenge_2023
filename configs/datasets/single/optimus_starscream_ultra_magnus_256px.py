@@ -7,6 +7,7 @@ patch_size = 256
 label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 0.05
+min_negative_patches_per_channel_block = 20
 
 k_fold = False
 train_frag_ids = [OPTIMUS_FRAG_ID, STARSCREAM_FRAG_ID, ULTRA_MAGNUS_FRAG_ID]
