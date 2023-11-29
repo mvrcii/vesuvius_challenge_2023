@@ -494,6 +494,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                         negative_label_patch = negative_labels[label_idx, y1:y2, x1:x2]
                         # If negative labels exist, check if this patch is overlapping a negative label
                         if negative_label_patch.sum() > 0 and label_patch.sum() == 0:
+                            # Here we are adding artefact patches
                             black_start_coords.append(coord)
                             start_coord_list.remove(coord)
 
@@ -503,6 +504,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
             # negative_patch_count is the amount of negative patches that will now be sampled from start_coord_list,
             # it will be at least the amount min_negative_patches, or more if there are more white patches
             negative_patch_count = min(max(patch_count_white, min_negative_patches), len(start_coord_list))
+            # Here we are adding regular dark patches
             black_start_coords.extend(random.sample(start_coord_list, negative_patch_count))
             for x1, y1 in black_start_coords:
                 y2 = y1 + patch_size
