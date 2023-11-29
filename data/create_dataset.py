@@ -452,14 +452,14 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
             pbar_channels.update(4)
             random_shift_magnitude = stride // 4
 
-            for y1 in y1_list:
-                for x1 in x1_list:
-                    orig_x1 = x1
-                    orig_y1 = y1
-                    orig_x2 = x1 + patch_size
-                    orig_y2 = y1 + patch_size
-                    x1 += random.randint(-random_shift_magnitude, random_shift_magnitude)
-                    y1 += random.randint(-random_shift_magnitude, random_shift_magnitude)
+            for y1_ in y1_list:
+                for x1_ in x1_list:
+                    orig_x1 = x1_
+                    orig_y1 = y1_
+                    orig_x2 = x1_ + patch_size
+                    orig_y2 = y1_ + patch_size
+                    x1 = x1_ + random.randint(-random_shift_magnitude, random_shift_magnitude)
+                    y1 = y1_ + random.randint(-random_shift_magnitude, random_shift_magnitude)
                     y2 = y1 + patch_size
                     x2 = x1 + patch_size
 
@@ -510,13 +510,13 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
             negative_patch_count = min(max(patch_count_white, min_negative_patches), len(start_coord_list))
             # Here we are adding regular dark patches
             black_start_coords.extend(random.sample(start_coord_list, negative_patch_count))
-            for x1, y1 in black_start_coords:
-                orig_x1 = x1
-                orig_y1 = y1
-                orig_x2 = x1 + patch_size
-                orig_y2 = y1 + patch_size
-                x1 += random.randint(-random_shift_magnitude, random_shift_magnitude)
-                y1 += random.randint(-random_shift_magnitude, random_shift_magnitude)
+            for x1_, y1_ in black_start_coords:
+                orig_x1 = x1_
+                orig_y1 = y1_
+                orig_x2 = x1_ + patch_size
+                orig_y2 = y1_ + patch_size
+                x1 = x1_ + random.randint(-random_shift_magnitude, random_shift_magnitude)
+                y1 = y1_ + random.randint(-random_shift_magnitude, random_shift_magnitude)
                 y2 = y1 + patch_size
                 x2 = x1 + patch_size
 
