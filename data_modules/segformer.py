@@ -101,8 +101,8 @@ class WuesuvDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        image = np.load(os.path.join(self.img_dir, self.images[idx]))
-        label = np.load(os.path.join(self.label_dir, self.labels[idx]))
+        image = np.load(os.path.join(self.img_dir, self.images[idx]), allow_pickle=True)
+        label = np.load(os.path.join(self.label_dir, self.labels[idx]), allow_pickle=True)
 
         # Add random augmentation on the layer axis
         if random.random() < 0.5:
