@@ -3,6 +3,7 @@ from tkinter import Tk, Scale, HORIZONTAL, Label, Button, Frame, IntVar, Radiobu
 
 import numpy as np
 from PIL import Image, ImageTk
+from PIL.Image import Resampling
 from tqdm import tqdm
 
 arrays = []
@@ -11,32 +12,27 @@ slider = None
 inverted = False
 
 
-def process_image(array, threshold, max_size=(1800, 1000)):
+def process_image(array, threshold, max_size=(1500, 800), inverted=False):
     processed = array.copy()
 
     # Apply threshold
-    # processed = np.where(array > threshold, 1, 0)
-
-    # reverse threshold
     processed[processed < threshold] = 0
     if inverted:
         processed = 1 - processed
-    # processed = array
 
     image = Image.fromarray(np.uint8(processed * 255), 'L')
-
-    # Resize while maintaining aspect ratio
     aspect_ratio = image.width / image.height
+
+    # Determine new dimensions
     if aspect_ratio > 1:
-        # Width is greater than height
-        new_width = min(image.width, max_size[0])
+        new_width = min(max_size[0], image.width * 4)
         new_height = int(new_width / aspect_ratio)
     else:
-        # Height is greater than or equal to width
-        new_height = min(image.height, max_size[1])
+        new_height = min(max_size[1], image.height * 4)
         new_width = int(new_height * aspect_ratio)
 
-    return image.resize((new_width, new_height), Image.ANTIALIAS)
+    # Resize with high-quality resampling
+    return image.resize((new_width, new_height), Resampling.LANCZOS)
 
 
 def update_image(value):
@@ -44,6 +40,7 @@ def update_image(value):
         layer = int(value)
         global array
         array = arrays[layer]
+        array = np.rot90(array, -1)
         print("setting to layers", layer)
         new_img = process_image(array, 0)
         imgtk = ImageTk.PhotoImage(image=new_img)
@@ -95,8 +92,10 @@ def combine_layers(predictions, max_distance):
 def combine_arrays(directory_path, ignore_percent=0):
     global arrays
 
-    paths = [x for x in os.listdir(directory_path) if x.endswith('.npy')]
+    paths = [x for x in os.listdir(directory_path) if x.endswith('.npy') and not x.startswith('maxed_logits')]
     paths.sort(key=lambda x: int(x.split('_')[2]))
+
+    # paths = paths[28:38]
 
     # Load all numpy arrays from the directory
     for filename in tqdm(paths):
@@ -119,7 +118,9 @@ def combine_arrays(directory_path, ignore_percent=0):
     min_value = combined_array.min()
     max_value = combined_array.max()
     normalized_array = (combined_array - min_value) / (max_value - min_value)
-    return normalized_array
+
+    rotated_array = np.rot90(normalized_array, -1)
+    return rotated_array
 
 
 def increase_slider():
@@ -159,7 +160,7 @@ def mode_changed():
         min_value = combined_array.min()
         max_value = combined_array.max()
         normalized_array = (combined_array - min_value) / (max_value - min_value)
-        array = normalized_array
+        array = np.rot90(normalized_array, -1)
         update_image(threshold)
         slider.config(resolution=0.001)
         slider.config(from_=0)
@@ -170,7 +171,7 @@ def mode_changed():
         min_value = combined_array.min()
         max_value = combined_array.max()
         normalized_array = (combined_array - min_value) / (max_value - min_value)
-        array = normalized_array
+        array = np.rot90(normalized_array, -1)
         update_image(threshold)
         slider.config(resolution=0.001)
         slider.config(from_=0)
@@ -181,16 +182,15 @@ def mode_changed():
         slider.config(from_=0)
         slider.config(to=len(arrays) - 1)
         slider.set(0)
-        array = arrays[0]
+        array = np.rot90(arrays[0], -1)
         threshold = 0
         update_image(threshold)
 
 
 def save_snapshot():
-    new_img = process_image(array, threshold)
+    new_img = process_image(array, threshold, max_size=(10479, 10360))
     os.makedirs("snapshots", exist_ok=True)
     new_img.save(os.path.join("snapshots", f"{frag_id}_snapshot_{threshold}.png"))
-    pass
 
 
 def invert_colors():
@@ -203,10 +203,9 @@ if __name__ == "__main__":
     # folder_path = r"A:\handlabel\test\20231123-205540"  # big (330?)
     # folder_path = r"A:\handlabel\test\20231123-212933"  # small (35)
     # folder_path = r"A:\handlabel\test\20231125-220804"  # huge 336
-    folder_path = r"C:\Users\Marce\Git-Master\Privat\kaggle1stReimp\inference\results\fragment20231005123335_superseded\20231126-195001"
+    # folder_path = r"C:\Users\Marce\Git-Master\Privat\kaggle1stReimp\inference\results\fragment20230702185753\20231128-224709"
+    folder_path = r"C:\Users\Marce\Git-Master\Privat\kaggle1stReimp\inference\results\fragment20230702185753\20231129-023606"
     array = combine_arrays(folder_path, ignore_percent=0)
-    # print(array.shape)
-    # exit()
 
     frag_id = folder_path.split('\\')[-2]
 
