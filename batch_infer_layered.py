@@ -151,7 +151,7 @@ def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
     progress_bar.close()
 
     # Average the predictions
-    out_arr = np.where(pred_counts > 0, out_arr / pred_counts, 0)
+    out_arr = np.divide(out_arr, pred_counts, where=(pred_counts > 0))
 
     return out_arr
 
@@ -170,7 +170,13 @@ if __name__ == '__main__':
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_run_name = '-'.join(checkpoint_path.split(f"checkpoints{os.sep}")[-1].split('-')[0:5])
+    root_dir = os.path.join("inference", "results", f"fragment{fragment_id}")
     results_dir = os.path.join("inference", "results", f"fragment{fragment_id}", f"{date_time_string}_{model_run_name}")
+
+    dirs = [x for x in os.listdir(root_dir) if x.endswith(model_run_name)]
+    if len(dirs) == 1:
+        results_dir = os.path.join(root_dir, dirs[0])
+
     os.makedirs(results_dir, exist_ok=True)
     print(f"Created directory {results_dir}")
 
@@ -186,8 +192,14 @@ if __name__ == '__main__':
 
     output_arrays = []
 
-    start_idx = 28
-    end_idx = 58
+    start_idx = None
+    end_idx = None
+
+    if not start_idx:
+        start_idx = 31
+    if not end_idx:
+        end_idx = 61
+
     for i in range(start_idx, end_idx, 1):
         sigmoid_logits = infer_full_fragment_layer(model=model,
                                                    fragment_id=fragment_id,

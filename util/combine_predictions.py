@@ -45,6 +45,21 @@ def combine_layers(predictions, max_distance):
     return combined
 
 
+def get_common_layers(folder_paths):
+    common_layers = set()
+
+    for i, folder_path in enumerate(folder_paths):
+        paths = [x for x in os.listdir(folder_path) if x.endswith('.npy') and not x.startswith('maxed_logits')]
+        layers = set(int(x.split('_')[2]) for x in paths)
+
+        if i == 0:
+            common_layers = layers
+        else:
+            common_layers = common_layers.intersection(layers)
+
+    return common_layers
+
+
 def get_sys_args():
     if len(sys.argv) != 2:
         print("Usage: python combine_predictions.py <fragment_id>")
@@ -68,45 +83,86 @@ def get_sys_args():
     for idx, subdir in enumerate(sub_dirs):
         print(f"{idx}: {subdir}")
 
-    selected_index = input("Enter the number of the subdirectory you want to use: ")
+    selected_indices = input("Enter the numbers of the subdirectories you want to use (comma-separated): ")
 
     try:
-        selected_index = int(selected_index)
-        if selected_index < 0 or selected_index >= len(sub_dirs):
+        selected_indices = [int(idx.strip()) for idx in selected_indices.split(',')]
+        selected_subdirs = [sub_dirs[idx] for idx in selected_indices if 0 <= idx < len(sub_dirs)]
+        if not selected_subdirs:
             raise ValueError
     except ValueError:
-        print("Invalid selection. Please enter a valid number.")
+        print("Invalid selection. Please enter valid numbers.")
         sys.exit(1)
 
-    selected_subdir = sub_dirs[selected_index]
-    folder_path = os.path.join(folder_path, selected_subdir)
+    folder_paths = [os.path.join(folder_path, subdir) for subdir in selected_subdirs]
 
-    return frag_id, config.work_dir, folder_path
+    return frag_id, config.work_dir, folder_paths, folder_path
 
+
+def get_target_dims(work_dir, frag_id):
+    frag_dir = os.path.join(work_dir, "data", "fragments", f"fragment{frag_id}")
+    assert os.path.isdir(frag_dir)
+
+    target_dims = None
+
+    slice_dir = os.path.join(frag_dir, "slices")
+    if os.path.isdir(slice_dir):
+        for i in range(0, 63):
+            if target_dims:
+                return target_dims
+
+            img_path = os.path.join(slice_dir, f"{i:05}.tif")
+            if os.path.isfile(img_path):
+                image = cv2.imread(img_path, 0)
+                target_dims = image.shape
+
+    return target_dims
 
 def main():
-    frag_id, work_dir, folder_path = get_sys_args()
+    frag_id, work_dir, folder_paths, folder_root_dir = get_sys_args()
+    common_layers = get_common_layers(folder_paths)
 
-    layer_idxs = None
-    target_dims = (10479, 10360)  # TODO extract from original tif image dimension
+    target_dims = get_target_dims(work_dir=work_dir, frag_id=frag_id)
+    # target_dims = (10479, 10360)  # TODO extract from original tif image dimension
+    # target_dims = (15738, 10636)  # TODO extract from original tif image dimension
 
-    npy_preds_array = combine_npy_preds(idxs=layer_idxs, root_dir=folder_path, ignore_percent=0)
+    model_arrays = {}
+    for folder_path in folder_paths:
+        arrays = combine_npy_preds(root_dir=folder_path, layer_indices=common_layers, ignore_percent=0)
+        model_arrays[folder_path] = arrays
 
-    Visualization(root_dir=folder_path, target_dims=target_dims, arrays=npy_preds_array)
+    Visualization(root_dir=folder_root_dir, target_dims=target_dims, model_arrays=model_arrays)
 
 
 class Visualization:
-    def __init__(self, root_dir, target_dims, arrays):
+    def __init__(self, root_dir, target_dims, model_arrays: dict):
+        assert isinstance(target_dims, tuple) and len(target_dims) == 2, "target_dims must be a tuple of two elements"
+        assert isinstance(model_arrays, dict) and model_arrays, "model_arrays must be a non-empty dictionary"
+
         self.root_dir = root_dir
         self.target_dims = target_dims
-
         self.rotate_num = -1
 
-        # Initially normalize and rotate combined predictions
-        self.arrays = arrays
-        self.array_max = np.maximum.reduce(self.arrays)
-        self.array_sum = np.sum(self.arrays, axis=0)
-        self.array = self.array_max  # initially set view to array_sum
+        self.models = list(model_arrays.values())
+        self.model_count = len(self.models)
+
+        assert all(isinstance(model, list) and model for model in
+                   self.models), "Each value in model_arrays must be a non-empty list"
+        assert all(len(model[0].shape) == 2 for model in self.models), "Each numpy array must be two-dimensional"
+
+        self.array_maxs = []
+        self.array_sums = []
+        self.curr_weight_th_val = 0.5
+
+        # Initially calculate max and sum once
+        for model in self.models:
+            self.array_maxs.append(np.maximum.reduce(model))
+            self.array_sums.append(np.sum(model, axis=0))
+
+        if self.model_count == 1:
+            self.array = self.array_maxs[0]
+        else:
+            self.array = self.calc_weighted_arr(array=self.array_maxs, weight=self.curr_weight_th_val)
 
         # Slider idxs
         self.curr_layer_val = 0
@@ -143,30 +199,41 @@ class Visualization:
         # Create a frame for the slider and buttons
         control_frame = Frame(self.root)
         control_frame.pack(side='top')
-
-        # Add left button for decreasing the slider value
         left_button = Button(control_frame, text="  -  ", command=self.decrease_slider)
         left_button.pack(side='left')
-
-        # Add a slider
         self.slider = Scale(control_frame, from_=0, to=1, orient=HORIZONTAL, resolution=0.001, length=500,
                             command=self.update_image)
         self.slider.set(0.5)
         self.slider.pack(side='left')
-
-        # Add right button for increasing the slider value
         right_button = Button(control_frame, text="  +  ", command=self.increase_slider)
         right_button.pack(side='left')
+
+        # Create another control frame for weighting
+        if self.model_count > 1:
+            control_frame_weighting = Frame(self.root)
+            control_frame_weighting.pack(side='top')
+            left_button_weighting = Button(control_frame_weighting, text="  --  ", command=self.decrease_slider_weighting)
+            left_button_weighting.pack(side='left')
+            self.slider_weighting = Scale(control_frame_weighting, from_=0, to=1, orient=HORIZONTAL, resolution=0.1,
+                                          length=500,
+                                          command=self.update_weighting)
+            self.slider_weighting.set(self.curr_weight_th_val)
+            self.slider_weighting.pack(side='left')
+            right_button_weighting = Button(control_frame_weighting, text="  ++  ", command=self.increase_slider_weighting)
+            right_button_weighting.pack(side='left')
 
         # Display area for the image
         self.label = Label(self.root)
         self.label.pack()
 
-        # Initially change mode
-        # self.mode_changed()
-
         # Start the application
         self.root.mainloop()
+
+    @staticmethod
+    def calc_weighted_arr(array, weight):
+        array_cp = array.copy()
+        assert len(array) == 2
+        return array_cp[0] * weight + array_cp[1] * (1 - weight)
 
     def get_threshold(self):
         mode = self.mode_var.get()
@@ -194,7 +261,7 @@ class Visualization:
         mode = self.modes[self.mode_var.get()]
         threshold = self.get_threshold()
         inverted_str = f'_inverted' if self.inverted else ""
-        file_path = os.path.join(target_dir, f"{mode.lower()}_{threshold:.2f}{inverted_str}.png")
+        file_path = os.path.join(target_dir, f"{mode.lower()}_{float(threshold):.2f}{inverted_str}.png")
 
         image = self.process_image(array=self.array, max_size=self.target_dims)
         image.save(file_path)
@@ -215,6 +282,30 @@ class Visualization:
     def rot90(array, count):
         return np.rot90(array, count)
 
+    def get_layer_weighted_arr(self, layer, weight=None):
+        if not weight:
+            weight = self.curr_weight_th_val
+        if self.model_count == 2:
+            return self.calc_weighted_arr(array=[model[layer] for model in self.models], weight=weight)
+        else:
+            return self.models[0][layer]
+
+    def get_array_max(self, weight=None):
+        if not weight:
+            weight = self.curr_weight_th_val
+        if self.model_count == 2:
+            return self.calc_weighted_arr(array=self.array_maxs, weight=weight)
+        else:
+            return self.array_maxs[0]
+
+    def get_array_sum(self, weight=None):
+        if not weight:
+            weight = self.curr_weight_th_val
+        if self.model_count == 2:
+            return self.calc_weighted_arr(array=self.array_sums, weight=weight)
+        else:
+            return self.array_sums[0]
+
     def mode_changed(self):
         mode = self.mode_var.get()
         print("Selected Mode", self.modes[mode])
@@ -222,19 +313,32 @@ class Visualization:
 
         if mode in [0, 1]:
             if mode == 0:
-                self.array = self.array_max
+                self.array = self.get_array_max()
             else:  # mode == 1
-                self.array = self.array_sum
+                self.array = self.get_array_sum()
 
             self.slider.config(resolution=0.001, from_=0, to=1)
             self.slider.set(threshold)
 
         elif mode == 2:
-            self.slider.config(resolution=1, from_=0, to=len(self.arrays) - 1)
+            self.slider.config(resolution=1, from_=0, to=len(self.models[0]) - 1)
             self.slider.set(threshold)
-            self.array = self.arrays[int(threshold)]
+            self.array = self.get_layer_weighted_arr(int(threshold))
 
         self.update_image()
+
+    def update_weighting(self, weight=None):
+        if self.mode_var.get() == 0:
+            self.array = self.get_array_max(weight=float(weight))
+        elif self.mode_var.get() == 1:
+            self.array = self.get_array_sum(weight=float(weight))
+        else:
+            self.array = self.get_layer_weighted_arr(layer=int(self.get_threshold()), weight=float(weight))
+
+        new_img = self.process_image(array=self.array)
+        imgtk = ImageTk.PhotoImage(image=new_img)
+        self.label.imgtk = imgtk
+        self.label.config(image=imgtk)
 
     def update_image(self, threshold=None):
         if threshold:
@@ -243,7 +347,7 @@ class Visualization:
         if self.mode_var.get() == 2:
             layer = int(self.get_threshold())
             print("Selected layer", layer)
-            self.array = self.arrays[layer]
+            self.array = self.get_layer_weighted_arr(layer=layer)
             self.set_threshold(layer)
 
         new_img = self.process_image(array=self.array)
@@ -298,37 +402,47 @@ class Visualization:
 
         if mode == 2:
             step = 1
-            max_val = len(self.arrays) - 1
+            max_val = len(self.models[0]) - 1
         current_value = self.slider.get()
         new_threshold = min(current_value + step, max_val)  # Ensure the value does not exceed the maximum
 
         self.set_threshold(new_threshold)
         self.slider.set(new_threshold)
 
+    def decrease_slider_weighting(self):
+        step = 0.1
+        current_value = self.slider_weighting.get()
+        new_threshold = max(current_value - step, 0)
+        self.curr_weight_th_val = new_threshold
+        self.slider_weighting.set(new_threshold)
 
-def combine_npy_preds(root_dir, idxs=None, ignore_percent=0):
+    def increase_slider_weighting(self):
+        step = 0.1
+        max_val = 1
+        current_value = self.slider_weighting.get()
+        new_threshold = min(current_value + step, max_val)  # Ensure the value does not exceed the maximum
+        self.curr_weight_th_val = new_threshold
+        self.slider_weighting.set(new_threshold)
+
+
+def combine_npy_preds(root_dir, layer_indices=None, ignore_percent=0):
     npy_preds_array = []
 
     paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
     paths.sort(key=lambda x: int(x.split('_')[2]))
 
-    if idxs:
-        start, end = idxs
-        paths = paths[start:end]
+    if layer_indices is not None:
+        paths = [path for path in paths if int(path.split('_')[2]) in layer_indices]
 
     # Load all numpy arrays from the directory
-    for filename in tqdm(paths):
-        if filename.endswith('.npy'):
-            file_path = os.path.join(root_dir, filename)
-            array = np.load(file_path)
-            npy_preds_array.append(array)
+    for filename in paths:
+        file_path = os.path.join(root_dir, filename)
+        array = np.load(file_path)
+        npy_preds_array.append(array)
 
     if ignore_percent > 0:
-        print(f"Ignoring {ignore_percent * 100}% of top and bottom layers")
-        print("Before:", len(npy_preds_array))
         ignore_count = int(ignore_percent * len(npy_preds_array))
-        combined_npy_preds = npy_preds_array[ignore_count:-ignore_count]
-        print("After:", len(combined_npy_preds))
+        npy_preds_array = npy_preds_array[ignore_count:-ignore_count]
 
     return npy_preds_array
 
