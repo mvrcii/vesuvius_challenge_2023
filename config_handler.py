@@ -20,7 +20,7 @@ class Config:
         save_to_file(file_path): Instance method to save current configuration to a file.
     """
 
-    def __init__(self, dictionary=None, config_file_name=None):
+    def __init__(self, dictionary=None, config_file_name=None, save=True):
         """
         Initialize the Config object with a dictionary of configuration parameters.
 
@@ -34,7 +34,20 @@ class Config:
         if dictionary:
             for key, value in dictionary.items():
                 setattr(self, key, value)
+        self.save = save
         self.config_file_name = config_file_name
+
+    @classmethod
+    def load_local_cfg(cls):
+        config = {}
+
+        # Check for and apply local configuration overrides
+        local_config_path = 'conf_local.py'
+        if os.path.exists(local_config_path):
+            local_config = cls.import_config_from_path(local_config_path)
+            config.update({k: v for k, v in vars(local_config).items() if not k.startswith('__')})
+
+        return cls(config, None, save=False)
 
     @classmethod
     def load_from_file(cls, config_path):
@@ -51,20 +64,12 @@ class Config:
         Returns:
             Config: A Config object initialized with the loaded configuration parameters.
         """
-
-        def import_config_from_path(path):
-            module_name = os.path.basename(path).split('.')[0]
-            spec = importlib.util.spec_from_file_location(module_name, path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            return module
-
-        model_config = import_config_from_path(config_path)
+        model_config = cls.import_config_from_path(config_path)
         config = {}
         # todo is this the right way to handle this? was necessary to add since my dataset configs don't have base
         if hasattr(model_config, '_base_'):
             for base_path in model_config._base_:
-                base_config = import_config_from_path(base_path)
+                base_config = cls.import_config_from_path(base_path)
                 config.update({k: v for k, v in vars(base_config).items() if not k.startswith('__')})
 
         config.update({k: v for k, v in vars(model_config).items() if not k.startswith('__')})
@@ -72,7 +77,7 @@ class Config:
         # Check for and apply local configuration overrides
         local_config_path = 'conf_local.py'
         if os.path.exists(local_config_path):
-            local_config = import_config_from_path(local_config_path)
+            local_config = cls.import_config_from_path(local_config_path)
             config.update({k: v for k, v in vars(local_config).items() if not k.startswith('__')})
 
         if config_path.__contains__('/'):
@@ -105,6 +110,10 @@ class Config:
         Raises:
             ValueError: If both file_path is None and the original configuration file's path is unknown.
         """
+        if not self.save:
+            print("Only a local config has been loaded, which cannot be saved.")
+            sys.exit(1)
+
         if file_path is None:
             file_path = self.config_file_name
             if file_path is None:
@@ -133,3 +142,11 @@ class Config:
             str: A formatted string of the configuration dictionary.
         """
         return pprint.pformat(self.__dict__, indent=4, width=1)
+
+    @staticmethod
+    def import_config_from_path(path):
+        module_name = os.path.basename(path).split('.')[0]
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
