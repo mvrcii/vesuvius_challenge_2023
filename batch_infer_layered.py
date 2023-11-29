@@ -39,12 +39,6 @@ def read_fragment(work_dir, fragment_id, layer_start, layer_count):
     return images
 
 
-# Inference depends on:
-# - model
-# - in_channels
-# - patch_size_in
-# - patch_size_out
-
 def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
     patch_size = config.patch_size
     expected_patch_shape = (config.in_chans, patch_size, patch_size)
@@ -81,8 +75,10 @@ def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
                                                           f"{get_frag_name_from_id(fragment_id)}: Processing patches"
                                                           f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
 
-    # todo read batch_size_infer from config
-    batch_size = 2
+    batch_size = 2  # default for 528
+    if config.patch_size == 256:
+        batch_size = 8
+
     batches = []
     batch_indices = []
 
@@ -100,6 +96,7 @@ def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
         # Add the result to the stitched_result array and increment prediction counts
         out_arr[out_y_start:out_y_end, out_x_start:out_x_end] += logits_np
         pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
+
     transform = A.Compose(val_image_aug, is_check_shapes=False)
 
     for y in range(y_patches):
@@ -172,7 +169,8 @@ if __name__ == '__main__':
     channels = config.in_chans
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
-    results_dir = os.path.join("inference", "results", f"fragment{fragment_id}", date_time_string)
+    model_run_name = '-'.join(checkpoint_path.split(f"checkpoints{os.sep}")[-1].split('-')[0:5])
+    results_dir = os.path.join("inference", "results", f"fragment{fragment_id}", f"{date_time_string}_{model_run_name}")
     os.makedirs(results_dir, exist_ok=True)
     print(f"Created directory {results_dir}")
 
@@ -188,8 +186,9 @@ if __name__ == '__main__':
 
     output_arrays = []
 
-    end_idx = 61
-    for i in range(0, end_idx, 1):
+    start_idx = 28
+    end_idx = 58
+    for i in range(start_idx, end_idx, 1):
         sigmoid_logits = infer_full_fragment_layer(model=model,
                                                    fragment_id=fragment_id,
                                                    config=config,
