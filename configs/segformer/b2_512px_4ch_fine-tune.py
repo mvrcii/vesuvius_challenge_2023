@@ -23,3 +23,6 @@ dataset_fraction = 1
 num_workers = 16
 train_batch_size = 24
 val_batch_size = 24
+
+lr = 1e-5
+eta_min = 1e-6
