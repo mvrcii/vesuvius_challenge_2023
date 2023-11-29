@@ -2,16 +2,16 @@ import os
 import sys
 from datetime import datetime
 
+import albumentations as A
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
-import albumentations as A
 
 from config_handler import Config
 from constants import get_frag_name_from_id
-import matplotlib.pyplot as plt
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -26,14 +26,11 @@ val_image_aug = [
 
 def read_fragment(work_dir, fragment_id, layer_start, layer_count):
     images = []
-    print(f"attempting to read fragment {fragment_id} from layer {layer_start} to {layer_count - 1}")
 
-    for i in tqdm(range(layer_start, layer_start + layer_count)):
+    for i in range(layer_start, layer_start + layer_count):
         img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
-        print(img_path)
 
         image = cv2.imread(img_path, 0)
-        print(image.shape)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image"
 
         images.append(image)
@@ -48,23 +45,13 @@ def read_fragment(work_dir, fragment_id, layer_start, layer_count):
 # - patch_size_in
 # - patch_size_out
 
-def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, layer_start):
+def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
     patch_size = config.patch_size
     expected_patch_shape = (config.in_chans, patch_size, patch_size)
 
-    model = SegformerForSemanticSegmentation.from_pretrained(config.from_pretrained,
-                                                             num_labels=1,
-                                                             num_channels=config.in_chans,
-                                                             ignore_mismatched_sizes=True)
-    model = model.to("cuda")
-
-    checkpoint = torch.load(checkpoint_path)
-    state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-    model.load_state_dict(state_dict)
-    print("Loaded model", checkpoint_path)
-
     # Loading images
-    images = read_fragment(work_dir=config.work_dir, fragment_id=fragment_id, layer_start=layer_start, layer_count=config.in_chans)
+    images = read_fragment(work_dir=config.work_dir, fragment_id=fragment_id, layer_start=layer_start,
+                           layer_count=config.in_chans)
 
     # Hyperparams
     label_size = config.label_size
@@ -90,8 +77,9 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
     out_arr = np.zeros((out_height, out_width), dtype=np.float32)
     pred_counts = np.zeros((out_height, out_width), dtype=np.int32)
 
-    progress_bar = tqdm(total=x_patches * y_patches, desc=f"Infer Full Fragment "
-                                                          f"{get_frag_name_from_id(fragment_id)}: Processing patches")
+    progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx}: Infer Full Fragment "
+                                                          f"{get_frag_name_from_id(fragment_id)}: Processing patches"
+                                                          f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
 
     # todo read batch_size_infer from config
     batch_size = 2
@@ -112,6 +100,7 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
         # Add the result to the stitched_result array and increment prediction counts
         out_arr[out_y_start:out_y_end, out_x_start:out_x_end] += logits_np
         pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
+    transform = A.Compose(val_image_aug, is_check_shapes=False)
 
     for y in range(y_patches):
         for x in range(x_patches):
@@ -133,8 +122,6 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
             # When batch is full, process it
             if len(batches) == batch_size:
-                # Augmentation
-                transform = A.Compose(val_image_aug, is_check_shapes=False)
                 transformed_images = [transform(image=image)['image'] for image in batches]
 
                 batch_tensor = torch.tensor(np.stack(transformed_images)).float()
@@ -151,8 +138,6 @@ def infer_full_fragment_layer(fragment_id, config: Config, checkpoint_path, laye
 
     # Process any remaining patches
     if batches:
-        # Augmentation
-        transform = A.Compose(val_image_aug, is_check_shapes=False)
         transformed_images = [transform(image=image)['image'] for image in batches]
 
         batch_tensor = torch.tensor(np.stack(transformed_images)).float()
@@ -191,20 +176,30 @@ if __name__ == '__main__':
     os.makedirs(results_dir, exist_ok=True)
     print(f"Created directory {results_dir}")
 
-    arrs = []
-    # inference
-    for i in range(0, 61, channels):
-        print(f"Inferring layer {0} to {config.in_chans - 1}")
+    model = SegformerForSemanticSegmentation.from_pretrained(config.from_pretrained,
+                                                             num_labels=1,
+                                                             num_channels=config.in_chans,
+                                                             ignore_mismatched_sizes=True)
+    model = model.to("cuda")
+    checkpoint = torch.load(checkpoint_path)
+    state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+    print("Loaded model", checkpoint_path)
 
-        sigmoid_logits = infer_full_fragment_layer(fragment_id=fragment_id,
-                                                   checkpoint_path=checkpoint_path,
+    output_arrays = []
+
+    end_idx = 61
+    for i in range(0, end_idx, 1):
+        sigmoid_logits = infer_full_fragment_layer(model=model,
+                                                   fragment_id=fragment_id,
                                                    config=config,
                                                    layer_start=i)
-        arrs.append(sigmoid_logits)
+
+        output_arrays.append(sigmoid_logits)
         np.save(os.path.join(results_dir, f"sigmoid_logits_{i}_{i + channels - 1}.npy"), sigmoid_logits)
-    maxed_arr = np.maximum.reduce(arrs)
+
+    maxed_arr = np.maximum.reduce(output_arrays)
     plt.imshow(maxed_arr, cmap='gray')  # Change colormap if needed
     plt.colorbar()
-    plt.savefig(os.path.join(results_dir, "maxed_logits.png"), dpi=500,)
+    plt.savefig(os.path.join(results_dir, "maxed_logits.png"), dpi=500, )
     np.save(os.path.join(results_dir, "maxed_logits.npy"), maxed_arr)
-
