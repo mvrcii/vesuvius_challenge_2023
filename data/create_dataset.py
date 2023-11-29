@@ -147,15 +147,8 @@ def read_fragment(fragment_dir, channels, patch_size):
     return images, labels, negative_labels
 
 
-def process_fragment(dataset_information, fragment_id, data_type, progress_tracker):
-    try:
-        foo = create_dataset(dataset_information=dataset_information, fragment_ids=fragment_id, data_type=data_type)
-        progress_tracker.value += 1
-        return True, foo
-
-    except Exception as e:
-        print("Exception", e)
-        return e, None
+def process_fragment(dataset_information, fragment_id, data_type):
+    return create_dataset(dataset_information=dataset_information, fragment_ids=fragment_id, data_type=data_type)
 
 
 def validate_fragments(_cfg):
@@ -348,31 +341,14 @@ def build_single_fold_dataset(_cfg, frag_2_channels):
         "min_negative_patches": _cfg.min_negative_patches_per_channel_block
     }
 
-    with Manager() as manager:
-        progress_tracker = manager.Value('i', 0)
+    train_coord_dict = process_fragment(dataset_information=dataset_information,
+                                        fragment_id=_cfg.train_frag_ids,
+                                        data_type='train')
 
-        all_args = [(dataset_information, _cfg.train_frag_ids, 'train', progress_tracker)]
-
-        with Pool() as pool:
-            result = pool.starmap_async(process_fragment, all_args)
-            results = result.get()
-
-        errors = []
-        successful_results = []
-
-        for i, (success, train_coord_dict) in enumerate(results):
-            if not success:
-                print(f"Error in processing fragment {all_args[i][1]}")
-            else:
-                successful_results.append(train_coord_dict)
-
-        if errors:
-            print(f"Errors occurred in {len(errors)} fragments.")
-
-            create_single_val_dataset(patch_size=_cfg.patch_size,
-                                      data_root_dir=target_dir,
-                                      train_split=_cfg.train_split,
-                                      train_coord_dict=successful_results[0])
+    create_single_val_dataset(patch_size=_cfg.patch_size,
+                              data_root_dir=target_dir,
+                              train_split=_cfg.train_split,
+                              train_coord_dict=train_coord_dict)
 
 
 def build_k_fold_dataset(_cfg, frag_2_channels):
@@ -465,7 +441,8 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         patch_count_negative_total = 0
 
         for label_idx, channel in enumerate(channels[::4]):
-            coord_dict[frag_id][channel] = {}
+            channel_idx = channels.index(channel)
+            coord_dict[frag_id][channel_idx] = {}
             patch_count_white = 0
             patch_count_black = 0
             patch_count_negative = 0
@@ -484,7 +461,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                         start_coord_list.remove((x1, y1))
                         continue
 
-                    img_patch = images[channel:channel + 4, y1:y2, x1:x2]
+                    img_patch = images[channel_idx:channel_idx + 4, y1:y2, x1:x2]
                     coord = (x1, y1)
 
                     # LABELS
@@ -527,7 +504,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                 y2 = y1 + patch_size
                 x2 = x1 + patch_size
 
-                img_patch = images[channel:channel + 4, y1:y2, x1:x2]
+                img_patch = images[channel_idx:channel_idx + 4, y1:y2, x1:x2]
 
                 label_patch = np.zeros_like(img_patch[0])
                 if labels[label_idx] is not None:
@@ -543,8 +520,8 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                 np.save(img_file_path, img_patch)
                 np.save(label_file_path, label_patch)
 
-            coord_dict[frag_id][channel]['white_coord_list'] = white_start_coords
-            coord_dict[frag_id][channel]['black_coord_list'] = black_start_coords
+            coord_dict[frag_id][channel_idx]['white_coord_list'] = white_start_coords
+            coord_dict[frag_id][channel_idx]['black_coord_list'] = black_start_coords
 
             patch_count_white_total += patch_count_white
             patch_count_black_total += (patch_count_black - patch_count_negative)
