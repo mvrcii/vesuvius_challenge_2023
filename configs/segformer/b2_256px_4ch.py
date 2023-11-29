@@ -14,6 +14,7 @@ model_type = "b2"
 architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
+from_local_checkpoint = "youthful-haze-501-segformer-b2-231128-174836"
 in_chans = 4
 seed = 240783
 epochs = -1
