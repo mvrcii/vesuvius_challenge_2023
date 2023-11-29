@@ -442,7 +442,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
 
         for label_idx, channel in enumerate(channels[::4]):
             channel_idx = channels.index(channel)
-            coord_dict[frag_id][channel_idx] = {}
+            coord_dict[frag_id][label_idx] = {}
             patch_count_white = 0
             patch_count_black = 0
             patch_count_negative = 0
@@ -520,8 +520,8 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                 np.save(img_file_path, img_patch)
                 np.save(label_file_path, label_patch)
 
-            coord_dict[frag_id][channel_idx]['white_coord_list'] = white_start_coords
-            coord_dict[frag_id][channel_idx]['black_coord_list'] = black_start_coords
+            coord_dict[frag_id][label_idx]['white_coord_list'] = white_start_coords
+            coord_dict[frag_id][label_idx]['black_coord_list'] = black_start_coords
 
             patch_count_white_total += patch_count_white
             patch_count_black_total += (patch_count_black - patch_count_negative)
@@ -586,7 +586,7 @@ def create_single_val_dataset(patch_size, data_root_dir, train_coord_dict, train
     total_patch_count_black = 0
 
     for frag_id, channels in train_coord_dict.items():
-        for channel, coord_lists in channels.items():
+        for label_idx, coord_lists in channels.items():
             for list_name, coords in coord_lists.items():
                 num_coords_to_select = int(len(coords) * (1 - train_split))
                 sampled_coords = random.sample(coords, min(num_coords_to_select, len(coords)))
@@ -595,7 +595,6 @@ def create_single_val_dataset(patch_size, data_root_dir, train_coord_dict, train
                 for coord in sampled_coords:
                     x1, y1 = coord
                     x2, y2 = x1 + patch_size, y1 + patch_size
-                    label_idx = channel // 4
                     file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
                     files.append(file_name)
 
