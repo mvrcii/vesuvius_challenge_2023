@@ -104,40 +104,45 @@ def read_fragment(fragment_dir, channels, patch_size):
 
         images.append(image)
 
-    for channel in range(min(channels), max(channels), 4):
+    for channel in channels[::4]:
+        channel_used = False
         label_path = os.path.join(fragment_dir, 'layered', f"inklabels_{channel}_{channel + 3}.png")
         negative_label_path = os.path.join(fragment_dir, 'layered', f"negatives_{channel}_{channel + 3}.png")
 
-        if not os.path.isfile(label_path):
-            print("Label file not found:", label_path)
-            sys.exit(1)
+        # LABELS
+        label = None
+        if os.path.isfile(label_path):
+            channel_used = True
+            label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
 
-        label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
+            if label is None or label.shape[0] == 0:
+                print("Label is empty or not loaded correctly:", label_path)
+                sys.exit(1)
 
-        if label is None or label.shape[0] == 0:
-            print("Label is empty or not loaded correctly:", label_path)
-            sys.exit(1)
+            assert pad0 is not None and pad1 is not None, "Padding is None or not set"
+            label = np.pad(label, [(0, pad0), (0, pad1)], mode='constant', constant_values=0)
+            label = (label / 255).astype(np.uint8)
+            assert set(np.unique(np.array(label))) == {0, 1}, "Invalid label"
+        labels.append(label)
 
-        negative_label = None
+        # NEGATIVE LABELS
         # This is optional, negative labels don't have to exist
+        negative_label = None
         if os.path.isfile(negative_label_path):
+            channel_used = True
             negative_label = cv2.imread(negative_label_path, cv2.IMREAD_GRAYSCALE)
             if negative_label is None or negative_label.shape[0] == 0:
                 print("Negative Label is empty or not loaded correctly:", label_path)
                 sys.exit(1)
-
-        assert pad0 is not None and pad1 is not None, "Padding is None or not set"
-
-        label = np.pad(label, [(0, pad0), (0, pad1)], mode='constant', constant_values=0)
-        label = (label / 255).astype(np.uint8)
-        assert set(np.unique(np.array(label))) == {0, 1}, "Invalid label"
-
-        labels.append(label)
         negative_labels.append(negative_label)
 
-    images = np.stack(images, axis=0)
-    labels = np.stack(labels, axis=0)
-    negative_labels = np.stack(negative_labels, axis=0)
+        if not channel_used:
+            print(f"Channel {channel} listed but not used for any label. Check it!")
+            sys.exit(1)
+
+    # images = np.stack(images, axis=0)
+    # labels = np.stack(labels, axis=0)
+    # negative_labels = np.stack(negative_labels, axis=0)
 
     return images, labels, negative_labels
 
@@ -262,12 +267,14 @@ def validate_labels(frag_dir):
         errors.append(f"Missing '{slice_dir}' directory")
         return errors, []
 
+    existing_negative_channels = set(extract_indices(label_dir, pattern=r'negatives_(\d+)_(\d+).png'))
     existing_label_channels = set(extract_indices(label_dir, pattern=r'inklabels_(\d+)_(\d+).png'))
     existing_slice_channels = set(extract_indices(slice_dir, pattern=r'(\d+).tif'))
+    required_channels = existing_label_channels.union(existing_negative_channels)
 
-    missing_slice_channels = existing_label_channels - existing_slice_channels
-    valid_channels = existing_slice_channels.intersection(existing_label_channels)
+    valid_channels = existing_slice_channels.intersection(required_channels)
 
+    missing_slice_channels = required_channels - existing_slice_channels
     if missing_slice_channels:
         errors.append(
             f"Missing slice channel files: {format_ranges(sorted(list(missing_slice_channels)), file_ending='png')}")
@@ -362,10 +369,10 @@ def build_single_fold_dataset(_cfg, frag_2_channels):
         if errors:
             print(f"Errors occurred in {len(errors)} fragments.")
 
-        create_single_val_dataset(patch_size=_cfg.patch_size,
-                                  data_root_dir=target_dir,
-                                  train_split=_cfg.train_split,
-                                  train_coord_dict=successful_results[0])
+            create_single_val_dataset(patch_size=_cfg.patch_size,
+                                      data_root_dir=target_dir,
+                                      train_split=_cfg.train_split,
+                                      train_coord_dict=successful_results[0])
 
 
 def build_k_fold_dataset(_cfg, frag_2_channels):
@@ -422,6 +429,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
 
     total_patch_count_white = 0
     total_patch_count_black = 0
+    total_patch_count_negative = 0
 
     coord_dict = {}
 
@@ -441,6 +449,9 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         assert len(channels) % 4 == 0, "Channels are not divisible by 4"
 
         images, labels, negative_labels = read_fragment(fragment_dir, frag_2_channels[frag_id], patch_size)
+        images = np.array(images)
+        labels = np.array(labels, dtype=object)
+        negative_labels = np.array(negative_labels, dtype=object)
 
         x1_list = list(range(0, images.shape[2] - patch_size + 1, stride))
         y1_list = list(range(0, images.shape[1] - patch_size + 1, stride))
@@ -451,15 +462,16 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
         patch_count_skipped_mask = 0
         patch_count_white_total = 0
         patch_count_black_total = 0
+        patch_count_negative_total = 0
 
-        for channel in range(0, max(channels) - min(channels) + 1, 4):
+        for label_idx, channel in enumerate(channels[::4]):
             coord_dict[frag_id][channel] = {}
             patch_count_white = 0
             patch_count_black = 0
+            patch_count_negative = 0
             start_coord_list = [(x, y) for x in x1_list for y in y1_list]
             white_start_coords = []
             black_start_coords = []
-            label_idx = channel // 4
             pbar_channels.update(4)
 
             for y1 in y1_list:
@@ -472,29 +484,34 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                         start_coord_list.remove((x1, y1))
                         continue
 
-                    # Extract label and image patch
-                    label_patch = labels[label_idx, y1:y2, x1:x2]
                     img_patch = images[channel:channel + 4, y1:y2, x1:x2]
-
                     coord = (x1, y1)
-                    # Add white patch if it contains sufficient ink
-                    if label_patch.sum() > np.prod(label_patch.shape) * ink_ratio:
-                        patch_count_white += 1
-                        white_start_coords.append(coord)
-                        start_coord_list.remove(coord)
-                        file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
 
-                        img_file_path = os.path.join(img_path, file_name)
-                        label_file_path = os.path.join(label_path, file_name)
+                    # LABELS
+                    if labels[label_idx] is not None:
+                        label_patch = labels[label_idx][y1:y2, x1:x2]
 
-                        np.save(img_file_path, img_patch)
-                        np.save(label_file_path, label_patch)
+                        # Add white patch if it contains sufficient ink
+                        if label_patch.sum() > np.prod(label_patch.shape) * ink_ratio:
+                            patch_count_white += 1
+                            white_start_coords.append(coord)
+                            start_coord_list.remove(coord)
+                            file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
+
+                            img_file_path = os.path.join(img_path, file_name)
+                            label_file_path = os.path.join(label_path, file_name)
+
+                            np.save(img_file_path, img_patch)
+                            np.save(label_file_path, label_patch)
+
+                    # NEGATIVE LABELS
                     # Check if negative labels exist for this channel block
                     elif negative_labels[label_idx] is not None:
-                        negative_label_patch = negative_labels[label_idx, y1:y2, x1:x2]
+                        negative_label_patch = negative_labels[label_idx][y1:y2, x1:x2]
                         # If negative labels exist, check if this patch is overlapping a negative label
-                        if negative_label_patch.sum() > 0 and label_patch.sum() == 0:
+                        if negative_label_patch.sum() > 0:
                             # Here we are adding artefact patches
+                            patch_count_negative += 1
                             black_start_coords.append(coord)
                             start_coord_list.remove(coord)
 
@@ -511,7 +528,10 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                 x2 = x1 + patch_size
 
                 img_patch = images[channel:channel + 4, y1:y2, x1:x2]
-                label_patch = labels[label_idx, y1:y2, x1:x2]
+
+                label_patch = np.zeros_like(img_patch[0])
+                if labels[label_idx] is not None:
+                    label_patch = labels[label_idx][y1:y2, x1:x2]
 
                 patch_count_black += 1
 
@@ -527,23 +547,29 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
             coord_dict[frag_id][channel]['black_coord_list'] = black_start_coords
 
             patch_count_white_total += patch_count_white
-            patch_count_black_total += patch_count_black
+            patch_count_black_total += (patch_count_black - patch_count_negative)
+            patch_count_negative_total += patch_count_negative
 
         del images, labels, negative_labels
         gc.collect()
 
         pbar_channels.close()
         print(
-            f"Balanced: Patch Count Fragment {get_frag_name_from_id(frag_id)}: Ink={patch_count_white_total}, Black={patch_count_black_total}")
+            f"Balanced: Patch Count Fragment {get_frag_name_from_id(frag_id)}: "
+            f"Ink={patch_count_white_total}, "
+            f"Black={patch_count_black_total}, "
+            f"Negative={patch_count_negative_total}")
         print(f"After Masking: Patch Count Fragment {get_frag_name_from_id(frag_id)}: Mask={patch_count_skipped_mask}")
 
         total_patch_count_white += patch_count_white_total
         total_patch_count_black += patch_count_black_total
+        total_patch_count_negative += patch_count_negative_total
 
     print("\n================== SUMMARY TRAIN DATASET ==================")
     print("Total Patch Count White:\t", total_patch_count_white)
     print("Total Patch Count Black:\t", total_patch_count_black)
-    print("Total Patch Count:\t\t\t", total_patch_count_white + total_patch_count_black)
+    print("Total Patch Count Negative:\t", total_patch_count_negative)
+    print("Total Patch Count:\t\t\t", total_patch_count_white + total_patch_count_black + total_patch_count_negative)
 
     return coord_dict
 
