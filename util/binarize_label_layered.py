@@ -14,7 +14,7 @@ def process_image(img_src_dir, img_src_name, frag_id):
         os.makedirs(target_dir, exist_ok=True)
 
         pos = img_src_name.find('_')
-        file_name = img_src_name[pos+1:]
+        file_name = img_src_name[pos + 1:]
 
         img_target_dir = os.path.join(target_dir, file_name)
 
@@ -36,7 +36,7 @@ def process_image(img_src_dir, img_src_name, frag_id):
         return False, str(e)
 
 
-def main():
+def main(keyword="inklabels"):
     success_count = 0
     failure_count = 0
 
@@ -57,7 +57,7 @@ def main():
             continue
 
         for file in os.listdir(sub_dir):
-            if not file.endswith(".png") or not "inklabels" in file:
+            if not file.endswith(".png") or keyword not in file:
                 continue
 
             valid_file_count += 1
@@ -77,4 +77,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main("inklabels")
+    main("negatives")
