@@ -450,15 +450,21 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
             white_start_coords = []
             black_start_coords = []
             pbar_channels.update(4)
+            random_shift_magnitude = stride // 4
 
             for y1 in y1_list:
                 for x1 in x1_list:
+                    x1 += random.randint(-random_shift_magnitude, random_shift_magnitude)
+                    y1 += random.randint(-random_shift_magnitude, random_shift_magnitude)
                     y2 = y1 + patch_size
                     x2 = x1 + patch_size
 
-                    if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
-                        patch_count_skipped_mask += 1
-                        start_coord_list.remove((x1, y1))
+                    try:
+                        if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
+                            patch_count_skipped_mask += 1
+                            start_coord_list.remove((x1, y1))
+                            continue
+                    except IndexError as e:
                         continue
 
                     img_patch = images[channel_idx:channel_idx + 4, y1:y2, x1:x2]
