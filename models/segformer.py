@@ -17,7 +17,8 @@ class SegformerModule(AbstractVesuvLightningModule):
             num_channels=cfg.in_chans,
         )
 
-        if cfg.from_checkpoint:
+        from_checkpoint = getattr(cfg, 'from_checkpoint', None)
+        if from_checkpoint:
             checkpoint_root_path = os.path.join("checkpoints", cfg.from_checkpoint)
             checkpoint_files = [file for file in os.listdir(checkpoint_root_path) if file.startswith('best-checkpoint')]
             checkpoint_path = os.path.join(checkpoint_root_path, checkpoint_files[-1])
