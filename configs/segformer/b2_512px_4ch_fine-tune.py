@@ -14,12 +14,12 @@ model_type = "b2"
 architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
-# from_checkpoint = "fine-wildflower-497-segformer-b2-231128-164424"
+from_checkpoint = "fine-wildflower-497-segformer-b2-231128-164424"
 in_chans = 4
 seed = 52352235
 epochs = -1
 
-dataset_fraction = 0.5
-num_workers = 4
-train_batch_size = 8
-val_batch_size = 8
+dataset_fraction = 1
+num_workers = 16
+train_batch_size = 24
+val_batch_size = 24
