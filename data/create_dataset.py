@@ -450,29 +450,19 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
             white_start_coords = []
             black_start_coords = []
             pbar_channels.update(4)
-            random_shift_magnitude = stride // 4
 
-            for y1_ in y1_list:
-                for x1_ in x1_list:
-                    orig_x1 = x1_
-                    orig_y1 = y1_
-                    orig_x2 = x1_ + patch_size
-                    orig_y2 = y1_ + patch_size
-                    x1 = x1_ + random.randint(-random_shift_magnitude, random_shift_magnitude)
-                    y1 = y1_ + random.randint(-random_shift_magnitude, random_shift_magnitude)
+            for y1 in y1_list:
+                for x1 in x1_list:
                     y2 = y1 + patch_size
                     x2 = x1 + patch_size
 
-                    coord = (orig_x1, orig_y1)
-                    try:
-                        if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
-                            patch_count_skipped_mask += 1
-                            start_coord_list.remove(coord)
-                            continue
-                    except IndexError as e:
+                    if mask_arr[y1:y2, x1:x2].all() != 1:  # Patch is not contained in mask
+                        patch_count_skipped_mask += 1
+                        start_coord_list.remove((x1, y1))
                         continue
 
                     img_patch = images[channel_idx:channel_idx + 4, y1:y2, x1:x2]
+                    coord = (x1, y1)
 
                     # LABELS
                     if labels[label_idx] is not None:
@@ -483,7 +473,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
                             patch_count_white += 1
                             white_start_coords.append(coord)
                             start_coord_list.remove(coord)
-                            file_name = f"f{frag_id}_l{label_idx}_{orig_x1}_{orig_y1}_{orig_x2}_{orig_y2}.npy"
+                            file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
 
                             img_file_path = os.path.join(img_path, file_name)
                             label_file_path = os.path.join(label_path, file_name)
@@ -510,13 +500,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
             negative_patch_count = min(max(patch_count_white, min_negative_patches), len(start_coord_list))
             # Here we are adding regular dark patches
             black_start_coords.extend(random.sample(start_coord_list, negative_patch_count))
-            for x1_, y1_ in black_start_coords:
-                orig_x1 = x1_
-                orig_y1 = y1_
-                orig_x2 = x1_ + patch_size
-                orig_y2 = y1_ + patch_size
-                x1 = x1_ + random.randint(-random_shift_magnitude, random_shift_magnitude)
-                y1 = y1_ + random.randint(-random_shift_magnitude, random_shift_magnitude)
+            for x1, y1 in black_start_coords:
                 y2 = y1 + patch_size
                 x2 = x1 + patch_size
 
@@ -528,7 +512,7 @@ def create_dataset(dataset_information, fragment_ids, data_type='train'):
 
                 patch_count_black += 1
 
-                file_name = f"f{frag_id}_l{label_idx}_{orig_x1}_{orig_y1}_{orig_x2}_{orig_y2}.npy"
+                file_name = f"f{frag_id}_l{label_idx}_{x1}_{y1}_{x2}_{y2}.npy"
 
                 img_file_path = os.path.join(img_path, file_name)
                 label_file_path = os.path.join(label_path, file_name)
