@@ -1,7 +1,7 @@
 import os
 
 _base_ = [
-    "configs/datasets/single/ultra_magnus_512px.py",
+    "configs/datasets/single/optimus_starscream_ultra_magnus_512px.py",
     "configs/schedules/adamw_cosine_lr.py",
 ]
 
@@ -15,7 +15,7 @@ architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 4
-seed = 240783
+seed = 52352235
 epochs = -1
 
 dataset_fraction = 1
