@@ -104,6 +104,9 @@ class WuesuvDataset(Dataset):
         image = np.load(os.path.join(self.img_dir, self.images[idx]), allow_pickle=True)
         label = np.load(os.path.join(self.label_dir, self.labels[idx]), allow_pickle=True)
 
+        if label.dtype == object:
+            label = label.astype(np.uint8)
+
         # Add random augmentation on the layer axis
         if random.random() < 0.5:
             np.random.shuffle(image)
