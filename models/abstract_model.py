@@ -4,7 +4,8 @@ from lightning import LightningModule
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
-                                         BinaryAccuracy, BinaryJaccardIndex as IoU)
+                                         BinaryAccuracy)
+from metrics.binary_jaccard_index import BinaryJaccardIndex as IoU
 
 from losses.bce_with_logits_with_label_smoothing import BCEWithLogitsLossWithLabelSmoothing
 from util.losses import BinaryDiceLoss
@@ -118,4 +119,4 @@ class AbstractVesuvLightningModule(LightningModule):
         self.log('val_precision', self.precision(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_recall', self.recall(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_f1', self.f1(output_logits, target), on_step=False, on_epoch=True, prog_bar=True)
-        self.log('val_iou', self.iou(output_logits, target), on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log('val_iou', self.iou.calculate(output_logits, target), on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
