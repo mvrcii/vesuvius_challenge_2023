@@ -46,19 +46,16 @@ def process_fragment(config, fragment_id, channels, processing_type):
                    processing_type=processing_type)
 
 
-def clean_all_fragment_label_dirs(config, processing_type):
+def clean_all_fragment_label_dirs(config):
     for fragment_id in FRAGMENTS.values():
         frag_name = '_'.join([get_frag_name_from_id(fragment_id)]).upper()
-        label_dir = os.path.join(config.dataset_target_dir, str(config.patch_size), frag_name, processing_type)
+        label_dir = os.path.join(config.dataset_target_dir, str(config.patch_size), frag_name, 'labels')
         if os.path.isdir(label_dir):
             shutil.rmtree(label_dir)
 
 
 def create_dataset(target_dir, config, frag_id, channels, processing_type):
     target_dir = os.path.join(target_dir, processing_type)
-
-    if processing_type == 'labels':
-        clean_all_fragment_label_dirs(config=config, processing_type='labels')
 
     os.makedirs(target_dir, exist_ok=True)
 
@@ -231,7 +228,8 @@ def read_fragment_labels_for_channels(fragment_dir, patch_size, channels):
             return None
 
         label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
-        assert label is not None and label.shape[0] != 0 and label.shape[1] != 0, "Label is empty or not loaded correctly"
+        assert label is not None and label.shape[0] != 0 and label.shape[
+            1] != 0, "Label is empty or not loaded correctly"
 
         pad0 = (patch_size - label.shape[0] % patch_size) % patch_size
         pad1 = (patch_size - label.shape[1] % patch_size) % patch_size
@@ -284,6 +282,7 @@ if __name__ == '__main__':
     # TODO: add automatic binarize label layered for files that changed
     LABEL_INFO_LIST = []
 
+    clean_all_fragment_label_dirs(config=cfg)
     for proc_type in ['images', 'labels']:
         print("Processing", proc_type)
         extract_patches(cfg, processing_type=proc_type)

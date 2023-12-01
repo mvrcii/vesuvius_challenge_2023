@@ -1,99 +1,152 @@
 import os
 import random
+import sys
 
 import albumentations as A
 import numpy as np
+import pandas as pd
 from lightning.pytorch import LightningDataModule
 from skimage.transform import resize
+from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader
 from transformers import SegformerImageProcessor
 
-from data.create_dataset import build_dataset_dir_from_config
+from constants import get_frag_name_from_id
+
+
+def generate_random_balanced_dataset(csv_path, ink_threshold, artefact_threshold, train_split):
+    try:
+        data = pd.read_csv(csv_path)
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
+    # Select ink samples
+    ink_samples = data[data['ink_p'] > ink_threshold]
+
+    # Calculate the number of non-ink samples to select
+    num_ink_samples = len(ink_samples)
+
+    # Split non-ink samples into two groups
+    non_ink_samples_no_artefact = data[(data['ink_p'] <= ink_threshold) & (data['artefact_p'] == 0)]
+    non_ink_samples_with_artefact = data[(data['ink_p'] <= ink_threshold) & (data['artefact_p'] >= artefact_threshold)]
+
+    # Determine the available number of non-ink samples with artefacts
+    available_with_artefact = len(non_ink_samples_with_artefact)
+    desired_with_artefact = int(num_ink_samples * 0.3)
+
+    # Adjust the number of each non-ink group based on availability
+    num_with_artefact_samples = min(desired_with_artefact, available_with_artefact)
+    num_no_artefact_samples = num_ink_samples - num_with_artefact_samples
+
+    # Ensure not to exceed the available non-ink samples with no artefacts
+    num_no_artefact_samples = min(num_no_artefact_samples, len(non_ink_samples_no_artefact))
+
+    # Select samples from each non-ink group
+    selected_no_artefact_samples = non_ink_samples_no_artefact.sample(n=num_no_artefact_samples, random_state=42)
+    selected_with_artefact_samples = non_ink_samples_with_artefact.sample(n=num_with_artefact_samples, random_state=42)
+
+    # Combine all selected samples
+    balanced_dataset = pd.concat([ink_samples, selected_no_artefact_samples, selected_with_artefact_samples])
+
+    # Print statistics
+    print(f"Total ink samples: {num_ink_samples}")
+    print(f"Total non-ink samples with no artefact: {num_no_artefact_samples}")
+    print(f"Total non-ink samples with artefact > {artefact_threshold}: {num_with_artefact_samples}")
+
+    balanced_dataset['file_path'] = balanced_dataset.apply(
+        lambda row: os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename']), axis=1)
+
+    train_df, valid_df = train_test_split(balanced_dataset, train_size=train_split, random_state=42)
+
+    train_image_paths = train_df['file_path'].tolist()
+    val_image_paths = valid_df['file_path'].tolist()
+
+    train_label_paths = [path.replace('images', 'labels') for path in train_image_paths]
+    val_label_paths = [path.replace('images', 'labels') for path in train_image_paths]
+
+    return train_image_paths, train_label_paths, val_image_paths, val_label_paths
 
 
 class SegFormerDataModule(LightningDataModule):
     def __init__(self, cfg):
         super().__init__()
         self.cfg = cfg
-        self.data_root_dir = build_dataset_dir_from_config(config=cfg)
+        csv_path = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), 'label_infos.csv')
+        self.train_image_paths, self.train_label_paths, self.val_image_paths, self.val_label_paths = generate_random_balanced_dataset(
+            csv_path=csv_path,
+            ink_threshold=cfg.ink_ratio,
+            artefact_threshold=cfg.artefact_ratio,
+            train_split=cfg.train_split)
 
-    def train_dataloader(self):
-        return self.build_dataloader(dataset_type='train')
 
-    def val_dataloader(self):
-        return self.build_dataloader(dataset_type='val')
+def train_dataloader(self):
+    return self.build_dataloader(dataset_type='train')
 
-    def get_transforms(self, dataset_type):
-        image_processor = SegformerImageProcessor.from_pretrained(pretrained_model_name_or_path=self.cfg.from_pretrained)
 
-        mean, std = image_processor.image_mean, image_processor.image_std
+def val_dataloader(self):
+    return self.build_dataloader(dataset_type='val')
 
-        mean.append(np.mean(mean))
-        mean = np.array(mean)
-        assert len(mean) == self.cfg.in_chans
 
-        std.append(np.mean(std))
-        std = np.array(std)
-        assert len(std) == self.cfg.in_chans
+def get_transforms(self, dataset_type):
+    image_processor = SegformerImageProcessor.from_pretrained(
+        pretrained_model_name_or_path=self.cfg.from_pretrained)
 
-        normalize = A.Normalize(mean=mean, std=std)
+    mean, std = image_processor.image_mean, image_processor.image_std
 
-        transforms = []
-        if dataset_type == 'train':
-            transforms = self.cfg.train_aug
-        elif dataset_type == 'val':
-            transforms = self.cfg.val_aug
+    mean.append(np.mean(mean))
+    mean = np.array(mean)
+    assert len(mean) == self.cfg.in_chans
 
-        transforms.append(normalize)
+    std.append(np.mean(std))
+    std = np.array(std)
+    assert len(std) == self.cfg.in_chans
 
-        return A.Compose(transforms=transforms, is_check_shapes=False)
+    normalize = A.Normalize(mean=mean, std=std)
 
-    def build_dataloader(self, dataset_type):
-        data_dir = os.path.join(self.data_root_dir, dataset_type)
+    transforms = []
+    if dataset_type == 'train':
+        transforms = self.cfg.train_aug
+    elif dataset_type == 'val':
+        transforms = self.cfg.val_aug
 
-        img_dir = os.path.join(data_dir, 'images')
-        label_dir = os.path.join(data_dir, 'labels')
+    transforms.append(normalize)
 
-        images_list = os.listdir(img_dir)
-        label_list = os.listdir(label_dir)
+    return A.Compose(transforms=transforms, is_check_shapes=False)
 
-        if not images_list or not label_list:
-            raise NotADirectoryError(f"One or both directories (images, labels) of {data_dir} are empty.")
 
-        num_samples = int(len(images_list) * self.cfg.dataset_fraction)
+def build_dataloader(self, dataset_type):
+    if dataset_type == 'train':
+        images_list = self.train_image_paths
+        label_list = self.train_label_paths
+    else:
+        images_list = self.val_image_paths
+        label_list = self.val_label_paths
 
-        images_list.sort()
-        label_list.sort()
+    transform = self.get_transforms(dataset_type=dataset_type)
+    root_dir = os.path.join(self.cfg.dataset_target_dir, str(self.cfg.patch_size))
+    dataset = WuesuvDataset(root_dir=root_dir,
+                            images=images_list,
+                            labels=label_list,
+                            label_size=self.cfg.label_size,
+                            transform=transform)
 
-        images_list = images_list[:num_samples]
-        label_list = label_list[:num_samples]
+    data_loader = DataLoader(dataset,
+                             batch_size=self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size,
+                             shuffle=(dataset_type == 'train'),
+                             num_workers=self.cfg.num_workers,
+                             pin_memory=True,
+                             drop_last=False,
+                             persistent_workers=True)
 
-        transform = self.get_transforms(dataset_type=dataset_type)
-
-        dataset = WuesuvDataset(img_dir=img_dir,
-                                label_dir=label_dir,
-                                images=images_list,
-                                labels=label_list,
-                                label_size=self.cfg.label_size,
-                                transform=transform)
-
-        data_loader = DataLoader(dataset,
-                                 batch_size=self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size,
-                                 shuffle=(dataset_type == 'train'),
-                                 num_workers=self.cfg.num_workers,
-                                 pin_memory=True,
-                                 drop_last=False,
-                                 persistent_workers=True)
-
-        return data_loader
+    return data_loader
 
 
 class WuesuvDataset(Dataset):
-    def __init__(self, img_dir, label_dir, images, label_size, transform, labels=None):
+    def __init__(self, root_dir, images, label_size, transform, labels=None):
         self.images = np.array(images)
         self.labels = labels
-        self.img_dir = img_dir
-        self.label_dir = label_dir
+        self.root_dir = root_dir
         self.transform = transform
         self.label_shape = (label_size, label_size)
 
@@ -101,15 +154,12 @@ class WuesuvDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        image = np.load(os.path.join(self.img_dir, self.images[idx]), allow_pickle=True)
-        label = np.load(os.path.join(self.label_dir, self.labels[idx]), allow_pickle=True)
-
-        if label.dtype == object:
-            label = label.astype(np.uint8)
+        image = np.load(os.path.join(self.root_dir, self.images[idx]))
+        label = np.load(os.path.join(self.root_dir, self.labels[idx]))
 
         # Add random augmentation on the layer axis
-        if random.random() < 0.5:
-            np.random.shuffle(image)
+        # if random.random() < 0.5:
+        #     np.random.shuffle(image)
 
         # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
         image = np.transpose(image, (1, 2, 0))
