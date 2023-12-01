@@ -14,7 +14,11 @@ def process_image(img_src_dir, img_src_name, frag_id):
         os.makedirs(target_dir, exist_ok=True)
 
         pos = img_src_name.find('_')
-        file_name = img_src_name[pos + 1:]
+
+        if 'superseded' in img_src_name:
+            file_name = ''.join(img_src_name.split('_')[2:])
+        else:
+            file_name = img_src_name[pos + 1:]
 
         img_target_dir = os.path.join(target_dir, file_name)
 
@@ -70,7 +74,7 @@ def main(keyword="inklabels"):
                 print(colored(f"Failure: {message}", "red"))
                 failure_count += 1
 
-    print("\nReport:")
+    print(f"\nReport {keyword}:")
     print(colored(f"Total Files: {valid_file_count}", "blue"))
     print(colored(f"Total Successful: {success_count}", "green"))
     print(colored(f"Total Failures: {failure_count}", "red"))
