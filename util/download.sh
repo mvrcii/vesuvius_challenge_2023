@@ -16,7 +16,7 @@ fi
 fragmentID=$1
 
 # Configuration based on option
-outputFolder="data/fragments/fragment${fragmentID}/slices"
+outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment${fragmentID}/slices"
 baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/${fragmentID}/layers/"
 
 # Other configurations
