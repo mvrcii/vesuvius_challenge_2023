@@ -22,7 +22,7 @@ class AbstractVesuvLightningModule(LightningModule):
         # False Negatives (FNs) are twice as impactful on the loss as False Positives (FPs)
         # pos_weight = torch.tensor([cfg.pos_weight]).to(self.device)
 
-        # self.bce_loss = BCEWithLogitsLossWithLabelSmoothing(label_smoothing=cfg.label_smoothing)
+        self.bce_loss = BCEWithLogitsLossWithLabelSmoothing(label_smoothing=cfg.label_smoothing)
         self.dice_loss = BinaryDiceLoss(from_logits=True)
 
         self.f1 = BinaryF1Score()
@@ -62,12 +62,11 @@ class AbstractVesuvLightningModule(LightningModule):
         output = self.forward(data)
 
         # Compute both BCE loss (with label smoothing) and Dice loss
-        # bce_loss = self.bce_loss(output, target.float())
+        bce_loss = self.bce_loss(output, target.float())
         dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
 
         # Combine the losses
-        # total_loss = bce_loss + dice_loss
-        total_loss = dice_loss
+        total_loss = bce_loss + dice_loss
 
         self.update_training_metrics(loss=total_loss)
 
@@ -78,12 +77,11 @@ class AbstractVesuvLightningModule(LightningModule):
         output = self.forward(data)
 
         # Compute both BCE loss (with label smoothing) and Dice loss
-        # bce_loss = self.bce_loss(output, target.float())
+        bce_loss = self.bce_loss(output, target.float())
         dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
 
         # Combine the losses
-        total_loss = dice_loss
-        # total_loss = bce_loss + dice_loss
+        total_loss = bce_loss + dice_loss
 
         self.update_validation_metrics(loss=total_loss, output_logits=output, target=target)
 
