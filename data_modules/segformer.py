@@ -1,5 +1,4 @@
 import os
-import random
 import sys
 
 import albumentations as A
@@ -14,12 +13,15 @@ from transformers import SegformerImageProcessor
 from constants import get_frag_name_from_id
 
 
-def generate_random_balanced_dataset(csv_path, ink_threshold, artefact_threshold, train_split):
+def generate_random_balanced_dataset(csv_path, dataset_fraction, frag_ids, ink_threshold, artefact_threshold, train_split):
     try:
         data = pd.read_csv(csv_path)
     except Exception as e:
         print(e)
         sys.exit(1)
+
+    # Filter for desired fragments
+    data = data[data['frag_id'].isin(frag_ids)]
 
     # Select ink samples
     ink_samples = data[data['ink_p'] > ink_threshold]
@@ -59,6 +61,9 @@ def generate_random_balanced_dataset(csv_path, ink_threshold, artefact_threshold
 
     train_df, valid_df = train_test_split(balanced_dataset, train_size=train_split, random_state=42)
 
+    train_df, _ = train_test_split(train_df, train_size=dataset_fraction, random_state=42)
+    valid_df, _ = train_test_split(valid_df, train_size=dataset_fraction, random_state=42)
+
     train_image_paths = train_df['file_path'].tolist()
     val_image_paths = valid_df['file_path'].tolist()
 
@@ -75,71 +80,69 @@ class SegFormerDataModule(LightningDataModule):
         csv_path = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), 'label_infos.csv')
         self.train_image_paths, self.train_label_paths, self.val_image_paths, self.val_label_paths = generate_random_balanced_dataset(
             csv_path=csv_path,
+            dataset_fraction=cfg.dataset_fraction,
+            frag_ids=cfg.fragment_ids,
             ink_threshold=cfg.ink_ratio,
             artefact_threshold=cfg.artefact_ratio,
             train_split=cfg.train_split)
 
+    def train_dataloader(self):
+        return self.build_dataloader(dataset_type='train')
 
-def train_dataloader(self):
-    return self.build_dataloader(dataset_type='train')
+    def val_dataloader(self):
+        return self.build_dataloader(dataset_type='val')
 
+    def get_transforms(self, dataset_type):
+        image_processor = SegformerImageProcessor.from_pretrained(
+            pretrained_model_name_or_path=self.cfg.from_pretrained)
 
-def val_dataloader(self):
-    return self.build_dataloader(dataset_type='val')
+        mean, std = image_processor.image_mean, image_processor.image_std
 
+        mean.append(np.mean(mean))
+        mean = np.array(mean)
+        assert len(mean) == self.cfg.in_chans
 
-def get_transforms(self, dataset_type):
-    image_processor = SegformerImageProcessor.from_pretrained(
-        pretrained_model_name_or_path=self.cfg.from_pretrained)
+        std.append(np.mean(std))
+        std = np.array(std)
+        assert len(std) == self.cfg.in_chans
 
-    mean, std = image_processor.image_mean, image_processor.image_std
+        normalize = A.Normalize(mean=mean, std=std)
 
-    mean.append(np.mean(mean))
-    mean = np.array(mean)
-    assert len(mean) == self.cfg.in_chans
+        transforms = []
+        if dataset_type == 'train':
+            transforms = self.cfg.train_aug
+        elif dataset_type == 'val':
+            transforms = self.cfg.val_aug
 
-    std.append(np.mean(std))
-    std = np.array(std)
-    assert len(std) == self.cfg.in_chans
+        transforms.append(normalize)
 
-    normalize = A.Normalize(mean=mean, std=std)
+        return A.Compose(transforms=transforms, is_check_shapes=False)
 
-    transforms = []
-    if dataset_type == 'train':
-        transforms = self.cfg.train_aug
-    elif dataset_type == 'val':
-        transforms = self.cfg.val_aug
+    def build_dataloader(self, dataset_type):
+        if dataset_type == 'train':
+            images_list = self.train_image_paths
+            label_list = self.train_label_paths
+        else:
+            images_list = self.val_image_paths
+            label_list = self.val_label_paths
 
-    transforms.append(normalize)
+        transform = self.get_transforms(dataset_type=dataset_type)
+        root_dir = os.path.join(self.cfg.dataset_target_dir, str(self.cfg.patch_size))
+        dataset = WuesuvDataset(root_dir=root_dir,
+                                images=images_list,
+                                labels=label_list,
+                                label_size=self.cfg.label_size,
+                                transform=transform)
 
-    return A.Compose(transforms=transforms, is_check_shapes=False)
+        data_loader = DataLoader(dataset,
+                                 batch_size=self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size,
+                                 shuffle=(dataset_type == 'train'),
+                                 num_workers=self.cfg.num_workers,
+                                 pin_memory=True,
+                                 drop_last=False,
+                                 persistent_workers=True)
 
-
-def build_dataloader(self, dataset_type):
-    if dataset_type == 'train':
-        images_list = self.train_image_paths
-        label_list = self.train_label_paths
-    else:
-        images_list = self.val_image_paths
-        label_list = self.val_label_paths
-
-    transform = self.get_transforms(dataset_type=dataset_type)
-    root_dir = os.path.join(self.cfg.dataset_target_dir, str(self.cfg.patch_size))
-    dataset = WuesuvDataset(root_dir=root_dir,
-                            images=images_list,
-                            labels=label_list,
-                            label_size=self.cfg.label_size,
-                            transform=transform)
-
-    data_loader = DataLoader(dataset,
-                             batch_size=self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size,
-                             shuffle=(dataset_type == 'train'),
-                             num_workers=self.cfg.num_workers,
-                             pin_memory=True,
-                             drop_last=False,
-                             persistent_workers=True)
-
-    return data_loader
+        return data_loader
 
 
 class WuesuvDataset(Dataset):
