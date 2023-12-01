@@ -174,6 +174,9 @@ def process_label_stack(config, target_dir, frag_id, mask, tensor, start_channel
                     artefact_percentage = int((artefact_label_patch.sum() / shape_product) * 100)
                     assert 0 <= artefact_percentage <= 100
 
+                    np.save(os.path.join(target_dir, file_name), artefact_label_patch)
+                    patches += 1
+
                 LABEL_INFO_LIST.append((file_name, frag_id, start_channel, ink_percentage, artefact_percentage))
 
             elif processing_type == 'images':
