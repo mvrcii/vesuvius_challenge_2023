@@ -16,9 +16,9 @@ def process_image(img_src_dir, img_src_name, frag_id):
         pos = img_src_name.find('_')
 
         if 'superseded' in img_src_name:
-            file_name = ''.join(img_src_name.split('_')[2:])
-        else:
-            file_name = img_src_name[pos + 1:]
+            pos = img_src_name.find('_', pos + 1)
+
+        file_name = img_src_name[pos + 1:]
 
         img_target_dir = os.path.join(target_dir, file_name)
 
