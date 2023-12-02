@@ -13,12 +13,15 @@ from transformers import SegformerImageProcessor
 from constants import get_frag_name_from_id
 
 
-def generate_random_balanced_dataset(csv_path, dataset_fraction, frag_ids, ink_threshold, artefact_threshold, train_split):
+def generate_random_balanced_dataset(seed, csv_path, dataset_fraction, frag_ids, ink_threshold, artefact_threshold, train_split):
     try:
         data = pd.read_csv(csv_path)
     except Exception as e:
         print(e)
         sys.exit(1)
+
+    if seed == -1:
+        seed = None  # Set random seed if -1 is given
 
     # Filter for desired fragments
     data = data[data['frag_id'].isin(frag_ids)]
@@ -45,8 +48,8 @@ def generate_random_balanced_dataset(csv_path, dataset_fraction, frag_ids, ink_t
     num_no_artefact_samples = min(num_no_artefact_samples, len(non_ink_samples_no_artefact))
 
     # Select samples from each non-ink group
-    selected_no_artefact_samples = non_ink_samples_no_artefact.sample(n=num_no_artefact_samples, random_state=42)
-    selected_with_artefact_samples = non_ink_samples_with_artefact.sample(n=num_with_artefact_samples, random_state=42)
+    selected_no_artefact_samples = non_ink_samples_no_artefact.sample(n=num_no_artefact_samples, random_state=seed)
+    selected_with_artefact_samples = non_ink_samples_with_artefact.sample(n=num_with_artefact_samples, random_state=seed)
 
     # Combine all selected samples
     balanced_dataset = pd.concat([ink_samples, selected_no_artefact_samples, selected_with_artefact_samples])
@@ -59,10 +62,15 @@ def generate_random_balanced_dataset(csv_path, dataset_fraction, frag_ids, ink_t
     balanced_dataset['file_path'] = balanced_dataset.apply(
         lambda row: os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename']), axis=1)
 
-    train_df, valid_df = train_test_split(balanced_dataset, train_size=train_split, random_state=42)
+    train_df, valid_df = train_test_split(balanced_dataset, train_size=train_split, random_state=seed)
 
-    train_df, _ = train_test_split(train_df, train_size=dataset_fraction, random_state=42)
-    valid_df, _ = train_test_split(valid_df, train_size=dataset_fraction, random_state=42)
+    if dataset_fraction != 1.0 or dataset_fraction != 1:
+        train_df, _ = train_test_split(train_df,
+                                       train_size=round(len(train_df.index) * dataset_fraction),
+                                       random_state=seed)
+        valid_df, _ = train_test_split(valid_df,
+                                       train_size=round(len(valid_df.index) * dataset_fraction),
+                                       random_state=seed)
 
     train_image_paths = train_df['file_path'].tolist()
     val_image_paths = valid_df['file_path'].tolist()
@@ -79,6 +87,7 @@ class SegFormerDataModule(LightningDataModule):
         self.cfg = cfg
         csv_path = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), 'label_infos.csv')
         self.train_image_paths, self.train_label_paths, self.val_image_paths, self.val_label_paths = generate_random_balanced_dataset(
+            seed=cfg.seed,
             csv_path=csv_path,
             dataset_fraction=cfg.dataset_fraction,
             frag_ids=cfg.fragment_ids,

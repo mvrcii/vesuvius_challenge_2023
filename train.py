@@ -4,6 +4,7 @@ import types
 import warnings
 from datetime import datetime
 
+import numpy as np
 import torch
 from lightning import seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
@@ -78,6 +79,7 @@ def main():
 
     if config.seed != -1:
         seed_everything(config.seed)
+        np.random.seed(config.seed)
 
     wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
 
