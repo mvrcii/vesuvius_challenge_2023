@@ -34,6 +34,7 @@ def list_directories_and_areas(url, username, password):
                 # Fetch area from the area_cm2.txt file in this directory
                 area = get_area_from_file(url, href, username, password)
                 print(area)
+                areas[href] = -1
                 if area is not None:
                     areas[href] = area
 
