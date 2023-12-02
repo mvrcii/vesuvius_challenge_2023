@@ -40,7 +40,12 @@ class AbstractVesuvLightningModule(LightningModule):
 
         if self.epochs == -1:
             # Set T_0 to a reasonable value based on your dataset and model
-            scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=25, T_mult=2)
+            # scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=25, T_mult=2)
+            scheduler = StepLR(
+                optimizer,
+                step_size=2,
+                gamma=0.99
+            )
         else:
             scheduler = CosineAnnealingLR(optimizer, T_max=self.epochs, eta_min=self.eta_min)
 
