@@ -143,6 +143,7 @@ def process_label_stack(config, target_dir, frag_id, mask, tensor, start_channel
                 continue
 
             file_name = f"f{frag_id}_ch{start_channel:02d}_{x1}_{y1}_{x2}_{y2}.npy"
+            file_path = os.path.join(target_dir, file_name)
 
             if processing_type == 'labels':
                 if tensor.ndim < 3 or tensor.shape[0] < 2 or len(tensor[0]) + len(tensor[1]) == 0:
@@ -161,7 +162,7 @@ def process_label_stack(config, target_dir, frag_id, mask, tensor, start_channel
                     ink_percentage = int((base_label_patch.sum() / shape_product) * 100)
                     assert 0 <= ink_percentage <= 100
 
-                    np.save(os.path.join(target_dir, file_name), base_label_patch)
+                    np.save(file_path, base_label_patch)
                     patches += 1
 
                 # If artefact label is existent
@@ -174,14 +175,16 @@ def process_label_stack(config, target_dir, frag_id, mask, tensor, start_channel
                     artefact_percentage = int((artefact_label_patch.sum() / shape_product) * 100)
                     assert 0 <= artefact_percentage <= 100
 
-                    np.save(os.path.join(target_dir, file_name), artefact_label_patch)
+                    np.save(file_path, artefact_label_patch)
                     patches += 1
 
                 LABEL_INFO_LIST.append((file_name, frag_id, start_channel, ink_percentage, artefact_percentage))
 
             elif processing_type == 'images':
+                if os.path.isfile(file_path):
+                    continue
                 image_patch = tensor[:, y1:y2, x1:x2]
-                np.save(os.path.join(target_dir, file_name), image_patch)
+                np.save(file_path, image_patch)
                 patches += 1
             else:
                 raise ValueError("Unknown processing type:", processing_type)
