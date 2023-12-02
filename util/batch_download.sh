@@ -40,7 +40,8 @@ check_downloaded_slices() {
     # Check if the slices directory exists and is a directory
     if [ ! -d "$fragmentDir" ]; then
         >&2 echo "Slices directory does not exist for fragment ID: $fragmentID"
-        return 1
+        #return 1
+        mkdir $fragmentDir
     fi
 
     for ((i=startSlice; i<=endSlice; i++)); do
