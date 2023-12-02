@@ -18,8 +18,8 @@ label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
 artefact_ratio = 5
-# fragment_ids = [ULTRA_MAGNUS_FRAG_ID]
-fragment_ids = [OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID, SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
+fragment_ids = [ULTRA_MAGNUS_FRAG_ID]
+# fragment_ids = [OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID, SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
 train_split = 0.8
 train_aug = [
     A.OneOf([
