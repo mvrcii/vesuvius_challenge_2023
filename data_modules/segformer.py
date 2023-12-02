@@ -76,7 +76,7 @@ def generate_random_balanced_dataset(seed, csv_path, dataset_fraction, frag_ids,
     val_image_paths = valid_df['file_path'].tolist()
 
     train_label_paths = [path.replace('images', 'labels') for path in train_image_paths]
-    val_label_paths = [path.replace('images', 'labels') for path in train_image_paths]
+    val_label_paths = [path.replace('images', 'labels') for path in val_image_paths]
 
     return train_image_paths, train_label_paths, val_image_paths, val_label_paths
 
