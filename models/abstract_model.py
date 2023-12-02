@@ -1,12 +1,12 @@
 import torch
 from einops import rearrange
 from lightning import LightningModule
+from torch.nn import BCEWithLogitsLoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryJaccardIndex as IoU)
 
-from losses.bce_with_logits_with_label_smoothing import BCEWithLogitsLossWithLabelSmoothing
 from util.losses import BinaryDiceLoss
 
 
@@ -22,7 +22,7 @@ class AbstractVesuvLightningModule(LightningModule):
         # False Negatives (FNs) are twice as impactful on the loss as False Positives (FPs)
         # pos_weight = torch.tensor([cfg.pos_weight]).to(self.device)
 
-        self.bce_loss = BCEWithLogitsLossWithLabelSmoothing(label_smoothing=cfg.label_smoothing)
+        self.bce_loss = BCEWithLogitsLoss()
         self.dice_loss = BinaryDiceLoss(from_logits=True)
 
         self.f1 = BinaryF1Score()
