@@ -1,13 +1,13 @@
 import torch
 from einops import rearrange
 from lightning import LightningModule
+from torch.nn import BCEWithLogitsLoss
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
+from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR, CosineAnnealingWarmRestarts
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy)
 from metrics.binary_jaccard_index import BinaryJaccardIndex as IoU
 
-from losses.bce_with_logits_with_label_smoothing import BCEWithLogitsLossWithLabelSmoothing
 from util.losses import BinaryDiceLoss
 
 
@@ -23,7 +23,7 @@ class AbstractVesuvLightningModule(LightningModule):
         # False Negatives (FNs) are twice as impactful on the loss as False Positives (FPs)
         # pos_weight = torch.tensor([cfg.pos_weight]).to(self.device)
 
-        self.bce_loss = BCEWithLogitsLossWithLabelSmoothing(label_smoothing=cfg.label_smoothing)
+        self.bce_loss = BCEWithLogitsLoss()
         self.dice_loss = BinaryDiceLoss(from_logits=True)
 
         self.f1 = BinaryF1Score()
@@ -39,17 +39,11 @@ class AbstractVesuvLightningModule(LightningModule):
             raise NotImplementedError()
 
         if self.epochs == -1:
-            scheduler = StepLR(
-                optimizer,
-                step_size=2,
-                gamma=0.99
-            )
+            # Set T_0 to a reasonable value based on your dataset and model
+            scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=25, T_mult=2)
         else:
-            scheduler = CosineAnnealingLR(
-                optimizer,
-                T_max=self.epochs,
-                eta_min=self.eta_min
-            )
+            scheduler = CosineAnnealingLR(optimizer, T_max=self.epochs, eta_min=self.eta_min)
+
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
 
     def forward(self, x):
@@ -97,7 +91,7 @@ class AbstractVesuvLightningModule(LightningModule):
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
 
         self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=False, sync_dist=True)
+        self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
     def update_validation_metrics(self, loss, output_logits, target):
         """
