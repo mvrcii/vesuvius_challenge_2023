@@ -12,22 +12,17 @@ if [ "$#" -lt 1 ]; then
 fi
 
 # Assign the first argument to a variable
-fragmentID=$1
-sliceRange=${2:-"00028 00043"}
+fragmentID="$1"
+string_argument="$2"
+
+IFS=',' read -r -a ranges <<< "$string_argument"
 
 # Configuration based on option
 #outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment${fragmentID}/slices"
 outputFolder="data/fragments/fragment${fragmentID}/slices"
 baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/${fragmentID}/layers/"
 
-# Other configurations
-# default 00023 00039 to get 16 slices
-#         00019 00043 to get 24 slices
-
 # Use the provided or default slice range
-ranges=("$sliceRange")
-
-ranges=("$sliceRange")
 overwriteExistingFiles=false
 
 # Create output folder if it doesn't exist
