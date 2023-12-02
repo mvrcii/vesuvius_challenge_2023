@@ -1,33 +1,33 @@
 #!/bin/bash
-set -x
 
 # Basic authentication
 user="registeredusers"
 password="only"
 credentials="$user:$password"
 
-# Check if an argument is provided
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <fragmentID>"
+# Check if at least one argument is provided
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 <fragmentID> [sliceRange]"
     exit 1
 fi
 
 # Assign the first argument to a variable
 fragmentID=$1
+sliceRange=${2:-"00028 00043"}
 
 # Configuration based on option
-outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment${fragmentID}/slices"
+#outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment${fragmentID}/slices"
+outputFolder="data/fragments/fragment${fragmentID}/slices"
 baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/${fragmentID}/layers/"
 
 # Other configurations
 # default 00023 00039 to get 16 slices
 #         00019 00043 to get 24 slices
-ranges=(
-    #"00023 00039"
-#    "00019 00043"
-#    "00015 00044"
-    "00028 00043"
-)
+
+# Use the provided or default slice range
+ranges=("$sliceRange")
+
+ranges=("$sliceRange")
 overwriteExistingFiles=false
 
 # Create output folder if it doesn't exist
