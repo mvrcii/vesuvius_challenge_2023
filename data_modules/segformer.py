@@ -115,7 +115,7 @@ class SegFormerDataModule(LightningDataModule):
         std = np.array(std)
         assert len(std) == self.cfg.in_chans
 
-        normalize = A.Normalize(mean=mean, std=std)
+        normalize = A.Normalize(mean=[0], std=[1])
 
         transforms = []
         if dataset_type == 'train':
