@@ -6,6 +6,8 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryJaccardIndex as IoU)
+from torchmetrics import Dice
+from losses.bce_with_logits_with_label_smoothing import BCEWithLogitsLossWithLabelSmoothing
 
 from util.losses import BinaryDiceLoss
 
@@ -30,6 +32,7 @@ class AbstractVesuvLightningModule(LightningModule):
         self.precision = BinaryPrecision()
         self.recall = BinaryRecall()
         self.iou = IoU()
+        self.dice_coefficient = Dice(multiclass=False, threshold=0.5)
 
     def configure_optimizers(self):
         if self.optimizer == 'adamw':
@@ -121,3 +124,5 @@ class AbstractVesuvLightningModule(LightningModule):
         self.log('val_recall', self.recall(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_f1', self.f1(output_logits, target), on_step=False, on_epoch=True, prog_bar=True)
         self.log('val_iou', self.iou(output_logits, target), on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log('val_dice', self.dice(torch.sigmoid(output_logits), target), on_step=False, on_epoch=True,
+                 prog_bar=True, sync_dist=True)
