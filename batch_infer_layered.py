@@ -88,10 +88,10 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     batches = []
     batch_indices = []
 
-    def process_patch(logits_np, x, y):
+    def process_patch(logits, x, y):
         # Calculate the margin to ignore (10% of the patch size)
         # Set the outer 10% of averaged_logits to zero
-        logits_np *= mask
+        logits *= ~mask
 
         # Determine the location in the stitched_result array
         out_y_start = y * stride_out
@@ -100,7 +100,7 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
         out_x_end = out_x_start + label_size
 
         # Add the result to the stitched_result array and increment prediction counts
-        out_arr[out_y_start:out_y_end, out_x_start:out_x_end] += logits_np
+        out_arr[out_y_start:out_y_end, out_x_start:out_x_end] += logits
         pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
 
     transform = A.Compose(val_image_aug, is_check_shapes=False)
