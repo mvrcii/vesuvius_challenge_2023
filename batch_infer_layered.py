@@ -196,9 +196,9 @@ if __name__ == '__main__':
     end_idx = None
 
     if not start_idx:
-        start_idx = 31
+        start_idx = 0
     if not end_idx:
-        end_idx = 61
+        end_idx = 63
 
     for i in range(start_idx, end_idx, 1):
         sigmoid_logits = infer_full_fragment_layer(model=model,
