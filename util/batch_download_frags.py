@@ -8,8 +8,10 @@ from constants import FRAGMENTS
 download_script = "./util/download.sh"
 label_files_dir = "./data/base_label_files/layered"
 
+
 def get_fragment_ids():
     return list(FRAGMENTS.values())
+
 
 def determine_slice_range(fragment_id):
     file_pattern = re.compile(r'_([0-9]+)_([0-9]+)\.png')
@@ -28,6 +30,7 @@ def determine_slice_range(fragment_id):
         pass
 
     return min_slice, max_slice
+
 
 def check_downloaded_slices(fragment_id, start_slice, end_slice):
     fragment_dir = f"./data/fragments/fragment{fragment_id}/slices"
@@ -62,6 +65,7 @@ def check_downloaded_slices(fragment_id, start_slice, end_slice):
         print(f"Existing slices for {fragment_id}: {' '.join(map(str, existing_slices))}", file=sys.stderr)
         return missing_slices
 
+
 def get_consecutive_ranges(missing_slices):
     if not missing_slices:
         return []
@@ -77,6 +81,7 @@ def get_consecutive_ranges(missing_slices):
     ranges.append(f"{start:05d} {end:05d}")
 
     return ranges
+
 
 # Main script execution
 fragment_ids = get_fragment_ids()
