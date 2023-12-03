@@ -32,7 +32,6 @@ train_aug = [
         A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
         A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
                        rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
-        A.CLAHE(always_apply=True, clip_limit=(1, 4), tile_grid_size=(8, 8)),
         A.ChannelDropout(always_apply=True, channel_drop_range=(1, 1), fill_value=0),
         A.CoarseDropout(always_apply=True, max_holes=6, max_height=56, max_width=56, min_holes=2, min_height=38,
                         min_width=38, fill_value=0, mask_fill_value=None),
