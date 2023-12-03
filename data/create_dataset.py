@@ -174,7 +174,7 @@ def process_label_stack(config, target_dir, frag_id, mask, tensor, start_channel
                     label_dims = (config.patch_size, config.patch_size)
                     artefact_label_patch = tensor[1, y1:y2, x1:x2]
 
-                    artefact_percentage = int((artefact_label_patch.sum() / np.prod(artefact_label_patch)) * 100)
+                    artefact_percentage = int((artefact_label_patch.sum() / np.prod(artefact_label_patch.shape)) * 100)
                     assert 0 <= artefact_percentage <= 100
 
                     # If no label exists for this patch -> create zero-filled label patch
