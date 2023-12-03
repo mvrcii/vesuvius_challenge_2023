@@ -53,7 +53,7 @@ def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
     stride_factor = 2
 
     margin = int(margin_percent * label_size)
-    mask = np.ones((label_size, label_size), dtype=bool)
+    mask = torch.ones((label_size, label_size), dtype=torch.bool, device='cuda')
     mask[margin:-margin, margin:-margin] = False
 
     stride = patch_size // stride_factor
@@ -68,16 +68,20 @@ def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
     # Initialize arrays to hold the stitched result and count of predictions for each pixel
     out_height = y_patches * stride_out + label_size
     out_width = x_patches * stride_out + label_size
-    out_arr = np.zeros((out_height, out_width), dtype=np.float32)
-    pred_counts = np.zeros((out_height, out_width), dtype=np.int32)
+
+    out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device='cuda')
+    pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
+
 
     progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx}: Infer Full Fragment "
                                                           f"{get_frag_name_from_id(fragment_id)}: Processing patches"
                                                           f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
-
-    batch_size = 2  # default for 528
+    batch_size = 4  # default for 528
     if config.patch_size == 256:
         batch_size = 8
+
+    preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device='cuda')
+    model = model.half()
 
     batches = []
     batch_indices = []
@@ -85,7 +89,7 @@ def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
     def process_patch(logits_np, x, y):
         # Calculate the margin to ignore (10% of the patch size)
         # Set the outer 10% of averaged_logits to zero
-        logits_np[mask] = 0
+        logits_np *= mask
 
         # Determine the location in the stitched_result array
         out_y_start = y * stride_out
@@ -121,14 +125,14 @@ def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
             if len(batches) == batch_size:
                 transformed_images = [transform(image=image)['image'] for image in batches]
 
-                batch_tensor = torch.tensor(np.stack(transformed_images)).float()
-                batch_tensor = batch_tensor.to("cuda")
-                outputs = model(batch_tensor)
-                logits = outputs.logits
-                logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
+                for idx, patch in enumerate(transformed_images):
+                    preallocated_batch_tensor[idx] = torch.from_numpy(patch).float()
+
+                outputs = model(preallocated_batch_tensor[:len(batches)])
+                logits = torch.sigmoid(outputs.logits).detach().squeeze()
 
                 for idx, (x, y) in enumerate(batch_indices):
-                    process_patch(logits_np[idx], x, y)  # Function to process each patch
+                    process_patch(logits[idx], x, y)  # Function to process each patch
 
                 batches = []
                 batch_indices = []
@@ -137,33 +141,48 @@ def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
     if batches:
         transformed_images = [transform(image=image)['image'] for image in batches]
 
-        batch_tensor = torch.tensor(np.stack(transformed_images)).float()
-        batch_tensor = batch_tensor.to("cuda")
-        outputs = model(batch_tensor)
-        logits = outputs.logits
-        logits_np = torch.sigmoid(logits).detach().squeeze().cpu().numpy()
+        for idx, patch in enumerate(transformed_images):
+            preallocated_batch_tensor[idx] = torch.from_numpy(patch).float()
+
+        outputs = model(preallocated_batch_tensor[:len(batches)])
+        logits = torch.sigmoid(outputs.logits).detach().squeeze(dim=1)
+
         if len(batches) == 1:
-            logits_np = np.expand_dims(logits_np, axis=0)
+            logits.unsqueeze(dim=0)
 
         for idx, (x, y) in enumerate(batch_indices):
-            process_patch(logits_np[idx], x, y)
+            process_patch(logits[idx], x, y)
 
     progress_bar.close()
 
     # Average the predictions
-    out_arr = np.divide(out_arr, pred_counts, where=(pred_counts > 0))
+    out_arr = torch.where(pred_counts > 0, torch.div(out_arr, pred_counts), out_arr)
 
     return out_arr
 
 
+def find_pth_in_dir(path):
+    path = os.path.join('checkpoints', path)
+    for file in os.listdir(path):
+        if file.endswith('.ckpt'):
+            return os.path.join(path, file)
+    return None
+
+
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 3:
         print("Usage: python batch_infer_layered.py <config_path> <checkpoint_path> <fragment_id>")
         sys.exit(1)
 
-    config_path = sys.argv[1]
-    checkpoint_path = sys.argv[2]
-    fragment_id = sys.argv[3]
+    checkpoint_folder_name = sys.argv[1]
+    config_path = os.path.join('checkpoints', checkpoint_folder_name, 'config.py')
+
+    checkpoint_path = find_pth_in_dir(checkpoint_folder_name)
+    if checkpoint_path is None:
+        print("No valid checkpoint file found")
+        sys.exit(1)
+
+    fragment_id = sys.argv[2]
 
     config = Config.load_from_file(config_path)
     channels = config.in_chans
@@ -192,27 +211,22 @@ if __name__ == '__main__':
     model.load_state_dict(state_dict)
     print("Loaded model", checkpoint_path)
 
-    output_arrays = []
-
     start_idx = None
     end_idx = None
 
     if not start_idx:
         start_idx = 0
     if not end_idx:
-        end_idx = 63
+        end_idx = 62
 
     for i in range(start_idx, end_idx, 1):
+        file_path = os.path.join(results_dir, f"sigmoid_logits_{i}_{i + channels - 1}.npy")
+        if os.path.isfile(file_path):
+            continue
+
         sigmoid_logits = infer_full_fragment_layer(model=model,
                                                    fragment_id=fragment_id,
                                                    config=config,
                                                    layer_start=i)
-
-        output_arrays.append(sigmoid_logits)
-        np.save(os.path.join(results_dir, f"sigmoid_logits_{i}_{i + channels - 1}.npy"), sigmoid_logits)
-
-    maxed_arr = np.maximum.reduce(output_arrays)
-    plt.imshow(maxed_arr, cmap='gray')  # Change colormap if needed
-    plt.colorbar()
-    plt.savefig(os.path.join(results_dir, "maxed_logits.png"), dpi=500, )
-    np.save(os.path.join(results_dir, "maxed_logits.npy"), maxed_arr)
+        output = sigmoid_logits.cpu().numpy()
+        np.save(file_path, output)
