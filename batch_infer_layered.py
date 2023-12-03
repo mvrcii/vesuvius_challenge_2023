@@ -72,10 +72,7 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device='cuda')
     pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
 
-    total_patches = x_patches * y_patches
-    total_batches = int(np.ceil(total_patches / batch_size))
-
-    progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx}: Infer Full Fragment "
+    progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx-1}: Infer Full Fragment "
                                                           f"{get_frag_name_from_id(fragment_id)}: Processing patches"
                                                           f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
     batch_size = 4  # default for 528
