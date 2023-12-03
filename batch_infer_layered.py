@@ -107,8 +107,6 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
 
     for y in range(y_patches):
         for x in range(x_patches):
-            progress_bar.update(1)
-
             x_start = x * stride
             x_end = min(x_start + patch_size, width)
             y_start = y * stride
@@ -138,7 +136,9 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
 
                 # Update progress bar after each batch is processed
                 current_batch = (y * x_patches + x) // batch_size
-                progress_bar.set_description(f"Processing batch {current_batch + 1}/{total_batches}")
+                progress_bar.set_description(f"Step {layer_start}/{end_idx}: "
+                                             f"Infer Full Fragment {get_frag_name_from_id(fragment_id)}: "
+                                             f"Processing batch {current_batch + 1}/{total_batches}")
                 progress_bar.update(1)
 
                 # Clear batches for next iteration
