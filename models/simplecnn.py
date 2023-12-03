@@ -1,26 +1,67 @@
+import torch
 import torch.nn as nn
 
 from models.abstract_model import AbstractVesuvLightningModule
-import torch
 
 
-class SimpleCNN(nn.Module):
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1):
+        super(ConvBlock, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        return self.relu(self.bn(self.conv(x)))
+
+
+class UpConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(UpConvBlock, self).__init__()
+        self.upconv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        return self.relu(self.bn(self.upconv(x)))
+
+
+class ResidualBlock(nn.Module):
+    def __init__(self, channels):
+        super(ResidualBlock, self).__init__()
+        self.conv1 = ConvBlock(channels, channels)
+        self.conv2 = ConvBlock(channels, channels)
+
+    def forward(self, x):
+        residual = x
+        x = self.conv1(x)
+        x = self.conv2(x)
+        return x + residual
+
+
+class ComplexCNN(nn.Module):
     def __init__(self):
-        super(SimpleCNN, self).__init__()
+        super(ComplexCNN, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Conv2d(4, 16, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
+            ConvBlock(4, 32),
+            ResidualBlock(32),
+            nn.MaxPool2d(2, 2),
+            ConvBlock(32, 64),
+            ResidualBlock(64),
+            nn.MaxPool2d(2, 2),
+            ConvBlock(64, 128),
+            ResidualBlock(128),
+            nn.MaxPool2d(2, 2)
         )
 
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(32, 16, kernel_size=2, stride=2),
-            nn.ReLU(),
-            nn.ConvTranspose2d(16, 1, kernel_size=2, stride=2),
+            UpConvBlock(128, 64),
+            ConvBlock(64, 64),
+            UpConvBlock(64, 32),
+            ConvBlock(32, 32),
+            UpConvBlock(32, 16),
+            nn.Conv2d(16, 1, kernel_size=1),
             nn.Sigmoid()
         )
 
@@ -34,7 +75,7 @@ class SimpleCNNModule(AbstractVesuvLightningModule):
     def __init__(self, cfg):
         super().__init__(cfg=cfg)
 
-        self.model = SimpleCNN()
+        self.model = ComplexCNN()
 
     def forward(self, x):
         output = self.model(x.float())
