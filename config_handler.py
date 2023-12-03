@@ -121,11 +121,10 @@ class Config:
 
         keys_to_ignore = [
             'config_file_name',
-            'train_common_aug',
-            'train_image_aug',
-            'val_image_aug',
-            'val_common_aug'
-            'os'
+            'train_aug',
+            'val_aug',
+            'os',
+            'A'
         ]
 
         file_path = os.path.join(model_run_dir, self.config_file_name)
