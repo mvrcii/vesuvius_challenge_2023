@@ -85,7 +85,7 @@ def validate_fragment_files(frag_id, cfg, processing_type):
 
 def validate_fragment_dir(frag_dir):
     if not os.path.isdir(frag_dir):
-        return [f"Fragment directory '{frag_dir}' does not exist"]
+        return [f"\033[91mReason:\t\tFragment directory '{frag_dir}' does not exist\033[0m"]
 
     return []
 
