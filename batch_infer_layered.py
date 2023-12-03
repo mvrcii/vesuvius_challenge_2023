@@ -173,6 +173,8 @@ if __name__ == '__main__':
     root_dir = os.path.join("inference", "results", f"fragment{fragment_id}")
     results_dir = os.path.join("inference", "results", f"fragment{fragment_id}", f"{date_time_string}_{model_run_name}")
 
+    os.makedirs(root_dir, exist_ok=True)
+
     dirs = [x for x in os.listdir(root_dir) if x.endswith(model_run_name)]
     if len(dirs) == 1:
         results_dir = os.path.join(root_dir, dirs[0])

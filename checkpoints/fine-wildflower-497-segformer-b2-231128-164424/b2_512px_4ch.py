@@ -17,7 +17,6 @@ eta_min = 1e-05
 label_smoothing = 0.0
 pos_weight = 1.0
 optimizer = 'adamw'
-_base_ = ['configs/datasets/single/ultra_magnus_512px.py', 'configs/schedules/adamw_cosine_lr.py']
 work_dir = '/scratch/medfm/vesuv/kaggle1stReimp'
 base_label_dir = 'data/base_label_files'
 data_root_dir = 'data'
