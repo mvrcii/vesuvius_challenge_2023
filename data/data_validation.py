@@ -124,7 +124,7 @@ def validate_labels(cfg, frag_id, frag_dir, processing_type):
         missing_slice_channels = required_channels - existing_slice_channels
         if missing_slice_channels:
             errors.append(
-                f"\033[91mReason: Slice channel files {format_ranges(sorted(list(missing_slice_channels)), file_ending='png')} not found\033[0m")
+                f"\033[91mReason:\t\tSlice channel files {format_ranges(sorted(list(missing_slice_channels)))} not found\033[0m")
 
     return errors, sorted(list(valid_channels)), sorted(list(existing_channels))
 
@@ -158,7 +158,7 @@ def extract_indices(directory, pattern):
     return indices
 
 
-def format_ranges(numbers, file_ending="tif"):
+def format_ranges(numbers, file_ending=".tif"):
     """Convert a list of numbers into a string of ranges."""
     if not numbers:
         return ""
