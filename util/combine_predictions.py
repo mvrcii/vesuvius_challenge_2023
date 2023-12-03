@@ -118,6 +118,7 @@ def get_target_dims(work_dir, frag_id):
 
     return target_dims
 
+
 def main():
     frag_id, work_dir, folder_paths, folder_root_dir = get_sys_args()
     common_layers = get_common_layers(folder_paths)
@@ -212,14 +213,16 @@ class Visualization:
         if self.model_count > 1:
             control_frame_weighting = Frame(self.root)
             control_frame_weighting.pack(side='top')
-            left_button_weighting = Button(control_frame_weighting, text="  --  ", command=self.decrease_slider_weighting)
+            left_button_weighting = Button(control_frame_weighting, text="  --  ",
+                                           command=self.decrease_slider_weighting)
             left_button_weighting.pack(side='left')
             self.slider_weighting = Scale(control_frame_weighting, from_=0, to=1, orient=HORIZONTAL, resolution=0.1,
                                           length=500,
                                           command=self.update_weighting)
             self.slider_weighting.set(self.curr_weight_th_val)
             self.slider_weighting.pack(side='left')
-            right_button_weighting = Button(control_frame_weighting, text="  ++  ", command=self.increase_slider_weighting)
+            right_button_weighting = Button(control_frame_weighting, text="  ++  ",
+                                            command=self.increase_slider_weighting)
             right_button_weighting.pack(side='left')
 
         # Display area for the image
