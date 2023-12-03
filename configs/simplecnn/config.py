@@ -47,6 +47,6 @@ epochs = -1
 loss = "dice+bce"
 dataset_fraction = 1
 
-num_workers = 1
+num_workers = 16
 train_batch_size = 240
-val_batch_size = 240
+val_batch_size = 512
