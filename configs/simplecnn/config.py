@@ -37,6 +37,7 @@ val_aug = [
 
 # training parameters
 model_type = "nan"
+lr = 2e-3
 architecture = 'simplecnn'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nan"
