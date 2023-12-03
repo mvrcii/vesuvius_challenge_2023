@@ -13,9 +13,11 @@ from lightning.pytorch.trainer import Trainer
 
 from config_handler import Config
 from data_modules.segformer import SegFormerDataModule
+from data_modules.simplecnn import SimpleCNNDataModule
 from data_modules.unetplusplus import UnetPlusPlusDataModule
 from models.cnn3d_segformer import CNN3D_SegformerModule
 from models.segformer import SegformerModule
+from models.simplecnn import SimpleCNNModule
 from models.unetplusplus import UnetPlusPlusModule
 from util.train_utils import get_device_configuration
 
@@ -46,6 +48,8 @@ def get_model(config: Config):
         return CNN3D_SegformerModule(cfg=config)
     elif architecture == 'unetplusplus':
         return UnetPlusPlusModule(cfg=config)
+    elif architecture == 'simplecnn':
+        return SimpleCNNModule(cfg=config)
     else:
         print("Invalid architecture for model:", architecture)
         sys.exit(1)
@@ -68,6 +72,8 @@ def get_data_module(config: Config):
         return SegFormerDataModule(cfg=config)
     elif architecture == "unetplusplus":
         return UnetPlusPlusDataModule(cfg=config)
+    elif architecture == "simplecnn":
+        return SimpleCNNDataModule(cfg=config)
     else:
         print("Invalid architecture for data module:", architecture)
         sys.exit(1)
