@@ -62,8 +62,8 @@ in_chans = 4
 seed = 7777
 epochs = -1
 loss = "dice+bce"
-dataset_fraction = 0.1
+dataset_fraction = 1
 
 num_workers = 8
-train_batch_size = 4
-val_batch_size = 4
+train_batch_size = 24
+val_batch_size = 24
