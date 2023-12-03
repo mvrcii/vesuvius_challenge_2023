@@ -267,6 +267,14 @@ class Visualization:
         file_path = os.path.join(target_dir, f"{mode.lower()}_{float(threshold):.2f}{inverted_str}.png")
 
         image = self.process_image(array=self.array, max_size=self.target_dims)
+        #
+        # if image.mode != 'RGBA':
+        #     image = image.convert('RGBA')
+        #
+        # data = np.array(image)  # Convert image to numpy array
+        # data[:, :, 3] = np.where(data[:, :, 0:3].sum(axis=2) == 0, 0, 255)  # Set alpha to 0 where RGB sums to 0, else 255
+        # image = Image.fromarray(data)
+
         image.save(file_path)
 
     def invert_colors(self):
@@ -362,6 +370,7 @@ class Visualization:
         processed = array.copy()
         processed = self.normalize_npy_preds(processed)  # Normalize
         processed = self.rot90(processed, self.rotate_num)  # Rotate
+        # processed = np.flip(processed, 1)
 
         threshold = self.get_threshold()
         if self.mode_var.get() == 2:
