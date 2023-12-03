@@ -87,6 +87,7 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
 
     batches = []
     batch_indices = []
+    current_batch = 1
 
     def process_patch(logits_np, x, y):
         # Calculate the margin to ignore (10% of the patch size)
@@ -135,7 +136,7 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
                     process_patch(logits[idx], x, y)  # Function to process each patch
 
                 # Update progress bar after each batch is processed
-                current_batch = (y * x_patches + x) // batch_size
+                current_batch += 1
                 progress_bar.set_description(f"Step {layer_start}/{end_idx}: "
                                              f"Infer Full Fragment {get_frag_name_from_id(fragment_id)}: "
                                              f"Processing batch {current_batch + 1}/{total_batches}")
@@ -161,7 +162,7 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
         for idx, (x, y) in enumerate(batch_indices):
             process_patch(logits[idx], x, y)
 
-        current_batch = (y_patches * x_patches - 1) // batch_size
+        current_batch += 1
         progress_bar.set_description(f"Processing batch {current_batch + 1}/{total_batches}")
         progress_bar.update(1)
 
