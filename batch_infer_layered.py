@@ -75,9 +75,6 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx-1}: Infer Full Fragment "
                                                           f"{get_frag_name_from_id(fragment_id)}: Processing patches"
                                                           f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
-    batch_size = 4  # default for 528
-    if config.patch_size == 256:
-        batch_size = 8
 
     preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device='cuda')
     model = model.half()
@@ -127,7 +124,9 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
                 for idx, patch in enumerate(transformed_images):
                     preallocated_batch_tensor[idx] = torch.from_numpy(patch).float()
 
-                outputs = model(preallocated_batch_tensor[:len(batches)])
+                with torch.no_grad():
+                    outputs = model(preallocated_batch_tensor[:len(batches)])
+
                 logits = torch.sigmoid(outputs.logits).detach().squeeze()
 
                 for idx, (x, y) in enumerate(batch_indices):
@@ -242,5 +241,6 @@ if __name__ == '__main__':
                                                    fragment_id=fragment_id,
                                                    config=config,
                                                    layer_start=i)
+        torch.cuda.empty_cache()
         output = sigmoid_logits.cpu().numpy()
         np.save(file_path, output)
