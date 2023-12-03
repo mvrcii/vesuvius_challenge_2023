@@ -39,7 +39,7 @@ def read_fragment(work_dir, fragment_id, layer_start, layer_count):
     return images
 
 
-def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
+def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, layer_start):
     patch_size = config.patch_size
     expected_patch_shape = (config.in_chans, patch_size, patch_size)
 
@@ -76,9 +76,6 @@ def infer_full_fragment_layer(model, fragment_id, config: Config, layer_start):
     progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx}: Infer Full Fragment "
                                                           f"{get_frag_name_from_id(fragment_id)}: Processing patches"
                                                           f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
-    batch_size = 4  # default for 528
-    if config.patch_size == 256:
-        batch_size = 8
 
     preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device='cuda')
     model = model.half()
@@ -170,22 +167,36 @@ def find_pth_in_dir(path):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print("Usage: python batch_infer_layered.py <config_path> <checkpoint_path> <fragment_id>")
+    # Check for the minimum number of arguments
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
+        print("Usage: python batch_infer_layered.py <checkpoint_folder_name> <fragment_id> [<batch_size>]")
         sys.exit(1)
 
     checkpoint_folder_name = sys.argv[1]
+    fragment_id = sys.argv[2]
+
+    # Determine the path to the configuration based on the checkpoint folder
     config_path = os.path.join('checkpoints', checkpoint_folder_name, 'config.py')
 
+    # Find the checkpoint path
     checkpoint_path = find_pth_in_dir(checkpoint_folder_name)
     if checkpoint_path is None:
         print("No valid checkpoint file found")
         sys.exit(1)
 
-    fragment_id = sys.argv[2]
-
     config = Config.load_from_file(config_path)
     channels = config.in_chans
+
+    # If a batch size is provided, use it; otherwise, use the default
+    default_batch_size = 4
+    if len(sys.argv) == 4:
+        try:
+            batch_size = int(sys.argv[3])
+        except ValueError:
+            print("Invalid batch size provided. Please provide an integer value.")
+            sys.exit(1)
+    else:
+        batch_size = default_batch_size
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_run_name = '-'.join(checkpoint_path.split(f"checkpoints{os.sep}")[-1].split('-')[0:5])
@@ -225,6 +236,7 @@ if __name__ == '__main__':
             continue
 
         sigmoid_logits = infer_full_fragment_layer(model=model,
+                                                   batch_size=batch_size,
                                                    fragment_id=fragment_id,
                                                    config=config,
                                                    layer_start=i)
