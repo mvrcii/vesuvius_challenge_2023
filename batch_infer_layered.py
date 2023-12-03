@@ -75,19 +75,18 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     total_patches = x_patches * y_patches
     total_batches = int(np.ceil(total_patches / batch_size))
 
-    print("total patches:", total_patches, "total batches", total_batches)
-
-    # Initialize the progress bar to track batches instead of patches
-    progress_bar = tqdm(total=total_batches, desc=f"Step {layer_start}/{end_idx}: Infer Full Fragment "
-                                                  f"{get_frag_name_from_id(fragment_id)}: Processing batches"
-                                                  f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
+    progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx}: Infer Full Fragment "
+                                                          f"{get_frag_name_from_id(fragment_id)}: Processing patches"
+                                                          f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
+    batch_size = 4  # default for 528
+    if config.patch_size == 256:
+        batch_size = 8
 
     preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device='cuda')
     model = model.half()
 
     batches = []
     batch_indices = []
-    current_batch = 1
 
     def process_patch(logits_np, x, y):
         # Calculate the margin to ignore (10% of the patch size)
@@ -108,6 +107,8 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
 
     for y in range(y_patches):
         for x in range(x_patches):
+            progress_bar.update(1)
+
             x_start = x * stride
             x_end = min(x_start + patch_size, width)
             y_start = y * stride
@@ -135,14 +136,6 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
                 for idx, (x, y) in enumerate(batch_indices):
                     process_patch(logits[idx], x, y)  # Function to process each patch
 
-                # Update progress bar after each batch is processed
-                current_batch += 1
-                progress_bar.set_description(f"Step {layer_start}/{end_idx}: "
-                                             f"Infer Full Fragment {get_frag_name_from_id(fragment_id)}: "
-                                             f"Processing batch {current_batch + 1}/{total_batches}")
-                progress_bar.update(1)
-
-                # Clear batches for next iteration
                 batches = []
                 batch_indices = []
 
@@ -161,10 +154,6 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
 
         for idx, (x, y) in enumerate(batch_indices):
             process_patch(logits[idx], x, y)
-
-        current_batch += 1
-        progress_bar.set_description(f"Processing batch {current_batch + 1}/{total_batches}")
-        progress_bar.update(1)
 
     progress_bar.close()
 
