@@ -17,6 +17,13 @@ string_argument="$2"
 
 IFS=',' read -r -a ranges <<< "$string_argument"
 
+#read -r start end <<< "$string_argument"
+# How to use this script:
+# 1. Go to bash with "bash"
+# 2. Go to root dir
+# 3. "./util/download.sh FRAG_ID "00000 00063"
+echo $ranges
+
 # Configuration based on option
 #outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment${fragmentID}/slices"
 outputFolder="data/fragments/fragment${fragmentID}/slices"
