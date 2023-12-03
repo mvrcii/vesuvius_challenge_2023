@@ -114,7 +114,7 @@ def validate_labels(cfg, frag_id, frag_dir, processing_type):
         existing_dir = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size),
                                     get_frag_name_from_id(frag_id).upper(), processing_type)
         # Check for already existing images / labels patches
-        if processing_type == 'images' and os.path.isdir(existing_dir) and frag_id != "20231106155351":
+        if processing_type == 'images' and os.path.isdir(existing_dir):
             start_indices = extract_indices(existing_dir, pattern=r".*ch(\d+)_.*\.npy$")
             existing_channels = set([index + i for i in range(4) for index in start_indices])
             required_channels -= existing_channels
