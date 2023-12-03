@@ -49,5 +49,5 @@ loss = "dice+bce"
 dataset_fraction = 0.5
 
 num_workers = 1
-train_batch_size = 16
-val_batch_size = 16
+train_batch_size = 48
+val_batch_size = 48
