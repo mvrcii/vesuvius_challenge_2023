@@ -10,6 +10,8 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from config_handler import Config
 from constants import get_frag_name_from_id, FRAGMENTS
 from data.data_validation import validate_fragments, format_ranges
