@@ -75,6 +75,8 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     total_patches = x_patches * y_patches
     total_batches = int(np.ceil(total_patches / batch_size))
 
+    print("total patches:", total_patches, "total batches", total_batches)
+
     # Initialize the progress bar to track batches instead of patches
     progress_bar = tqdm(total=total_batches, desc=f"Step {layer_start}/{end_idx}: Infer Full Fragment "
                                                   f"{get_frag_name_from_id(fragment_id)}: Processing batches"
