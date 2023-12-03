@@ -5,6 +5,7 @@ import albumentations as A
 import numpy as np
 import pandas as pd
 from lightning.pytorch import LightningDataModule
+from matplotlib import pyplot as plt
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader
@@ -173,6 +174,8 @@ class WuesuvDataset(Dataset):
         # if random.random() < 0.5:
         #     np.random.shuffle(image)
 
+        # self.plot(image, label)
+
         # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
         image = np.transpose(image, (1, 2, 0))
 
@@ -188,3 +191,24 @@ class WuesuvDataset(Dataset):
         label = resize(label, self.label_shape, order=0, preserve_range=True, anti_aliasing=False)
 
         return image, label
+
+
+    def plot(self, image, label):
+        fig, axs = plt.subplots(2, 4, figsize=(20, 10))  # 2 rows, 4 columns
+
+        for i in range(4):  # iterating through each image in the batch
+            img = image[i].squeeze()  # Remove any unnecessary dimensions
+            lbl = label.squeeze()  # Remove any unnecessary dimensions
+
+            # Plot the image
+            axs[i // 2, 2 * (i % 2)].imshow(img, cmap='gray')
+            axs[i // 2, 2 * (i % 2)].set_title(f"Image {i + 1}")
+            axs[i // 2, 2 * (i % 2)].axis('off')
+
+            # Plot the label
+            axs[i // 2, 2 * (i % 2) + 1].imshow(lbl, cmap='gray')
+            axs[i // 2, 2 * (i % 2) + 1].set_title(f"Label {i + 1}")
+            axs[i // 2, 2 * (i % 2) + 1].axis('off')
+
+        plt.tight_layout()
+        plt.show()
