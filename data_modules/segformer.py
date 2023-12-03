@@ -170,12 +170,6 @@ class WuesuvDataset(Dataset):
         image = np.load(os.path.join(self.root_dir, self.images[idx]))
         label = np.load(os.path.join(self.root_dir, self.labels[idx]))
 
-        # Add random augmentation on the layer axis
-        # if random.random() < 0.5:
-        #     np.random.shuffle(image)
-
-        # self.plot(image, label)
-
         # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
         image = np.transpose(image, (1, 2, 0))
 
@@ -187,13 +181,14 @@ class WuesuvDataset(Dataset):
         # Rearrange image back from (height, width, channels) to (channels, height, width) to work with segformer input
         image = np.transpose(image, (2, 0, 1))
 
+        self.plot(image, label, filename=os.path.join(self.root_dir, self.images[idx]))
+
         # Scale down label to match segformer output
         label = resize(label, self.label_shape, order=0, preserve_range=True, anti_aliasing=False)
 
         return image, label
 
-
-    def plot(self, image, label):
+    def plot(self, image, label, filename):
         fig, axs = plt.subplots(2, 4, figsize=(20, 10))  # 2 rows, 4 columns
 
         for i in range(4):  # iterating through each image in the batch
@@ -202,13 +197,14 @@ class WuesuvDataset(Dataset):
 
             # Plot the image
             axs[i // 2, 2 * (i % 2)].imshow(img, cmap='gray')
-            axs[i // 2, 2 * (i % 2)].set_title(f"Image {i + 1}")
             axs[i // 2, 2 * (i % 2)].axis('off')
 
             # Plot the label
             axs[i // 2, 2 * (i % 2) + 1].imshow(lbl, cmap='gray')
-            axs[i // 2, 2 * (i % 2) + 1].set_title(f"Label {i + 1}")
             axs[i // 2, 2 * (i % 2) + 1].axis('off')
+
+        # Set the title for the entire plot
+        fig.suptitle(f"Filename: {filename}", fontsize=16)
 
         plt.tight_layout()
         plt.show()
