@@ -151,9 +151,11 @@ def process_label_stack(config, target_dir, frag_id, mask, tensor, start_channel
 
                 ink_percentage = 0
                 artefact_percentage = 0
+                label_exists = False
 
                 # If label is existent
                 if tensor[0][0][0] != -1:
+                    label_exists = True
                     base_label_patch = tensor[0, y1:y2, x1:x2]
 
                     shape_product = np.prod(base_label_patch.shape)
@@ -167,16 +169,22 @@ def process_label_stack(config, target_dir, frag_id, mask, tensor, start_channel
 
                 # If artefact label is existent
                 if tensor[1][0][0] != -1:
+                    label_dims = (config.patch_size, config.patch_size)
                     artefact_label_patch = tensor[1, y1:y2, x1:x2]
 
-                    shape_product = np.prod(artefact_label_patch.shape)
-                    assert shape_product != 0
-
-                    artefact_percentage = int((artefact_label_patch.sum() / shape_product) * 100)
+                    artefact_percentage = int((artefact_label_patch.sum() / label_dims) * 100)
                     assert 0 <= artefact_percentage <= 100
 
-                    np.save(file_path, artefact_label_patch)
-                    patches += 1
+                    # If no label exists for this patch -> create zero-filled label patch
+                    if not label_exists:
+                        artefact_label_patch = np.zeros_like(label_dims)
+
+                        # Check that the label contains no 0 shape
+                        shape_product = np.prod(artefact_label_patch.shape)
+                        assert shape_product != 0
+
+                        np.save(file_path, artefact_label_patch)
+                        patches += 1
 
                 LABEL_INFO_LIST.append((file_name, frag_id, start_channel, ink_percentage, artefact_percentage))
 
