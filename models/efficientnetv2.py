@@ -98,8 +98,8 @@ class LightCNN(nn.Module):
 
 
 class SimpleCNN(nn.Module):
-    def _init_(self):
-        super(SimpleCNN, self)._init_()
+    def __init__(self):
+        super(SimpleCNN, self).__init__()
         # Convolutional layers
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
@@ -136,35 +136,35 @@ class EfficientNetV2Module(LightningModule):
         self.epochs = cfg.epochs
         self.eta_min = cfg.eta_min
 
-        self.model = timm.create_model(cfg.from_pretrained,
-                                       in_chans=cfg.in_chans,
-                                       pretrained=True,
-                                       num_classes=1)
+        # self.model = timm.create_model(cfg.from_pretrained,
+        #                                in_chans=cfg.in_chans,
+        #                                pretrained=True,
+        #                                num_classes=1)
+        #
+        # # Freeze the parameters in feature extractor
+        # layers = list(self.model.children())[:-1]
+        # self.feature_extractor = nn.Sequential(*layers)
+        #
+        # for param in self.feature_extractor.parameters():
+        #     param.requires_grad = False
+        #
+        # self.classifier = nn.Sequential(
+        #     nn.Flatten(),
+        #     nn.Linear(in_features=1280, out_features=128),
+        #     nn.ReLU(),
+        #     nn.Dropout(0.1),
+        #     nn.Linear(128, 1)
+        # )
 
-        # Freeze the parameters in feature extractor
-        layers = list(self.model.children())[:-1]
-        self.feature_extractor = nn.Sequential(*layers)
-
-        for param in self.feature_extractor.parameters():
-            param.requires_grad = False
-
-        self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(in_features=1280, out_features=128),
-            nn.ReLU(),
-            nn.Dropout(0.1),
-            nn.Linear(128, 1)
-        )
-
-        # self.model = SimpleCNN()
+        self.model = SimpleCNN()
 
         self.loss = BCEWithLogitsLoss()
         self.accuracy = BinaryAccuracy()
 
     def forward(self, data):
-        features = self.feature_extractor(data)
-        output = self.classifier(features)
-        # output = self.model(data)
+        # features = self.feature_extractor(data)
+        # output = self.classifier(features)
+        output = self.model(data)
         return output
 
     def configure_optimizers(self):

@@ -1,4 +1,5 @@
 import os
+from random import sample
 
 import numpy as np
 from lightning.pytorch import LightningDataModule
@@ -28,7 +29,12 @@ class EfficientNetV2DataModule(LightningDataModule):
         mean = norm_params['mean']
         std = norm_params['std']
 
-        dataset = SliceDataset(img_dir=img_dir, mean=mean, std=std)
+        images = os.listdir(img_dir)
+        num_images = int(len(images) * self.cfg.dataset_fraction)
+        images = sample(images, num_images)
+
+        dataset = SliceDataset(img_dir=img_dir, images=images, mean=mean, std=std)
+
 
         data_loader = DataLoader(dataset,
                                  batch_size=self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size,
@@ -42,8 +48,8 @@ class EfficientNetV2DataModule(LightningDataModule):
 
 
 class SliceDataset(Dataset):
-    def __init__(self, img_dir, mean, std):
-        self.images = np.array(os.listdir(img_dir))
+    def __init__(self, img_dir, images, mean, std):
+        self.images = images
         self.img_dir = img_dir
         self.mean = mean
         self.std = std

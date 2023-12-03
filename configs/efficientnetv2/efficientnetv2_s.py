@@ -18,8 +18,11 @@ seed = 42
 epochs = 200
 
 num_workers = 16
-train_batch_size = 2560 * 8
-val_batch_size = 2560 * 8
+train_batch_size = 64
+val_batch_size = 64
+
+
+dataset_fraction = 0.01
 
 lr = 1e-4
 eta_min = 1e-5
