@@ -65,7 +65,6 @@ class AbstractVesuvLightningModule(LightningModule):
 
         loss = self.loss_fn(output, target.float())
 
-        # Combine the losses
         self.update_training_metrics(loss=loss)
 
         return loss
