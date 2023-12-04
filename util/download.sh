@@ -8,6 +8,7 @@ credentials="$user:$password"
 # Check if at least one argument is provided
 if [ "$#" -lt 1 ]; then
     echo "Usage: $0 <fragmentID> [sliceRange]"
+    exit 1
 fi
 
 # Assign the first argument to a variable
@@ -47,91 +48,22 @@ download_file() {
     fi
 }
 
-# Function to check file sizes
-check_file_sizes() {
-    local firstFileSize
-    local fileSizeMismatch=false
-    local mismatchedFiles=()
-
-    for file in "$outputFolder"/*.tif; do
-        if [ ! -f "$file" ]; then
-            continue
-        fi
-
-        if [ -z "$firstFileSize" ]; then
-            firstFileSize=$(stat -c%s "$file")
-        else
-            currentFileSize=$(stat -c%s "$file")
-            if [ "$firstFileSize" -ne "$currentFileSize" ]; then
-                fileSizeMismatch=true
-                mismatchedFiles+=("$file")  # Add only mismatched file paths
-            fi
-        fi
-    done
-
-    if [ "$fileSizeMismatch" = false ]; then
-        echo "All files have the same size: $firstFileSize bytes"
-    else
-        echo "There is a file size mismatch among the downloaded files."
-        echo "${mismatchedFiles[@]}"  # Echo only mismatched file paths
-    fi
-}
-
 # Start timer
 jobStart=$(date +%s)
 
-echo "Ranges: ${ranges[*]}"
-
 # Main loop
 for range in "${ranges[@]}"; do
-    IFS=' ' read -r start end <<< "$range"
-
-    echo "Start: $start, End: $end"
-
-    if ! [[ $start =~ ^[0-9]+$ ]] || ! [[ $end =~ ^[0-9]+$ ]]; then
-        echo "Invalid slice range. Please provide numeric start and end values."
-        continue # Skip this iteration
-    fi
-
+    read -r start end <<< "$range"
     for ((i=10#$start; i<=10#$end; i++)); do
-        printf -v formattedIndex "%05d" $i
+        printf -v formattedIndex "%02d" $i
         url="${baseUrl}${formattedIndex}.tif"
         outputFile="${outputFolder}/0$(printf "%04d" $i).tif"
-        if $overwriteExistingFiles || [ ! -f "$outputFile" ]; then
-            echo "About to download: $url to $outputFile"
-            download_file "$url" "$outputFile"  # Temporarily commented out for debugging
-        else
-            echo "File $outputFile already exists, skipping download."
-        fi
+        download_file "$url" "$outputFile" &
     done
 done
 
 # Wait for all background processes to finish
 wait
-
-# Check file sizes and get mismatched files
-IFS=$'\n' mismatchedFiles=($(check_file_sizes))
-
-# Redownload mismatched files
-for file in "${mismatchedFiles[@]}"; do
-    if [[ $file =~ \.tif$ ]]; then  # Ensure it's a .tif file
-        fileName=$(basename "$file")
-        index=${fileName:0:5}
-        url="${baseUrl}${index}.tif"
-        outputFile="$outputFolder/$fileName"
-        echo "Redownloading mismatched file: $url"
-        download_file "$url" "$outputFile" &
-    fi
-done
-
-# Wait for all background processes to finish
-wait
-
-# Optionally, you can recheck the file sizes after the redownloading
-echo "Rechecking file sizes after redownloading:"
-check_file_sizes
-
-read -p "Press Enter to Continue"
 
 # End timer and print job duration
 jobEnd=$(date +%s)
