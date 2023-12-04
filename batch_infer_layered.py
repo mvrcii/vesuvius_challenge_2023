@@ -12,6 +12,7 @@ from transformers import SegformerForSemanticSegmentation
 
 from config_handler import Config
 from constants import get_frag_name_from_id
+from models.simplecnn import SimpleCNNModule
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -213,16 +214,24 @@ if __name__ == '__main__':
     os.makedirs(results_dir, exist_ok=True)
     print(f"Created directory {results_dir}")
 
-    model = SegformerForSemanticSegmentation.from_pretrained(config.from_pretrained,
-                                                             num_labels=1,
-                                                             num_channels=config.in_chans,
-                                                             ignore_mismatched_sizes=True)
+    if config.architecture == 'segformer':
+        model = SegformerForSemanticSegmentation.from_pretrained(config.from_pretrained,
+                                                                 num_labels=1,
+                                                                 num_channels=config.in_chans,
+                                                                 ignore_mismatched_sizes=True)
+
+    elif config.architecture == 'simplecnn':
+        model = SimpleCNNModule(cfg=config)
+    else:
+        print("Error")
+        sys.exit(1)
+
     model = model.to("cuda")
+
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
     print("Loaded model", checkpoint_path)
-
     start_idx = None
     end_idx = None
 
