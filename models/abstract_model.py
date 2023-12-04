@@ -1,13 +1,15 @@
 import torch
 from einops import rearrange
 from lightning import LightningModule
+from torch.nn import BCEWithLogitsLoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
-from torchmetrics import Dice
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryJaccardIndex as IoU)
+from torchmetrics import Dice
+from losses.bce_with_logits_with_label_smoothing import BCEWithLogitsLossWithLabelSmoothing
 
-from util.losses import get_loss_functions
+from util.losses import BinaryDiceLoss
 
 
 class AbstractVesuvLightningModule(LightningModule):
@@ -22,7 +24,8 @@ class AbstractVesuvLightningModule(LightningModule):
         # False Negatives (FNs) are twice as impactful on the loss as False Positives (FPs)
         # pos_weight = torch.tensor([cfg.pos_weight]).to(self.device)
 
-        self.loss_functions = get_loss_functions(cfg)
+        self.bce_loss = BCEWithLogitsLoss()
+        self.dice_loss = BinaryDiceLoss(from_logits=True)
 
         self.f1 = BinaryF1Score()
         self.accuracy = BinaryAccuracy()
@@ -63,16 +66,14 @@ class AbstractVesuvLightningModule(LightningModule):
         data, target = batch
         output = self.forward(data)
 
-        # Calculate individual losses, store them as (name, weight, value) tuples in list
-        losses = [(name, weight, loss_function(output, target.float())) for (name, weight, loss_function) in
-                  self.loss_functions]
+        # Compute both BCE loss (with label smoothing) and Dice loss
+        bce_loss = self.bce_loss(output, target.float())
+        dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
 
-        # Combine individual losses based on their weight
-        total_loss = sum([weight * value for (_, weight, value) in losses])
+        # Combine the losses
+        total_loss = bce_loss + dice_loss
 
-        # Append total loss to list which is being logged
-        losses.append(("total", 1.0, total_loss))
-        self.update_training_metrics(losses=losses)
+        self.update_training_metrics(loss=total_loss)
 
         return total_loss
 
@@ -80,20 +81,16 @@ class AbstractVesuvLightningModule(LightningModule):
         data, target = batch
         output = self.forward(data)
 
-        # Calculate individual losses, store them as (name, weight, value) tuples in list
-        losses = [(name, weight, loss_function(output, target.float())) for (name, weight, loss_function) in
-                  self.loss_functions]
-
-        # Combine individual losses based on their weight
-        total_loss = sum([weight * value for (_, weight, value) in losses])
-
-        # Append total loss to list which is being logged
-        losses.append(("total", 1.0, total_loss))
+        # Compute both BCE loss (with label smoothing) and Dice loss
+        bce_loss = self.bce_loss(output, target.float())
+        dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
 
         # Combine the losses
-        self.update_validation_metrics(losses=losses, output_logits=output, target=target)
+        total_loss = bce_loss + dice_loss
 
-    def update_training_metrics(self, losses):
+        self.update_validation_metrics(loss=total_loss, output_logits=output, target=target)
+
+    def update_training_metrics(self, loss):
         """
         Update and log training metrics.
 
@@ -104,10 +101,9 @@ class AbstractVesuvLightningModule(LightningModule):
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
 
         self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        for (name, _, value) in losses:
-            self.log(f'train_loss_{name}', value, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
-    def update_validation_metrics(self, losses, output_logits, target):
+    def update_validation_metrics(self, loss, output_logits, target):
         """
         Update and log validation metrics.
 
@@ -122,14 +118,11 @@ class AbstractVesuvLightningModule(LightningModule):
             target = target.unsqueeze(1)
         target = target.int()
 
-        for (name, _, value) in losses:
-            self.log(f'val_loss_{name}', value, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log('val_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
         self.log('val_accuracy', self.accuracy(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_precision', self.precision(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_recall', self.recall(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_f1', self.f1(output_logits, target), on_step=False, on_epoch=True, prog_bar=True)
-        self.log('val_iou', self.iou(output_logits, target), on_step=False, on_epoch=True, prog_bar=True,
-                 sync_dist=True)
-        self.log('val_dice_coefficient', self.dice_coefficient(torch.sigmoid(output_logits), target), on_step=False,
-                 on_epoch=True,
+        self.log('val_iou', self.iou(output_logits, target), on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log('val_dice_coefficient', self.dice_coefficient(torch.sigmoid(output_logits), target), on_step=False, on_epoch=True,
                  prog_bar=True, sync_dist=True)
