@@ -6,7 +6,7 @@ from datetime import datetime
 
 import numpy as np
 import torch
-from lightning import seed_everything
+from lightning import seed_everything, Callback
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
@@ -79,6 +79,26 @@ def get_data_module(config: Config):
         sys.exit(1)
 
 
+class NaNStoppingCallback(Callback):
+    def __init__(self, logger):
+        super().__init__()
+        self.logger = logger
+
+    def on_validation_end(self, trainer, pl_module):
+        val_loss = trainer.callback_metrics.get('val_loss')
+        val_iou = trainer.callback_metrics.get('val_iou')
+        if val_loss is not None and torch.isnan(val_loss).any():
+            trainer.should_stop = True
+            print(f"Halting training due to NaN in validation loss at epoch {trainer.current_epoch}")
+            # Use the logger passed to the callback
+            self.logger.experiment.log({'halted': True, 'reason': 'NaN in val_loss', 'epoch': trainer.current_epoch})
+        if val_iou is not None and torch.isnan(val_iou).any():
+            trainer.should_stop = True
+            print(f"Halting training due to NaN in validation IoU at epoch {trainer.current_epoch}")
+            # Use the logger passed to the callback
+            self.logger.experiment.log({'halted': True, 'reason': 'NaN in val_iou', 'epoch': trainer.current_epoch})
+
+
 def main():
     config_path = get_sys_args()
     config = Config.load_from_file(config_path)
@@ -111,13 +131,15 @@ def main():
         every_n_epochs=1
     )
 
+    nan_stopping_callback = NaNStoppingCallback(logger=wandb_logger)
+
     devices = get_device_configuration()
     print("Using Devices:", devices)
 
     trainer = Trainer(
         max_epochs=config.epochs,
         logger=wandb_logger,
-        callbacks=[checkpoint_callback],
+        callbacks=[checkpoint_callback, nan_stopping_callback],
         accelerator="auto",
         devices=devices,
         enable_progress_bar=True,
