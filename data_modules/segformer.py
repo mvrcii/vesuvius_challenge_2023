@@ -181,7 +181,7 @@ class WuesuvDataset(Dataset):
         # Rearrange image back from (height, width, channels) to (channels, height, width) to work with segformer input
         image = np.transpose(image, (2, 0, 1))
 
-        self.plot(image, label, filename=os.path.join(self.root_dir, self.images[idx]))
+       # self.plot(image, label, filename=os.path.join(self.root_dir, self.images[idx]))
 
         # Scale down label to match segformer output
         label = resize(label, self.label_shape, order=0, preserve_range=True, anti_aliasing=False)
