@@ -1,13 +1,11 @@
 import torch
 from einops import rearrange
 from lightning import LightningModule
-from torch.nn import BCEWithLogitsLoss
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryJaccardIndex as IoU)
 from torchmetrics import Dice
-from losses.bce_with_logits_with_label_smoothing import BCEWithLogitsLossWithLabelSmoothing
 
 from util.losses import BinaryDiceLoss, get_loss_function
 
@@ -65,17 +63,12 @@ class AbstractVesuvLightningModule(LightningModule):
         data, target = batch
         output = self.forward(data)
 
-        # Compute both BCE loss (with label smoothing) and Dice loss
-        bce_loss = self.bce_loss(output, target.float())
-        # dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
+        loss = self.loss_fn(output, target.float())
 
         # Combine the losses
-        # total_loss = bce_loss + dice_loss
-        total_loss = bce_loss
+        self.update_training_metrics(loss=loss)
 
-        self.update_training_metrics(loss=total_loss)
-
-        return total_loss
+        return loss
 
     def validation_step(self, batch, batch_idx):
         data, target = batch
