@@ -3,7 +3,18 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
+from torch.nn import BCEWithLogitsLoss
 from torch.nn.modules.loss import _Loss
+
+
+def get_loss_function(cfg):
+    available_losses = {"dice": BinaryDiceLoss(from_logits=True),
+                        "bce": BCEWithLogitsLoss()}
+
+    def loss_composite(output, target):
+        return sum(available_losses[name](output, target) * weight for (name, weight) in cfg.losses)
+
+    return loss_composite
 
 
 # https://github.com/agaldran/lesion_losses_ood/blob/main/utils/losses.py

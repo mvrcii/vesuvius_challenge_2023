@@ -61,7 +61,7 @@ from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 4
 seed = 7654321
 epochs = -1
-loss = "dice+bce"
+loss_types = [("dice", 1.0), ("bce", 1.0)]
 dataset_fraction = 1
 
 num_workers = 32

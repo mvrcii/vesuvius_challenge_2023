@@ -9,7 +9,7 @@ from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryR
 from torchmetrics import Dice
 from losses.bce_with_logits_with_label_smoothing import BCEWithLogitsLossWithLabelSmoothing
 
-from util.losses import BinaryDiceLoss
+from util.losses import BinaryDiceLoss, get_loss_function
 
 
 class AbstractVesuvLightningModule(LightningModule):
@@ -24,8 +24,7 @@ class AbstractVesuvLightningModule(LightningModule):
         # False Negatives (FNs) are twice as impactful on the loss as False Positives (FPs)
         # pos_weight = torch.tensor([cfg.pos_weight]).to(self.device)
 
-        self.bce_loss = BCEWithLogitsLoss()
-        # self.dice_loss = BinaryDiceLoss(from_logits=True)
+        self.loss_fn = get_loss_function(cfg)
 
         self.f1 = BinaryF1Score()
         self.accuracy = BinaryAccuracy()
@@ -82,15 +81,10 @@ class AbstractVesuvLightningModule(LightningModule):
         data, target = batch
         output = self.forward(data)
 
-        # Compute both BCE loss (with label smoothing) and Dice loss
-        bce_loss = self.bce_loss(output, target.float())
-        # dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
+        loss = self.loss_fn(output, target.float())
 
         # Combine the losses
-        # total_loss = bce_loss + dice_loss
-        total_loss = bce_loss
-
-        self.update_validation_metrics(loss=total_loss, output_logits=output, target=target)
+        self.update_validation_metrics(loss=loss, output_logits=output, target=target)
 
     def update_training_metrics(self, loss):
         """
