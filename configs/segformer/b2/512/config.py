@@ -57,13 +57,13 @@ model_type = "b2"
 architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
-from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
+# from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
 seed = 232343
 epochs = -1
-loss = "dice+bce"
+loss = "bce"
 dataset_fraction = 1
 
-num_workers = 32
+num_workers = 16
 train_batch_size = 24
 val_batch_size = 24
