@@ -61,7 +61,7 @@ from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
 seed = 232343
 epochs = -1
-loss = "bce"
+loss = "dice"
 dataset_fraction = 1
 
 num_workers = 16
