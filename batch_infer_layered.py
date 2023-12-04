@@ -70,15 +70,15 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     out_height = y_patches * stride_out + label_size
     out_width = x_patches * stride_out + label_size
 
-    out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device='cuda')
-    pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
+    out_arr = torch.zeros((out_height, out_width), dtype=torch.float32, device='cuda')
+    pred_counts = torch.zeros((out_height, out_width), dtype=torch.int32, device='cuda')
 
     progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx-1}: Infer Full Fragment "
                                                           f"{get_frag_name_from_id(fragment_id)}: Processing patches"
                                                           f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
 
-    preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device='cuda')
-    model = model.half()
+    preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float32, device='cuda')
+    # model = model.half()
 
     batches = []
     batch_indices = []
@@ -234,7 +234,7 @@ if __name__ == '__main__':
     print("Loaded model", checkpoint_path)
 
     # sample_input = torch.Tensor((batch_size, config.in_chans, config.patch_size, config.patch_size))
-    # model = torch.compile(model)
+    model = torch.compile(model)
 
     start_idx = None
     end_idx = None
