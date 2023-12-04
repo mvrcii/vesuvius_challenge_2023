@@ -18,6 +18,8 @@ class AbstractVesuvLightningModule(LightningModule):
         self.eta_min = cfg.eta_min
         self.weight_decay = cfg.weight_decay
         self.optimizer = cfg.optimizer
+        self.step_lr_steps = cfg.step_lr_steps
+        self.step_lr_factor = cfg.step_lr_factor
 
         # False Negatives (FNs) are twice as impactful on the loss as False Positives (FPs)
         # pos_weight = torch.tensor([cfg.pos_weight]).to(self.device)
@@ -42,8 +44,8 @@ class AbstractVesuvLightningModule(LightningModule):
             # scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=25, T_mult=2)
             scheduler = StepLR(
                 optimizer,
-                step_size=10,
-                gamma=0.8
+                step_size=self.step_lr_steps,
+                gamma=self.step_lr_factor
             )
         else:
             scheduler = CosineAnnealingLR(

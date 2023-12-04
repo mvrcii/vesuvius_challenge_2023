@@ -48,6 +48,9 @@ train_aug = [
 val_aug = [
 ]
 
+step_lr_steps = 10
+step_lr_factor = 0.8
+
 # training parameters
 model_type = "b3"
 architecture = 'segformer'
@@ -59,6 +62,7 @@ seed = 7654321
 epochs = -1
 losses = [("dice", 1.0), ("bce", 1.0)]
 dataset_fraction = 1
+val_interval = 2
 
 num_workers = 32
 train_batch_size = 16
