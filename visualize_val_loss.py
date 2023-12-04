@@ -1,17 +1,15 @@
 import os
 import sys
 
-import numpy as np
+import albumentations as A
 import torch
 from matplotlib import pyplot as plt
 from torch.nn import BCEWithLogitsLoss
-from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 
 from config_handler import Config
 from data_modules.segformer import SegFormerDataModule
 from util.losses import BinaryDiceLoss
-import albumentations as A
 
 val_image_aug = [
     A.Normalize(mean=[0], std=[1]),
@@ -36,7 +34,7 @@ def plot(image, label, prediction, filename):
         axs[0, i].axis('off')
 
     # Plotting the label in the second row, first column
-    lbl = label.squeeze() # Remove any unnecessary dimensions
+    lbl = label.squeeze()  # Remove any unnecessary dimensions
     axs[1, 0].imshow(lbl, cmap='gray')
     axs[1, 0].axis('off')
 
@@ -86,8 +84,24 @@ if __name__ == '__main__':
     model.load_state_dict(state_dict)
     print("Loaded model", checkpoint_path)
 
-    config.val_aug = val_image_aug
-    config.num_workers = 2
+    config.val_aug = [
+        A.HorizontalFlip(),
+        A.VerticalFlip(),
+        A.RandomRotate90(),
+        A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
+        A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
+                       rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
+        A.ChannelDropout(always_apply=True, channel_drop_range=(1, 1), fill_value=0),
+        A.CoarseDropout(always_apply=True, max_holes=6, max_height=56, max_width=56, min_holes=2, min_height=38,
+                        min_width=38, fill_value=0, mask_fill_value=None),
+        A.Downscale(always_apply=True, scale_min=0.55, scale_max=0.99),
+        A.PiecewiseAffine(always_apply=True, scale=(0.03, 0.03), nb_rows=(3, 3), nb_cols=(3, 3), interpolation=0,
+                          mask_interpolation=0, cval=0, cval_mask=0, mode='constant', absolute_scale=False,
+                          keypoints_threshold=0.01),
+        A.ElasticTransform(always_apply=True, alpha=0.37, sigma=20, alpha_affine=20, interpolation=0, border_mode=0,
+                           value=(0, 0, 0, 0), mask_value=None, approximate=False, same_dxdy=False)
+    ]
+    config.num_workers = 1
     config.val_batch_size = 4
     config.dataset_fraction = 0.1
 
@@ -99,7 +113,7 @@ if __name__ == '__main__':
 
     losses = {}
 
-    for (img_batch, label_batch, img_paths, label_paths) in tqdm(val_loader):
+    for (img_batch, label_batch, img_paths, label_paths) in val_loader:
 
         label_batch = label_batch.to('cuda', dtype=torch.float16)
         img_batch = img_batch.to('cuda', dtype=torch.float16)
@@ -116,33 +130,16 @@ if __name__ == '__main__':
             total_loss = bce_loss + dice_loss
 
             prediction = torch.sigmoid(outputs[i])
+            if len(losses) < 50:
+                losses[img_paths[i]] = {
+                    'bce_loss': bce_loss,
+                    'dice_loss': dice_loss,
+                    'total_loss': total_loss,
+                    'images': img_batch[i].cpu().numpy(),
+                    'label': label_batch[i].cpu().numpy(),
+                    'prediction': prediction.cpu().numpy()  # Detach and convert to numpy array
+                }
+    for key, value in zip(losses.keys(), losses.values()):
+        key += f"\ntotal_loss={value['total_loss']}, dice_loss={value['dice_loss']}, bce_loss={value['bce_loss']}"
+        plot(value['images'], value['label'], value['prediction'], filename=key)
 
-            losses[img_paths[i]] = {
-                'bce_loss': bce_loss,
-                'dice_loss': dice_loss,
-                'total_loss': total_loss,
-                'label_path': label_paths[i],
-                'prediction': prediction.cpu().numpy()  # Detach and convert to numpy array
-            }
-
-    def foo(losses, loss_type):
-        sorted_losses = sorted(losses.items(), key=lambda x: x[1][loss_type], reverse=True)
-        return [filename for filename, loss in sorted_losses[:10]]
-
-    top10_bce = foo(losses, loss_type='bce_loss')
-    top10_dice = foo(losses, loss_type='dice_loss')
-    top10_total = foo(losses, loss_type='total_loss')
-
-    for loss_type in ['bce_loss', 'dice_loss', 'total_loss']:
-        print("Loss Type:", loss_type)
-
-        for img_path in foo(losses, loss_type):
-            label_path = losses[img_path]['label_path']
-            prediction = losses[img_path]['prediction']
-
-            image = np.load(img_path)
-            label = np.load(label_path)
-
-            img_path += f"\n{loss_type.upper()}={losses[img_path][loss_type]}"
-
-            plot(image, label, prediction, filename=img_path)
