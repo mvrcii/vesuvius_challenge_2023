@@ -99,7 +99,7 @@ for range in "${ranges[@]}"; do
         outputFile="${outputFolder}/0$(printf "%04d" $i).tif"
         if $overwriteExistingFiles || [ ! -f "$outputFile" ]; then
             echo "About to download: $url to $outputFile"
-            # download_file "$url" "$outputFile"  # Temporarily commented out for debugging
+            download_file "$url" "$outputFile"  # Temporarily commented out for debugging
         else
             echo "File $outputFile already exists, skipping download."
         fi
