@@ -42,6 +42,23 @@ def get_frag_name_from_id(frag_id):
             return name
     return "Unknown Fragment"
 
+def get_frag_id_from_name(frag_name):
+    for name, id in FRAGMENTS.items():
+        if frag_name == name:
+            return name
+    return "Unknown Fragment"
+
+
+def get_all_frag_infos():
+    return [(name, FRAGMENTS[name]) for name in FRAGMENTS]
+
+def get_all_frag_names():
+    return FRAGMENTS.keys()
+
+
+def get_all_frag_ids():
+    return FRAGMENTS.values()
+
 # Additional Transformers character names for IDs
 # HOT_ROD_FRAG_ID = "your_id_here_3"  # Replace 'your_id_here_3' with the actual ID
 # GRIMLOCK_FRAG_ID = "your_id_here_7"  # Replace 'your_id_here_7' with the actual ID

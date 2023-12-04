@@ -8,6 +8,8 @@ from PIL import Image, ImageTk
 from PIL.Image import Resampling
 from tqdm import tqdm
 
+from constants import get_all_frag_infos
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config_handler import Config
@@ -60,43 +62,48 @@ def get_common_layers(folder_paths):
     return common_layers
 
 
-def get_sys_args():
-    if len(sys.argv) != 2:
-        print("Usage: python combine_predictions.py <fragment_id>")
+def get_valid_ckpt_dirs(folder_path):
+    def is_valid(path):
+        return os.path.isdir(os.path.join(folder_path, path)) and not path.__contains__('snapshots')
+
+    if not os.path.isdir(folder_path):
+        return None
+
+    return [_dir for _dir in os.listdir(folder_path) if is_valid(path=_dir)]
+
+
+def get_selected_ckpt_dirs(frag_dir):
+    if not os.path.exists(frag_dir):
+        print(f"No such directory: {frag_dir}")
         sys.exit(1)
 
-    frag_id = sys.argv[1]
-    config = Config().load_local_cfg()
-
-    folder_path = os.path.join(config.work_dir, 'inference', 'results', f'fragment{frag_id}')
-
-    if not os.path.exists(folder_path):
-        print(f"No such folder: {folder_path}")
-        sys.exit(1)
-
-    sub_dirs = [d for d in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, d))]
+    sub_dirs = get_valid_ckpt_dirs(frag_dir)
     if not sub_dirs:
-        print(f"No subdirectories found in {folder_path}")
+        print(f"No subdirectories found in {frag_dir}")
         sys.exit(1)
 
-    print("Available model predictions:")
-    for idx, subdir in enumerate(sub_dirs):
-        print(f"{idx}: {subdir}")
+    if len(sub_dirs) == 1:
+        selected_subdirs = [sub_dirs[0]]
+    else:
+        print("\nAvailable model predictions:")
+        for idx, subdir in enumerate(sub_dirs):
+            print(f"{idx}: {subdir}")
+        selected_indices = input("Enter numbers of subdirectories you want to use (comma-separated): ")
+        try:
+            selected_indices = [int(idx.strip()) for idx in selected_indices.split(',')]
+            selected_subdirs = [sub_dirs[idx] for idx in selected_indices if 0 <= idx < len(sub_dirs)]
+            if not selected_subdirs:
+                raise ValueError
+        except ValueError:
+            print("Invalid selection. Please enter valid numbers.")
+            sys.exit(1)
 
-    selected_indices = input("Enter the numbers of the subdirectories you want to use (comma-separated): ")
+    return [os.path.join(frag_dir, subdir) for subdir in selected_subdirs]
 
-    try:
-        selected_indices = [int(idx.strip()) for idx in selected_indices.split(',')]
-        selected_subdirs = [sub_dirs[idx] for idx in selected_indices if 0 <= idx < len(sub_dirs)]
-        if not selected_subdirs:
-            raise ValueError
-    except ValueError:
-        print("Invalid selection. Please enter valid numbers.")
-        sys.exit(1)
 
-    folder_paths = [os.path.join(folder_path, subdir) for subdir in selected_subdirs]
-
-    return frag_id, config.work_dir, folder_paths, folder_path
+def has_valid_ckpt_dirs(work_dir, frag_id):
+    frag_dir = os.path.join(work_dir, 'inference', 'results', f'fragment{frag_id}')
+    return bool(get_valid_ckpt_dirs(frag_dir))
 
 
 def get_target_dims(work_dir, frag_id):
@@ -120,19 +127,42 @@ def get_target_dims(work_dir, frag_id):
 
 
 def main():
-    frag_id, work_dir, folder_paths, folder_root_dir = get_sys_args()
-    common_layers = get_common_layers(folder_paths)
+    config = Config().load_local_cfg()
+    frag_infos = get_all_frag_infos()
 
-    target_dims = get_target_dims(work_dir=work_dir, frag_id=frag_id)
-    # target_dims = (10479, 10360)  # TODO extract from original tif image dimension
-    # target_dims = (15738, 10636)  # TODO extract from original tif image dimension
+    # Filter valid fragments only
+    valid_frags = [(name, frag_id) for (name, frag_id) in frag_infos if has_valid_ckpt_dirs(config.work_dir, frag_id)]
+
+    print("Available Fragments:")
+    for i, (name, frag_id) in enumerate(valid_frags, start=1):
+        print(f"\033[92m{i:2}. {name:15} {frag_id}\033[0m")  # Display only valid fragments in green
+
+    user_input = input("Fragment Number: ")
+
+    # Check if input is a number and within the range of valid fragments
+    if user_input.isdigit():
+        user_number = int(user_input)
+        if 1 <= user_number <= len(valid_frags):
+            name, frag_id = valid_frags[user_number - 1]
+        else:
+            print("Invalid selection. Please enter a valid number.")
+            sys.exit(1)
+    else:
+        print("Invalid input. Please enter a number.")
+        sys.exit(1)
+
+    frag_dir = os.path.join(config.work_dir, 'inference', 'results', f'fragment{frag_id}')
+    sub_dirs = get_selected_ckpt_dirs(frag_dir=frag_dir)
+
+    common_layers = get_common_layers(sub_dirs)
+    target_dims = get_target_dims(work_dir=config.work_dir, frag_id=frag_id)
 
     model_arrays = {}
-    for folder_path in folder_paths:
-        arrays = combine_npy_preds(root_dir=folder_path, layer_indices=common_layers, ignore_percent=0)
-        model_arrays[folder_path] = arrays
+    for sub_dir in sub_dirs:
+        arrays = combine_npy_preds(root_dir=sub_dir, layer_indices=common_layers, ignore_percent=0)
+        model_arrays[sub_dir] = arrays
 
-    Visualization(root_dir=folder_root_dir, target_dims=target_dims, model_arrays=model_arrays)
+    Visualization(root_dir=frag_dir, target_dims=target_dims, model_arrays=model_arrays)
 
 
 class Visualization:
