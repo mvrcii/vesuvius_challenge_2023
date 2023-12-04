@@ -146,6 +146,7 @@ def main():
         precision='16-mixed',
         gradient_clip_val=1.0,
         gradient_clip_algorithm="norm",
+        val_check_interval=5
     )
 
     os.makedirs(model_run_dir, exist_ok=True)
