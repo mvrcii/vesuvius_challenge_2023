@@ -46,7 +46,7 @@ class AbstractVesuvLightningModule(LightningModule):
             scheduler = StepLR(
                 optimizer,
                 step_size=10,
-                gamma=0.9
+                gamma=0.8
             )
         else:
             scheduler = CosineAnnealingLR(
