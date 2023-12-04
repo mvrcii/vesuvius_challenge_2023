@@ -9,7 +9,7 @@ from transformers import SegformerForSemanticSegmentation
 
 from config_handler import Config
 from data_modules.segformer import SegFormerDataModule
-from util.losses import BinaryDiceLoss
+from losses.losses import BinaryDiceLoss
 
 val_image_aug = [
     A.Normalize(mean=[0], std=[1]),
