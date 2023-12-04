@@ -120,7 +120,6 @@ def main():
     model_run_dir = os.path.join(config.work_dir, "checkpoints", model_run_name)
 
     model = get_model(config=config)
-    compiled_model = torch.compile(model)
 
     data_module = get_data_module(config=config)
 
@@ -154,7 +153,7 @@ def main():
     os.makedirs(model_run_dir, exist_ok=True)
     config.save_to_file(model_run_dir)
 
-    trainer.fit(compiled_model, data_module)
+    trainer.fit(model, data_module)
 
 
 if __name__ == '__main__':

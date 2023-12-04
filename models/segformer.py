@@ -17,6 +17,8 @@ class SegformerModule(AbstractVesuvLightningModule):
             num_channels=cfg.in_chans,
         )
 
+        self.model = torch.compile(self.model)
+
         from_checkpoint = getattr(cfg, 'from_checkpoint', None)
         if from_checkpoint:
             checkpoint_root_path = os.path.join("checkpoints", cfg.from_checkpoint)
