@@ -234,7 +234,7 @@ if __name__ == '__main__':
     print("Loaded model", checkpoint_path)
 
     # sample_input = torch.Tensor((batch_size, config.in_chans, config.patch_size, config.patch_size))
-    model = torch.compile(model)
+    # model = torch.compile(model)
 
     start_idx = None
     end_idx = None
