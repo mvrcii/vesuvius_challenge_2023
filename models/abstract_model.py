@@ -25,7 +25,7 @@ class AbstractVesuvLightningModule(LightningModule):
         # pos_weight = torch.tensor([cfg.pos_weight]).to(self.device)
 
         self.bce_loss = BCEWithLogitsLoss()
-        self.dice_loss = BinaryDiceLoss(from_logits=True)
+        # self.dice_loss = BinaryDiceLoss(from_logits=True)
 
         self.f1 = BinaryF1Score()
         self.accuracy = BinaryAccuracy()
@@ -68,14 +68,14 @@ class AbstractVesuvLightningModule(LightningModule):
 
         # Compute both BCE loss (with label smoothing) and Dice loss
         bce_loss = self.bce_loss(output, target.float())
-        dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
+        # dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
 
         # Combine the losses
-        total_loss = bce_loss + dice_loss
+        # total_loss = bce_loss + dice_loss
 
-        self.update_training_metrics(loss=total_loss)
+        self.update_training_metrics(loss=bce_loss)
 
-        return total_loss
+        return bce_loss
 
     def validation_step(self, batch, batch_idx):
         data, target = batch
@@ -83,12 +83,12 @@ class AbstractVesuvLightningModule(LightningModule):
 
         # Compute both BCE loss (with label smoothing) and Dice loss
         bce_loss = self.bce_loss(output, target.float())
-        dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
+        # dice_loss = self.dice_loss(torch.sigmoid(output), target.float())
 
         # Combine the losses
-        total_loss = bce_loss + dice_loss
+        # total_loss = bce_loss + dice_loss
 
-        self.update_validation_metrics(loss=total_loss, output_logits=output, target=target)
+        self.update_validation_metrics(loss=bce_loss, output_logits=output, target=target)
 
     def update_training_metrics(self, loss):
         """
