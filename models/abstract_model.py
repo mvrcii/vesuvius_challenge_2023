@@ -104,7 +104,7 @@ class AbstractVesuvLightningModule(LightningModule):
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
 
         self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        for (name, value) in losses:
+        for (name, _, value) in losses:
             self.log(f'train_loss_{name}', value, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
     def update_validation_metrics(self, losses, output_logits, target):
@@ -122,7 +122,7 @@ class AbstractVesuvLightningModule(LightningModule):
             target = target.unsqueeze(1)
         target = target.int()
 
-        for (name, value) in losses:
+        for (name, _, value) in losses:
             self.log(f'val_loss_{name}', value, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
         self.log('val_accuracy', self.accuracy(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_precision', self.precision(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
