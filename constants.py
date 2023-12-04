@@ -14,6 +14,7 @@ FRAGMENTS = {
     "BLASTER": "20230702185753",
     "GALVATRON": "20230929220925",
     "GRIMLOCK": "20231012184421",
+    "DEVASTATOR": "20231022170900",
 
     "SHOCKWAVE": "2"
 }
@@ -32,6 +33,7 @@ JETFIRE_FRAG_ID = FRAGMENTS["JETFIRE"]
 BLASTER_FRAG_ID = FRAGMENTS["BLASTER"]
 GALVATRON_FRAG_ID = FRAGMENTS["GALVATRON"]
 GRIMLOCK_FRAG_ID = FRAGMENTS["GRIMLOCK"]
+DEVASTATOR_FRAG_ID = FRAGMENTS["DEVASTATOR"]
 
 SHOCKWAVE_FRAG_ID = FRAGMENTS["SHOCKWAVE"]
 
@@ -61,6 +63,4 @@ def get_all_frag_ids():
 
 # Additional Transformers character names for IDs
 # HOT_ROD_FRAG_ID = "your_id_here_3"  # Replace 'your_id_here_3' with the actual ID
-# GRIMLOCK_FRAG_ID = "your_id_here_7"  # Replace 'your_id_here_7' with the actual ID
 # ARCEE_FRAG_ID = "your_id_here_8"  # Replace 'your_id_here_8' with the actual ID
-# DEVASTATOR_FRAG_ID = "your_id_here_10"  # Replace 'your_id_here_10' with the actual ID
