@@ -59,6 +59,7 @@ def generate_random_balanced_dataset(seed, csv_path, dataset_fraction, frag_ids,
     print(f"Total ink samples: {num_ink_samples}")
     print(f"Total non-ink samples with no artefact: {num_no_artefact_samples}")
     print(f"Total non-ink samples with artefact > {artefact_threshold}: {num_with_artefact_samples}")
+    print(f"Total samples: {num_ink_samples + num_no_artefact_samples + num_with_artefact_samples}")
 
     balanced_dataset['file_path'] = balanced_dataset.apply(
         lambda row: os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename']), axis=1)
