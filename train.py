@@ -148,10 +148,10 @@ def main():
         gradient_clip_algorithm="norm",
     )
 
-    trainer.fit(model, data_module)
-
     os.makedirs(model_run_dir, exist_ok=True)
     config.save_to_file(model_run_dir)
+
+    trainer.fit(model, data_module)
 
 
 if __name__ == '__main__':
