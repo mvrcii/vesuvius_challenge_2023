@@ -147,7 +147,7 @@ def main():
         precision='16-mixed',
         gradient_clip_val=1.0,
         gradient_clip_algorithm="norm",
-        check_val_every_n_epoch=2
+        check_val_every_n_epoch=config.val_interval
     )
 
     os.makedirs(model_run_dir, exist_ok=True)
