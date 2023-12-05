@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 from tkinter import Tk, Scale, HORIZONTAL, Label, Button, Frame, IntVar, Radiobutton
@@ -8,6 +9,7 @@ from PIL import Image, ImageTk
 from PIL.Image import Resampling
 from tqdm import tqdm
 
+import constants
 from constants import get_all_frag_infos
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -162,18 +164,23 @@ def main():
         arrays = combine_npy_preds(root_dir=sub_dir, layer_indices=common_layers, ignore_percent=0)
         model_arrays[sub_dir] = arrays
 
-    Visualization(root_dir=frag_dir, target_dims=target_dims, model_arrays=model_arrays)
+    Visualization(frag_id=frag_id, root_dir=frag_dir, target_dims=target_dims, model_arrays=model_arrays)
 
 
 class Visualization:
-    def __init__(self, root_dir, target_dims, model_arrays: dict):
+    def __init__(self, frag_id, root_dir, target_dims, model_arrays: dict):
         assert isinstance(target_dims, tuple) and len(target_dims) == 2, "target_dims must be a tuple of two elements"
         assert isinstance(model_arrays, dict) and model_arrays, "model_arrays must be a non-empty dictionary"
 
         self.root_dir = root_dir
         self.target_dims = target_dims
-        self.rotate_num = -1
 
+        self.rotate_num = 0
+        rot_value = constants.get_rotate_value(frag_id=frag_id)
+        if rot_value:
+            self.rotate_num = rot_value
+
+        self.model_names = list(model_arrays.keys())
         self.models = list(model_arrays.values())
         self.model_count = len(self.models)
 
@@ -288,13 +295,40 @@ class Visualization:
 
         return threshold
 
+    def create_ensemble_dir_simple_names(self, dir_list, prefix):
+        # Extracting only the first part of the name after '_' (ignoring the numbers and model names)
+        parts = [d.split('_')[1].split('-')[0:2] for d in dir_list]
+        # Joining the first two parts (words) of each directory name
+        simplified_parts = ["-".join(p) for p in parts]
+
+        # Current timestamp
+        timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
+        # Creating the new directory name
+        new_dir_name = prefix + "_".join(simplified_parts) + "_" + timestamp
+        return new_dir_name
+
     def save_snapshot(self):
+        # Save in fragment root dir for ensemble
         target_dir = os.path.join(self.root_dir, "snapshots")
+        file_prefix = 'ensemble_'
+
+        # Save in model dir within fragment for single model
+        if self.model_count == 1:
+            assert len(self.model_names) == 1
+            model_dir = self.model_names[0]
+            target_dir = os.path.join(self.root_dir, model_dir, "snapshots")
+            file_prefix = ''
+
         os.makedirs(target_dir, exist_ok=True)
+
+        model_names_str = self.create_ensemble_dir_simple_names(self.model_names, file_prefix)
+
         mode = self.modes[self.mode_var.get()]
         threshold = self.get_threshold()
-        inverted_str = f'_inverted' if self.inverted else ""
-        file_path = os.path.join(target_dir, f"{mode.lower()}_{float(threshold):.2f}{inverted_str}.png")
+        inverted_str = f'inverted' if self.inverted else ""
+
+        file_path = os.path.join(target_dir, f"{model_names_str}_{mode.lower()}_{threshold}_{inverted_str}.png")
 
         image = self.process_image(array=self.array, max_size=self.target_dims)
         #
