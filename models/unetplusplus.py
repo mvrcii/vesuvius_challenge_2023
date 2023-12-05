@@ -1,6 +1,7 @@
 import sys
 
 import segmentation_models_pytorch as smp
+from einops import rearrange
 
 from models.abstract_model import AbstractVesuvLightningModule
 
@@ -21,3 +22,9 @@ class UnetPlusPlusModule(AbstractVesuvLightningModule):
             in_channels=cfg.in_chans,
             classes=1,
         )
+
+    def forward(self, x):
+        output = self.model(x.float())
+        output = rearrange(output, 'b 1 h w -> b h w')
+
+        return output

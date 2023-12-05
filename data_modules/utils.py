@@ -4,10 +4,11 @@ import sys
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+from config_handler import Config
 from constants import get_frag_name_from_id
 
 
-def generate_dataset(cfg):
+def generate_dataset(cfg: Config):
     csv_path = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), 'label_infos.csv')
 
     try:
@@ -30,7 +31,8 @@ def generate_dataset(cfg):
 
     # Split non-ink samples into two groups
     non_ink_samples_no_artefact = data[(data['ink_p'] <= cfg.ink_threshold) & (data['artefact_p'] == 0)]
-    non_ink_samples_with_artefact = data[(data['ink_p'] <= cfg.ink_threshold) & (data['artefact_p'] >= cfg.artefact_threshold)]
+    non_ink_samples_with_artefact = data[
+        (data['ink_p'] <= cfg.ink_threshold) & (data['artefact_p'] >= cfg.artefact_threshold)]
 
     # Determine the available number of non-ink samples with artefacts
     available_with_artefact = len(non_ink_samples_with_artefact)
