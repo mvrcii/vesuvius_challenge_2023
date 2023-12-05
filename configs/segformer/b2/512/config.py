@@ -29,7 +29,7 @@ model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
-seed = 5453
+seed = 7777
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
@@ -37,12 +37,12 @@ dataset_fraction = 1
 val_interval = 1
 lr = 2e-4
 step_lr_steps = 2
-step_lr_factor = 0.95
+step_lr_factor = 0.99
 weight_decay = 0.01
 
-num_workers = 2
-train_batch_size = 4
-val_batch_size = 4
+num_workers = 16
+train_batch_size = 24
+val_batch_size = 24
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
