@@ -25,7 +25,18 @@ val_image_aug = [
 ]
 
 
-def read_fragment(work_dir, fragment_id, layer_start, layer_count):
+def pad_image_to_be_divisible_by_4(image, patch_size):
+    # Calculate the padding required for height and width
+    height_pad = -image.shape[0] % patch_size
+    width_pad = -image.shape[1] % patch_size
+
+    # Pad the image
+    padded_image = np.pad(image, ((0, height_pad), (0, width_pad)), mode='constant')
+
+    return padded_image
+
+
+def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
     images = []
 
     for i in range(layer_start, layer_start + layer_count):
@@ -33,6 +44,8 @@ def read_fragment(work_dir, fragment_id, layer_start, layer_count):
 
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image"
+
+        image = pad_image_to_be_divisible_by_4(image, patch_size)
 
         images.append(image)
     images = np.stack(images, axis=0)
@@ -45,8 +58,8 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     expected_patch_shape = (config.in_chans, patch_size, patch_size)
 
     # Loading images
-    images = read_fragment(work_dir=config.work_dir, fragment_id=fragment_id, layer_start=layer_start,
-                           layer_count=config.in_chans)
+    images = read_fragment(patch_size=patch_size, work_dir=config.work_dir, fragment_id=fragment_id,
+                           layer_start=layer_start, layer_count=config.in_chans)
 
     # Hyperparams
     label_size = config.label_size
@@ -61,14 +74,17 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     stride_out = label_size // stride_factor
 
     height, width = images[0].shape
+    assert height % patch_size == 0 and width % patch_size == 0, "Input height/width not valid"
 
     # Calculate the number of patches needed, considering the stride
-    x_patches = int(np.ceil((width - patch_size) / stride)) + 1
-    y_patches = int(np.ceil((height - patch_size) / stride)) + 1
+    x_patches = int((width / stride) - 1)
+    y_patches = int((height / stride) - 1)
 
     # Initialize arrays to hold the stitched result and count of predictions for each pixel
-    out_height = y_patches * stride_out + label_size
-    out_width = x_patches * stride_out + label_size
+    out_height = height // 4
+    out_width = width // 4
+
+    assert out_height % 128 == 0 and out_width % 128 == 0, "Out height/width not valid"
 
     out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device='cuda')
     pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
@@ -105,9 +121,9 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
             progress_bar.update(1)
 
             x_start = x * stride
-            x_end = min(x_start + patch_size, width)
+            x_end = x_start + patch_size
             y_start = y * stride
-            y_end = min(y_start + patch_size, height)
+            y_end = y_start + patch_size
 
             patch = images[:, y_start:y_end, x_start:x_end]
 
