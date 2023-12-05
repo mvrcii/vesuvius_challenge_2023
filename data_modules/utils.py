@@ -24,15 +24,15 @@ def generate_dataset(cfg: Config):
     data = data[data['frag_id'].isin(cfg.fragment_ids)]
 
     # Select ink samples
-    ink_samples = data[data['ink_p'] > cfg.ink_threshold]
+    ink_samples = data[data['ink_p'] > cfg.ink_ratio]
 
     # Calculate the number of non-ink samples to select
     num_ink_samples = len(ink_samples)
 
     # Split non-ink samples into two groups
-    non_ink_samples_no_artefact = data[(data['ink_p'] <= cfg.ink_threshold) & (data['artefact_p'] == 0)]
+    non_ink_samples_no_artefact = data[(data['ink_p'] <= cfg.ink_ratio) & (data['artefact_p'] == 0)]
     non_ink_samples_with_artefact = data[
-        (data['ink_p'] <= cfg.ink_threshold) & (data['artefact_p'] >= cfg.artefact_threshold)]
+        (data['ink_p'] <= cfg.ink_ratio) & (data['artefact_p'] >= cfg.artefact_threshold)]
 
     # Determine the available number of non-ink samples with artefacts
     available_with_artefact = len(non_ink_samples_with_artefact)
