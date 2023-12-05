@@ -22,28 +22,27 @@ fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATR
                 SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
 train_split = 0.8
 train_aug = [
-    # A.HorizontalFlip(p=0.5),
-    # A.VerticalFlip(p=0.5),
-    # A.RandomRotate90(p=0.5),
-    # A.Transpose(p=0.5),
-    # A.RandomResizedCrop(p=0.5, height=patch_size, width=patch_size, scale=(0.78, 1.0),
-    #                     ratio=(0.75, 1.51),
-    #                     interpolation=0),
-    # A.ElasticTransform(always_apply=False, p=0.3, alpha=0.59, sigma=10.34, alpha_affine=9.66, interpolation=0, border_mode=0, value=(0, 0, 0), mask_value=None, approximate=False, same_dxdy=False),
-    # A.OneOf([
-    #     A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
-    #     A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
-    #                    rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
-    #     A.CoarseDropout(always_apply=True, max_holes=6, max_height=56, max_width=56, min_holes=2, min_height=38,
-    #                     min_width=38, fill_value=0, mask_fill_value=None),
-    #     A.Downscale(always_apply=True, scale_min=0.55, scale_max=0.99),
-    #     A.GridDistortion(always_apply=True, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
-    #                      border_mode=0,
-    #                      value=(0, 0, 0), mask_value=None, normalized=False),
-    #     A.ImageCompression(always_apply=True, quality_lower=62, quality_upper=91, compression_type=1),
-    # ], p=0.5),
-    # A.ChannelDropout(p=0.1, channel_drop_range=(1, 1), fill_value=0),
-
+    A.HorizontalFlip(p=0.5),
+    A.VerticalFlip(p=0.5),
+    A.RandomRotate90(p=0.5),
+    A.Transpose(p=0.5),
+    A.RandomResizedCrop(p=0.5, height=patch_size, width=patch_size, scale=(0.78, 1.0),
+                        ratio=(0.75, 1.51),
+                        interpolation=0),
+    A.ElasticTransform(always_apply=False, p=0.3, alpha=0.59, sigma=10.34, alpha_affine=9.66, interpolation=0, border_mode=0, value=(0, 0, 0), mask_value=None, approximate=False, same_dxdy=False),
+    A.OneOf([
+        A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
+        A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
+                       rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
+        A.CoarseDropout(always_apply=True, max_holes=6, max_height=56, max_width=56, min_holes=2, min_height=38,
+                        min_width=38, fill_value=0, mask_fill_value=None),
+        A.Downscale(always_apply=True, scale_min=0.55, scale_max=0.99),
+        A.GridDistortion(always_apply=True, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
+                         border_mode=0,
+                         value=(0, 0, 0), mask_value=None, normalized=False),
+        A.ImageCompression(always_apply=True, quality_lower=62, quality_upper=91, compression_type=1),
+    ], p=0.5),
+    A.ChannelDropout(p=0.1, channel_drop_range=(1, 1), fill_value=0),
 ]
 val_aug = [
 ]
