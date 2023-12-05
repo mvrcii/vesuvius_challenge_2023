@@ -23,6 +23,29 @@ artefact_ratio = 5
 fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,
                 SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
 train_split = 0.8
+
+# training parameters
+model_type = "b2"
+architecture = 'segformer'
+model_name = f"{architecture}-{model_type}"
+from_pretrained = f"nvidia/mit-{model_type}"
+# from_checkpoint = "fine-wildflower-497-segformer-b2-231128-164424"
+in_chans = 4
+seed = 7777
+epochs = -1
+losses = [("bce", 1.0), ("dice", 1.0)]
+dataset_fraction = 1
+
+val_interval = 1
+lr = 2e-4
+step_lr_steps = 2
+step_lr_factor = 0.99
+weight_decay = 0.01
+
+num_workers = 16
+train_batch_size = 24
+val_batch_size = 24
+
 train_aug = [
     A.OneOf([
         A.HorizontalFlip(),
@@ -50,25 +73,3 @@ train_aug = [
 ]
 val_aug = [
 ]
-
-# training parameters
-model_type = "b2"
-architecture = 'segformer'
-model_name = f"{architecture}-{model_type}"
-from_pretrained = f"nvidia/mit-{model_type}"
-# from_checkpoint = "fine-wildflower-497-segformer-b2-231128-164424"
-in_chans = 4
-seed = 7777
-epochs = -1
-losses = [("bce", 1.0), ("dice", 1.0)]
-dataset_fraction = 1
-
-val_interval = 1
-lr = 2e-4
-step_lr_steps = 2
-step_lr_factor = 0.99
-weight_decay = 0.01
-
-num_workers = 16
-train_batch_size = 24
-val_batch_size = 24

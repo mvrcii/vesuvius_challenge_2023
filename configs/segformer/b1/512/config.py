@@ -43,6 +43,7 @@ num_workers = 16
 train_batch_size = 48
 val_batch_size = 48
 
+# TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
