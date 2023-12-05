@@ -22,7 +22,8 @@ def main():
 
     gpu_resource = gpu_mapping[args.gpu_type]
 
-    cmd_str = f"python train.py {args.config_path} --seed {args.seed}"
+    seed_str = f"--seed {args.seed}" if args.seed else ""
+    cmd_str = f"python train.py {args.config_path} {seed_str}"
 
     slurm_cmd = f'sbatch -p ls6 \
     --gres=gpu:{gpu_resource} \
