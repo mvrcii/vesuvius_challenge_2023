@@ -21,6 +21,28 @@ artefact_ratio = 5
 fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,
                 SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
 train_split = 0.8
+
+lr = 2e-4
+step_lr_steps = 2
+step_lr_factor = 0.99
+
+# training parameters
+model_type = "b1"
+architecture = 'segformer'
+model_name = f"{architecture}-{model_type}"
+from_pretrained = f"nvidia/mit-{model_type}"
+# from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
+in_chans = 4
+seed = 5453
+epochs = -1
+losses = [("bce", 1.0), ("dice", 1.0)]
+dataset_fraction = 1
+val_interval = 2
+
+num_workers = 16
+train_batch_size = 48
+val_batch_size = 48
+
 train_aug = [
     A.HorizontalFlip(p=0.5),
     A.VerticalFlip(p=0.5),
@@ -46,25 +68,3 @@ train_aug = [
 ]
 val_aug = [
 ]
-
-lr = 2e-4
-step_lr_steps = 2
-step_lr_factor = 0.99
-
-# training parameters
-model_type = "b1"
-architecture = 'segformer'
-model_name = f"{architecture}-{model_type}"
-from_pretrained = f"nvidia/mit-{model_type}"
-# from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
-in_chans = 4
-seed = 5453
-epochs = -1
-losses = [("bce", 1.0), ("dice", 1.0)]
-dataset_fraction = 1
-val_interval = 2
-
-num_workers = 16
-train_batch_size = 48
-val_batch_size = 48
-

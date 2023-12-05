@@ -20,7 +20,7 @@ class Config:
         save_to_file(file_path): Instance method to save current configuration to a file.
     """
 
-    def __init__(self, dictionary=None, config_file_name=None, save=True):
+    def __init__(self, dictionary=None, config_file_name=None, append_info="", prepend_info="", save=True):
         """
         Initialize the Config object with a dictionary of configuration parameters.
 
@@ -36,6 +36,8 @@ class Config:
                 setattr(self, key, value)
         self.save = save
         self.config_file_name = config_file_name
+        self.append_info = append_info
+        self.prepend_info = prepend_info
 
     @classmethod
     def load_local_cfg(cls):
@@ -64,6 +66,20 @@ class Config:
         Returns:
             Config: A Config object initialized with the loaded configuration parameters.
         """
+
+        append_info = ""
+        # Read the source file
+        with open(config_path, 'r') as file:
+            prepend_info = ''.join(line for line in file if line.startswith('import'))
+
+        with open(config_path, 'r') as file:
+            content = file.read()
+            start_index = content.find("train_aug")
+            if start_index != -1:
+                append_info = content[start_index:]
+            else:
+                print("Warning! No train_aug found in ", config_path)
+
         model_config = cls.import_config_from_path(config_path)
         config = {}
         # todo is this the right way to handle this? was necessary to add since my dataset configs don't have base
@@ -87,7 +103,7 @@ class Config:
         else:
             print("Error: Config path incorrect.")
             sys.exit(1)
-        return cls(config, config_file_name)
+        return cls(config, config_file_name, append_info=append_info, prepend_info=prepend_info)
 
     def save_to_file(self, model_run_dir, file_path=None):
         """
@@ -124,14 +140,18 @@ class Config:
             'train_aug',
             'val_aug',
             'os',
-            'A'
+            'A',
+            'prepend_info',
+            'append_info'
         ]
 
         file_path = os.path.join(model_run_dir, self.config_file_name)
         with open(file_path, 'w') as f:
+            f.write(f'{self.prepend_info}')
             for key, value in self.__dict__.items():
                 if key not in keys_to_ignore:
                     f.write(f'{key} = {repr(value)}\n')
+            f.write(f'{self.append_info}')
 
     def __str__(self):
         """
