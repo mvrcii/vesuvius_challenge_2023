@@ -49,7 +49,7 @@ val_aug = [
 
 lr = 2e-4
 step_lr_steps = 2
-step_lr_factor = 0.95
+step_lr_factor = 0.99
 
 # training parameters
 model_type = "b1"
