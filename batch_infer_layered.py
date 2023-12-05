@@ -1,10 +1,10 @@
+import argparse
 import os
 import sys
 from datetime import datetime
 
 import albumentations as A
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -73,7 +73,7 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device='cuda')
     pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
 
-    progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx-1}: Infer Full Fragment "
+    progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx - 1}: Infer Full Fragment "
                                                           f"{get_frag_name_from_id(fragment_id)}: Processing patches"
                                                           f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
 
@@ -168,14 +168,27 @@ def find_pth_in_dir(path):
     return None
 
 
-if __name__ == '__main__':
-    # Check for the minimum number of arguments
-    if len(sys.argv) < 3 or len(sys.argv) > 4:
-        print("Usage: python batch_infer_layered.py <checkpoint_folder_name> <fragment_id> [<batch_size>]")
-        sys.exit(1)
+def parse_args():
+    parser = argparse.ArgumentParser(description='Batch Infer Layered Script')
+    parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
+    parser.add_argument('fragment_id', type=str, help='Fragment ID')
+    parser.add_argument('--start_idx', type=int, default=0, help='Start index (default: 0)')
+    parser.add_argument('--end_idx', type=int, default=62, help='End index (default: 62)')
+    parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
 
-    checkpoint_folder_name = sys.argv[1]
-    fragment_id = sys.argv[2]
+    args = parser.parse_args()
+
+    return args
+
+
+if __name__ == '__main__':
+    args = parse_args()
+
+    checkpoint_folder_name = args.checkpoint_folder_name
+    fragment_id = args.fragment_id
+    start_idx = args.start_idx
+    end_idx = args.end_idx
+    batch_size = args.batch_size
 
     # Determine the path to the configuration based on the checkpoint folder
     config_path = os.path.join('checkpoints', checkpoint_folder_name, 'config.py')
@@ -187,18 +200,6 @@ if __name__ == '__main__':
         sys.exit(1)
 
     config = Config.load_from_file(config_path)
-    channels = config.in_chans
-
-    # If a batch size is provided, use it; otherwise, use the default
-    default_batch_size = 4
-    if len(sys.argv) == 4:
-        try:
-            batch_size = int(sys.argv[3])
-        except ValueError:
-            print("Invalid batch size provided. Please provide an integer value.")
-            sys.exit(1)
-    else:
-        batch_size = default_batch_size
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_run_name = '-'.join(checkpoint_path.split(f"checkpoints{os.sep}")[-1].split('-')[0:5])
@@ -233,19 +234,8 @@ if __name__ == '__main__':
     model.load_state_dict(state_dict)
     print("Loaded model", checkpoint_path)
 
-    # sample_input = torch.Tensor((batch_size, config.in_chans, config.patch_size, config.patch_size))
-    # model = torch.compile(model)
-
-    start_idx = None
-    end_idx = None
-
-    if not start_idx:
-        start_idx = 0
-    if not end_idx:
-        end_idx = 62
-
     for i in range(start_idx, end_idx, 1):
-        file_path = os.path.join(results_dir, f"sigmoid_logits_{i}_{i + channels - 1}.npy")
+        file_path = os.path.join(results_dir, f"sigmoid_logits_{i}_{i + config.in_chans - 1}.npy")
         if os.path.isfile(file_path):
             continue
 
