@@ -41,12 +41,22 @@ DEVASTATOR_FRAG_ID = FRAGMENTS["DEVASTATOR"]
 SHOCKWAVE_FRAG_ID = FRAGMENTS["SHOCKWAVE"]
 ARCEE_FRAG_ID = FRAGMENTS["ARCEE"]
 
+ROTATE = {
+    JAZZ_FRAG_ID: -1,
+    JETFIRE_FRAG_ID: 0,
+}
+
+
+def get_rotate_value(frag_id):
+    return ROTATE.get(frag_id)
+
 
 def get_frag_name_from_id(frag_id):
     for name, id in FRAGMENTS.items():
         if id == frag_id:
             return name
     return "Unknown Fragment"
+
 
 def get_frag_id_from_name(frag_name):
     for name, id in FRAGMENTS.items():
@@ -57,6 +67,7 @@ def get_frag_id_from_name(frag_name):
 
 def get_all_frag_infos():
     return [(name, FRAGMENTS[name]) for name in FRAGMENTS]
+
 
 def get_all_frag_names():
     return FRAGMENTS.keys()
