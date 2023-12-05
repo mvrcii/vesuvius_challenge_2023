@@ -28,6 +28,7 @@ echo $ranges
 #outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment${fragmentID}/slices"
 outputFolder="data/fragments/fragment${fragmentID}/slices"
 baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/${fragmentID}/layers/"
+#baseUrl="http://dl.ash2txt.org/fragments/PHerc1667Cr01Fr03.volpkg/working/${fragmentID}Cr01Fr03_70keV_3.24um/registered/surface_volume/"
 
 # Use the provided or default slice range
 overwriteExistingFiles=false
