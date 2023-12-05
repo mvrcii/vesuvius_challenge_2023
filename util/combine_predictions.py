@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import os
 import sys
@@ -49,7 +50,7 @@ def combine_layers(predictions, max_distance):
     return combined
 
 
-def get_common_layers(folder_paths):
+def get_common_layers(folder_paths, selected_layers):
     common_layers = set()
 
     for i, folder_path in enumerate(folder_paths):
@@ -61,7 +62,13 @@ def get_common_layers(folder_paths):
         else:
             common_layers = common_layers.intersection(layers)
 
-    return common_layers
+    result_layers = common_layers.intersection(selected_layers)
+
+    if len(result_layers) == 0:
+        print("No intersecting layers found for the given range.")
+        sys.exit(1)
+
+    return result_layers
 
 
 def get_valid_ckpt_dirs(folder_path):
@@ -128,7 +135,59 @@ def get_target_dims(work_dir, frag_id):
     return target_dims
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Batch Infer Layered Script')
+    parser.add_argument('--start_idx', type=int, default=0, help='Start index (default: 0)')
+    parser.add_argument('--end_idx', type=int, default=61, help='End index (default: 61)')
+    parser.add_argument('--exclude', action='store_true', help='Exclude the range (default: False)')
+
+    args = parser.parse_args()
+
+    return args
+
+
+def get_selected_layer_range(start_idx, end_idx, exclude=False):
+    default_start = 0
+    default_end = 62
+
+    # Adjust end_idx if it exceeds the default_end
+    if end_idx > default_end:
+        end_idx = default_end
+
+    if start_idx < default_start:
+        start_idx = default_start
+
+    if exclude:
+        start_range = list(range(default_start, max(start_idx, default_start)))
+        end_range = list(range(min(end_idx + 1, default_end + 1), default_end + 1))
+        return start_range + end_range
+    else:
+        # Return the range between start_idx and end_idx
+        return list(range(start_idx, end_idx + 1))
+
+
+def test_get_selected_layer_range():
+    # Normal Inclusion
+    assert get_selected_layer_range(10, 20, exclude=False) == list(range(10, 21))
+    # Normal Exclusion
+    assert get_selected_layer_range(10, 20, exclude=True) == list(range(0, 10)) + list(range(21, 63))
+    # Start Index Exceeding Default End
+    assert get_selected_layer_range(65, 70, exclude=False) == []
+    # End Index Exceeding Default End
+    assert get_selected_layer_range(45, 70, exclude=False) == list(range(45, 63))
+    # Start Index Less Than Default Start
+    assert get_selected_layer_range(-5, 20, exclude=False) == list(range(0, 21))
+    # Empty Range
+    assert get_selected_layer_range(20, 20, exclude=False) == [20]
+    # Full Range Inclusion
+    assert get_selected_layer_range(0, 62, exclude=False) == list(range(0, 63))
+    # Full Range Exclusion
+    assert get_selected_layer_range(0, 62, exclude=True) == []
+
+
 def main():
+    args = parse_args()
+
     config = Config().load_local_cfg()
     frag_infos = get_all_frag_infos()
 
@@ -156,12 +215,15 @@ def main():
     frag_dir = os.path.join(config.work_dir, 'inference', 'results', f'fragment{frag_id}')
     sub_dirs = get_selected_ckpt_dirs(frag_dir=frag_dir)
 
-    common_layers = get_common_layers(sub_dirs)
+    test_get_selected_layer_range()
+
+    selected_layers = get_selected_layer_range(args.start_idx, args.end_idx, exclude=args.exclude)
+    common_layers = get_common_layers(sub_dirs, selected_layers=selected_layers)
     target_dims = get_target_dims(work_dir=config.work_dir, frag_id=frag_id)
 
     model_arrays = {}
     for sub_dir in sub_dirs:
-        arrays = combine_npy_preds(root_dir=sub_dir, layer_indices=common_layers, ignore_percent=0)
+        arrays = load_predictions(root_dir=sub_dir, layer_indices=common_layers)
         model_arrays[sub_dir] = arrays
 
     Visualization(frag_id=frag_id, root_dir=frag_dir, target_dims=target_dims, model_arrays=model_arrays)
@@ -174,17 +236,14 @@ class Visualization:
 
         self.root_dir = root_dir
         self.target_dims = target_dims
-
-        self.rotate_num = 0
-        rot_value = constants.get_rotate_value(frag_id=frag_id)
-        if rot_value:
-            self.rotate_num = rot_value
+        self.rotate_num = constants.get_rotate_value(frag_id=frag_id)
 
         self.model_names = list(model_arrays.keys())
         self.models = list(model_arrays.values())
         self.model_count = len(self.models)
+        self.layer_idxs = list(self.models[0].keys())
 
-        assert all(isinstance(model, list) and model for model in
+        assert all(isinstance(model, dict) and model for model in
                    self.models), "Each value in model_arrays must be a non-empty list"
         assert all(len(model[0].shape) == 2 for model in self.models), "Each numpy array must be two-dimensional"
 
@@ -194,6 +253,7 @@ class Visualization:
 
         # Initially calculate max and sum once
         for model in self.models:
+            model = list(model.values())
             self.array_maxs.append(np.maximum.reduce(model))
             self.array_sums.append(np.sum(model, axis=0))
 
@@ -243,8 +303,13 @@ class Visualization:
                             command=self.update_image)
         self.slider.set(0.5)
         self.slider.pack(side='left')
+
+        self.layer_label = Label(control_frame, text="Current Layer: ")
+        self.layer_label.config(text=f"Value: {self.layer_idxs[self.curr_layer_val]}")
+
         right_button = Button(control_frame, text="  +  ", command=self.increase_slider)
         right_button.pack(side='left')
+
 
         # Create another control frame for weighting
         if self.model_count > 1:
@@ -330,7 +395,7 @@ class Visualization:
 
         file_path = os.path.join(target_dir, f"{model_names_str}_{mode.lower()}_{threshold}_{inverted_str}.png")
 
-        image = self.process_image(array=self.array, max_size=self.target_dims)
+        image = self.process_image(array=self.array, max_size=self.target_dims, save_img=True)
         #
         # if image.mode != 'RGBA':
         #     image = image.convert('RGBA')
@@ -363,7 +428,7 @@ class Visualization:
         if self.model_count == 2:
             return self.calc_weighted_arr(array=[model[layer] for model in self.models], weight=weight)
         else:
-            return self.models[0][layer]
+            return list(self.models[0].values())[layer]
 
     def get_array_max(self, weight=None):
         if not weight:
@@ -392,12 +457,14 @@ class Visualization:
             else:  # mode == 1
                 self.array = self.get_array_sum()
 
-            self.slider.config(resolution=0.001, from_=0, to=1)
+            self.slider.config(resolution=0.01, from_=0, to=1)
             self.slider.set(threshold)
+            self.layer_label.pack_forget()
 
         elif mode == 2:
+            self.layer_label.pack(side='right')
             self.slider.config(resolution=1, from_=0, to=len(self.models[0]) - 1)
-            self.slider.set(threshold)
+            self.slider.set(self.layer_idxs[int(threshold)])
             self.array = self.get_layer_weighted_arr(int(threshold))
 
         self.update_image()
@@ -424,13 +491,14 @@ class Visualization:
             print("Selected layer", layer)
             self.array = self.get_layer_weighted_arr(layer=layer)
             self.set_threshold(layer)
+            self.layer_label.config(text=f"Value: {self.layer_idxs[int(layer)]}")
 
         new_img = self.process_image(array=self.array)
         imgtk = ImageTk.PhotoImage(image=new_img)
         self.label.imgtk = imgtk
         self.label.config(image=imgtk)
 
-    def process_image(self, array, max_size=(1500, 800)):
+    def process_image(self, array, max_size=(1500, 800), save_img=False):
         processed = array.copy()
         processed = self.normalize_npy_preds(processed)  # Normalize
         processed = self.rot90(processed, self.rotate_num)  # Rotate
@@ -448,6 +516,21 @@ class Visualization:
         image = Image.fromarray(np.uint8(processed * 255), 'L')
         aspect_ratio = image.width / image.height
 
+        new_width = image.width * 4
+        new_height = image.height * 4
+
+        # Save image
+        if save_img:
+            original_height, original_width = max_size
+            upscaled_image = image.resize((new_width, new_height), Resampling.LANCZOS)
+
+            assert new_width >= original_width and new_height >= original_height
+
+            width_diff = new_width - original_width
+            height_diff = new_height - original_height
+
+            return Image.fromarray(np.array(upscaled_image)[:-height_diff, :-width_diff])
+
         # Determine new dimensions
         if aspect_ratio > 1:
             new_width = min(max_size[0], image.width * 4)
@@ -461,7 +544,7 @@ class Visualization:
 
     def decrease_slider(self):
         mode = self.mode_var.get()
-        step = 0.001
+        step = 0.01
 
         if mode == 2:
             step = 1  # step size = 1 for layers
@@ -470,10 +553,12 @@ class Visualization:
 
         self.set_threshold(new_threshold)
         self.slider.set(new_threshold)
+        if mode == 2:
+            self.layer_label.config(text=f"Value: {self.layer_idxs[int(new_threshold)]}")
 
     def increase_slider(self):
         mode = self.mode_var.get()
-        step = 0.001
+        step = 0.01
         max_val = 1
 
         if mode == 2:
@@ -484,6 +569,8 @@ class Visualization:
 
         self.set_threshold(new_threshold)
         self.slider.set(new_threshold)
+        if mode == 2:
+            self.layer_label.config(text=f"Value: {self.layer_idxs[int(new_threshold)]}")
 
     def decrease_slider_weighting(self):
         step = 0.1
@@ -501,24 +588,22 @@ class Visualization:
         self.slider_weighting.set(new_threshold)
 
 
-def combine_npy_preds(root_dir, layer_indices=None, ignore_percent=0):
-    npy_preds_array = []
+def load_predictions(root_dir, layer_indices=None):
+    npy_preds_array = {}
 
-    paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
-    paths.sort(key=lambda x: int(x.split('_')[2]))
+    file_paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
+    file_paths.sort(key=lambda x: int(x.split('_')[2]))
 
-    if layer_indices is not None:
-        paths = [path for path in paths if int(path.split('_')[2]) in layer_indices]
+    for filename in file_paths:
+        layer_start_idx = int(filename.split('_')[2])
 
-    # Load all numpy arrays from the directory
-    for filename in paths:
+        # If layer_indices are given, check if layer_start_idx is contained
+        if layer_indices and layer_start_idx not in layer_indices:
+            continue
+
         file_path = os.path.join(root_dir, filename)
         array = np.load(file_path)
-        npy_preds_array.append(array)
-
-    if ignore_percent > 0:
-        ignore_count = int(ignore_percent * len(npy_preds_array))
-        npy_preds_array = npy_preds_array[ignore_count:-ignore_count]
+        npy_preds_array[layer_start_idx] = array
 
     return npy_preds_array
 
