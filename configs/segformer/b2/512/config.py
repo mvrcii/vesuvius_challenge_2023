@@ -47,9 +47,9 @@ train_aug = [
 val_aug = [
 ]
 
-lr = 2e-5
-step_lr_steps = 1
-step_lr_factor = 0.99
+lr = 2e-4
+step_lr_steps = 2
+step_lr_factor = 0.95
 
 # training parameters
 model_type = "b2"
@@ -58,7 +58,7 @@ model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
-seed = 232343
+seed = 5453
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
