@@ -21,7 +21,7 @@ def generate_dataset(cfg: Config):
         cfg.seed = None  # Set random seed if -1 is given
 
     # Filter for desired fragments
-    data = data[data['frag_id'].isin(cfg.frag_ids)]
+    data = data[data['frag_id'].isin(cfg.fragment_ids)]
 
     # Select ink samples
     ink_samples = data[data['ink_p'] > cfg.ink_threshold]
