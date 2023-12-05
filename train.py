@@ -13,8 +13,9 @@ from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
 
 from config_handler import Config
-from data_modules.segformer import SegFormerDataModule
-from data_modules.simplecnn import SimpleCNNDataModule
+from data_modules.cnn.cnn_datamodule import CNNDataModule
+from data_modules.segformer.segformer_datamodule import SegFormerDataModule
+from data_modules.unetplusplus.unetplusplus_datamodule import UnetPlusPlusDataModule
 from models.cnn3d_segformer import CNN3D_SegformerModule
 from models.segformer import SegformerModule
 from models.simplecnn import SimpleCNNModule
@@ -72,12 +73,12 @@ def log_wandb_hyperparams(config, wandb_logger):
 def get_data_module(config: Config):
     architecture = config.architecture
 
-    if architecture == "segformer" or architecture == "unetplusplus":
+    if architecture == "segformer":
         return SegFormerDataModule(cfg=config)
-    # elif architecture == "unetplusplus":
-    #     return UnetPlusPlusDataModule(cfg=config)
+    elif architecture == "unetplusplus":
+        return UnetPlusPlusDataModule(cfg=config)
     elif architecture == "simplecnn":
-        return SimpleCNNDataModule(cfg=config)
+        return CNNDataModule(cfg=config)
     else:
         print("Invalid architecture for data module:", architecture)
         sys.exit(1)
