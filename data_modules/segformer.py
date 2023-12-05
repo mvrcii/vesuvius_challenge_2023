@@ -104,18 +104,18 @@ class SegFormerDataModule(LightningDataModule):
         return self.build_dataloader(dataset_type='val')
 
     def get_transforms(self, dataset_type):
-        image_processor = SegformerImageProcessor.from_pretrained(
-            pretrained_model_name_or_path=self.cfg.from_pretrained)
-
-        mean, std = image_processor.image_mean, image_processor.image_std
-
-        mean.append(np.mean(mean))
-        mean = np.array(mean)
-        assert len(mean) == self.cfg.in_chans
-
-        std.append(np.mean(std))
-        std = np.array(std)
-        assert len(std) == self.cfg.in_chans
+        # image_processor = SegformerImageProcessor.from_pretrained(
+        #     pretrained_model_name_or_path=self.cfg.from_pretrained)
+        #
+        # mean, std = image_processor.image_mean, image_processor.image_std
+        #
+        # mean.append(np.mean(mean))
+        # mean = np.array(mean)
+        # assert len(mean) == self.cfg.in_chans
+        #
+        # std.append(np.mean(std))
+        # std = np.array(std)
+        # assert len(std) == self.cfg.in_chans
 
         normalize = A.Normalize(mean=[0], std=[1])
 
