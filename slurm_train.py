@@ -8,6 +8,7 @@ def main():
                         help="Type of GPU to use (a, b, c, 8a). Default is 'c'.")
     parser.add_argument("--config_path", type=str, required=True,
                         help="Path to the configuration file.")
+    parser.add_argument('--seed', type=int, default=None, help='Optional seed for the script')
 
     args = parser.parse_args()
 
@@ -21,7 +22,7 @@ def main():
 
     gpu_resource = gpu_mapping[args.gpu_type]
 
-    cmd_str = f"python train.py {args.config_path}"
+    cmd_str = f"python train.py {args.config_path} --seed {args.seed}"
 
     slurm_cmd = f'sbatch -p ls6 \
     --gres=gpu:{gpu_resource} \

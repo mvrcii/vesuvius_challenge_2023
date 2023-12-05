@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 import types
@@ -14,7 +15,6 @@ from lightning.pytorch.trainer import Trainer
 from config_handler import Config
 from data_modules.segformer import SegFormerDataModule
 from data_modules.simplecnn import SimpleCNNDataModule
-from data_modules.unetplusplus import UnetPlusPlusDataModule
 from models.cnn3d_segformer import CNN3D_SegformerModule
 from models.segformer import SegformerModule
 from models.simplecnn import SimpleCNNModule
@@ -32,11 +32,15 @@ warnings.simplefilter("ignore", category=Warning)
 
 
 def get_sys_args():
-    if len(sys.argv) < 2:
-        print("Usage: python pl_train.py <config_path>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description='Train configuration.')
 
-    return sys.argv[1]
+    parser.add_argument('config_path', type=str, help='Path to the configuration file')
+    parser.add_argument('--seed', type=int, default=None, help='Optional seed for the script')
+
+    # Parsing the arguments
+    args = parser.parse_args()
+
+    return args
 
 
 def get_model(config: Config):
@@ -100,10 +104,14 @@ class NaNStoppingCallback(Callback):
 
 
 def main():
-    config_path = get_sys_args()
-    config = Config.load_from_file(config_path)
+    args = get_sys_args()
 
-    if config.seed != -1:
+    config = Config.load_from_file(args.config_path)
+
+    if args.seed:
+        seed_everything(args.seed)
+        np.random.seed(args.seed)
+    elif config.seed != -1:
         seed_everything(config.seed)
         np.random.seed(config.seed)
 
