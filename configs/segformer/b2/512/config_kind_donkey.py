@@ -67,6 +67,7 @@ val_interval = 1
 lr = 2e-4
 step_lr_steps = 2
 step_lr_factor = 0.99
+weight_decay = 0.01
 
 num_workers = 16
 train_batch_size = 24
