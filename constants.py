@@ -48,7 +48,10 @@ ROTATE = {
 
 
 def get_rotate_value(frag_id):
-    return ROTATE.get(frag_id)
+    rot_val = ROTATE.get(frag_id)
+    if rot_val is not None:
+        return rot_val
+    return 0
 
 
 def get_frag_name_from_id(frag_id):
