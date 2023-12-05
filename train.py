@@ -68,10 +68,10 @@ def log_wandb_hyperparams(config, wandb_logger):
 def get_data_module(config: Config):
     architecture = config.architecture
 
-    if architecture == "segformer":
+    if architecture == "segformer" or architecture == "unetplusplus":
         return SegFormerDataModule(cfg=config)
-    elif architecture == "unetplusplus":
-        return UnetPlusPlusDataModule(cfg=config)
+    # elif architecture == "unetplusplus":
+    #     return UnetPlusPlusDataModule(cfg=config)
     elif architecture == "simplecnn":
         return SimpleCNNDataModule(cfg=config)
     else:

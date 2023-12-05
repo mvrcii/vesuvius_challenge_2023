@@ -21,9 +21,6 @@ class AbstractVesuvLightningModule(LightningModule):
         self.step_lr_steps = cfg.step_lr_steps
         self.step_lr_factor = cfg.step_lr_factor
 
-        # False Negatives (FNs) are twice as impactful on the loss as False Positives (FPs)
-        # pos_weight = torch.tensor([cfg.pos_weight]).to(self.device)
-
         self.loss_functions = get_loss_functions(cfg)
 
         self.f1 = BinaryF1Score()
