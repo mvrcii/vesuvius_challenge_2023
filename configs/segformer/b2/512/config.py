@@ -47,7 +47,7 @@ train_aug = [
 val_aug = [
 ]
 
-lr = 2e-3
+lr = 2e-5
 step_lr_steps = 1
 step_lr_factor = 0.99
 
