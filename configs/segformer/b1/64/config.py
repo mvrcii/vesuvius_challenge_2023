@@ -30,7 +30,7 @@ from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 16
 seed = 1421
 epochs = -1
-losses = [("bce", 1.0), ("dice", 1.0)]
+losses = [("bce", 0.2), ("dice", 1.0)]
 dataset_fraction = 1
 
 val_interval = 10
