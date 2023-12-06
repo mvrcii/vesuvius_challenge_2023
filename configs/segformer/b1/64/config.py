@@ -28,20 +28,20 @@ architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 16
-seed = 1421
+seed = 21323
 epochs = -1
-losses = [("bce", 0.2), ("dice", 1.0)]
+losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
 
-val_interval = 10
+val_interval = 2
 lr = 5e-4
 step_lr_steps = 2
-step_lr_factor = 0.99
-weight_decay = 0.05
+step_lr_factor = 0.98
+weight_decay = 0.01
 
 num_workers = 16
-train_batch_size = 32
-val_batch_size = 32
+train_batch_size = 8
+val_batch_size = 8
 
 train_aug = [
     A.HorizontalFlip(),
