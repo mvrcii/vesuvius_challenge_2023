@@ -245,7 +245,8 @@ class Visualization:
 
         assert all(isinstance(model, dict) and model for model in
                    self.models), "Each value in model_arrays must be a non-empty list"
-        assert all(len(model[0].shape) == 2 for model in self.models), "Each numpy array must be two-dimensional"
+        assert all(len(list(self.models[0].values())[0].shape) == 2 for model in
+                   self.models), "Each numpy array must be two-dimensional"
 
         self.array_maxs = []
         self.array_sums = []
@@ -254,11 +255,16 @@ class Visualization:
         # Initially calculate max and sum once
         for model in self.models:
             model = list(model.values())
-            self.array_maxs.append(np.maximum.reduce(model))
-            self.array_sums.append(np.sum(model, axis=0))
+            max_arr = np.maximum.reduce(model)
+            max_arr = np.clip(max_arr * 4, 0, 1)
+            self.array_maxs.append(max_arr)
+
+            sum_arr = np.sum(model, axis=0)
+            sum_arr = np.clip(sum_arr * 2, 0, 1)
+            self.array_sums.append(sum_arr)
 
         if self.model_count == 1:
-            self.array = self.array_maxs[0]
+            self.array = self.array_sums[0]
         else:
             self.array = self.calc_weighted_arr(array=self.array_maxs, weight=self.curr_weight_th_val)
 
@@ -309,7 +315,6 @@ class Visualization:
 
         right_button = Button(control_frame, text="  +  ", command=self.increase_slider)
         right_button.pack(side='left')
-
 
         # Create another control frame for weighting
         if self.model_count > 1:
@@ -453,9 +458,9 @@ class Visualization:
 
         if mode in [0, 1]:
             if mode == 0:
-                self.array = self.get_array_max()
-            else:  # mode == 1
                 self.array = self.get_array_sum()
+            else:  # mode == 1
+                self.array = self.get_array_max()
 
             self.slider.config(resolution=0.01, from_=0, to=1)
             self.slider.set(threshold)
@@ -471,9 +476,9 @@ class Visualization:
 
     def update_weighting(self, weight=None):
         if self.mode_var.get() == 0:
-            self.array = self.get_array_max(weight=float(weight))
-        elif self.mode_var.get() == 1:
             self.array = self.get_array_sum(weight=float(weight))
+        elif self.mode_var.get() == 1:
+            self.array = self.get_array_max(weight=float(weight))
         else:
             self.array = self.get_layer_weighted_arr(layer=int(self.get_threshold()), weight=float(weight))
 

@@ -48,7 +48,7 @@ def process_fragment(config, fragment_id, channels, processing_type):
                    processing_type=processing_type)
 
 
-def clean_all_fragment_label_dirs(config):
+def clean_all_fragment_label_dirs(config: Config):
     for fragment_id in FRAGMENTS.values():
         frag_name = '_'.join([get_frag_name_from_id(fragment_id)]).upper()
         label_dir = os.path.join(config.dataset_target_dir, str(config.patch_size), frag_name, 'labels')
@@ -76,8 +76,8 @@ def create_dataset(target_dir, config, frag_id, channels, processing_type):
     pbar = tqdm(total=(len(channels)), desc="Initializing...")
 
     first_channel_processed = False
-    for start_channel in channels[::4]:
-        end_channel = start_channel + 3
+    for start_channel in channels[::cfg.in_chans]:
+        end_channel = start_channel + cfg.in_chans - 1
 
         pbar.set_description(f"\033[94mProcessing: Fragment: {get_frag_name_from_id(frag_id)}\033[0m "
                              f"Channel: {start_channel:02d}-{end_channel:02d} in "
@@ -87,24 +87,25 @@ def create_dataset(target_dir, config, frag_id, channels, processing_type):
         tensor = read_fragment_for_channels(frag_dir=fragment_dir,
                                             processing_type=processing_type,
                                             channels=range(start_channel, end_channel + 1),
-                                            patch_size=config.patch_size)
+                                            patch_size=config.patch_size,
+                                            ch_block_size=config.in_chans)
 
         # Only required for TQDM
         if not first_channel_processed:
             x1_list = list(range(0, tensor.shape[2] - config.patch_size + 1, config.stride))
             y1_list = list(range(0, tensor.shape[1] - config.patch_size + 1, config.stride))
-            total_length = len(channels[::4]) * len(x1_list) * len(y1_list)
+            total_length = len(channels[::config.in_chans]) * len(x1_list) * len(y1_list)
             pbar.reset(total=total_length)
             first_channel_processed = True
 
-        patch_cnt, skipped_cnt = process_label_stack(config=config,
-                                                     target_dir=target_dir,
-                                                     frag_id=frag_id,
-                                                     mask=mask,
-                                                     tensor=tensor,
-                                                     start_channel=start_channel,
-                                                     processing_type=processing_type,
-                                                     pbar=pbar)
+        patch_cnt, skipped_cnt = process_channel_stack(config=config,
+                                                       target_dir=target_dir,
+                                                       frag_id=frag_id,
+                                                       mask=mask,
+                                                       tensor=tensor,
+                                                       start_channel=start_channel,
+                                                       processing_type=processing_type,
+                                                       pbar=pbar)
 
         total_patch_cnt += patch_cnt
         total_skipped_cnt += skipped_cnt
@@ -115,8 +116,8 @@ def create_dataset(target_dir, config, frag_id, channels, processing_type):
     pbar.close()
 
 
-def process_label_stack(config, target_dir, frag_id, mask, tensor, start_channel, processing_type, pbar):
-    """Extracts image/label patches for one 'label stack', corresponding to 4 consecutive slice layers.
+def process_channel_stack(config, target_dir, frag_id, mask, tensor, start_channel, processing_type, pbar):
+    """Extracts image/label patches for one 'label stack', corresponding to cfg.in_chans consecutive slice layers.
 
     :param pbar:
     :param processing_type:
@@ -201,18 +202,18 @@ def process_label_stack(config, target_dir, frag_id, mask, tensor, start_channel
     return patches, mask_skipped
 
 
-def read_fragment_for_channels(frag_dir, channels, patch_size, processing_type):
+def read_fragment_for_channels(frag_dir, channels, patch_size, processing_type, ch_block_size):
     if processing_type == 'images':
-        image_patch = read_fragment_images_for_channels(frag_dir, patch_size, channels)
+        image_patch = read_fragment_images_for_channels(frag_dir, patch_size, channels, ch_block_size=ch_block_size)
         return image_patch
     elif processing_type == 'labels':
-        label_patch = read_fragment_labels_for_channels(frag_dir, patch_size, channels)
+        label_patch = read_fragment_labels_for_channels(frag_dir, patch_size, channels, ch_block_size=ch_block_size)
         return label_patch
     else:
         raise ValueError("Processing Type unknown:", processing_type)
 
 
-def read_fragment_images_for_channels(fragment_dir, patch_size, channels):
+def read_fragment_images_for_channels(fragment_dir, patch_size, channels, ch_block_size):
     images = []
 
     for channel in channels:
@@ -232,12 +233,12 @@ def read_fragment_images_for_channels(fragment_dir, patch_size, channels):
 
         images.append(image)
     images = np.stack(images, axis=0)
-    assert images.ndim == 3 and images.shape[0] == 4
+    assert images.ndim == 3 and images.shape[0] == ch_block_size
 
     return np.array(images)
 
 
-def read_fragment_labels_for_channels(fragment_dir, patch_size, channels):
+def read_fragment_labels_for_channels(fragment_dir, patch_size, channels, ch_block_size):
     def read_label(label_path):
         if not os.path.isfile(label_path):
             return None
@@ -261,25 +262,47 @@ def read_fragment_labels_for_channels(fragment_dir, patch_size, channels):
         return label
 
     start_channel = channels[0]
-    base_label_path = os.path.join(fragment_dir, 'layered', f"inklabels_{start_channel}_{start_channel + 3}.png")
-    neg_label_path = os.path.join(fragment_dir, 'layered', f"negatives_{start_channel}_{start_channel + 3}.png")
 
-    base_label = read_label(base_label_path)
-    neg_label = read_label(neg_label_path)
+    root_dir = os.path.join(fragment_dir, 'layered')
+    label_step_size = 4
 
-    if base_label is None and neg_label is None:
-        sys.exit(f"Error: Both base label and negative label file are not existent for channel {channels[0]}")
+    label_blocks = []
+    for i in range(ch_block_size // label_step_size):
+        base_label_path = os.path.join(root_dir, f'inklabels_{start_channel}_{start_channel + 3}.png')
+        neg_label_path = os.path.join(root_dir, f'negatives_{start_channel}_{start_channel + 3}.png')
+        start_channel += label_step_size
 
-    if base_label is None:
-        base_label = np.ones_like(neg_label) * -1
+        base_label = read_label(base_label_path)
+        neg_label = read_label(neg_label_path)
 
-    if neg_label is None:
-        neg_label = np.ones_like(base_label) * -1
+        if base_label is None:
+            base_label = np.ones_like(neg_label) * -1
+        if neg_label is None:
+            neg_label = np.ones_like(base_label) * -1
 
-    label_stack = np.concatenate([base_label, neg_label], axis=0)
-    assert label_stack.shape[0] == 2
+        label_stack = np.concatenate([base_label, neg_label], axis=0)
+        assert label_stack.shape[0] == 2
 
-    return label_stack
+        label_blocks.append(label_stack)
+
+    result = np.zeros_like(label_blocks[0])
+    output_shape = label_blocks[0][0]
+
+    valid = [False, False]
+    for block in label_blocks:
+        for label_idx in range(2):
+            # Check if the label part of the block for XOR does not contain -1
+            if block[label_idx][0][0] != -1:
+                result[label_idx] = result[label_idx] | block[label_idx]
+                valid[label_idx] = True
+
+    for valid_idx in range(2):
+        if not valid[valid_idx]:
+            result[valid_idx] = np.ones_like(output_shape) * -1
+
+    assert result.shape == (2, output_shape.shape[0], output_shape.shape[1])
+
+    return result
 
 
 def get_sys_args():

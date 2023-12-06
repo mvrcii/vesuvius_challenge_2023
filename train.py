@@ -129,7 +129,6 @@ def main():
     model_run_dir = os.path.join(config.work_dir, "checkpoints", model_run_name)
 
     model = get_model(config=config)
-
     data_module = get_data_module(config=config)
 
     checkpoint_callback = ModelCheckpoint(
