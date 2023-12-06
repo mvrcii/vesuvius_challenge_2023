@@ -67,6 +67,8 @@ train_aug = [
                             ratio=(0.75, 1.51),
                             interpolation=0)
     ], p=0.5),
+    A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
+    A.Normalize(mean=[0], std=[1])
 ]

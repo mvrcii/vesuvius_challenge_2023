@@ -70,6 +70,8 @@ train_aug = [
                             interpolation=0)
     ], p=0.5),
     A.ChannelDropout(p=0.1, channel_drop_range=(1, 1), fill_value=0),
+    A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
+    A.Normalize(mean=[0], std=[1])
 ]

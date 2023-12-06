@@ -44,6 +44,8 @@ train_aug = [
     A.RandomResizedCrop(height=patch_size, width=patch_size, scale=(0.4, 0.9), ratio=(1, 1), p=0.5),
     # A.RandomScale(scale_limit=0.1, p=0.5),
     # A.CenterCrop(height=size, width=size, p=0.5),
+    A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
+    A.Normalize(mean=[0], std=[1])
 ]

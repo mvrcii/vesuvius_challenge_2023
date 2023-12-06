@@ -54,6 +54,8 @@ train_aug = [
                        rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
         A.ChannelDropout(always_apply=True, channel_drop_range=(2, 4), fill_value=0),
     ], p=0.5),
+    A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
+    A.Normalize(mean=[0], std=[1])
 ]

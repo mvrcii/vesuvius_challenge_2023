@@ -26,17 +26,12 @@ class AbstractDataModule(LightningDataModule):
         return self.build_dataloader(dataset_type='val')
 
     def get_transforms(self, dataset_type):
-        normalize = A.Normalize(mean=[0], std=[1])
-
-        transforms = []
         if dataset_type == 'train':
             transforms = self.cfg.train_aug
+            return A.Compose(transforms=transforms, is_check_shapes=False)
         elif dataset_type == 'val':
             transforms = self.cfg.val_aug
-
-        transforms.append(normalize)
-
-        return A.Compose(transforms=transforms, is_check_shapes=False)
+            return A.Compose(transforms=transforms, is_check_shapes=False)
 
     def build_dataloader(self, dataset_type):
         if dataset_type == 'train':
