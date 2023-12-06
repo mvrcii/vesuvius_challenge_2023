@@ -15,3 +15,10 @@ einops
 opencv-python
 pillow
 lightning
+
+pandas
+requests
+beautifulsoup4
+termcolor
+future
+timm
