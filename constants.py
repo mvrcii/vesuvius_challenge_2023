@@ -18,6 +18,7 @@ FRAGMENTS = {
     "GRIMLOCK": "20231012184421",
     "DEVASTATOR": "20231022170900",
     "SKYWARP": "20231007101615",
+    "THUNDERCRACKER": "20231012173610",
 
     # Fragments
     "SHOCKWAVE": "2",
@@ -44,6 +45,7 @@ HOT_ROD_FRAG_ID = FRAGMENTS["HOT_ROD"]
 GRIMLOCK_FRAG_ID = FRAGMENTS["GRIMLOCK"]
 DEVASTATOR_FRAG_ID = FRAGMENTS["DEVASTATOR"]
 SKYWARP_FRAG_ID = FRAGMENTS["SKYWARP"]
+THUNDERCRACKER_FRAG_ID = FRAGMENTS["THUNDERCRACKER"]
 
 SHOCKWAVE_FRAG_ID = FRAGMENTS["SHOCKWAVE"]
 ARCEE_FRAG_ID = FRAGMENTS["ARCEE"]
@@ -91,3 +93,15 @@ def get_all_frag_ids():
 
 # Additional Transformers character names for IDs
 # HOT_ROD_FRAG_ID = "your_id_here_3"  # Replace 'your_id_here_3' with the actual ID
+
+# Thundercracker
+# Sunstreaker
+# Sideswipe
+# Prowl
+# Hound
+# Mirage
+# Trailbreaker
+# Wheelie
+# Warpath
+# Windcharger
+# Bluestreak
