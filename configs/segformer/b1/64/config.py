@@ -34,10 +34,10 @@ losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
 
 val_interval = 5
-lr = 3e-4
+lr = 1e-4
 step_lr_steps = 2
-step_lr_factor = 0.98
-weight_decay = 0.01
+step_lr_factor = 0.99
+weight_decay = 0.005
 
 num_workers = 16
 train_batch_size = 16
