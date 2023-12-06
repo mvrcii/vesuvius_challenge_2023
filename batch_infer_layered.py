@@ -7,7 +7,7 @@ import albumentations as A
 import cv2
 import numpy as np
 import torch
-from PIL.Image import Image
+from PIL import Image
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 
