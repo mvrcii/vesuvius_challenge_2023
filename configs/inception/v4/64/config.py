@@ -70,5 +70,7 @@ train_aug = [
     A.Normalize(mean=[0.5], std=[0.5]),
 ]
 val_aug = [
+    A.Resize(341, 341, interpolation=1),
+    A.CenterCrop(299, 299),
     A.Normalize(mean=[0.5], std=[0.5])
 ]

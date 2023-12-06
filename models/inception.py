@@ -11,8 +11,3 @@ class InceptionModule(AbstractVesuvLightningModule):
         self.weight_decay = cfg.weight_decay
         self.epochs = cfg.epochs
         self.eta_min = cfg.eta_min
-
-        self.model = timm.create_model(cfg.from_pretrained,
-                                       in_chans=cfg.in_chans,
-                                       pretrained=True,
-                                       num_classes=1)

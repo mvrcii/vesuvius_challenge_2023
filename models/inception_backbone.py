@@ -1,3 +1,4 @@
+import albumentations as A
 import numpy as np
 import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
@@ -7,7 +8,7 @@ import torch.nn.functional as F
 from albumentations.pytorch import ToTensorV2
 from torch.optim import AdamW
 from warmup_scheduler import GradualWarmupScheduler
-import albumentations as A
+
 
 class CFG:
     # ============== comp exp name =============
@@ -495,12 +496,8 @@ class Decoder(nn.Module):
 
 
 class RegressionPLModel(pl.LightningModule):
-    def __init__(self, pred_shape, size=256, enc='', with_norm=False):
+    def __init__(self, cfg, size=256, enc='', with_norm=False):
         super(RegressionPLModel, self).__init__()
-
-        self.save_hyperparameters()
-        self.mask_pred = np.zeros(self.hparams.pred_shape)
-        self.mask_count = np.zeros(self.hparams.pred_shape)
 
         self.loss_func1 = smp.losses.DiceLoss(mode='binary')
         self.loss_func2 = smp.losses.SoftBCEWithLogitsLoss(smooth_factor=0.25)
@@ -535,7 +532,6 @@ class RegressionPLModel(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y, xyxys = batch
-        batch_size = x.size(0)
         outputs = self(x)
         loss1 = self.loss_func(outputs, y)
         y_preds = torch.sigmoid(outputs).to('cpu')
@@ -547,20 +543,19 @@ class RegressionPLModel(pl.LightningModule):
         self.log("val/total_loss", loss1.item(), on_step=True, on_epoch=True, prog_bar=True)
         return {"loss": loss1}
 
-    def on_validation_epoch_end(self):
-        self.mask_pred = np.divide(self.mask_pred, self.mask_count, out=np.zeros_like(self.mask_pred),
-                                   where=self.mask_count != 0)
-        # self.log_image(key="masks", images=[np.clip(self.mask_pred, 0, 1)], caption=["probs"])
+    @staticmethod
+    def get_scheduler(optimizer):
+        scheduler_cosine = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, 10, eta_min=1e-6)
+        scheduler = GradualWarmupSchedulerV2(
+            optimizer, multiplier=1.0, total_epoch=1, after_scheduler=scheduler_cosine)
 
-        # reset mask
-        self.mask_pred = np.zeros(self.hparams.pred_shape)
-        self.mask_count = np.zeros(self.hparams.pred_shape)
+        return scheduler
 
     def configure_optimizers(self):
-
         optimizer = AdamW(filter(lambda p: p.requires_grad, self.parameters()), lr=CFG.lr)
 
-        scheduler = get_scheduler(CFG, optimizer)
+        scheduler = self.get_scheduler(optimizer)
         return [optimizer], [scheduler]
 
 
@@ -589,10 +584,4 @@ class GradualWarmupSchedulerV2(GradualWarmupScheduler):
                     self.base_lrs]
 
 
-def get_scheduler(cfg, optimizer):
-    scheduler_cosine = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, 10, eta_min=1e-6)
-    scheduler = GradualWarmupSchedulerV2(
-        optimizer, multiplier=1.0, total_epoch=1, after_scheduler=scheduler_cosine)
 
-    return scheduler
