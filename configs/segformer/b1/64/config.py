@@ -40,8 +40,8 @@ step_lr_factor = 0.99
 weight_decay = 0.05
 
 num_workers = 16
-train_batch_size = 1024
-val_batch_size = 1024
+train_batch_size = 32
+val_batch_size = 32
 
 train_aug = [
     A.HorizontalFlip(),
