@@ -63,7 +63,7 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
                            layer_start=layer_start, layer_count=config.in_chans)
 
     # Load mask
-    mask_path = os.path.join(config.work_dir, "data", "fragments", f"fragment_{fragment_id}", "mask.png")
+    mask_path = os.path.join(config.work_dir, "data", "fragments", f"fragment{fragment_id}", "mask.png")
     if not os.path.isfile(mask_path):
         raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
     mask = np.asarray(Image.open(mask_path))
