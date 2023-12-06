@@ -21,6 +21,7 @@ FRAGMENTS = {
     "SKYWARP": "20231007101615",
     "THUNDERCRACKER": "20231012173610",
     "SUNSTREAKER": "20231031143852",
+    "SIDESWIPE": "20230701020044",
 
     # FRAGMENTS
     "SHOCKWAVE": "2",
@@ -49,6 +50,7 @@ DEVASTATOR_FRAG_ID = FRAGMENTS["DEVASTATOR"]
 SKYWARP_FRAG_ID = FRAGMENTS["SKYWARP"]
 THUNDERCRACKER_FRAG_ID = FRAGMENTS["THUNDERCRACKER"]
 SUNSTREAKER_FRAG_ID = FRAGMENTS["SUNSTREAKER"]
+SIDESWIPE_FRAG_ID = FRAGMENTS["SIDESWIPE"]
 
 # FRAGMENTS
 SHOCKWAVE_FRAG_ID = FRAGMENTS["SHOCKWAVE"]
@@ -63,6 +65,17 @@ ROTATE = {
     BLASTER_FRAG_ID: -1,
     THUNDERCRACKER_FRAG_ID: -1,
 }
+
+FLIP = {
+
+}
+
+
+def get_flip_value(frag_id):
+    flip_val = FLIP.get(frag_id)
+    if flip_val is not None:
+        return flip_val
+    return 0
 
 
 def get_rotate_value(frag_id):
@@ -100,7 +113,6 @@ def get_all_frag_ids():
 # Additional Transformers character names for IDs
 # HOT_ROD_FRAG_ID = "your_id_here_3"  # Replace 'your_id_here_3' with the actual ID
 
-# Sunstreaker
 # Sideswipe
 # Prowl
 # Hound
