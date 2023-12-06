@@ -1,5 +1,7 @@
 import os
+
 import albumentations as A
+
 from constants import (ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, IRONHIDE_FRAG_ID, MEGATRON_FRAG_ID,
                        BUMBLEBEE_FRAG_ID, SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID)
 
@@ -49,10 +51,6 @@ train_aug = [
     A.RandomRotate90(),
     A.Transpose(),
     A.OneOf([
-        # A.HorizontalFlip(),
-        # A.VerticalFlip(),
-        # A.RandomRotate90(),
-        # A.Transpose(),
         A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
         A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
                        rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
@@ -67,6 +65,10 @@ train_aug = [
                             ratio=(0.75, 1.51),
                             interpolation=0)
     ], p=0.5),
+    A.Resize(341, 341, interpolation=1),
+    A.CenterCrop(299, 299),
+    A.Normalize(mean=[0.5], std=[0.5]),
 ]
 val_aug = [
+    A.Normalize(mean=[0.5], std=[0.5])
 ]
