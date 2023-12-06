@@ -23,7 +23,7 @@ fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATR
 train_split = 0.8
 
 # training parameters
-model_type = "b2"
+model_type = "b1"
 architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
