@@ -542,7 +542,16 @@ class Visualization:
             width_diff = new_width - original_width
             height_diff = new_height - original_height
 
-            return Image.fromarray(np.array(upscaled_image)[:-height_diff, :-width_diff])
+            out_width = -width_diff
+            out_height = -height_diff
+
+            if width_diff == 0:
+                out_width = new_width
+
+            if height_diff == 0:
+                out_height = new_height
+
+            return Image.fromarray(np.array(upscaled_image)[:out_height, :out_width])
 
         # Determine new dimensions
         if aspect_ratio > 1:

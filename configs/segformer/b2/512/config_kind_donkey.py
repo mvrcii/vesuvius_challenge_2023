@@ -1,7 +1,8 @@
 import os
+
 import albumentations as A
-from constants import (ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, IRONHIDE_FRAG_ID, MEGATRON_FRAG_ID,
-                       BUMBLEBEE_FRAG_ID, SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID)
+
+from constants import (BLASTER_FRAG_ID)
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -18,8 +19,7 @@ label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
 artefact_threshold = 5
-fragment_ids = [OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,
-                SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
+fragment_ids = [BLASTER_FRAG_ID]
 train_split = 0.8
 
 # training parameters
@@ -45,11 +45,11 @@ train_batch_size = 24
 val_batch_size = 24
 
 train_aug = [
+    A.HorizontalFlip(),
+    A.VerticalFlip(),
+    A.RandomRotate90(),
+    A.Transpose(),
     A.OneOf([
-        A.HorizontalFlip(),
-        A.VerticalFlip(),
-        A.RandomRotate90(),
-        A.Transpose(),
         A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
         A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
                        rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
