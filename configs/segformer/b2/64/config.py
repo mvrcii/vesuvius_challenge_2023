@@ -16,8 +16,8 @@ dataset_target_dir = os.path.join("data", "datasets")
 patch_size = 64
 label_size = patch_size // 4
 stride = patch_size
-ink_ratio = 25
-artefact_threshold = 25
+ink_ratio = 15
+artefact_threshold = 15
 fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,
                 SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
 train_split = 0.8
@@ -31,17 +31,17 @@ in_chans = 16
 seed = 2342
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
-dataset_fraction = 0.5
+dataset_fraction = 1
 
 val_interval = 1
-lr = 5e-4
-step_lr_steps = 2
-step_lr_factor = 0.99
+lr = 5e-5
+step_lr_steps = 1
+step_lr_factor = 0.9
 weight_decay = 0.01
 
 num_workers = 16
-train_batch_size = 256
-val_batch_size = 256
+train_batch_size = 1024
+val_batch_size = 1024
 
 train_aug = [
     A.HorizontalFlip(),
