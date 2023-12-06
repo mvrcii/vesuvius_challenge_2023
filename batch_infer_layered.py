@@ -7,6 +7,7 @@ import albumentations as A
 import cv2
 import numpy as np
 import torch
+from PIL.Image import Image
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 
@@ -61,14 +62,22 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     images = read_fragment(patch_size=patch_size, work_dir=config.work_dir, fragment_id=fragment_id,
                            layer_start=layer_start, layer_count=config.in_chans)
 
+    # Load mask
+    mask_path = os.path.join(config.work_dir, "data", "fragments", f"fragment_{fragment_id}", "mask.png")
+    if not os.path.isfile(mask_path):
+        raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
+    mask = np.asarray(Image.open(mask_path))
+
+    assert mask.shape == images[0].shape, "Mask shape does not match image shape"
+
     # Hyperparams
     label_size = config.label_size
     margin_percent = 0.1
     stride_factor = 2
 
     margin = int(margin_percent * label_size)
-    mask = torch.ones((label_size, label_size), dtype=torch.bool, device='cuda')
-    mask[margin:-margin, margin:-margin] = False
+    ignore_edge_mask = torch.ones((label_size, label_size), dtype=torch.bool, device='cuda')
+    ignore_edge_mask[margin:-margin, margin:-margin] = False
 
     stride = patch_size // stride_factor
     stride_out = label_size // stride_factor
@@ -102,7 +111,7 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     def process_patch(logits, x, y):
         # Calculate the margin to ignore (10% of the patch size)
         # Set the outer 10% of averaged_logits to zero
-        logits *= ~mask
+        logits *= ~ignore_edge_mask
 
         # Determine the location in the stitched_result array
         out_y_start = y * stride_out
@@ -124,6 +133,11 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
             x_end = x_start + patch_size
             y_start = y * stride
             y_end = y_start + patch_size
+
+            mask_patch = mask[y_start:y_end, x_start:x_end]
+            # is mask is completely zero, ignore patch
+            if np.all(mask_patch == 0):
+                continue
 
             patch = images[:, y_start:y_end, x_start:x_end]
 
