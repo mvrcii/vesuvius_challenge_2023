@@ -506,8 +506,10 @@ class Visualization:
     def process_image(self, array, max_size=(1500, 800), save_img=False):
         processed = array.copy()
         processed = self.normalize_npy_preds(processed)  # Normalize
-        processed = self.rot90(processed, self.rotate_num)  # Rotate
-        # processed = np.flip(processed, 1)
+
+        if not save_img:
+            processed = self.rot90(processed, self.rotate_num)  # Rotate
+            # processed = np.flip(processed, 1)
 
         threshold = self.get_threshold()
         if self.mode_var.get() == 2:
