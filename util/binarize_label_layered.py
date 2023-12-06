@@ -26,8 +26,11 @@ def process_image(img_src_dir, img_src_name, frag_id):
         label_img = cv2.imread(os.path.join(img_src_dir, img_src_name), 0)
         label_arr = np.asarray(label_img)
 
+        # Normalize label array
+        label_arr = label_arr / 255.0
+
         # Binarize the label
-        binary_label = np.where(label_arr > 1, 1, 0)
+        binary_label = np.where(label_arr > 0.2, 1, 0)
 
         # Scale the binary_label to full 8-bit range
         scaled_label = (binary_label * 255).astype(np.uint8)
