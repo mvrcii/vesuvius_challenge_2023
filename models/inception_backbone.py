@@ -1,18 +1,13 @@
+import numpy as np
+import pytorch_lightning as pl
+import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
-import pytorch_lightning as pl
-import segmentation_models_pytorch as smp
+from albumentations.pytorch import ToTensorV2
 from torch.optim import AdamW
 from warmup_scheduler import GradualWarmupScheduler
-
-import numpy as np
-
-import os
-import sys
-from collections import OrderedDict
-
+import albumentations as A
 
 class CFG:
     # ============== comp exp name =============
@@ -127,6 +122,8 @@ class CFG:
         ),
         ToTensorV2(transpose_mask=True),
     ]
+
+
 class MaxPool3dSamePadding(nn.MaxPool3d):
 
     def compute_pad(self, dim, s):
@@ -472,8 +469,6 @@ class InceptionI3d(nn.Module):
         return self.avg_pool(x)
 
 
-
-
 class Decoder(nn.Module):
     def __init__(self, encoder_dims, upscale):
         super().__init__()
@@ -568,6 +563,7 @@ class RegressionPLModel(pl.LightningModule):
         scheduler = get_scheduler(CFG, optimizer)
         return [optimizer], [scheduler]
 
+
 class GradualWarmupSchedulerV2(GradualWarmupScheduler):
     """
     https://www.kaggle.com/code/underwearfitting/single-fold-training-of-resnet200d-lb0-965
@@ -591,6 +587,8 @@ class GradualWarmupSchedulerV2(GradualWarmupScheduler):
         else:
             return [base_lr * ((self.multiplier - 1.) * self.last_epoch / self.total_epoch + 1.) for base_lr in
                     self.base_lrs]
+
+
 def get_scheduler(cfg, optimizer):
     scheduler_cosine = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, 10, eta_min=1e-6)
