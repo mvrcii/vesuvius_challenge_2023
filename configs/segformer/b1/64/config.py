@@ -20,7 +20,7 @@ ink_ratio = 25
 artefact_threshold = 25
 fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,
                 SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
-train_split = 0.8
+train_split = 0.7
 
 # training parameters
 model_type = "b1"
@@ -33,22 +33,22 @@ epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
 
-val_interval = 2
-lr = 5e-4
+val_interval = 5
+lr = 3e-4
 step_lr_steps = 2
 step_lr_factor = 0.98
 weight_decay = 0.01
 
 num_workers = 16
-train_batch_size = 8
-val_batch_size = 8
+train_batch_size = 16
+val_batch_size = 16
 
 train_aug = [
-    A.HorizontalFlip(),
-    A.VerticalFlip(),
-    A.RandomRotate90(),
-    A.Transpose(),
     A.OneOf([
+        A.HorizontalFlip(),
+        A.VerticalFlip(),
+        A.RandomRotate90(),
+        A.Transpose(),
         A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
         A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
                        rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
