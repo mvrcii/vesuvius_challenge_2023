@@ -366,8 +366,14 @@ class Visualization:
         return threshold
 
     def create_ensemble_dir_simple_names(self, dir_list, prefix):
-        # Extracting only the first part of the name after '_' (ignoring the numbers and model names)
-        parts = [d.split('_')[1].split('-')[0:2] for d in dir_list]
+        parts = []
+        for d in dir_list:
+            if 'superseded' in d:
+                part = d.split('_')[2].split('-')[0:2]
+            else:
+                part = d.split('_')[1].split('-')[0:2]
+            parts.append(part)
+
         # Joining the first two parts (words) of each directory name
         simplified_parts = ["-".join(p) for p in parts]
 
