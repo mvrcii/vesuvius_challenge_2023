@@ -49,7 +49,7 @@ class CFG:
     stride = tile_size // 8
 
     # todo, original 256
-    train_batch_size = 48  # 32
+    train_batch_size = 256  # 32
     valid_batch_size = train_batch_size
     use_amp = True
 
