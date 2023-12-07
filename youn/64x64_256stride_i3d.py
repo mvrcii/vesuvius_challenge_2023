@@ -419,26 +419,13 @@ class RegressionPLModel(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y, xyxys = batch
-        batch_size = x.size(0)
         outputs = self(x)
         loss1 = self.loss_func(outputs, y)
-        y_preds = torch.sigmoid(outputs).to('cpu')
-        for i, (x1, y1, x2, y2) in enumerate(xyxys):
-            self.mask_pred[y1:y2, x1:x2] += F.interpolate(y_preds[i].unsqueeze(0).float(), scale_factor=4,
-                                                          mode='bilinear').squeeze(0).squeeze(0).numpy()
-            self.mask_count[y1:y2, x1:x2] += np.ones((self.hparams.size, self.hparams.size))
-
         self.log("val/total_loss", loss1.item(), on_step=True, on_epoch=True, prog_bar=True)
         return {"loss": loss1}
 
     def on_validation_epoch_end(self):
-        self.mask_pred = np.divide(self.mask_pred, self.mask_count, out=np.zeros_like(self.mask_pred),
-                                   where=self.mask_count != 0)
-        # self.log_image(key="masks", images=[np.clip(self.mask_pred, 0, 1)], caption=["probs"])
-
-        # reset mask
-        self.mask_pred = np.zeros(self.hparams.pred_shape)
-        self.mask_count = np.zeros(self.hparams.pred_shape)
+        pass
 
     def configure_optimizers(self):
 
