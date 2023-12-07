@@ -489,6 +489,8 @@ def main():
 
     pred_shape = valid_mask_gt.shape
     train_images, train_masks, valid_images, valid_masks, valid_xyxys = get_train_valid_dataset()
+    print("Train images:", len(train_images))
+    print("Valid images:", len(valid_images))
     valid_xyxys = np.stack(valid_xyxys)
     train_dataset = CustomDataset(
         train_images, CFG, labels=train_masks, transform=get_transforms(data='train', cfg=CFG))
