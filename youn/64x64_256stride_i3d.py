@@ -500,7 +500,7 @@ def main():
     print("Initialized config")
     torch.set_float32_matmul_precision('medium')
 
-    fragments = ['20230827161847', '2i20230905134255']
+    fragments = ['20230522181603','20230827161847', '2i20230905134255']
     val_frag_id = fragments[0]
     enc_i, enc, fold = 0, 'i3d', 0
     print("Starting with validation id", val_frag_id)
