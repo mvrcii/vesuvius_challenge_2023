@@ -68,6 +68,8 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
         raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
     mask = np.asarray(Image.open(mask_path))
 
+    mask = pad_image_to_be_divisible_by_4(mask, patch_size)
+
     assert mask.shape == images[0].shape, "Mask shape does not match image shape"
 
     # Hyperparams
