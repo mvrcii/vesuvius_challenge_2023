@@ -237,7 +237,7 @@ def get_train_valid_dataset():
     valid_xyxys = []
 
     # for fragment_id in ['20230827161847', '20230905134255']:
-    for fragment_id in ['20230522181603', '20230702185752', '20230827161847', '20230909121925', '20230905134255',
+    for fragment_id in ['20230522181603', '20230702185752_superseded', '20230827161847', '20230909121925', '20230905134255',
                         '20230904135535']:
         print('reading ', fragment_id)
         image, mask, fragment_mask = read_image_mask(fragment_id)
