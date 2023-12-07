@@ -34,22 +34,22 @@ in_chans = 4
 seed = 7777
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
-dataset_fraction = 1
+dataset_fraction = 0.01
 
 val_interval = 1
 lr = 2e-4
 
-warmup_epochs = 0
-warmup_start = 0.1
-warmup_end = 1.0
+# warmup_epochs = 0
+# warmup_start = 0.1
+# warmup_end = 1.0
 
 step_lr_steps = 2
 step_lr_factor = 0.99
 weight_decay = 0.01
 
-num_workers = 16
-train_batch_size = 24
-val_batch_size = 24
+num_workers = 2
+train_batch_size = 4
+val_batch_size = 4
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
