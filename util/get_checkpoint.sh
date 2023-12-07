@@ -32,3 +32,5 @@ if [ $? -eq 0 ]; then
 else
     echo "Error in copying folder."
 fi
+
+read -p "Press Enter to continue"
