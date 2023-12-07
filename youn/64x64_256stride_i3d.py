@@ -242,6 +242,7 @@ def get_train_valid_dataset():
                         '20230904135535']:
         print('reading ', fragment_id)
         image, mask, fragment_mask = read_image_mask(fragment_id)
+        print("shape is ", image.shape)
         x1_list = list(range(0, image.shape[1] - CFG.tile_size + 1, CFG.stride))
         y1_list = list(range(0, image.shape[0] - CFG.tile_size + 1, CFG.stride))
 
@@ -249,19 +250,32 @@ def get_train_valid_dataset():
             for x1 in x1_list:
                 y2 = y1 + CFG.size
                 x2 = x1 + CFG.size
+                if np.any(fragment_mask[y1:y2, x1:x2] == 0):
+                    continue
+
                 if fragment_id != CFG.valid_id:
-                    if not np.all(mask[y1:y2, x1:x2] < 0.05):
-                        if not np.any(fragment_mask[y1:y2, x1:x2] == 0):
+                    if np.any(mask[y1:y2, x1:x2] >= 0.05):
                             train_images.append(image[y1:y2, x1:x2])
                             train_masks.append(mask[y1:y2, x1:x2, None])
                             assert image[y1:y2, x1:x2].shape == (CFG.size, CFG.size, CFG.in_chans)
                 if fragment_id == CFG.valid_id:
-                    if not np.any(fragment_mask[y1:y2, x1:x2] == 0):
+                    if np.any(mask[y1:y2, x1:x2] >= 0.05):
                         valid_images.append(image[y1:y2, x1:x2])
                         valid_masks.append(mask[y1:y2, x1:x2, None])
 
                         valid_xyxys.append([x1, y1, x2, y2])
                         assert image[y1:y2, x1:x2].shape == (CFG.size, CFG.size, CFG.in_chans)
+                    elif random.random() > 0.75:
+                        valid_images.append(image[y1:y2, x1:x2])
+                        valid_masks.append(mask[y1:y2, x1:x2, None])
+
+                        valid_xyxys.append([x1, y1, x2, y2])
+                        assert image[y1:y2, x1:x2].shape == (CFG.size, CFG.size, CFG.in_chans)
+
+
+        print("train images", len(train_images))
+        print("val images", len(valid_images))
+
 
     return train_images, train_masks, valid_images, valid_masks, valid_xyxys
 
