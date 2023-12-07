@@ -61,9 +61,6 @@ train_aug = [
                          border_mode=0,
                          value=(0, 0, 0), mask_value=None, normalized=False),
         A.ImageCompression(always_apply=True, quality_lower=62, quality_upper=91, compression_type=1),
-        A.PiecewiseAffine(always_apply=True, scale=(0.03, 0.03), nb_rows=(3, 3), nb_cols=(3, 3), interpolation=0,
-                          mask_interpolation=0, cval=0, cval_mask=0, mode='constant', absolute_scale=False,
-                          keypoints_threshold=0.01),
         A.RandomResizedCrop(always_apply=True, height=patch_size, width=patch_size, scale=(0.78, 1.0),
                             ratio=(0.75, 1.51),
                             interpolation=0)
