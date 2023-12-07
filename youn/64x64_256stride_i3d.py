@@ -78,7 +78,7 @@ class CFG:
     max_grad_norm = 100
 
     print_freq = 50
-    num_workers = 1
+    num_workers = 16
 
     seed = 0
 
