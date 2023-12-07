@@ -532,7 +532,7 @@ def main():
     model = RegressionPLModel(enc='i3d', pred_shape=pred_shape, size=CFG.size)
 
     print('FOLD : ', fold)
-    wandb_logger.watch(model, log="all", log_freq=100)
+    # wandb_logger.watch(model, log="all", log_freq=100)
 
     trainer = pl.Trainer(
         max_epochs=12,
