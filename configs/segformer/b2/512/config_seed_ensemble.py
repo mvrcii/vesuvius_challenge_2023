@@ -1,5 +1,7 @@
 import os
+
 import albumentations as A
+
 from constants import (ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, IRONHIDE_FRAG_ID, MEGATRON_FRAG_ID,
                        BUMBLEBEE_FRAG_ID, SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID)
 
@@ -29,15 +31,15 @@ model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
-seed = 1
+seed = 7777
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
 
 val_interval = 1
-lr = 5e-4
+lr = 2e-4
 
-warmup_epochs = 5
+warmup_epochs = 0
 warmup_start = 0.1
 warmup_end = 1.0
 
@@ -51,25 +53,27 @@ val_batch_size = 24
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
-    A.HorizontalFlip(),
-    A.VerticalFlip(),
-    A.RandomRotate90(),
-    A.Transpose(),
     A.OneOf([
-        A.RandomGamma(gamma_limit=(56, 150), eps=None),
-        A.AdvancedBlur(blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
+        A.HorizontalFlip(),
+        A.VerticalFlip(),
+        A.RandomRotate90(),
+        A.Transpose(),
+        A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
+        A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
                        rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
-        A.CoarseDropout(max_holes=3, max_height=56, max_width=56, min_holes=2, min_height=38,
+        A.ChannelDropout(always_apply=True, channel_drop_range=(1, 1), fill_value=0),
+        A.CoarseDropout(always_apply=True, max_holes=6, max_height=56, max_width=56, min_holes=2, min_height=38,
                         min_width=38, fill_value=0, mask_fill_value=None),
-        A.Downscale(scale_min=0.65, scale_max=0.99),
-        A.GridDistortion(num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
+        A.Downscale(always_apply=True, scale_min=0.55, scale_max=0.99),
+        A.GridDistortion(always_apply=True, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
                          border_mode=0,
                          value=(0, 0, 0), mask_value=None, normalized=False),
-        A.RandomResizedCrop(height=patch_size, width=patch_size, scale=(0.65, 1.0),
-                            ratio=(0.85, 1.15),
+        A.ImageCompression(always_apply=True, quality_lower=62, quality_upper=91, compression_type=1),
+        A.RandomResizedCrop(always_apply=True, height=patch_size, width=patch_size, scale=(0.78, 1.0),
+                            ratio=(0.75, 1.51),
                             interpolation=0)
     ], p=0.5),
-    A.ChannelDropout(p=0.05, channel_drop_range=(1, 1), fill_value=0),
+    # A.ChannelDropout(p=0.05, channel_drop_range=(1, 1), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
