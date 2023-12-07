@@ -49,7 +49,7 @@ class CFG:
     stride = tile_size // 8
 
     # todo, original 256
-    train_batch_size = 8  # 32
+    train_batch_size = 32  # 32
     valid_batch_size = train_batch_size
     use_amp = True
 
@@ -236,9 +236,9 @@ def get_train_valid_dataset():
     valid_masks = []
     valid_xyxys = []
 
-    # for fragment_id in ['20230522181603', '20230702185752', '20230827161847', '20230909121925', '20230905134255',
-    #                     '20230904135535']:
-    for fragment_id in ['20230827161847', '20230905134255']:
+    # for fragment_id in ['20230827161847', '20230905134255']:
+    for fragment_id in ['20230522181603', '20230702185752', '20230827161847', '20230909121925', '20230905134255',
+                        '20230904135535']:
         print('reading ', fragment_id)
         image, mask, fragment_mask = read_image_mask(fragment_id)
         x1_list = list(range(0, image.shape[1] - CFG.tile_size + 1, CFG.stride))
@@ -257,15 +257,15 @@ def get_train_valid_dataset():
                         if fragment_id != CFG.valid_id:
                             if not np.all(mask[a:a + CFG.tile_size, b:b + CFG.tile_size] < 0.05):
                                 if not np.any(fragment_mask[a:a + CFG.tile_size, b:b + CFG.tile_size] == 0):
-                                    if len(train_images) > 100:
-                                        continue
+                                    # if len(train_images) > 100:
+                                    #     continue
                                     train_images.append(image[y1:y2, x1:x2])
                                     train_masks.append(mask[y1:y2, x1:x2, None])
                                     assert image[y1:y2, x1:x2].shape == (CFG.size, CFG.size, CFG.in_chans)
                         if fragment_id == CFG.valid_id:
                             if not np.any(fragment_mask[a:a + CFG.tile_size, b:b + CFG.tile_size] == 0):
-                                if len(valid_images) > 100:
-                                    continue
+                                # if len(valid_images) > 100:
+                                #     continue
                                 valid_images.append(image[y1:y2, x1:x2])
                                 valid_masks.append(mask[y1:y2, x1:x2, None])
 
