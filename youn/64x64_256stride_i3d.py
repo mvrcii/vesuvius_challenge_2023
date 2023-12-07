@@ -529,7 +529,7 @@ def main():
     # wandb_logger.watch(model, log="all", log_freq=100)
 
     trainer = pl.Trainer(
-        max_epochs=12,
+        max_epochs=300,
         accelerator="gpu",
         devices=1,
         logger=wandb_logger,
