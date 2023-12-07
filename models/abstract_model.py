@@ -2,7 +2,7 @@ import torch
 from einops import rearrange
 from lightning import LightningModule
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
+from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR, LinearLR, SequentialLR
 from torchmetrics import Dice
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryJaccardIndex as IoU)
@@ -30,6 +30,10 @@ class AbstractVesuvLightningModule(LightningModule):
         self.iou = IoU()
         self.dice_coefficient = Dice(multiclass=False, threshold=0.5)
 
+        self.warmup_epochs = cfg.warmup_epochs
+        self.warmup_start = cfg.warmup_start
+        self.warmup_end = cfg.warmup_end
+
     def configure_optimizers(self):
         if self.optimizer == 'adamw':
             optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
@@ -39,11 +43,29 @@ class AbstractVesuvLightningModule(LightningModule):
         if self.epochs == -1:
             # Set T_0 to a reasonable value based on your dataset and model
             # scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=25, T_mult=2)
-            scheduler = StepLR(
+
+            warmup_scheduler = LinearLR(
+                optimizer,
+                start_factor=self.warmup_start,
+                end_factor=self.warmup_end,
+                total_iters=self.warmup_epochs
+            )
+
+            step_lr_scheduler = StepLR(
                 optimizer,
                 step_size=self.step_lr_steps,
                 gamma=self.step_lr_factor
             )
+
+            if self.warmup_epochs > 0:
+                # Combine them using SequentialLR
+                scheduler = SequentialLR(
+                    optimizer,
+                    schedulers=[warmup_scheduler, step_lr_scheduler],
+                    milestones=[self.warmup_epochs]
+                )
+            else:
+                scheduler = step_lr_scheduler
         else:
             scheduler = CosineAnnealingLR(
                 optimizer,
