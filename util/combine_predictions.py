@@ -400,22 +400,39 @@ class Visualization:
 
         model_names_str = self.create_ensemble_dir_simple_names(self.model_names, file_prefix)
 
-        mode = self.modes[self.mode_var.get()]
-        threshold = self.get_threshold()
-        inverted_str = f'inverted' if self.inverted else ""
+        mode_key = self.mode_var.get()
+        mode = self.modes[mode_key]
+        inverted_str = f'_inverted' if self.inverted else ""
 
-        file_path = os.path.join(target_dir, f"{model_names_str}_{mode.lower()}_{threshold}_{inverted_str}.png")
+        save_all = False
 
-        image = self.process_image(array=self.array, max_size=self.target_dims, save_img=True)
-        #
-        # if image.mode != 'RGBA':
-        #     image = image.convert('RGBA')
-        #
-        # data = np.array(image)  # Convert image to numpy array
-        # data[:, :, 3] = np.where(data[:, :, 0:3].sum(axis=2) == 0, 0, 255)  # Set alpha to 0 where RGB sums to 0, else 255
-        # image = Image.fromarray(data)
+        # Layer mode
+        if mode_key == 2:
+            if save_all:
+                for idx, layer in enumerate(self.layer_idxs):
+                    file_name = f"{model_names_str}_{mode.lower()}_{layer}{inverted_str}.png"
+                    file_path = os.path.join(target_dir, file_name)
+                    layer_arr = self.get_layer_weighted_arr(int(idx))
+                    image = self.process_image(array=layer_arr, max_size=self.target_dims, save_img=True)
+                    print(f"Saving {file_name}")
+                    image.save(file_path)
+            else:
+                layer = int(self.get_threshold())
+                file_name = f"{model_names_str}_{mode.lower()}_{layer}{inverted_str}.png"
+                file_path = os.path.join(target_dir, file_name)
+                image = self.process_image(array=self.array, max_size=self.target_dims, save_img=True)
+                print(f"Saving {file_name}")
+                image.save(file_path)
+        else:
+            threshold = self.get_threshold()
+            file_path = os.path.join(target_dir, f"{model_names_str}_{mode.lower()}_{threshold}{inverted_str}.png")
 
-        image.save(file_path)
+            image = self.process_image(array=self.array, max_size=self.target_dims, save_img=True)
+            image.save(file_path)
+
+
+
+
 
     def invert_colors(self):
         self.inverted = not self.inverted
