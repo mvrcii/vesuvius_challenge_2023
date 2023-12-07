@@ -95,9 +95,6 @@ if __name__ == '__main__':
         A.CoarseDropout(always_apply=True, max_holes=6, max_height=56, max_width=56, min_holes=2, min_height=38,
                         min_width=38, fill_value=0, mask_fill_value=None),
         A.Downscale(always_apply=True, scale_min=0.55, scale_max=0.99),
-        A.PiecewiseAffine(always_apply=True, scale=(0.03, 0.03), nb_rows=(3, 3), nb_cols=(3, 3), interpolation=0,
-                          mask_interpolation=0, cval=0, cval_mask=0, mode='constant', absolute_scale=False,
-                          keypoints_threshold=0.01),
         A.ElasticTransform(always_apply=True, alpha=0.37, sigma=20, alpha_affine=20, interpolation=0, border_mode=0,
                            value=(0, 0, 0, 0), mask_value=None, approximate=False, same_dxdy=False)
     ]
