@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-from constants import BLASTER_FRAG_ID
+from constants import BLASTER_FRAG_ID, get_ckpt_name_from_id, get_frag_name_from_id
 from constants import STELLAR_VIOLET, REVIVED_BEE, AMBER_PLANT, CHOCOLATE_FOG
 
 
@@ -25,11 +25,17 @@ for fragment_id in FRAGMENT_IDS:
         ]
 
         # Execute the command
+        print(f"Started inference with checkpoint {get_ckpt_name_from_id(checkpoint).upper()} "
+              f"on fragment {get_frag_name_from_id(fragment_id).upper()}")
+
         process = subprocess.run(command, capture_output=True, text=True)
 
         # Check if an error occurred
         if process.returncode != 0:
             print(f"Error occurred while processing fragment {fragment_id} with checkpoint {checkpoint}:")
             print(process.stderr)
+        else:
+            print(f"Finished inference with checkpoint {get_ckpt_name_from_id(checkpoint).upper()} "
+                  f"on fragment {get_frag_name_from_id(fragment_id).upper()}")
 
 print("Batch inference completed.")
