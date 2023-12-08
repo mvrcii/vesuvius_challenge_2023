@@ -29,9 +29,17 @@ def extract_patches(config, processing_type):
         process_fragment(config=config, fragment_id=fragment_id, channels=channels, processing_type=processing_type)
 
     if processing_type == 'labels':
+        root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
         df = pd.DataFrame(LABEL_INFO_LIST, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
-        file_name = os.path.join(config.dataset_target_dir, str(config.patch_size), "label_infos.csv")
-        df.to_csv(file_name)
+        df.to_csv(os.path.join(root_dir, "label_infos.csv"))
+
+        write_to_config(os.path.join(root_dir),
+                        patch_size=config.patch_size,
+                        label_size=config.label_size,
+                        stride=config.stride,
+                        in_chans=config.in_chans,
+                        fragment_names=[get_frag_name_from_id(frag_id).upper() for frag_id in frag_id_2_channel.keys()],
+                        frag_id_2_channel=frag_id_2_channel)
 
 
 def process_fragment(config, fragment_id, channels, processing_type):
@@ -49,11 +57,17 @@ def process_fragment(config, fragment_id, channels, processing_type):
 
 
 def clean_all_fragment_label_dirs(config: Config):
+    root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
     for fragment_id in FRAGMENTS.values():
         frag_name = '_'.join([get_frag_name_from_id(fragment_id)]).upper()
-        label_dir = os.path.join(config.dataset_target_dir, str(config.patch_size), frag_name, 'labels')
+        label_dir = os.path.join(root_dir, frag_name, 'labels')
         if os.path.isdir(label_dir):
             shutil.rmtree(label_dir)
+
+    for file in ['label_infos.csv', 'config.json']:
+        file_path = os.path.join(root_dir, file)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
 
 
 def create_dataset(target_dir, config, frag_id, channels, processing_type):
