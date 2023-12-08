@@ -19,7 +19,7 @@ dataset_target_dir = os.path.join("data", "datasets")
 patch_size = 64
 label_size = patch_size // 4
 stride = patch_size
-ink_ratio = 5
+ink_ratio = 1
 artefact_threshold = 5
 fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,
                 SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID,
