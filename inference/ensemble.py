@@ -96,4 +96,4 @@ if __name__ == "__main__":
         exit()
 
     print("Running ensemble for fragment", args.id, "with strategy", args.strategy, "...")
-    main(args.id, args.string)
+    main(args.id, args.strategy)
