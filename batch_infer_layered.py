@@ -5,6 +5,16 @@ from constants import BLASTER_FRAG_ID, get_ckpt_name_from_id, get_frag_name_from
 from constants import STELLAR_VIOLET, REVIVED_BEE, AMBER_PLANT, CHOCOLATE_FOG
 
 
+def print_colored(message, color):
+    colors = {
+        "blue": '\033[94m',
+        "green": '\033[92m',
+        "red": '\033[91m',
+        "end": '\033[0m',
+    }
+    print(f"{colors[color]}{message}{colors['end']}")
+
+
 FRAGMENT_IDS = [BLASTER_FRAG_ID]
 CHECKPOINTS = [AMBER_PLANT, CHOCOLATE_FOG, REVIVED_BEE, STELLAR_VIOLET]
 
@@ -24,20 +34,20 @@ for fragment_id in FRAGMENT_IDS:
             '--batch_size', str(batch_size)
         ]
 
-        # Execute the command
-        print(f"Started inference with checkpoint {get_ckpt_name_from_id(checkpoint).upper()} "
-              f"on fragment {get_frag_name_from_id(fragment_id).upper()}")
+        ckpt_str = get_ckpt_name_from_id(checkpoint).upper()
+        frag_str = get_frag_name_from_id(fragment_id).upper()
+        print_colored(f"INFERENCE:\t\tSTARTED:\t\t{ckpt_str} -> {frag_str}", "blue")
 
+        # Execute the command
         process = subprocess.run(command, text=True)
 
         print(process.stdout)
 
         # Check if an error occurred
         if process.returncode != 0:
-            print(f"Error occurred while processing fragment {fragment_id} with checkpoint {checkpoint}:")
-            print(process.stderr)
+            print_colored(f"INFERENCE:\t\tERROR:\t\t{ckpt_str} -> {frag_str}", "red")
+            print_colored(process.stderr, "red")
         else:
-            print(f"Finished inference with checkpoint {get_ckpt_name_from_id(checkpoint).upper()} "
-                  f"on fragment {get_frag_name_from_id(fragment_id).upper()}")
+            print_colored(f"INFERENCE:\t\tDONE:\t\t{ckpt_str} -> {frag_str}", "green")
 
-print("Batch inference completed.")
+print_colored("\nINFERENCE: COMPLETED", "green")
