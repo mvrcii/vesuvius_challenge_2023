@@ -113,6 +113,13 @@ def get_frag_name_from_id(frag_id):
     return "Unknown Fragment"
 
 
+def get_ckpt_name_from_id(checkpoint_name):
+    for name, checkpoint in CHECKPOINTS.items():
+        if checkpoint == checkpoint_name:
+            return name
+    return "Unknown Checkpoint"
+
+
 def get_frag_id_from_name(frag_name):
     for name, id in FRAGMENTS.items():
         if frag_name == name:

@@ -12,7 +12,7 @@ from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 
 from config_handler import Config
-from constants import get_frag_name_from_id
+from constants import get_frag_name_from_id, get_ckpt_name_from_id
 from models.simplecnn import SimpleCNNModule
 
 '''
@@ -54,7 +54,7 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
     return images
 
 
-def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, layer_start):
+def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
     patch_size = config.patch_size
     expected_patch_shape = (config.in_chans, patch_size, patch_size)
 
@@ -100,9 +100,10 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device='cuda')
     pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
 
-    progress_bar = tqdm(total=x_patches * y_patches, desc=f"Step {layer_start}/{end_idx - 1}: Infer Full Fragment "
-                                                          f"{get_frag_name_from_id(fragment_id)}: Processing patches"
-                                                          f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
+    progress_bar = tqdm(total=x_patches * y_patches,
+                        desc=f"Step {layer_start}/{end_idx - 1}: Infer Fragment {get_frag_name_from_id(fragment_id)} "
+                             f"with {get_ckpt_name_from_id(ckpt_name)}: Processing patches"
+                             f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
 
     preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device='cuda')
     model = model.half()
@@ -283,6 +284,7 @@ if __name__ == '__main__':
             continue
 
         sigmoid_logits = infer_full_fragment_layer(model=model,
+                                                   ckpt_name=checkpoint_folder_name,
                                                    batch_size=batch_size,
                                                    fragment_id=fragment_id,
                                                    config=config,
