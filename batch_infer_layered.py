@@ -220,6 +220,7 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    Image.MAX_IMAGE_PIXELS = None
     args = parse_args()
 
     checkpoint_folder_name = args.checkpoint_folder_name
