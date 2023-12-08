@@ -17,8 +17,8 @@ for fragment_id in FRAGMENT_IDS:
 
         command = [
             sys.executable, 'infer_layered.py',
-            'fragment_id', str(fragment_id),
-            'checkpoint_folder_name', str(checkpoint),
+            str(checkpoint),
+            str(fragment_id),
             '--start_idx', str(start_idx),
             '--end_idx', str(end_idx),
             '--batch_size', str(batch_size)
