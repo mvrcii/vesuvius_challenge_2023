@@ -24,7 +24,7 @@ CHECKPOINTS = [LIVELY_MEADOW]
 
 start_idx = 0
 end_idx = 60
-batch_size = 16
+batch_size = 32
 
 for fragment_id in FRAGMENT_IDS:
     for checkpoint in CHECKPOINTS:
