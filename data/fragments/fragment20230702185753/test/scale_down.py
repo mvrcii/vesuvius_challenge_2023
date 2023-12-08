@@ -1,5 +1,6 @@
 import os
 from PIL import Image
+from tqdm import tqdm
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -8,7 +9,7 @@ if not os.path.exists('scaled_down'):
     os.makedirs('scaled_down')
 
 # Iterate through all files in the current directory
-for filename in os.listdir('.'):
+for filename in tqdm(os.listdir('.')):
     if filename.endswith('.png'):
         img = Image.open(filename)
         # Scale the image down to 25% of its size
