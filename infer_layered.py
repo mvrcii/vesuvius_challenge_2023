@@ -97,7 +97,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     out_height = height // 4
     out_width = width // 4
 
-    assert out_height % 128 == 0 and out_width % 128 == 0, "Out height/width not valid"
+    # assert out_height % 128 == 0 and out_width % 128 == 0, "Out height/width not valid"
 
     out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device='cuda')
     pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
