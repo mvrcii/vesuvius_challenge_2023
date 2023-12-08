@@ -102,7 +102,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
 
     progress_bar = tqdm(total=x_patches * y_patches,
                         desc=f"Step {layer_start}/{end_idx - 1}: Infer Fragment {get_frag_name_from_id(fragment_id)} "
-                             f"with {get_ckpt_name_from_id(ckpt_name)}: Processing patches"
+                             f"with {get_ckpt_name_from_id(ckpt_name).upper()}: Processing patches"
                              f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
 
     preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device='cuda')
