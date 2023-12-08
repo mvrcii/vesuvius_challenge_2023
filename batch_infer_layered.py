@@ -30,6 +30,12 @@ for fragment_id in FRAGMENT_IDS:
 
         process = subprocess.run(command, capture_output=True, text=True)
 
+        # Print stdout and stderr
+        print("Output:")
+        print(process.stdout)
+        print("Error (if any):")
+        print(process.stderr)
+
         # Check if an error occurred
         if process.returncode != 0:
             print(f"Error occurred while processing fragment {fragment_id} with checkpoint {checkpoint}:")
