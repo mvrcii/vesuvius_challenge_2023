@@ -14,12 +14,9 @@ from lightning.pytorch.trainer import Trainer
 
 from config_handler import Config
 from data_modules.cnn.cnn_datamodule import CNNDataModule
-from data_modules.inception.inception_datamodule import InceptionDataModule
 from data_modules.segformer.segformer_datamodule import SegFormerDataModule
 from data_modules.unetplusplus.unetplusplus_datamodule import UnetPlusPlusDataModule
 from models.cnn3d_segformer import CNN3D_SegformerModule
-from models.inception import InceptionModule
-from models.inception_backbone import RegressionPLModel
 from models.segformer import SegformerModule
 from models.simplecnn import SimpleCNNModule
 from models.unetplusplus import UnetPlusPlusModule
@@ -58,10 +55,10 @@ def get_model(config: Config):
         return UnetPlusPlusModule(cfg=config)
     elif architecture == 'simplecnn':
         return SimpleCNNModule(cfg=config)
-    elif architecture == 'inception':
-        return InceptionModule(cfg=config)
-    elif architecture == 'inceptionv1':
-        return RegressionPLModel(cfg=config, enc='i3d', size=config.patch_size)
+    # elif architecture == 'inception':
+    #     return InceptionModule(cfg=config)
+    # elif architecture == 'inceptionv1':
+    #     return RegressionPLModel(cfg=config, enc='i3d', size=config.patch_size)
     else:
         print("Invalid architecture for model:", architecture)
         sys.exit(1)
@@ -86,8 +83,8 @@ def get_data_module(config: Config):
         return UnetPlusPlusDataModule(cfg=config)
     elif architecture == "simplecnn":
         return CNNDataModule(cfg=config)
-    elif architecture == "inception" or architecture == 'inceptionv1':
-        return InceptionDataModule(cfg=config)
+    # elif architecture == "inception" or architecture == 'inceptionv1':
+    #     return InceptionDataModule(cfg=config)
     else:
         print("Invalid architecture for data module:", architecture)
         sys.exit(1)
