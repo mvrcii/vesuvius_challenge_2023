@@ -273,11 +273,13 @@ def parse_args(default_start_idx, default_end_idx):
     parser = argparse.ArgumentParser(description='Batch Infer Layered Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
-    parser.add_argument('--start_idx', type=int, default=default_start_idx, help='Start index (default: {})'.format(default_start_idx))
-    parser.add_argument('--end_idx', type=int, default=default_end_idx, help='End index (default: {})'.format(default_end_idx))
+    parser.add_argument('--start_idx', type=int, default=default_start_idx,
+                        help='Start index (default: {})'.format(default_start_idx))
+    parser.add_argument('--end_idx', type=int, default=default_end_idx,
+                        help='End index (default: {})'.format(default_end_idx))
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
-                                                                         'for the inference')
+                                                              'for the inference')
     args = parser.parse_args()
 
     return args
@@ -370,6 +372,6 @@ if __name__ == '__main__':
         if save_labels and layer_idx in valid_start_idxs:
             target_dims = get_target_dims(work_dir=config.work_dir, frag_id=fragment_id)
             image = process_image(array=output, dimensions=target_dims)
-            os.path.join(results_dir, 'labels', fragment_id,
-                         f"{fragment_id}_inklabels_{layer_idx}_{layer_idx + config.in_chans - 1}.png")
-            image.save(file_path)
+            image_path = os.path.join(results_dir, 'labels', fragment_id,
+                                      f"{fragment_id}_inklabels_{layer_idx}_{layer_idx + config.in_chans - 1}.png")
+            image.save(image_path)
