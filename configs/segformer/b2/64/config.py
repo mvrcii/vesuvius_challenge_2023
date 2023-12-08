@@ -3,7 +3,8 @@ import os
 import albumentations as A
 
 from constants import (ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, IRONHIDE_FRAG_ID, MEGATRON_FRAG_ID,
-                       BUMBLEBEE_FRAG_ID, SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID)
+                       BUMBLEBEE_FRAG_ID, SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID, BLASTER_FRAG_ID,
+                       JAZZ_FRAG_ID, SUNSTREAKER_FRAG_ID, DEVASTATOR_FRAG_ID)
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -21,7 +22,8 @@ stride = patch_size
 ink_ratio = 3
 artefact_threshold = 5
 fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,
-                SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
+                SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID,
+                JAZZ_FRAG_ID, SUNSTREAKER_FRAG_ID, DEVASTATOR_FRAG_ID, BLASTER_FRAG_ID]
 train_split = 0.8
 
 # training parameters
