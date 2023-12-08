@@ -286,7 +286,6 @@ if __name__ == '__main__':
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
-    # print("Loaded model", checkpoint_path)
 
     for i in range(start_idx, end_idx + 1, 1):
         file_path = os.path.join(results_dir, f"sigmoid_logits_{i}_{i + config.in_chans - 1}.npy")
@@ -302,6 +301,3 @@ if __name__ == '__main__':
         torch.cuda.empty_cache()
         output = sigmoid_logits.cpu().numpy()
         np.save(file_path, output)
-
-    print(f"Finished inference with checkpoint {get_ckpt_name_from_id(checkpoint_folder_name).upper()} "
-          f"on fragment {get_frag_name_from_id(fragment_id).upper()}.")
