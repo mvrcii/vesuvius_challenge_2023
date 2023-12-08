@@ -30,11 +30,11 @@ architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "fine-wildflower-497-segformer-b2-231128-164424"
-in_chans = 16
+in_chans = 64
 seed = 7777
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
-dataset_fraction = 1
+dataset_fraction = 0.01
 
 val_interval = 1
 lr = 2e-4
@@ -42,9 +42,9 @@ step_lr_steps = 2
 step_lr_factor = 0.97
 weight_decay = 0.01
 
-num_workers = 16
-train_batch_size = 512
-val_batch_size = 512
+num_workers = 4
+train_batch_size = 25
+val_batch_size = 25
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
