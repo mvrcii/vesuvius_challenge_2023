@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import sys
 import warnings
@@ -223,6 +224,8 @@ def parse_args():
 
 if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
+    warnings.filterwarnings('ignore', message="Some weights of SegformerForSemanticSegmentation were not initialized.*")
+    logging.getLogger().setLevel(logging.ERROR)
 
     Image.MAX_IMAGE_PIXELS = None
     args = parse_args()
