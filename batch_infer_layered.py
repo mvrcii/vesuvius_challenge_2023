@@ -36,7 +36,7 @@ for fragment_id in FRAGMENT_IDS:
 
         ckpt_str = get_ckpt_name_from_id(checkpoint).upper()
         frag_str = get_frag_name_from_id(fragment_id).upper()
-        print_colored(f"INFERENCE:\t\tSTARTED:\t\t{ckpt_str} -> {frag_str}", "blue")
+        print_colored(f"INFERENCE:\tSTARTED:\t{ckpt_str} -> {frag_str}", "blue")
 
         # Execute the command
         process = subprocess.run(command, text=True)
@@ -46,9 +46,9 @@ for fragment_id in FRAGMENT_IDS:
 
         # Check if an error occurred
         if process.returncode != 0:
-            print_colored(f"INFERENCE:\t\tERROR:\t\t{ckpt_str} -> {frag_str}", "red")
+            print_colored(f"INFERENCE:\tERROR:\t{ckpt_str} -> {frag_str}", "red")
             print_colored(process.stderr, "red")
         else:
-            print_colored(f"INFERENCE:\t\tDONE:\t\t{ckpt_str} -> {frag_str}", "green")
+            print_colored(f"INFERENCE:\tDONE:\t{ckpt_str} -> {frag_str}", "green")
 
 print_colored("\nINFERENCE: COMPLETED", "green")
