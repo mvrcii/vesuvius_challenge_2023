@@ -29,7 +29,7 @@ def main(fragment__id, strategy):
         next_ensemble_id = max(current_ensemble_ids) + 1
 
     # Ensemble short info id
-    ensemble_info_id = "".join([os.path.basename(dir_name)[0] for dir_name in ensemble_dir_paths]) + f"_{strategy}"
+    ensemble_info_id = "".join([os.path.basename(dir_name)[0] for dir_name in inference_dir_paths]) + f"_{strategy}"
     print("info id: ", ensemble_info_id)
 
     # Output path
@@ -60,10 +60,10 @@ def main(fragment__id, strategy):
         np.save(os.path.join(out_path, npy_name), result)
 
     # Save config to output path, listing current time as well as the used inference directories
-    config = f"Ensemble of {len(ensemble_dir_paths)} inferences, strategy: {strategy}\n"
+    config = f"Ensemble of {len(inference_dir_paths)} inferences, strategy: {strategy}\n"
     config += f"Used inferences:\n"
-    for inference_dir in ensemble_dir_paths:
-        config += f"{inference_dir}\n"
+    for inference_dir in inference_dir_paths:
+        config += f"{os.path.basename(inference_dir)}\n"
     config += f"Created at {datetime.now()}"
     with open(os.path.join(out_path, "config.txt"), "w") as f:
         f.write(config)
