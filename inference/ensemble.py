@@ -22,6 +22,9 @@ def main(fragment__id, strategy):
         print(f"{fragment_dir_path} only contains {len(inference_dir_paths)} inferences, ensemble not possible.")
         exit()
 
+    print("Attempting ensemble with ")
+    print(inference_dir_paths)
+
     # Determine name of output directory, e.g. ensemble1
     ensemble_dir_paths = [x for x in contained_dir_paths if x.startswith("ensemble")]
     current_ensemble_ids = [int(os.path.basename(dir_name).split("_")[-1]) for dir_name in ensemble_dir_paths]
