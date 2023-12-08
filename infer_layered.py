@@ -224,8 +224,12 @@ def parse_args():
 
 if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
-    warnings.filterwarnings('ignore', message="Some weights of SegformerForSemanticSegmentation were not initialized.*")
-    logging.getLogger().setLevel(logging.ERROR)
+
+    from transformers.utils import logging
+    logging.set_verbosity_error()
+    # logger = logging.get_logger("transformers")
+    # logger.info("INFO")
+    # logger.warning("WARN")
 
     Image.MAX_IMAGE_PIXELS = None
     args = parse_args()
