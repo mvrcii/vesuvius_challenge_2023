@@ -3,7 +3,8 @@ import os
 import albumentations as A
 
 from constants import (ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, IRONHIDE_FRAG_ID, MEGATRON_FRAG_ID,
-                       BUMBLEBEE_FRAG_ID, SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID)
+                       BUMBLEBEE_FRAG_ID, SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID, JAZZ_FRAG_ID,
+                       DEVASTATOR_FRAG_ID, SUNSTREAKER_FRAG_ID)
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -20,8 +21,8 @@ label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
 artefact_threshold = 5
-fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,
-                SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
+fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID, SUNSTREAKER_FRAG_ID,
+                SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID, JAZZ_FRAG_ID, DEVASTATOR_FRAG_ID]
 train_split = 0.8
 
 # training parameters
@@ -34,7 +35,7 @@ in_chans = 4
 seed = 7777
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
-dataset_fraction = 0.01
+dataset_fraction = 1
 
 val_interval = 1
 lr = 2e-4
@@ -42,9 +43,9 @@ step_lr_steps = 2
 step_lr_factor = 0.97
 weight_decay = 0.01
 
-num_workers = 4
-train_batch_size = 25
-val_batch_size = 25
+num_workers = 16
+train_batch_size = 256
+val_batch_size = 256
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
