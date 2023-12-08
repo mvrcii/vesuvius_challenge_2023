@@ -30,11 +30,7 @@ for fragment_id in FRAGMENT_IDS:
 
         process = subprocess.run(command, text=True)
 
-        # Print stdout and stderr
-        print("Output:")
         print(process.stdout)
-        print("Error (if any):")
-        print(process.stderr)
 
         # Check if an error occurred
         if process.returncode != 0:
