@@ -12,15 +12,16 @@ def get_inference(frag_ids, checkpoint_path, host):
             checkpoint_path,
             host
         ]
-        subprocess.run(command)
+
+        # Execute the command
+        process = subprocess.run(command, text=True)
+
+        if process.stdout:
+            print(process.stdout)
 
 
 if __name__ == '__main__':
-    # fragments = FRAGMENTS.values()
-    fragments = FRAGMENT_IDS = [STARSCREAM_FRAG_ID, MEGATRON_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID, SOUNDWAVE_FRAG_ID,
-                OPTIMUS_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, JAZZ_FRAG_ID, JETFIRE_FRAG_ID, SUNSTREAKER_FRAG_ID,
-                DEVASTATOR_FRAG_ID,
+    fragments = FRAGMENTS_ALPHA
+    checkpoint = LIVELY_MEADOW
 
-                GRIMLOCK_FRAG_ID, HOT_ROD_FRAG_ID]
-
-    get_inference(frag_ids=fragments, checkpoint_path=LIVELY_MEADOW, host="vast")
+    get_inference(frag_ids=fragments, checkpoint_path=checkpoint, host="vast")

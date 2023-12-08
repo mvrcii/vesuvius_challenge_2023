@@ -237,6 +237,7 @@ class Visualization:
         self.root_dir = root_dir
         self.target_dims = target_dims
         self.rotate_num = constants.get_rotate_value(frag_id=frag_id)
+        self.flip_num = constants.get_flip_value(frag_id=frag_id)
 
         self.model_names = list(model_arrays.keys())
         self.models = list(model_arrays.values())
@@ -532,7 +533,7 @@ class Visualization:
 
         if not save_img:
             processed = self.rot90(processed, self.rotate_num)  # Rotate
-            # processed = np.flip(processed, 1)
+            # processed = np.flip(processed, self.flip_num)
 
         threshold = self.get_threshold()
         if self.mode_var.get() == 2:
