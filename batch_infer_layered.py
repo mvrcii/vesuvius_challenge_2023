@@ -25,6 +25,11 @@ CHECKPOINTS = [LIVELY_MEADOW]
 start_idx = 0
 end_idx = 60
 batch_size = 32
+labels = True
+
+labels_str = ''
+if labels:
+    labels_str = ' --labels'
 
 for fragment_id in FRAGMENT_IDS:
     for checkpoint in CHECKPOINTS:
@@ -35,7 +40,8 @@ for fragment_id in FRAGMENT_IDS:
             str(fragment_id),
             '--start_idx', str(start_idx),
             '--end_idx', str(end_idx),
-            '--batch_size', str(batch_size)
+            '--batch_size', str(batch_size),
+            str(labels_str)
         ]
 
         ckpt_str = get_ckpt_name_from_id(checkpoint).upper()
