@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import warnings
 from datetime import datetime
 
 import albumentations as A
@@ -221,6 +222,8 @@ def parse_args():
 
 
 if __name__ == '__main__':
+    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
+
     Image.MAX_IMAGE_PIXELS = None
     args = parse_args()
 

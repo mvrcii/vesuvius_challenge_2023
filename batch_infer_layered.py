@@ -28,7 +28,7 @@ for fragment_id in FRAGMENT_IDS:
         print(f"Started inference with checkpoint {get_ckpt_name_from_id(checkpoint).upper()} "
               f"on fragment {get_frag_name_from_id(fragment_id).upper()}")
 
-        process = subprocess.run(command, capture_output=True, text=True)
+        process = subprocess.run(command, text=True)
 
         # Print stdout and stderr
         print("Output:")
