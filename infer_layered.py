@@ -244,9 +244,12 @@ def save_npy_as_img(cfg: Config, target_dir, array, frag_id, layer_index):
     target_dir = os.path.join(target_dir, 'labels', fragment_id)
     os.makedirs(target_dir, exist_ok=True)
     image_file_name = f"{fragment_id}_inklabels_{layer_index}_{layer_index + cfg.in_chans - 1}.png"
-    print("Saved label file:", image_file_name)
-
     image_path = os.path.join(target_dir, image_file_name)
+
+    if os.path.isfile(image_path):
+        return
+
+    print("Saved label file:", image_file_name)
     image.save(image_path)
 
 
