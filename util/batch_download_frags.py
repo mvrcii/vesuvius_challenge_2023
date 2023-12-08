@@ -85,27 +85,32 @@ def get_consecutive_ranges(missing_slices):
     return ranges
 
 
-# Main script execution
-fragment_ids = get_fragment_ids()
-for fragment_id in fragment_ids:
-    print(f"\nFragment ID: {fragment_id}")
+def batch_download_frags(frag_list):
+    for fragment_id in frag_list:
+        print(f"\nFragment ID: {fragment_id}")
 
-    start_slice, end_slice = determine_slice_range(fragment_id)
-    if start_slice == 99999 or end_slice == 0:
-        print("No label files found -> Skipping download")
-        continue
-    else:
-        print(f"Labels = [{start_slice}, {end_slice}] found")
+        start_slice, end_slice = determine_slice_range(fragment_id)
+        if start_slice == 99999 or end_slice == 0:
+            print("No label files found -> Skipping download")
+            continue
+        else:
+            print(f"Labels = [{start_slice}, {end_slice}] found")
 
-    missing_slices = check_downloaded_slices(fragment_id, start_slice, end_slice)
-    if not missing_slices:
-        print("No missing slices found -> Skipping download")
-        continue
-    else:
-        ranges = get_consecutive_ranges(missing_slices)
-        print(f"Downloading missing Slices = {missing_slices}")
-        str_args = ",".join(ranges)
-        command = ['bash', download_script, fragment_id, str_args]
-        subprocess.run(command)
+        missing_slices = check_downloaded_slices(fragment_id, start_slice, end_slice)
+        if not missing_slices:
+            print("No missing slices found -> Skipping download")
+            continue
+        else:
+            ranges = get_consecutive_ranges(missing_slices)
+            print(f"Downloading missing Slices = {missing_slices}")
+            str_args = ",".join(ranges)
+            command = ['bash', download_script, fragment_id, str_args]
+            subprocess.run(command)
 
-print("Batch download script execution completed.")
+    print("Batch download script execution completed.")
+
+
+if __name__ == '__main__':
+    fragment_list = get_fragment_ids()
+
+    batch_download_frags(fragment_list)
