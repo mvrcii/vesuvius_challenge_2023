@@ -86,7 +86,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run inference on a fragment.")
     parser.add_argument("id", type=int, help="fragment id")
     parser.add_argument("-strategy", "--string", help="optional, specify strategy [mean, max] (default=mean)",
-                        default="avg")
+                        default="mean")
 
     args = parser.parse_args()
     print("Running ensemble for fragment", args.id, "with strategy", args.string, "...")
