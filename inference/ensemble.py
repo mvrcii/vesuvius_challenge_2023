@@ -30,9 +30,19 @@ def main(fragment__id, strategy):
     out_path = os.path.join(fragment_dir_path, f"ensemble_{ensemble_info_id}_{next_ensemble_id}")
     os.makedirs(out_path)
 
-    # Combine numpy files and save them to output path
-    npy_files = os.listdir(inference_dirs[0])
-    for npy_name in tqdm(npy_files):
+    # Collect all .npy file names from each directory
+    all_npy_files = {d: set([f for f in os.listdir(d) if f.endswith('.npy')]) for d in inference_dirs}
+
+    # Find common files across all directories
+    common_npy_files = set.intersection(*all_npy_files.values())
+
+    # Find and print missing files in each directory
+    for d in inference_dirs:
+        missing_files = common_npy_files - all_npy_files[d]
+        for file in missing_files:
+            print(f"Skipping {file} as it is not contained in {d}")
+
+    for npy_name in tqdm(common_npy_files):
         npy_files = []
         for inference_dir in inference_dirs:
             npy_path = os.path.join(fragment_dir_path, inference_dir, npy_name)
