@@ -292,3 +292,6 @@ if __name__ == '__main__':
         torch.cuda.empty_cache()
         output = sigmoid_logits.cpu().numpy()
         np.save(file_path, output)
+
+    print(f"Finished inference with checkpoint {get_ckpt_name_from_id(checkpoint_folder_name).upper()} "
+          f"on fragment {get_frag_name_from_id(fragment_id).upper()}.")
