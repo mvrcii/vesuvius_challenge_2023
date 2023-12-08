@@ -533,7 +533,7 @@ class Visualization:
 
         if not save_img:
             processed = self.rot90(processed, self.rotate_num)  # Rotate
-            # processed = np.flip(processed, self.flip_num)
+            processed = np.flip(processed, self.flip_num)
 
         threshold = self.get_threshold()
         if self.mode_var.get() == 2:
