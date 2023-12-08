@@ -85,11 +85,15 @@ def get_consecutive_ranges(missing_slices):
     return ranges
 
 
-def batch_download_frags(frag_list):
+def batch_download_frags(frag_list, include_labels=True):
     for fragment_id in frag_list:
         print(f"\nFragment ID: {fragment_id}")
 
-        start_slice, end_slice = determine_slice_range(fragment_id)
+        start_slice = 0
+        end_slice = 63
+        if include_labels:
+            start_slice, end_slice = determine_slice_range(fragment_id)
+
         if start_slice == 99999 or end_slice == 0:
             print("No label files found -> Skipping download")
             continue

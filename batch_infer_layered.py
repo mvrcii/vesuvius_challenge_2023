@@ -32,7 +32,7 @@ if labels:
     labels_str = '--labels'
 
     # Make sure that all fragments TIF files are existent
-    batch_download_frags(FRAGMENT_IDS)
+    batch_download_frags(FRAGMENT_IDS, include_labels=False)
 
 for fragment_id in FRAGMENT_IDS:
     for checkpoint in CHECKPOINTS:
