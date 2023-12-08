@@ -1,5 +1,4 @@
 import argparse
-import logging
 import os
 import sys
 import warnings
@@ -10,8 +9,10 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
+from PIL.Image import Resampling
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
+from transformers.utils import logging
 
 from config_handler import Config
 from constants import get_frag_name_from_id, get_ckpt_name_from_id
@@ -209,14 +210,74 @@ def find_py_in_dir(path):
     return None
 
 
-def parse_args():
+def get_target_dims(work_dir, frag_id):
+    frag_dir = os.path.join(work_dir, "data", "fragments", f"fragment{frag_id}")
+    assert os.path.isdir(frag_dir)
+
+    target_dims = None
+
+    slice_dir = os.path.join(frag_dir, "slices")
+    if os.path.isdir(slice_dir):
+        for i in range(0, 63):
+            if target_dims:
+                return target_dims
+
+            img_path = os.path.join(slice_dir, f"{i:05}.tif")
+            if os.path.isfile(img_path):
+                image = cv2.imread(img_path, 0)
+                target_dims = image.shape
+
+    return target_dims
+
+
+def normalize_npy_preds(array):
+    min_value = array.min()
+    max_value = array.max()
+    normalized_array = (array - min_value) / (max_value - min_value)
+
+    return normalized_array
+
+
+def process_image(array, dimensions):
+    processed = normalize_npy_preds(array)  # Normalize
+
+    # Apply threshold
+    processed[processed < 0.0] = 0
+
+    image = Image.fromarray(np.uint8(processed * 255), 'L')
+
+    new_width = image.width * 4
+    new_height = image.height * 4
+
+    original_height, original_width = dimensions
+    upscaled_image = image.resize((new_width, new_height), Resampling.LANCZOS)
+
+    assert new_width >= original_width and new_height >= original_height
+
+    width_diff = new_width - original_width
+    height_diff = new_height - original_height
+
+    out_width = -width_diff
+    out_height = -height_diff
+
+    if width_diff == 0:
+        out_width = new_width
+
+    if height_diff == 0:
+        out_height = new_height
+
+    return Image.fromarray(np.array(upscaled_image)[:out_height, :out_width])
+
+
+def parse_args(default_start_idx, default_end_idx):
     parser = argparse.ArgumentParser(description='Batch Infer Layered Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
-    parser.add_argument('--start_idx', type=int, default=0, help='Start index (default: 0)')
-    parser.add_argument('--end_idx', type=int, default=60, help='End index (default: 60)')
+    parser.add_argument('--start_idx', type=int, default=default_start_idx, help='Start index (default: 0)')
+    parser.add_argument('--end_idx', type=int, default=default_end_idx, help='End index (default: 60)')
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
-
+    parser.add_argument('--labels', type=bool, action='store_true', help='Additionally store labels pngs '
+                                                                         'for the inference')
     args = parser.parse_args()
 
     return args
@@ -224,21 +285,20 @@ def parse_args():
 
 if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
-
-    from transformers.utils import logging
     logging.set_verbosity_error()
-    # logger = logging.get_logger("transformers")
-    # logger.info("INFO")
-    # logger.warning("WARN")
-
     Image.MAX_IMAGE_PIXELS = None
-    args = parse_args()
+
+    default_start_idx = 0
+    default_end_idx = 60
+
+    args = parse_args(default_start_idx, default_end_idx)
 
     checkpoint_folder_name = args.checkpoint_folder_name
     fragment_id = args.fragment_id
     start_idx = args.start_idx
     end_idx = args.end_idx
     batch_size = args.batch_size
+    save_labels = args.labels
 
     # Determine the path to the configuration based on the checkpoint folder
     checkpoint_folder_path = os.path.join('checkpoints', checkpoint_folder_name)
@@ -267,7 +327,6 @@ if __name__ == '__main__':
         results_dir = os.path.join(root_dir, dirs[0])
 
     os.makedirs(results_dir, exist_ok=True)
-    # print(f"Created directory {results_dir}")
 
     if config.architecture == 'segformer':
         model = SegformerForSemanticSegmentation.from_pretrained(config.from_pretrained,
@@ -282,13 +341,19 @@ if __name__ == '__main__':
         sys.exit(1)
 
     model = model.to("cuda")
-
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
 
-    for i in range(start_idx, end_idx + 1, 1):
-        file_path = os.path.join(results_dir, f"sigmoid_logits_{i}_{i + config.in_chans - 1}.npy")
+    # Calculate valid label indices
+    valid_start_idxs = set()
+    if save_labels:
+        default_range = set(range(default_start_idx, default_end_idx, config.in_chans))
+        selected_range = set(range(start_idx, end_idx + 1))
+        valid_start_idxs = default_range.intersection(selected_range)
+
+    for layer_idx in range(start_idx, end_idx + 1, 1):
+        file_path = os.path.join(results_dir, f"sigmoid_logits_{layer_idx}_{layer_idx + config.in_chans - 1}.npy")
         if os.path.isfile(file_path):
             continue
 
@@ -297,7 +362,14 @@ if __name__ == '__main__':
                                                    batch_size=batch_size,
                                                    fragment_id=fragment_id,
                                                    config=config,
-                                                   layer_start=i)
+                                                   layer_start=layer_idx)
         torch.cuda.empty_cache()
         output = sigmoid_logits.cpu().numpy()
         np.save(file_path, output)
+
+        if save_labels and layer_idx in valid_start_idxs:
+            target_dims = get_target_dims(work_dir=config.work_dir, frag_id=fragment_id)
+            image = process_image(array=output, dimensions=target_dims)
+            os.path.join(results_dir, 'labels', fragment_id,
+                         f"{fragment_id}_inklabels_{layer_idx}_{layer_idx + config.in_chans - 1}.png")
+            image.save(file_path)

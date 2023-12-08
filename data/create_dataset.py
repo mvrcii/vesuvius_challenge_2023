@@ -55,6 +55,8 @@ def process_fragment(config, fragment_id, channels, processing_type):
                    channels=channels,
                    processing_type=processing_type)
 
+    # TODO: PRUNE LABEL_INFO_LIST for blacks
+
 
 def clean_all_fragment_label_dirs(config: Config):
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))

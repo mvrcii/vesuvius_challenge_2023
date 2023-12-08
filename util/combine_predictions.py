@@ -256,11 +256,11 @@ class Visualization:
         for model in self.models:
             model = list(model.values())
             max_arr = np.maximum.reduce(model)
-            max_arr = np.clip(max_arr * 4, 0, 1)
+            # max_arr = np.clip(max_arr * 4, 0, 1)
             self.array_maxs.append(max_arr)
 
             sum_arr = np.sum(model, axis=0)
-            sum_arr = np.clip(sum_arr * 2, 0, 1)
+            # sum_arr = np.clip(sum_arr * 2, 0, 1)
             self.array_sums.append(sum_arr)
 
         if self.model_count == 1:
