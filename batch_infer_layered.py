@@ -29,7 +29,7 @@ labels = True
 
 labels_str = ''
 if labels:
-    labels_str = ' --labels'
+    labels_str = '--labels'
 
 for fragment_id in FRAGMENT_IDS:
     for checkpoint in CHECKPOINTS:
