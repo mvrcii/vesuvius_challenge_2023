@@ -12,7 +12,7 @@ def main(fragment__id, strategy):
     contained_dirs = os.listdir(fragment_dir_path)
     print("found")
     print(contained_dirs)
-    inference_dirs = [x for x in contained_dirs if os.path.isdir(x) and not x.startswith("ensemble")]
+    inference_dirs = [x for x in contained_dirs if os.path.isdir(os.path.join(fragment_dir_path, x)) and not x.startswith("ensemble")]
 
     # Check if enough directories exist
     if len(inference_dirs) < 2:
