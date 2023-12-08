@@ -63,11 +63,7 @@ def main(fragment__id, strategy):
             npy_files.append(np.load(npy_path))
 
         # IMPLEMENT DIFFERENT STRATEGIES HERE
-        result = None
-        if strategy == "mean":
-            result = np.mean(np.stack(npy_files), axis=0)
-        elif strategy == "max":
-            result = np.max(np.stack(npy_files), axis=0)
+        result = np.mean(np.stack(npy_files), axis=0)
         np.save(os.path.join(out_path, npy_name), result)
 
     # Save config to output path, listing current time as well as the used inference directories
