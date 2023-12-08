@@ -267,7 +267,7 @@ if __name__ == '__main__':
         results_dir = os.path.join(root_dir, dirs[0])
 
     os.makedirs(results_dir, exist_ok=True)
-    print(f"Created directory {results_dir}")
+    # print(f"Created directory {results_dir}")
 
     if config.architecture == 'segformer':
         model = SegformerForSemanticSegmentation.from_pretrained(config.from_pretrained,
@@ -286,7 +286,7 @@ if __name__ == '__main__':
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
-    print("Loaded model", checkpoint_path)
+    # print("Loaded model", checkpoint_path)
 
     for i in range(start_idx, end_idx + 1, 1):
         file_path = os.path.join(results_dir, f"sigmoid_logits_{i}_{i + config.in_chans - 1}.npy")
