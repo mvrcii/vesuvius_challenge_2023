@@ -9,7 +9,7 @@ FRAGMENT_IDS = [BLASTER_FRAG_ID]
 CHECKPOINTS = [AMBER_PLANT, CHOCOLATE_FOG, REVIVED_BEE, STELLAR_VIOLET]
 
 start_idx = 0
-end_idx = 62
+end_idx = 60
 batch_size = 16
 
 for fragment_id in FRAGMENT_IDS:

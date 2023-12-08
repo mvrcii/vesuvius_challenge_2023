@@ -212,7 +212,7 @@ def parse_args():
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
     parser.add_argument('--start_idx', type=int, default=0, help='Start index (default: 0)')
-    parser.add_argument('--end_idx', type=int, default=62, help='End index (default: 62)')
+    parser.add_argument('--end_idx', type=int, default=60, help='End index (default: 60)')
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
 
     args = parser.parse_args()
@@ -278,7 +278,7 @@ if __name__ == '__main__':
     model.load_state_dict(state_dict)
     print("Loaded model", checkpoint_path)
 
-    for i in range(start_idx, end_idx, 1):
+    for i in range(start_idx, end_idx + 1, 1):
         file_path = os.path.join(results_dir, f"sigmoid_logits_{i}_{i + config.in_chans - 1}.npy")
         if os.path.isfile(file_path):
             continue
