@@ -1,6 +1,7 @@
 import argparse
 import os
 from datetime import datetime
+import re
 
 import numpy as np
 from tqdm import tqdm
@@ -29,7 +30,7 @@ def main(fragment__id, strategy):
         next_ensemble_id = max(current_ensemble_ids) + 1
 
     # Ensemble short info id
-    ensemble_info_id = "".join([os.path.basename(dir_name)[0] for dir_name in inference_dir_paths]) + f"_{strategy}"
+    ensemble_info_id = "".join([re.findall("[a-zA-Z]", os.path.basename(dir_name))[:2] for dir_name in inference_dir_paths]) + f"_{strategy}"
     print("info id: ", ensemble_info_id)
 
     # Output path
