@@ -41,7 +41,8 @@ for fragment_id in FRAGMENT_IDS:
         # Execute the command
         process = subprocess.run(command, text=True)
 
-        print(process.stdout)
+        if process.stdout:
+            print(process.stdout)
 
         # Check if an error occurred
         if process.returncode != 0:
