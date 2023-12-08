@@ -33,8 +33,11 @@ def main(fragment__id, strategy):
         next_ensemble_id = max(current_ensemble_ids) + 1
 
     # Ensemble short info id
-    ensemble_info_id = "".join([re.findall("[a-zA-Z]", os.path.basename(dir_name))[:2] for dir_name in inference_dir_paths]) + f"_{strategy}"
-    print("info id: ", ensemble_info_id)
+    ensemble_info_id = "".join(
+        ["".join(re.findall("[a-zA-Z]", os.path.basename(dir_name))[:2])
+         for dir_name in inference_dir_paths]
+    ) + f"_{strategy}"
+    print("Info id: ", ensemble_info_id)
 
     # Output path
     out_path = os.path.join(fragment_dir_path, f"ensemble_{ensemble_info_id}_{next_ensemble_id}")
