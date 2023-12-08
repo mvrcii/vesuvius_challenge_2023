@@ -63,7 +63,12 @@ def main(fragment__id, strategy):
             npy_files.append(np.load(npy_path))
 
         # IMPLEMENT DIFFERENT STRATEGIES HERE
-        result = np.mean(np.stack(npy_files), axis=0)
+        result = None
+        if strategy == "mean":
+            result = np.mean(np.stack(npy_files), axis=0)
+        elif strategy == "max":
+            result = np.max(np.stack(npy_files), axis=0)
+
         np.save(os.path.join(out_path, npy_name), result)
 
     # Save config to output path, listing current time as well as the used inference directories
@@ -81,9 +86,14 @@ def main(fragment__id, strategy):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run inference on a fragment.")
     parser.add_argument("id", type=int, help="fragment id")
-    parser.add_argument("-strategy", "--string", help="optional, specify strategy [mean, max] (default=mean)",
+    parser.add_argument("--strategy", help="optional, specify strategy [mean, max] (default=mean)",
                         default="mean")
 
     args = parser.parse_args()
-    print("Running ensemble for fragment", args.id, "with strategy", args.string, "...")
+
+    if args.strategy not in ["mean", "max"]:
+        print("Invalid strategy, aborting.")
+        exit()
+
+    print("Running ensemble for fragment", args.id, "with strategy", args.strategy, "...")
     main(args.id, args.string)
