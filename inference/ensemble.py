@@ -7,7 +7,7 @@ import numpy as np
 
 def main(fragment__id, strategy):
     # Check for existing inference directories
-    fragment_dir_path = os.path.join("..", "inference", "results", f"fragment{fragment__id}")
+    fragment_dir_path = os.path.join("inference", "results", f"fragment{fragment__id}")
     contained_dirs = os.listdir(fragment_dir_path)
     inference_dirs = [x for x in contained_dirs if os.path.isdir(x) and not x.startswith("ensemble")]
 
