@@ -192,10 +192,16 @@ def infer_full_fragment_layer(model, batch_size, fragment_id, config: Config, la
     return out_arr
 
 
-def find_pth_in_dir(path):
-    path = os.path.join('checkpoints', path)
+def find_ckpt_in_dir(path):
     for file in os.listdir(path):
         if file.endswith('.ckpt'):
+            return os.path.join(path, file)
+    return None
+
+
+def find_py_in_dir(path):
+    for file in os.listdir(path):
+        if file.endswith('.py'):
             return os.path.join(path, file)
     return None
 
@@ -223,10 +229,14 @@ if __name__ == '__main__':
     batch_size = args.batch_size
 
     # Determine the path to the configuration based on the checkpoint folder
-    config_path = os.path.join('checkpoints', checkpoint_folder_name, 'config.py')
+    checkpoint_folder_path = os.path.join('checkpoints', checkpoint_folder_name)
+
+    # Find config path
+    config_path = find_py_in_dir(checkpoint_folder_path)
 
     # Find the checkpoint path
-    checkpoint_path = find_pth_in_dir(checkpoint_folder_name)
+    checkpoint_path = find_ckpt_in_dir(checkpoint_folder_path)
+
     if checkpoint_path is None:
         print("No valid checkpoint file found")
         sys.exit(1)
