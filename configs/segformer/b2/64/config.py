@@ -63,7 +63,7 @@ train_aug = [
         A.GridDistortion(always_apply=True, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
                          border_mode=0,
                          value=(0, 0, 0), mask_value=None, normalized=False),
-        A.ImageCompression(always_apply=True, quality_lower=62, quality_upper=91, compression_type=1),
+        # A.ImageCompression(always_apply=True, quality_lower=62, quality_upper=91, compression_type=1),
         A.RandomResizedCrop(always_apply=True, height=patch_size, width=patch_size, scale=(0.78, 1.0),
                             ratio=(0.75, 1.51),
                             interpolation=0)
