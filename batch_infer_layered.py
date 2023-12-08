@@ -49,6 +49,6 @@ for fragment_id in FRAGMENT_IDS:
             print_colored(f"INFERENCE:\tERROR:\t{ckpt_str} -> {frag_str}", "red")
             print_colored(process.stderr, "red")
         else:
-            print_colored(f"INFERENCE:\tDONE:\t{ckpt_str} -> {frag_str}", "green")
+            print_colored(f"INFERENCE:\tDONE:\t\t{ckpt_str} -> {frag_str}", "green")
 
 print_colored("\nINFERENCE: COMPLETED", "green")
