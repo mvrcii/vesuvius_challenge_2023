@@ -72,6 +72,9 @@ FLIP = {
 
 # CHECKPOINTS
 CHECKPOINTS = {
+    "chocolate-fog": "chocolate-fog-716-segformer-b2-231207-182217",
+    "amber-plant": "amber-plant-717-segformer-b2-231208-003604",
+    "revived-bee": "revived-bee-694-segformer-b2-231206-181839",
     "stellar-violet": "stellar-violet-584-segformer-b2-231204-093958",
     "kind-donkey": "kind-donkey-583-segformer-b2-231204-001337",
     "elated-wind": "elated-wind-555-segformer-b2-231203-000033",
@@ -79,6 +82,9 @@ CHECKPOINTS = {
     "solar-oath": "solar-oath-401-segformer-b2-231126-043455"
 }
 
+CHOCOLATE_FOG = CHECKPOINTS["chocolate-fog"]
+AMBER_PLANT = CHECKPOINTS["amber-plant"]
+REVIVED_BEE = CHECKPOINTS["revived-bee"]
 STELLAR_VIOLET = CHECKPOINTS["stellar-violet"]
 KIND_DONKEY = CHECKPOINTS["kind-donkey"]
 ELATED_WIND = CHECKPOINTS["elated-wind"]
