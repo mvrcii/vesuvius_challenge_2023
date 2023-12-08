@@ -31,7 +31,7 @@ model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
-seed = 7777
+seed = 5555
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
@@ -44,7 +44,7 @@ lr = 2e-4
 # warmup_end = 1.0
 
 step_lr_steps = 2
-step_lr_factor = 0.99
+step_lr_factor = 0.97
 weight_decay = 0.01
 
 num_workers = 16
