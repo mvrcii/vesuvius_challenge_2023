@@ -239,18 +239,21 @@ def normalize_npy_preds(array):
 
 
 def save_npy_as_img(cfg: Config, target_dir, array, frag_id, layer_index):
-    target_dims = get_target_dims(work_dir=cfg.work_dir, frag_id=frag_id)
-    image = process_image(array=array, dimensions=target_dims)
-    target_dir = os.path.join(target_dir, 'labels', fragment_id)
-    os.makedirs(target_dir, exist_ok=True)
-    image_file_name = f"{fragment_id}_inklabels_{layer_index}_{layer_index + cfg.in_chans - 1}.png"
-    image_path = os.path.join(target_dir, image_file_name)
+    image_file_name = f"{frag_id}_inklabels_{layer_index}_{layer_index + cfg.in_chans - 1}.png"
+    image_root_dir = os.path.join(target_dir, 'labels', frag_id)
+    image_file_path = os.path.join(image_root_dir, image_file_name)
 
-    if os.path.isfile(image_path):
+    # Check if label PNG file exists -> skip
+    if os.path.isfile(image_file_path):
         return
 
+    os.makedirs(image_root_dir, exist_ok=True)
+    target_dims = get_target_dims(work_dir=cfg.work_dir, frag_id=frag_id)
+
+    image = process_image(array=array, dimensions=target_dims)
+    image.save(image_file_path)
+
     print("Saved label file:", image_file_name)
-    image.save(image_path)
 
 
 def process_image(array, dimensions):
@@ -370,13 +373,18 @@ if __name__ == '__main__':
         valid_start_idxs = default_range.intersection(selected_range)
 
     for layer_idx in range(start_idx, end_idx + 1, 1):
-        file_path = os.path.join(results_dir, f"sigmoid_logits_{layer_idx}_{layer_idx + config.in_chans - 1}.npy")
-        if os.path.isfile(file_path):
-            try:
-                npy_file = np.load(file_path)
-                save_npy_as_img(config, results_dir, npy_file, fragment_id, layer_idx)
-            except FileNotFoundError:
-                print("Numpy File not found:", file_path)
+        npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{layer_idx}_{layer_idx + config.in_chans - 1}.npy")
+
+        # Check if prediction NPY file already exists -> skip infer
+        if os.path.isfile(npy_file_path):
+            npy_file = np.load(npy_file_path)
+
+            if save_labels and layer_idx in valid_start_idxs:
+                save_npy_as_img(config,
+                                target_dir=results_dir,
+                                array=npy_file,
+                                frag_id=fragment_id,
+                                layer_index=layer_idx)
             continue
 
         sigmoid_logits = infer_full_fragment_layer(model=model,
@@ -387,7 +395,11 @@ if __name__ == '__main__':
                                                    layer_start=layer_idx)
         torch.cuda.empty_cache()
         output = sigmoid_logits.cpu().numpy()
-        np.save(file_path, output)
+        np.save(npy_file_path, output)
 
         if save_labels and layer_idx in valid_start_idxs:
-            save_npy_as_img(config, results_dir, output, fragment_id, layer_idx)
+            save_npy_as_img(config,
+                            target_dir=results_dir,
+                            array=output,
+                            frag_id=fragment_id,
+                            layer_index=layer_idx)
