@@ -1,9 +1,7 @@
 import subprocess
 import sys
 
-from constants import get_ckpt_name_from_id, get_frag_name_from_id, LIVELY_MEADOW, \
-    ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID, SUNSTREAKER_FRAG_ID, SOUNDWAVE_FRAG_ID, \
-    IRONHIDE_FRAG_ID, RATCHET_FRAG_ID, DEVASTATOR_FRAG_ID, JAZZILLA_FRAG_ID, GRIMLARGE_FRAG_ID
+from constants import *
 from util.batch_download_frags import batch_download_frags
 
 
@@ -17,20 +15,7 @@ def print_colored(message, color):
     print(f"{colors[color]}{message}{colors['end']}")
 
 
-FRAGMENT_IDS = [
-    # ALPHA (w/o BUMBLEBEE)
-    STARSCREAM_FRAG_ID, MEGATRON_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID, SOUNDWAVE_FRAG_ID,
-    OPTIMUS_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,
-    # +
-    # BETA (TO BE ADDED TO ALPHA)
-    SUNSTREAKER_FRAG_ID, DEVASTATOR_FRAG_ID,
-
-    # USED FOR INFERENCE FOR ALPHA + BETA MODEL
-    # BLASTER_FRAG_ID, JETFIRE_FRAG_ID,
-    # HOT_ROD_FRAG_ID,
-
-    GRIMLARGE_FRAG_ID, JAZZILLA_FRAG_ID,  # NEW TBD
-]
+FRAGMENT_IDS = FRAGMENTS_ALPHA
 CHECKPOINTS = [LIVELY_MEADOW]
 
 start_idx = 0
