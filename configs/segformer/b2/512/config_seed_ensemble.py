@@ -38,11 +38,6 @@ dataset_fraction = 1
 
 val_interval = 1
 lr = 2e-4
-
-# warmup_epochs = 0
-# warmup_start = 0.1
-# warmup_end = 1.0
-
 step_lr_steps = 2
 step_lr_factor = 0.97
 weight_decay = 0.01

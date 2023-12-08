@@ -2,7 +2,8 @@ import os
 
 import albumentations as A
 
-from constants import (BLASTER_FRAG_ID)
+from constants import (ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, IRONHIDE_FRAG_ID, MEGATRON_FRAG_ID,
+                       BUMBLEBEE_FRAG_ID, SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID)
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -19,7 +20,8 @@ label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
 artefact_threshold = 5
-fragment_ids = [BLASTER_FRAG_ID]
+fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,
+                SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
 train_split = 0.8
 
 # training parameters
@@ -37,19 +39,20 @@ dataset_fraction = 1
 val_interval = 1
 lr = 2e-4
 step_lr_steps = 2
-step_lr_factor = 0.99
+step_lr_factor = 0.97
 weight_decay = 0.01
 
 num_workers = 16
 train_batch_size = 24
 val_batch_size = 24
 
+# TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
-    A.HorizontalFlip(),
-    A.VerticalFlip(),
-    A.RandomRotate90(),
-    A.Transpose(),
     A.OneOf([
+        A.HorizontalFlip(),
+        A.VerticalFlip(),
+        A.RandomRotate90(),
+        A.Transpose(),
         A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
         A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
                        rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
@@ -65,6 +68,7 @@ train_aug = [
                             ratio=(0.75, 1.51),
                             interpolation=0)
     ], p=0.5),
+    # A.ChannelDropout(p=0.05, channel_drop_range=(1, 1), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
