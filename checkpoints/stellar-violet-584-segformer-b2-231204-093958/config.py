@@ -1,3 +1,4 @@
+import albumentations as A
 weight_decay = 0.005
 lr = 5e-06
 eta_min = 1e-05
@@ -38,3 +39,9 @@ num_workers = 32
 train_batch_size = 24
 val_batch_size = 24
 save = True
+train_aug = [
+    A.Normalize(mean=[0], std=[1])
+]
+val_aug = [
+    A.Normalize(mean=[0], std=[1])
+]
