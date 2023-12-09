@@ -23,9 +23,6 @@ FRAGMENTS = {
     "THUNDERCRACKER": "20231012173610",
 
     "SIDESWIPE": "20230701020044",  # infer next!
-
-    # FRAGMENTS
-    "ARCEE": "PHerc1667"
 }
 
 # TRAIN SET ALPHA
@@ -74,6 +71,28 @@ ROTATE = {
 
 FLIP = {
     JAZZILLA_FRAG_ID: None,
+}
+
+INTER_COLUMN_MAPPING = {
+    JAZZILLA_FRAG_ID: {
+        "CENTER_LAYERS": (22, 45),
+        "OFFSET_LAYERS": {
+            (0, 22): {
+                "X":  0.0,
+                "Y": 0.0,
+                "X_SCALE": 0.0,
+                "Y_SCALE": 0.0,
+                "ROT": 0.0,
+            },
+            (45, 63): {
+                "X": 0.0,
+                "Y": 0.0,
+                "X_SCALE": 0.0,
+                "Y_SCALE": 0.0,
+                "ROT": 0.0,
+            }
+        }
+    }
 }
 
 # CHECKPOINTS
