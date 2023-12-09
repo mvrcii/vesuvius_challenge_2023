@@ -16,17 +16,17 @@ def print_colored(message, color):
 
 
 FRAGMENT_IDS = [BLASTER_FRAG_ID, HOT_ROD_FRAG_ID, JAZZILLA_FRAG_ID]
-CHECKPOINTS = ["playful-firefly-737-segformer-b2-231209-143850"]
+CHECKPOINTS = ["chocolate-fog-716-segformer-b2-231207-182217"]
+# CHECKPOINTS = ["playful-firefly-737-segformer-b2-231209-143850"]
 
 start_idx = 0
 end_idx = 60
 batch_size = 32
 labels = False
+verbose = False
 
-labels_str = ''
+
 if labels:
-    labels_str = '--labels'
-
     # Make sure that all fragments TIF files are existent
     batch_download_frags(FRAGMENT_IDS, include_labels=False)
 
@@ -40,9 +40,13 @@ for fragment_id in FRAGMENT_IDS:
             '--start_idx', str(start_idx),
             '--end_idx', str(end_idx),
             '--batch_size', str(batch_size),
-            str(labels_str),
-            '--v'
         ]
+
+        if labels:
+            command.append('--labels')
+
+        if verbose:
+            command.append('--v')
 
         ckpt_str = get_ckpt_name_from_id(checkpoint).upper()
         frag_str = get_frag_name_from_id(fragment_id).upper()

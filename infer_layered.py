@@ -309,7 +309,7 @@ def process_image(array, dimensions):
 
 
 def parse_args(default_start_idx, default_end_idx):
-    parser = argparse.ArgumentParser(description='Batch Infer Layered Script')
+    parser = argparse.ArgumentParser(description='Infer Layered Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
     parser.add_argument('--start_idx', type=int, default=default_start_idx,
