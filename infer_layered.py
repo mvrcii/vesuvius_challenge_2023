@@ -259,8 +259,8 @@ def save_npy_as_img(cfg: Config, target_dir, array, frag_id, layer_index):
 def process_image(array, dimensions):
     processed = normalize_npy_preds(array)  # Normalize
 
-    # Apply threshold
-    processed[processed < 0.0] = 0
+    # Binarize
+    processed = np.where(processed > 0.5, 1, 0)
 
     image = Image.fromarray(np.uint8(processed * 255), 'L')
 
