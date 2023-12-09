@@ -67,31 +67,30 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     :param flip_horizontal: Apply horizontal flip if True.
     :return: Batch of TTA-processed tensors.
     """
-    tta_batch = [tensor]
-
-    print(tensor.dtype)
+    tta_batch = []
 
     # Apply rotation augmentations
     if rotate:
-        tta_batch.append(torch.rot90(tensor, 1, [1, 2]))  # Rotate left 90 degrees
-        tta_batch.append(torch.rot90(tensor, 2, [1, 2]))  # Rotate 180 degrees
-        tta_batch.append(torch.rot90(tensor, 3, [1, 2]))  # Rotate right 90 degrees
+        tta_batch.append(torch.rot90(tensor, 1, [1, 2]).clone())  # Rotate left 90 degrees
+        tta_batch.append(torch.rot90(tensor, 2, [1, 2]).clone())  # Rotate 180 degrees
+        tta_batch.append(torch.rot90(tensor, 3, [1, 2]).clone())  # Rotate right 90 degrees
 
     # Apply flip augmentations
     if flip_vertical:
-        tta_batch.append(torch.flip(tensor, [1]))  # Vertical flip
+        tta_batch.append(torch.flip(tensor, [1]).clone())  # Vertical flip
     if flip_horizontal:
-        tta_batch.append(torch.flip(tensor, [2]))  # Horizontal flip
+        tta_batch.append(torch.flip(tensor, [2]).clone())  # Horizontal flip
 
     # Convert list to torch tensor
     tta_batch = torch.stack(tta_batch).half()  # Assuming the model is in half precision
 
     # Get the model's predictions for the batch
-    tta_outputs = model(tta_batch)
+    tta_outputs = model(tta_batch).logits
 
     # Post-process to revert the TTA
     reverted_outputs = []
     for i, output in enumerate(tta_outputs):
+        output = output.clone()
         if rotate:
             if i == 1:  # Revert rotate left
                 output = torch.rot90(output, 3, [1, 2])
@@ -103,7 +102,7 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
             output = torch.flip(output, [1])
         if flip_horizontal and i == len(tta_outputs) - 1:
             output = torch.flip(output, [2])
-        reverted_outputs.append(output)
+        reverted_outputs.append(output.clone().squeeze())
 
     return torch.stack(reverted_outputs)
 
@@ -169,6 +168,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     def process_patch(logits, x, y):
         # Calculate the margin to ignore (10% of the patch size)
         # Set the outer 10% of averaged_logits to zero
+        logits = logits.clone()
         logits *= ~ignore_edge_mask
 
         # Determine the location in the stitched_result array
@@ -219,19 +219,21 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
                 sigmoid_output = torch.sigmoid(outputs.logits).detach().squeeze()
 
                 # Check 'improved' TTA for every image patch
-                for image_patch, sigmoid_patch in zip(preallocated_batch_tensor, sigmoid_output):
-                    ink_percentage = int((sigmoid_patch.sum() / np.prod(sigmoid_patch.shape)) * 100)
+                use_advanced_tta = False
+                if use_advanced_tta:
+                    for image_patch, sigmoid_patch in zip(preallocated_batch_tensor, sigmoid_output):
+                        ink_percentage = int((sigmoid_patch.sum() / np.prod(sigmoid_patch.shape)) * 100)
 
-                    if ink_percentage >= 5:
-                        advanced_tta_patch_counter += 1
-                        output_patches = advanced_tta(model=model,
-                                                      tensor=image_patch,
-                                                      rotate=True,
-                                                      flip_vertical=True,
-                                                      flip_horizontal=True)
+                        if ink_percentage >= 5:
+                            advanced_tta_patch_counter += 1
+                            output_patches = advanced_tta(model=model,
+                                                          tensor=image_patch,
+                                                          rotate=True,
+                                                          flip_vertical=True,
+                                                          flip_horizontal=True)
 
-                        for patch in output_patches:
-                            process_patch(patch, x, y)
+                            for patch in output_patches:
+                                process_patch(patch, x, y)
 
                 for idx, (x, y) in enumerate(batch_indices):
                     process_patch(sigmoid_output[idx], x, y)  # Function to process each patch
