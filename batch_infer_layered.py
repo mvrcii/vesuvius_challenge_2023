@@ -15,7 +15,7 @@ def print_colored(message, color):
     print(f"{colors[color]}{message}{colors['end']}")
 
 
-FRAGMENT_IDS = FRAGMENTS_ALPHA
+FRAGMENT_IDS = [SIDESWIPE_FRAG_ID]
 CHECKPOINTS = [LIVELY_MEADOW]
 
 start_idx = 0
