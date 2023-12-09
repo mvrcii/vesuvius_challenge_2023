@@ -59,7 +59,7 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
 
 def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizontal=False):
     """
-    Apply test-time augmentation to the input tensor and make a batch inference.
+    Apply test-time augmentation to the input tensor and make a batch inference with PyTorch.
 
     :param tensor: Image tensor with shape (4, 512, 512).
     :param rotate: Apply rotation if True.
@@ -67,25 +67,22 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     :param flip_horizontal: Apply horizontal flip if True.
     :return: Batch of TTA-processed tensors.
     """
-    tta_batch = []
+    tta_batch = [tensor]
 
     # Apply rotation augmentations
     if rotate:
-        tta_batch.append(np.rot90(tensor, 1, axes=(1, 2)))  # Rotate left 90 degrees
-        tta_batch.append(np.rot90(tensor, 2, axes=(1, 2)))  # Rotate 180 degrees
-        tta_batch.append(np.rot90(tensor, 3, axes=(1, 2)))  # Rotate right 90 degrees
+        tta_batch.append(torch.rot90(tensor, 1, [1, 2]))  # Rotate left 90 degrees
+        tta_batch.append(torch.rot90(tensor, 2, [1, 2]))  # Rotate 180 degrees
+        tta_batch.append(torch.rot90(tensor, 3, [1, 2]))  # Rotate right 90 degrees
 
     # Apply flip augmentations
     if flip_vertical:
-        tta_batch.append(np.flip(tensor, axis=1))  # Vertical flip
+        tta_batch.append(torch.flip(tensor, [1]))  # Vertical flip
     if flip_horizontal:
-        tta_batch.append(np.flip(tensor, axis=2))  # Horizontal flip
+        tta_batch.append(torch.flip(tensor, [2]))  # Horizontal flip
 
-    # Convert list to numpy array
-    tta_batch = np.array(tta_batch)
-
-    # Ensure the batch dimension is correct
-    assert len(tta_batch.shape) == 4
+    # Convert list to torch tensor
+    tta_batch = torch.stack(tta_batch).half()  # Assuming the model is in half precision
 
     # Get the model's predictions for the batch
     tta_outputs = model(tta_batch)
@@ -95,18 +92,18 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     for i, output in enumerate(tta_outputs):
         if rotate:
             if i == 1:  # Revert rotate left
-                output = np.rot90(output, 3, axes=(1, 2))
+                output = torch.rot90(output, 3, [1, 2])
             elif i == 2:  # Revert rotate 180
-                output = np.rot90(output, 2, axes=(1, 2))
+                output = torch.rot90(output, 2, [1, 2])
             elif i == 3:  # Revert rotate right
-                output = np.rot90(output, 1, axes=(1, 2))
+                output = torch.rot90(output, 1, [1, 2])
         if flip_vertical and i == len(tta_outputs) - 2 + int(flip_horizontal):
-            output = np.flip(output, axis=1)
+            output = torch.flip(output, [1])
         if flip_horizontal and i == len(tta_outputs) - 1:
-            output = np.flip(output, axis=2)
+            output = torch.flip(output, [2])
         reverted_outputs.append(output)
 
-    return np.array(reverted_outputs)
+    return torch.stack(reverted_outputs)
 
 
 def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
