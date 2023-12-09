@@ -41,8 +41,8 @@ val_interval = 1
 # TODO: Learning Rate Schedule where LR reduction is triggered based on performance metrics / loss peaks at later epochs
 # TODO: Think about a more complex model architecture (B3, B4, B5) since larger dataset introduces more complexity/variations
 lr = 4e-4  # default: 2e-4 -> also try 3e-4
-step_lr_steps = 3  # default: 2 -> try higher step sizes
-step_lr_factor = 0.97
+step_lr_steps = 2  # default: 2 -> try higher step sizes
+step_lr_factor = 0.75
 weight_decay = 0.005  # default: 0.01  -> Lower weight decay if we have more data
 
 num_workers = 16
