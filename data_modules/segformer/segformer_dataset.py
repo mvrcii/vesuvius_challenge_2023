@@ -1,3 +1,4 @@
+import numpy as np
 from skimage.transform import resize
 
 from data_modules.abstract.abstract_dataset import AbstractDataset
@@ -11,6 +12,10 @@ class SegFormerDataset(AbstractDataset):
     def __getitem__(self, idx):
         image, label = super().__getitem__(idx)
 
-        label = resize(label, self.label_shape, order=0, preserve_range=True, anti_aliasing=False)
+        # unpack label from binary data and reshape it to original shape
+        label = np.unpackbits(label).reshape(self.label_shape)
 
+        # resize label to fit segformer output
+        # not necessary, done in dataset creation
+        # label = resize(label, self.label_shape, order=0, preserve_range=True, anti_aliasing=False)
         return image, label

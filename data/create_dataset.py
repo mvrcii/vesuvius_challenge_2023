@@ -18,6 +18,7 @@ from constants import get_frag_name_from_id, FRAGMENTS
 from data.data_validation import validate_fragments, format_ranges
 from data.utils import write_to_config
 from data_modules.utils import balance_dataset
+from skimage.transform import resize
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -163,6 +164,7 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
 
     patches = 0
     mask_skipped = 0
+    label_shape = (config.label_size, config.label_size)
 
     STACK_PATCHES = {}
     STACK_PATCH_INFOS = []
@@ -252,10 +254,13 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
         os.makedirs(img_dir, exist_ok=True)
         os.makedirs(label_dir, exist_ok=True)
 
+        # save image
         np.save(os.path.join(img_dir, file_name), image_patch)
 
-        packed_label = np.packbits(label_patch.flatten())
-        np.save(os.path.join(label_dir, file_name), packed_label)
+        # save label
+        label_patch = resize(label_patch, label_shape, order=0, preserve_range=True, anti_aliasing=False)
+        label_patch = np.packbits(label_patch.flatten())
+        np.save(os.path.join(label_dir, file_name), label_patch)
 
     patches += len(balanced_df)
     pruned = all_patches - len(balanced_df)
