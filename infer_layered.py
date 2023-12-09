@@ -166,6 +166,27 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
 
                 logits = torch.sigmoid(outputs.logits).detach().squeeze()
 
+                # Check 'improved' TTA for every image patch
+                # for image_patch in outputs:
+                #     ink_percentage = int((image_patch.sum() / np.prod(image_patch.shape)) * 100)
+                #
+                #     if ink_percentage >= 5:
+                #         advanced_tta(tensor=image_patch)
+                # for patch in batch:
+                    # get ink percentage from logits
+                    # if ink percentage > threshold
+
+                    # perform TTA rotate -> additional 3 patches
+                    # perform TTA horizontal/vertical flip maybe??
+                    # model((4, 512, 512)) # image tensor TTA
+                    # -> output (512, 512) -> reverse TTA
+                    # -> add reversed TTA patch with process_patch
+
+                    # for variation in variations:
+                        # process_patch(patch, x, y)
+                    # average over all 4 rotations
+
+
                 for idx, (x, y) in enumerate(batch_indices):
                     process_patch(logits[idx], x, y)  # Function to process each patch
 
@@ -324,12 +345,14 @@ if __name__ == '__main__':
 
     # Determine the path to the configuration based on the checkpoint folder
     checkpoint_folder_path = os.path.join('checkpoints', checkpoint_folder_name)
+    print(checkpoint_folder_path)
 
     # Find config path
     config_path = find_py_in_dir(checkpoint_folder_path)
 
     # Find the checkpoint path
     checkpoint_path = find_ckpt_in_dir(checkpoint_folder_path)
+    print(checkpoint_path)
 
     if checkpoint_path is None:
         print("No valid checkpoint file found")
@@ -365,6 +388,8 @@ if __name__ == '__main__':
     checkpoint = torch.load(checkpoint_path)
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
+
+    print("model loaded")
 
     # Calculate valid label indices
     valid_start_idxs = set()
