@@ -6,6 +6,7 @@ for f in os.listdir(inf_dir):
     for sub_dir in os.listdir(os.path.join(inf_dir, f)):
         if sub_dir.__contains__("lively-meadow-695"):
             for file in os.listdir(os.path.join(inf_dir, f, sub_dir)):
+                print(file)
                 start_idx = int(file.split("_")[2])
                 if not valid_start_idxs.__contains__(start_idx):
                     print(f"Removing {file}")
