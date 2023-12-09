@@ -134,7 +134,7 @@ def get_rotate_value(frag_id):
 
 def get_frag_name_from_id(frag_id):
     for name, id in FRAGMENTS.items():
-        if id == frag_id:
+        if str(id) == str(frag_id):
             return name
     return "Unknown Fragment"
 
