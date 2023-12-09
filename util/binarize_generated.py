@@ -43,7 +43,7 @@ def process_image(img_src_dir, img_src_name, out_dir):
 
 
 def main(keyword="inklabels"):
-    os.makedirs(os.path.join("data", "base_label_binarized"))
+    os.makedirs(os.path.join("data", "base_label_binarized"), exist_ok=True)
     success_count = 0
     failure_count = 0
     valid_file_count = 0
