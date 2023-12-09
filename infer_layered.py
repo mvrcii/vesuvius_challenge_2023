@@ -57,6 +57,58 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
     return images
 
 
+def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizontal=False):
+    """
+    Apply test-time augmentation to the input tensor and make a batch inference.
+
+    :param tensor: Image tensor with shape (4, 512, 512).
+    :param rotate: Apply rotation if True.
+    :param flip_vertical: Apply vertical flip if True.
+    :param flip_horizontal: Apply horizontal flip if True.
+    :return: Batch of TTA-processed tensors.
+    """
+    tta_batch = []
+
+    # Apply rotation augmentations
+    if rotate:
+        tta_batch.append(np.rot90(tensor, 1, axes=(1, 2)))  # Rotate left 90 degrees
+        tta_batch.append(np.rot90(tensor, 2, axes=(1, 2)))  # Rotate 180 degrees
+        tta_batch.append(np.rot90(tensor, 3, axes=(1, 2)))  # Rotate right 90 degrees
+
+    # Apply flip augmentations
+    if flip_vertical:
+        tta_batch.append(np.flip(tensor, axis=1))  # Vertical flip
+    if flip_horizontal:
+        tta_batch.append(np.flip(tensor, axis=2))  # Horizontal flip
+
+    # Convert list to numpy array
+    tta_batch = np.array(tta_batch)
+
+    # Ensure the batch dimension is correct
+    assert len(tta_batch.shape) == 4
+
+    # Get the model's predictions for the batch
+    tta_outputs = model(tta_batch)
+
+    # Post-process to revert the TTA
+    reverted_outputs = []
+    for i, output in enumerate(tta_outputs):
+        if rotate:
+            if i == 1:  # Revert rotate left
+                output = np.rot90(output, 3, axes=(1, 2))
+            elif i == 2:  # Revert rotate 180
+                output = np.rot90(output, 2, axes=(1, 2))
+            elif i == 3:  # Revert rotate right
+                output = np.rot90(output, 1, axes=(1, 2))
+        if flip_vertical and i == len(tta_outputs) - 2 + int(flip_horizontal):
+            output = np.flip(output, axis=1)
+        if flip_horizontal and i == len(tta_outputs) - 1:
+            output = np.flip(output, axis=2)
+        reverted_outputs.append(output)
+
+    return np.array(reverted_outputs)
+
+
 def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
     patch_size = config.patch_size
     expected_patch_shape = (config.in_chans, patch_size, patch_size)
@@ -113,6 +165,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
 
     batches = []
     batch_indices = []
+    advanced_tta_patch_counter = 0
 
     def process_patch(logits, x, y):
         # Calculate the margin to ignore (10% of the patch size)
@@ -164,31 +217,25 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
                 with torch.no_grad():
                     outputs = model(preallocated_batch_tensor[:len(batches)])
 
-                logits = torch.sigmoid(outputs.logits).detach().squeeze()
+                sigmoid_output = torch.sigmoid(outputs.logits).detach().squeeze()
 
                 # Check 'improved' TTA for every image patch
-                # for image_patch in outputs:
-                #     ink_percentage = int((image_patch.sum() / np.prod(image_patch.shape)) * 100)
-                #
-                #     if ink_percentage >= 5:
-                #         advanced_tta(tensor=image_patch)
-                # for patch in batch:
-                    # get ink percentage from logits
-                    # if ink percentage > threshold
+                for image_patch, sigmoid_patch in zip(preallocated_batch_tensor, sigmoid_output):
+                    ink_percentage = int((sigmoid_patch.sum() / np.prod(sigmoid_patch.shape)) * 100)
 
-                    # perform TTA rotate -> additional 3 patches
-                    # perform TTA horizontal/vertical flip maybe??
-                    # model((4, 512, 512)) # image tensor TTA
-                    # -> output (512, 512) -> reverse TTA
-                    # -> add reversed TTA patch with process_patch
+                    if ink_percentage >= 5:
+                        advanced_tta_patch_counter += 1
+                        output_patches = advanced_tta(model=model,
+                                                      tensor=image_patch,
+                                                      rotate=True,
+                                                      flip_vertical=True,
+                                                      flip_horizontal=True)
 
-                    # for variation in variations:
-                        # process_patch(patch, x, y)
-                    # average over all 4 rotations
-
+                        for patch in output_patches:
+                            process_patch(patch, x, y)
 
                 for idx, (x, y) in enumerate(batch_indices):
-                    process_patch(logits[idx], x, y)  # Function to process each patch
+                    process_patch(sigmoid_output[idx], x, y)  # Function to process each patch
 
                 batches = []
                 batch_indices = []
@@ -214,6 +261,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     # Average the predictions
     out_arr = torch.where(pred_counts > 0, torch.div(out_arr, pred_counts), out_arr)
 
+    print(f"Advanced TTA Patches for layer start {layer_start}: {total_advanced_tta_patches}")
     return out_arr
 
 
@@ -394,6 +442,8 @@ if __name__ == '__main__':
         selected_range = set(range(start_idx, end_idx + 1))
         valid_start_idxs = default_range.intersection(selected_range)
 
+    total_advanced_tta_patches = 0
+
     for layer_idx in range(start_idx, end_idx + 1, 1):
         npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{layer_idx}_{layer_idx + config.in_chans - 1}.npy")
 
@@ -417,6 +467,7 @@ if __name__ == '__main__':
                                                    fragment_id=fragment_id,
                                                    config=config,
                                                    layer_start=layer_idx)
+
         torch.cuda.empty_cache()
         output = sigmoid_logits.cpu().numpy()
         np.save(npy_file_path, output)
@@ -427,4 +478,3 @@ if __name__ == '__main__':
                             array=output,
                             frag_id=fragment_id,
                             layer_index=layer_idx)
-
