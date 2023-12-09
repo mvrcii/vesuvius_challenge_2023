@@ -7,7 +7,7 @@ for fragment_dir in os.listdir(inf_dir):
     for run_dir in os.listdir(os.path.join(inf_dir, fragment_dir)):
         if run_dir.__contains__("lively-meadow-695"):
             print(run_dir, "contains lively-meadow-695")
-            label_dir = [x for x in os.listdir(run_dir) if x.__contains__("labels")][0]
+            label_dir = [x for x in os.listdir(os.path.join(inf_dir, fragment_dir, run_dir)) if x.__contains__("labels")][0]
             label_sub_dir = os.listdir(os.path.join(inf_dir, fragment_dir, run_dir, label_dir))[0]
             for file in os.listdir(os.path.join(inf_dir, fragment_dir, run_dir, label_dir, label_sub_dir)):
                 print(file)
