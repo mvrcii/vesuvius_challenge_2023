@@ -14,4 +14,4 @@ for fragment_dir in os.listdir(inf_dir):
                 if not valid_start_idxs.__contains__(start_idx):
                     print(f"Removing {file}")
                     print("in " + os.path.join(inf_dir, fragment_dir, run_dir, label_dir, label_sub_dir))
-                    # os.remove(os.path.join(inf_dir, f, sub_dir, sub_sub_dir, "labels", file))
+                    os.remove(os.path.join(inf_dir, fragment_dir, run_dir, label_dir, label_sub_dir, file))
