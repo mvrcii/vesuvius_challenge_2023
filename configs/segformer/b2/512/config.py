@@ -1,7 +1,8 @@
 import os
+
 import albumentations as A
-from constants import (ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, IRONHIDE_FRAG_ID, MEGATRON_FRAG_ID,
-                       SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID)
+
+from constants import FRAGMENTS_ALPHA
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -15,11 +16,10 @@ dataset_target_dir = os.path.join("data", "datasets")
 # dataset creation parameters
 patch_size = 512
 label_size = patch_size // 4
-stride = patch_size
+stride = patch_size // 2
 ink_ratio = 3
 artefact_threshold = 5
-fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,
-                SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID]
+fragment_ids = FRAGMENTS_ALPHA
 train_split = 0.8
 
 # training parameters
@@ -29,7 +29,7 @@ model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
-seed = 7777
+seed = 5555
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
@@ -37,7 +37,7 @@ dataset_fraction = 1
 val_interval = 1
 lr = 2e-4
 step_lr_steps = 2
-step_lr_factor = 0.99
+step_lr_factor = 0.97
 weight_decay = 0.01
 
 num_workers = 16
@@ -66,7 +66,7 @@ train_aug = [
                             ratio=(0.75, 1.51),
                             interpolation=0)
     ], p=0.5),
-    A.ChannelDropout(p=0.1, channel_drop_range=(1, 1), fill_value=0),
+    # A.ChannelDropout(p=0.05, channel_drop_range=(1, 1), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
