@@ -1,7 +1,7 @@
 import os
 import re
 
-from constants import get_frag_name_from_id, FRAGMENTS
+from constants import get_frag_name_from_id, FRAGMENTS, SIDESWIPE_FRAG_ID, JETFIRE_FRAG_ID
 
 
 def validate_fragments(config, label_dir):
@@ -12,7 +12,7 @@ def validate_fragments(config, label_dir):
     valid_fragments = {}
     excluded_fragments = []
 
-    for frag_id in FRAGMENTS.values():
+    for frag_id in [JETFIRE_FRAG_ID]:
         val_errors, frag_channels, existing_channels = validate_fragment_files(frag_id=frag_id, cfg=config,
                                                                                label_dir=label_dir)
 
