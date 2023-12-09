@@ -14,6 +14,6 @@ def print_array_info(path1, path2):
 
 
 # Example usage
-path_a = r"~/kaggle1stReimp/data/datasets/512/JETFIRE/labels/f20231005123336_ch60_9984_9728_10496_10240.npy"
-path_b = r"~/kaggle1stReimp/data/datasets/512/JETFIRE/images/f20231005123336_ch60_9984_9728_10496_10240.npy"
+path_a = r"data/datasets/512/JETFIRE/labels/f20231005123336_ch60_9984_9728_10496_10240.npy"
+path_b = r"data/datasets/512/JETFIRE/images/f20231005123336_ch60_9984_9728_10496_10240.npy"
 print_array_info(path_a, path_b)
