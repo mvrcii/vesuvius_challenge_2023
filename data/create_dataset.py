@@ -253,7 +253,9 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
         os.makedirs(label_dir, exist_ok=True)
 
         np.save(os.path.join(img_dir, file_name), image_patch)
-        np.save(os.path.join(label_dir, file_name), label_patch)
+
+        packed_label = np.packbits(label_patch.flatten())
+        np.save(os.path.join(label_dir, file_name), packed_label)
 
     patches += len(balanced_df)
     pruned = all_patches - len(balanced_df)
