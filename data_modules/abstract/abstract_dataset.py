@@ -17,13 +17,13 @@ class AbstractDataset(Dataset):
     def __len__(self):
         return len(self.images)
 
-    def __getitem__(self, idx, label_shape=None, patch_shape=None):
+    def __getitem__(self, idx):
         image = np.load(os.path.join(self.root_dir, self.images[idx]))
         label = np.load(os.path.join(self.root_dir, self.labels[idx]))
-        label = np.unpackbits(label).reshape(label_shape)
+        label = np.unpackbits(label).reshape(self.label_shape)
 
         # Scale label up to patch shape
-        label = resize(label, patch_shape, order=0, preserve_range=True, anti_aliasing=False)
+        label = resize(label, self.patch_shape, order=0, preserve_range=True, anti_aliasing=False)
 
         # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
         image = np.transpose(image, (1, 2, 0))
@@ -37,6 +37,6 @@ class AbstractDataset(Dataset):
         image = np.transpose(image, (2, 0, 1))
 
         # Scale label back down to label shape
-        label = resize(label, label_shape, order=0, preserve_range=True, anti_aliasing=False)
+        label = resize(label, self.label_shape, order=0, preserve_range=True, anti_aliasing=False)
 
         return image, label
