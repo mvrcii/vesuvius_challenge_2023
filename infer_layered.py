@@ -298,6 +298,7 @@ def parse_args(default_start_idx, default_end_idx):
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
                                                               'for the inference')
+    parser.add_argument('--v', action='store_false', help='Print stuff (default True)')
     args = parser.parse_args()
 
     return args
@@ -319,6 +320,7 @@ if __name__ == '__main__':
     end_idx = args.end_idx
     batch_size = args.batch_size
     save_labels = args.labels
+    verbose = args.v
 
     # Determine the path to the configuration based on the checkpoint folder
     checkpoint_folder_path = os.path.join('checkpoints', checkpoint_folder_name)
@@ -384,6 +386,8 @@ if __name__ == '__main__':
                                 array=npy_file,
                                 frag_id=fragment_id,
                                 layer_index=layer_idx)
+            if verbose:
+                print(f"Skip layer {layer_idx}")
             continue
 
         sigmoid_logits = infer_full_fragment_layer(model=model,
@@ -402,3 +406,4 @@ if __name__ == '__main__':
                             array=output,
                             frag_id=fragment_id,
                             layer_index=layer_idx)
+

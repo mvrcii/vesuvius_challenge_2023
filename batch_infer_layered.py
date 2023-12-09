@@ -40,7 +40,8 @@ for fragment_id in FRAGMENT_IDS:
             '--start_idx', str(start_idx),
             '--end_idx', str(end_idx),
             '--batch_size', str(batch_size),
-            str(labels_str)
+            str(labels_str),
+            '--v'
         ]
 
         ckpt_str = get_ckpt_name_from_id(checkpoint).upper()
