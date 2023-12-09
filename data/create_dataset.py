@@ -95,14 +95,10 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     total_pruned_cnt = 0
     pbar = tqdm(total=(len(channels)), desc="Initializing...")
 
-    first_channel_processed = False
+    image_tensors = []
+    label_tensors = []
     for start_channel in channels[::cfg.in_chans]:
         end_channel = start_channel + cfg.in_chans - 1
-
-        pbar.set_description(f"\033[94mProcessing: Fragment: {get_frag_name_from_id(frag_id)}\033[0m "
-                             f"Channel: {start_channel:02d}-{end_channel:02d} in "
-                             f"{format_ranges(sorted(list(channels)), '')}")
-
         read_chans = range(start_channel, end_channel + 1)
 
         # Tensor may either be images or labels
@@ -110,11 +106,21 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
                                                          channels=read_chans, ch_block_size=config.in_chans)
         label_tensor = read_fragment_labels_for_channels(root_dir=label_dir, patch_size=config.patch_size,
                                                          channels=read_chans, ch_block_size=config.in_chans)
+        image_tensors.append(image_tensor)
+        label_tensors.append(label_tensor)
+
+    first_channel_processed = False
+    for i, start_channel in enumerate(channels[::cfg.in_chans]):
+        end_channel = start_channel + cfg.in_chans - 1
+
+        pbar.set_description(f"\033[94mProcessing: Fragment: {get_frag_name_from_id(frag_id)}\033[0m "
+                             f"Channel: {start_channel:02d}-{end_channel:02d} in "
+                             f"{format_ranges(sorted(list(channels)), '')}")
 
         # Only required for TQDM
         if not first_channel_processed:
-            x1_list = list(range(0, image_tensor.shape[2] - config.patch_size + 1, config.stride))
-            y1_list = list(range(0, image_tensor.shape[1] - config.patch_size + 1, config.stride))
+            x1_list = list(range(0, image_tensor[i].shape[2] - config.patch_size + 1, config.stride))
+            y1_list = list(range(0, image_tensor[i].shape[1] - config.patch_size + 1, config.stride))
             total_length = len(channels[::config.in_chans]) * len(x1_list) * len(y1_list)
             pbar.reset(total=total_length)
             first_channel_processed = True
@@ -123,17 +129,17 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
                                                                    target_dir=target_dir,
                                                                    frag_id=frag_id,
                                                                    mask=mask,
-                                                                   image_tensor=image_tensor,
-                                                                   label_tensor=label_tensor,
+                                                                   image_tensor=image_tensor[i],
+                                                                   label_tensor=label_tensor[i],
                                                                    start_channel=start_channel,
                                                                    pbar=pbar)
 
         total_patch_cnt += patch_cnt
         total_skipped_cnt += skipped_cnt
         total_pruned_cnt += pruned_cnt
-        del image_tensor, label_tensor
 
-        gc.collect()
+    del image_tensors, label_tensors
+    gc.collect()
 
     total_patches = total_patch_cnt + total_skipped_cnt + total_pruned_cnt
     pbar.set_description(f"\033[94mProcessing: Fragment: {get_frag_name_from_id(frag_id)}\033[0m "
