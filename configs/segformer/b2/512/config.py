@@ -35,10 +35,15 @@ losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
 
 val_interval = 1
-lr = 2e-4
-step_lr_steps = 2
+
+# TODO: Add warmup phase and gradually increase the learning rate over the first few epochs -> adapt to new data smoothly
+# TODO: DROPOUT & Batch Normalization
+# TODO: Learning Rate Schedule where LR reduction is triggered based on performance metrics / loss peaks at later epochs
+# TODO: Think about a more complex model architecture (B3, B4, B5) since larger dataset introduces more complexity/variations
+lr = 4e-4  # default: 2e-4 -> also try 3e-4
+step_lr_steps = 3  # default: 2 -> try higher step sizes
 step_lr_factor = 0.97
-weight_decay = 0.01
+weight_decay = 0.005  # default: 0.01  -> Lower weight decay if we have more data
 
 num_workers = 16
 train_batch_size = 24
