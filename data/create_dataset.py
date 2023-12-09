@@ -22,7 +22,7 @@ from data_modules.utils import balance_dataset
 Image.MAX_IMAGE_PIXELS = None
 
 
-def extract_patches(config, label_dir):
+def extract_patches(config: Config, label_dir):
     frag_id_2_channel = validate_fragments(config, label_dir)
 
     logging.info(f"Starting to extract image and label patches..")
@@ -43,7 +43,7 @@ def extract_patches(config, label_dir):
                     frag_id_2_channel=frag_id_2_channel)
 
 
-def process_fragment(config, fragment_id, channels):
+def process_fragment(config: Config, fragment_id, channels):
     frag_name = '_'.join([get_frag_name_from_id(fragment_id)]).upper()
     target_dir = os.path.join(config.dataset_target_dir, str(config.patch_size), frag_name)
 
@@ -69,7 +69,7 @@ def clean_all_fragment_label_dirs(config: Config):
             os.remove(file_path)
 
 
-def create_dataset(target_dir, config, frag_id, channels):
+def create_dataset(target_dir, config: Config, frag_id, channels):
     target_dir = os.path.join(target_dir)
 
     os.makedirs(target_dir, exist_ok=True)
@@ -365,9 +365,9 @@ if __name__ == '__main__':
     LABEL_INFO_LIST = []
 
     if label_dir == "handmade":
-        label_dir = os.path.join(cfg.work_dir, "data", "base_label", "handmade")
+        label_dir = os.path.join(cfg.work_dir, "data", "base_label_files", "handmade")
     else:
-        label_dir = os.path.join(cfg.work_dir, "data", "base_label", "model_generated", label_dir)
+        label_dir = os.path.join(cfg.work_dir, "data", "base_label_binarized", label_dir)
 
     clean_all_fragment_label_dirs(config=cfg)
     extract_patches(cfg, label_dir)
