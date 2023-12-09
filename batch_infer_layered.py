@@ -15,13 +15,13 @@ def print_colored(message, color):
     print(f"{colors[color]}{message}{colors['end']}")
 
 
-FRAGMENT_IDS = FRAGMENTS_ALPHA
-CHECKPOINTS = [LIVELY_MEADOW]
+FRAGMENT_IDS = [BLASTER_FRAG_ID, HOT_ROD_FRAG_ID, JAZZILLA_FRAG_ID]
+CHECKPOINTS = ["playful-firefly-737-segformer-b2-231209-143850"]
 
 start_idx = 0
 end_idx = 60
 batch_size = 32
-labels = True
+labels = False
 
 labels_str = ''
 if labels:
