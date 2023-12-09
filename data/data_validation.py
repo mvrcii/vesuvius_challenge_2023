@@ -30,7 +30,7 @@ def validate_fragments(config, label_dir):
             valid_fragments[frag_id] = [frag_str]
 
     for frag_id, valid in valid_fragments.items():
-        type_str = 'Images' if processing_type == 'images' else 'Labels'
+        type_str = 'Images & Labels'
 
         new_channels = frag_id_2_channels.get(frag_id, False)
         existing_channels = frag_id_2_existing_channels.get(frag_id, False)
@@ -130,14 +130,10 @@ def validate_labels(cfg, frag_id, frag_dir, label_dir):
 
         existing_slice_channels = set(extract_indices(slice_dir, pattern=r'(\d+).tif'))
 
-        existing_image_dir = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size),
-                                          get_frag_name_from_id(frag_id).upper(),
-                                          "images")
-
         # Check for already existing images / labels patches
-        start_indices = extract_indices(existing_image_dir, pattern=r".*ch(\d+)_.*\.npy$")
-        existing_channels = set([index + i for i in range(cfg.in_chans) for index in start_indices])
-        required_channels -= existing_channels
+        # start_indices = extract_indices(existing_image_dir, pattern=r".*ch(\d+)_.*\.npy$")
+        # existing_channels = set([index + i for i in range(cfg.in_chans) for index in start_indices])
+        # required_channels -= existing_channels
 
         valid_channels = existing_slice_channels.intersection(required_channels)
 

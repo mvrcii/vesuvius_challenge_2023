@@ -32,6 +32,7 @@ def extract_patches(config: Config, label_dir):
 
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
     df = pd.DataFrame(LABEL_INFO_LIST, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
+    os.makedirs(root_dir, exist_ok=True)
     df.to_csv(os.path.join(root_dir, "label_infos.csv"))
 
     write_to_config(os.path.join(root_dir),
@@ -236,8 +237,13 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
     for _, row in balanced_df.iterrows():
         file_name = row['filename']
         image_patch, label_patch = STACK_PATCHES[file_name]
-        np.save(os.path.join(target_dir, "images", file_name), image_patch)
-        np.save(os.path.join(target_dir, "labels", file_name), label_patch)
+        img_dir = os.path.join(target_dir, "images")
+        label_dir = os.path.join(target_dir, "labels")
+        os.makedirs(img_dir, exist_ok=True)
+        os.makedirs(label_dir, exist_ok=True)
+
+        np.save(os.path.join(img_dir, file_name), image_patch)
+        np.save(os.path.join(label_dir, file_name), label_patch)
 
     patches += len(balanced_df)
     pruned = all_patches - len(balanced_df)

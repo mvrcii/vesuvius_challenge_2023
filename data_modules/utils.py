@@ -40,7 +40,8 @@ def balance_dataset(cfg: Config, data):
                                                                           random_state=cfg.seed)
 
     # Combine all selected samples
-    return pd.concat([ink_samples, selected_no_artefact_samples, selected_with_artefact_samples])
+    return pd.concat([ink_samples, selected_no_artefact_samples,
+                      selected_with_artefact_samples]), num_ink_samples, num_no_artefact_samples, num_with_artefact_samples
 
 
 def generate_dataset(cfg: Config):
