@@ -353,7 +353,6 @@ if __name__ == '__main__':
                                                                  num_labels=1,
                                                                  num_channels=config.in_chans,
                                                                  ignore_mismatched_sizes=True)
-
     elif config.architecture == 'simplecnn':
         model = SimpleCNNModule(cfg=config)
     else:
