@@ -15,7 +15,7 @@ dataset_target_dir = os.path.join("data", "datasets")
 # dataset creation parameters
 patch_size = 512
 label_size = patch_size // 4
-stride = patch_size // 2
+stride = patch_size
 ink_ratio = 3
 artefact_threshold = 5
 fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID,

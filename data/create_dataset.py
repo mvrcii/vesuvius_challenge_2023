@@ -28,7 +28,7 @@ def extract_patches(config: Config, label_dir):
     logging.info(f"Starting to extract image and label patches..")
 
     for fragment_id, channels in frag_id_2_channel.items():
-        process_fragment(config=config, fragment_id=fragment_id, channels=channels)
+        process_fragment(label_dir=label_dir, config=config, fragment_id=fragment_id, channels=channels)
 
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
     df = pd.DataFrame(LABEL_INFO_LIST, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
@@ -44,13 +44,14 @@ def extract_patches(config: Config, label_dir):
                     frag_id_2_channel=frag_id_2_channel)
 
 
-def process_fragment(config: Config, fragment_id, channels):
+def process_fragment(config: Config, fragment_id, channels, label_dir):
     frag_name = '_'.join([get_frag_name_from_id(fragment_id)]).upper()
     target_dir = os.path.join(config.dataset_target_dir, str(config.patch_size), frag_name)
 
     write_to_config(target_dir, frag_id=fragment_id, channels=channels)
 
     create_dataset(target_dir=target_dir,
+                   label_dir=label_dir,
                    config=config,
                    frag_id=fragment_id,
                    channels=channels)
@@ -70,7 +71,7 @@ def clean_all_fragment_label_dirs(config: Config):
             os.remove(file_path)
 
 
-def create_dataset(target_dir, config: Config, frag_id, channels):
+def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     target_dir = os.path.join(target_dir)
 
     os.makedirs(target_dir, exist_ok=True)
@@ -78,6 +79,10 @@ def create_dataset(target_dir, config: Config, frag_id, channels):
     fragment_dir = os.path.join(config.data_root_dir, "fragments", f"fragment{frag_id}")
     if not os.path.isdir(fragment_dir):
         raise ValueError(f"Fragment directory does not exist: {fragment_dir}")
+
+    label_dir = os.path.join(label_dir, frag_id)
+    if not os.path.isdir(label_dir):
+        raise ValueError(f"Label directory does not exist: {fragment_dir}")
 
     # Load mask
     mask_path = os.path.join(fragment_dir, f"mask.png")
@@ -98,11 +103,13 @@ def create_dataset(target_dir, config: Config, frag_id, channels):
                              f"Channel: {start_channel:02d}-{end_channel:02d} in "
                              f"{format_ranges(sorted(list(channels)), '')}")
 
+        read_chans = range(start_channel, end_channel + 1)
+
         # Tensor may either be images or labels
-        image_tensor, label_tensor = read_fragment_for_channels(frag_dir=fragment_dir,
-                                                                channels=range(start_channel, end_channel + 1),
-                                                                patch_size=config.patch_size,
-                                                                ch_block_size=config.in_chans)
+        image_tensor = read_fragment_images_for_channels(root_dir=fragment_dir, patch_size=config.patch_size,
+                                                         channels=read_chans, ch_block_size=config.in_chans)
+        label_tensor = read_fragment_labels_for_channels(root_dir=label_dir, patch_size=config.patch_size,
+                                                         channels=read_chans, ch_block_size=config.in_chans)
 
         # Only required for TQDM
         if not first_channel_processed:
@@ -127,11 +134,15 @@ def create_dataset(target_dir, config: Config, frag_id, channels):
         del image_tensor, label_tensor
 
         gc.collect()
+
+    total_patches = total_patch_cnt + total_skipped_cnt + total_pruned_cnt
     pbar.set_description(f"\033[94mProcessing: Fragment: {get_frag_name_from_id(frag_id)}\033[0m "
-                         f"\033[92mDone! Channels: {format_ranges(sorted(list(channels)), '')}\033[0m")
+                         f"\033[92mDone! Channels: {format_ranges(sorted(list(channels)), '')}\033[0m "
+                         f"- Total={total_patches} |"
+                         f" Patches={total_patch_cnt} |"
+                         f" Skipped={total_skipped_cnt} |"
+                         f" Pruned={total_pruned_cnt}")
     pbar.close()
-    print(
-        f"Total discarded %: {(total_skipped_cnt + total_pruned_cnt) / total_patch_cnt * 100:.2f}% of {total_patch_cnt} => {total_skipped_cnt} skipped, {total_pruned_cnt} pruned")
 
 
 def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tensor, label_tensor, start_channel, pbar):
@@ -168,7 +179,6 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
                 continue
 
             file_name = f"f{frag_id}_ch{start_channel:02d}_{x1}_{y1}_{x2}_{y2}.npy"
-            # file_path = os.path.join(target_dir, file_name)
 
             if label_tensor.ndim != 3 or label_tensor.shape[0] != 2 or len(label_tensor[0]) + len(label_tensor[1]) == 0:
                 raise ValueError(f"Expected tensor with shape (2, height, width), got {label_tensor.shape}")
@@ -181,7 +191,6 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             ink_percentage = 0
             artefact_percentage = 0
             label_exists = False
-
             label_patch = None
 
             # tensor images: (4x512x512) labels (2x512x512)
@@ -196,7 +205,6 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
                 ink_percentage = int((base_label_patch.sum() / shape_product) * 100)
                 assert 0 <= ink_percentage <= 100
 
-                # np.save(file_path, base_label_patch)
                 label_patch = base_label_patch
 
             # If artefact label is existent
@@ -214,16 +222,15 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
                     shape_product = np.prod(artefact_label_patch.shape)
                     assert shape_product != 0
 
-                    # np.save(file_path, artefact_label_patch)
                     label_patch = artefact_label_patch
             assert label_patch is not None, "Label patch is None, Stack as processed without existing label or artefact label"
 
             image_patch = image_tensor[:, y1:y2, x1:x2]
 
             assert image_patch.shape == (
-            cfg.in_chans, config.patch_size, config.patch_size), f"Image patch wrong shape: {image_patch.shape}"
+                cfg.in_chans, config.patch_size, config.patch_size), f"Image patch wrong shape: {image_patch.shape}"
             assert label_patch.shape == (
-            config.patch_size, config.patch_size), f"Label patch wrong shape: {label_patch.shape}"
+                config.patch_size, config.patch_size), f"Label patch wrong shape: {label_patch.shape}"
 
             STACK_PATCHES[file_name] = (image_patch, label_patch)
             STACK_PATCH_INFOS.append((file_name, frag_id, start_channel, ink_percentage, artefact_percentage))
@@ -250,17 +257,11 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
     return patches, mask_skipped, pruned
 
 
-def read_fragment_for_channels(frag_dir, channels, patch_size, ch_block_size):
-    image_patch = read_fragment_images_for_channels(frag_dir, patch_size, channels, ch_block_size=ch_block_size)
-    label_patch = read_fragment_labels_for_channels(frag_dir, patch_size, channels, ch_block_size=ch_block_size)
-    return image_patch, label_patch
-
-
-def read_fragment_images_for_channels(fragment_dir, patch_size, channels, ch_block_size):
+def read_fragment_images_for_channels(root_dir, patch_size, channels, ch_block_size):
     images = []
 
     for channel in channels:
-        img_path = os.path.join(fragment_dir, "slices", f"{channel:05}.tif")
+        img_path = os.path.join(root_dir, "slices", f"{channel:05}.tif")
 
         assert os.path.isfile(img_path), "Fragment file does not exist"
 
@@ -281,7 +282,7 @@ def read_fragment_images_for_channels(fragment_dir, patch_size, channels, ch_blo
     return np.array(images)
 
 
-def read_fragment_labels_for_channels(fragment_dir, patch_size, channels, ch_block_size):
+def read_fragment_labels_for_channels(root_dir, patch_size, channels, ch_block_size):
     def read_label(label_path):
         if not os.path.isfile(label_path):
             return None
@@ -306,7 +307,6 @@ def read_fragment_labels_for_channels(fragment_dir, patch_size, channels, ch_blo
 
     start_channel = channels[0]
 
-    root_dir = os.path.join(fragment_dir, 'layered')
     label_step_size = 4
 
     label_blocks = []
@@ -318,14 +318,14 @@ def read_fragment_labels_for_channels(fragment_dir, patch_size, channels, ch_blo
         base_label = read_label(base_label_path)
         neg_label = read_label(neg_label_path)
 
+        if base_label is None and neg_label is None:
+            print("Label and neg Label none")
+            sys.exit(1)
+
         if base_label is None:
             base_label = np.ones_like(neg_label) * -1
         if neg_label is None:
             neg_label = np.ones_like(base_label) * -1
-
-        if base_label is None and neg_label is None:
-            print("Label and neg Label none")
-            sys.exit(1)
 
         label_stack = np.concatenate([base_label, neg_label], axis=0)
         assert label_stack.shape[0] == 2
