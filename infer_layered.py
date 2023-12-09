@@ -69,6 +69,8 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     """
     tta_batch = [tensor]
 
+    print(tensor.dtype)
+
     # Apply rotation augmentations
     if rotate:
         tta_batch.append(torch.rot90(tensor, 1, [1, 2]))  # Rotate left 90 degrees
