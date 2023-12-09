@@ -323,6 +323,10 @@ def read_fragment_labels_for_channels(fragment_dir, patch_size, channels, ch_blo
         if neg_label is None:
             neg_label = np.ones_like(base_label) * -1
 
+        if base_label is None and neg_label is None:
+            print("Label and neg Label none")
+            sys.exit(1)
+
         label_stack = np.concatenate([base_label, neg_label], axis=0)
         assert label_stack.shape[0] == 2
 
