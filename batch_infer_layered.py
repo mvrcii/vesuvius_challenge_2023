@@ -16,8 +16,7 @@ def print_colored(message, color):
 
 
 FRAGMENT_IDS = [BLASTER_FRAG_ID, HOT_ROD_FRAG_ID, JAZZILLA_FRAG_ID]
-CHECKPOINTS = ["chocolate-fog-716-segformer-b2-231207-182217"]
-# CHECKPOINTS = ["playful-firefly-737-segformer-b2-231209-143850"]
+CHECKPOINTS = ["playful-firefly-737-segformer-b2-231209-143850"]
 
 start_idx = 0
 end_idx = 60
