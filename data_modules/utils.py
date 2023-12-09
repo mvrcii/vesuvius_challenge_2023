@@ -48,7 +48,7 @@ def generate_dataset(cfg: Config):
     csv_path = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), 'label_infos.csv')
 
     try:
-        data = pd.read_csv(csv_path)
+        balanced_dataset = pd.read_csv(csv_path)
     except Exception as e:
         print(e)
         sys.exit(1)
@@ -56,13 +56,14 @@ def generate_dataset(cfg: Config):
     if cfg.seed == -1:
         cfg.seed = None  # Set random seed if -1 is given
 
-    balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, data)
-
-    # Print statistics
-    print(f"Total ink samples: {num_ink_samples}")
-    print(f"Total non-ink samples with no artefact: {num_no_artefact_samples}")
-    print(f"Total non-ink samples with artefact > {cfg.artefact_threshold}: {num_with_artefact_samples}")
-    print(f"Total samples: {num_ink_samples + num_no_artefact_samples + num_with_artefact_samples}")
+    # BALANCING IS DONE ON CREATION
+    # balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, data)
+    #
+    # # Print statistics
+    # print(f"Total ink samples: {num_ink_samples}")
+    # print(f"Total non-ink samples with no artefact: {num_no_artefact_samples}")
+    # print(f"Total non-ink samples with artefact > {cfg.artefact_threshold}: {num_with_artefact_samples}")
+    # print(f"Total samples: {num_ink_samples + num_no_artefact_samples + num_with_artefact_samples}")
 
     balanced_dataset['file_path'] = balanced_dataset.apply(
         lambda row: os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename']), axis=1)
