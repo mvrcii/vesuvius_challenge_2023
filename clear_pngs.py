@@ -10,7 +10,6 @@ for fragment_dir in os.listdir(inf_dir):
             label_dir = [x for x in os.listdir(os.path.join(inf_dir, fragment_dir, run_dir)) if x.__contains__("labels")][0]
             label_sub_dir = os.listdir(os.path.join(inf_dir, fragment_dir, run_dir, label_dir))[0]
             for file in os.listdir(os.path.join(inf_dir, fragment_dir, run_dir, label_dir, label_sub_dir)):
-                print(file)
                 start_idx = int(file.split("_")[2])
                 if not valid_start_idxs.__contains__(start_idx):
                     print(f"Removing {file}")
