@@ -96,6 +96,7 @@ INTER_COLUMN_MAPPING = {
 
 # CHECKPOINTS
 CHECKPOINTS = {
+    "playful-firefly": "playful-firefly-737-segformer-b2-231209-143850",
     "chocolate-fog": "chocolate-fog-716-segformer-b2-231207-182217",
     "amber-plant": "amber-plant-717-segformer-b2-231208-003604",
     "revived-bee": "revived-bee-694-segformer-b2-231206-181839",
@@ -107,6 +108,7 @@ CHECKPOINTS = {
     "solar-oath": "solar-oath-401-segformer-b2-231126-043455",
 }
 
+PLAYFUL_FIREFLY = CHECKPOINTS["playful-firefly"]
 CHOCOLATE_FOG = CHECKPOINTS["chocolate-fog"]
 AMBER_PLANT = CHECKPOINTS["amber-plant"]
 REVIVED_BEE = CHECKPOINTS["revived-bee"]

@@ -182,6 +182,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
         pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
 
     transform = A.Compose(val_image_aug, is_check_shapes=False)
+    use_advanced_tta = False
 
     for y in range(y_patches):
         for x in range(x_patches):
@@ -219,7 +220,6 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
                 sigmoid_output = torch.sigmoid(outputs.logits).detach().squeeze()
 
                 # Check 'improved' TTA for every image patch
-                use_advanced_tta = False
                 if use_advanced_tta:
                     for image_patch, sigmoid_patch in zip(preallocated_batch_tensor, sigmoid_output):
                         ink_percentage = int((sigmoid_patch.sum() / np.prod(sigmoid_patch.shape)) * 100)
@@ -262,7 +262,8 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     # Average the predictions
     out_arr = torch.where(pred_counts > 0, torch.div(out_arr, pred_counts), out_arr)
 
-    print(f"Advanced TTA Patches for layer start {layer_start}: {total_advanced_tta_patches}")
+    if use_advanced_tta:
+        print(f"Advanced TTA Patches for layer start {layer_start}: {total_advanced_tta_patches}")
     return out_arr
 
 

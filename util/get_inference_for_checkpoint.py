@@ -13,7 +13,7 @@ def get_inference_for_checkpoint(frag_ids, checkpoint_path, host):
 
 
 if __name__ == '__main__':
-    fragments = FRAGMENTS_ALPHA
-    checkpoint = LIVELY_MEADOW
+    fragments = FRAGMENTS_BETA
+    checkpoint = PLAYFUL_FIREFLY
 
     get_inference_for_checkpoint(frag_ids=fragments, checkpoint_path=checkpoint, host="vast")
