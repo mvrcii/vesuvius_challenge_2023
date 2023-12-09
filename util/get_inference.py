@@ -1,7 +1,33 @@
+import argparse
 import os
 import subprocess
-import argparse
-from tqdm import tqdm
+
+from constants import get_frag_name_from_id
+
+
+def validate_folder(local_path, model_run_dir):
+    try:
+        model_dirs = [_dir for _dir in os.listdir(local_path) if model_run_dir in _dir]
+        if len(model_dirs) != 1:
+            print_colored(f"Error: Expected 1 directory named {model_run_dir}, found {len(model_dirs)}", "red")
+            return False
+
+        path = os.path.join(local_path, model_dirs[0])
+        files = [f for f in os.listdir(path) if f.endswith('.npy')]
+        if len(files) != 61:
+            print_colored(f"Error: Expected 61 .npy files in {model_run_dir}, found {len(files)}", "red")
+            return False
+
+        file_sizes = [os.path.getsize(os.path.join(path, f)) for f in files]
+        if len(set(file_sizes)) != 1:
+            print_colored("Error: Not all files in the model directory have the same size", "red")
+            return False
+
+        return True
+
+    except Exception as e:
+        print_colored(f"Error: {str(e)}", "red")
+        return False
 
 
 def print_colored(message, color):
@@ -14,7 +40,14 @@ def print_colored(message, color):
     print(f"{colors[color]}{message}{colors['end']}")
 
 
-def main(fragment_id, checkpoint_folder_name, hostname):
+def find_directory_on_remote(server_path, fragment_id, model_run_dir):
+    model_run_dir = '-'.join(model_run_dir.split('-')[:3])
+    full_server_path = f"{server_path}/fragment{fragment_id}"
+
+    return os.path.join(full_server_path, f"*{model_run_dir}*"), model_run_dir
+
+
+def get_inference_folder(fragment_id, full_model_run_dir, hostname):
     server_paths = {
         "vast": "~/kaggle1stReimp/inference/results",
         "slurm": "/scratch/medfm/vesuv/kaggle1stReimp/inference/results",
@@ -25,32 +58,47 @@ def main(fragment_id, checkpoint_folder_name, hostname):
         return
 
     server_path = server_paths[hostname]
-    full_server_path = f"{server_path}/fragment{fragment_id}/{checkpoint_folder_name}"
-    local_path = os.path.join(os.getcwd(), f"inference/results/fragment{fragment_id}")
 
-    # Check if the directory exists, create it if not
-    if not os.path.isdir(local_path):
-        os.makedirs(local_path)
+    full_server_path, short_model_run_dir = find_directory_on_remote(
+        fragment_id=fragment_id,
+        server_path=server_path,
+        model_run_dir=full_model_run_dir,
+    )
+
+    local_path = os.path.join(os.getcwd(), f"inference/results/fragment{fragment_id}")
+    os.makedirs(local_path, exist_ok=True)
+
+    model_dirs = [_dir for _dir in os.listdir(local_path) if short_model_run_dir in _dir]
+
+    if len(model_dirs) > 1:
+        print_colored(f"ERROR:\tMore than one inference directory found: {short_model_run_dir}", "red")
+        return
+
+    if len(model_dirs) == 1:
+        if validate_folder(local_path, short_model_run_dir):
+            frag_name = get_frag_name_from_id(fragment_id).upper()
+            print_colored(
+                f"SKIP:\tInference download for {short_model_run_dir.upper()} and {frag_name} '{fragment_id}' already exists",
+                "blue")
+            return
+
+    frag_name = get_frag_name_from_id(fragment_id).upper()
+    print_colored(
+        f"START:\tInference download for {short_model_run_dir.upper()} and {frag_name} '{fragment_id}'",
+        "green")
 
     # Using scp to copy the directory
-    command = f"scp -r {hostname}:{full_server_path} {local_path}"
-
-    print_colored("Starting folder copy...", "blue")
-
-    # Execute scp command
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    for _ in tqdm(process.stdout):
-        pass  # This will show the progress of the copy
-
-    # Wait for the process to complete
+    command = f'scp -r "{hostname}:{full_server_path}" "{local_path}"'
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     process.wait()
 
     # Check if scp succeeded
-    if process.returncode == 0:
-        print_colored("Folder copied successfully.", "green")
-    else:
-        print_colored("Error in copying folder.", "red")
+    if process.returncode != 0:
+        print_colored("ERROR:\tError in downloading inference", "red")
+
+    print_colored(
+        f"END:\tInference download for {short_model_run_dir.upper()} and {frag_name} '{fragment_id}'\n",
+        "green")
 
 
 if __name__ == "__main__":
@@ -60,4 +108,4 @@ if __name__ == "__main__":
     parser.add_argument("hostname", type=str, help="Hostname")
     args = parser.parse_args()
 
-    main(args.fragment_id, args.checkpoint_folder_name, args.hostname)
+    get_inference_folder(args.fragment_id, args.checkpoint_folder_name, args.hostname)
