@@ -1,3 +1,4 @@
+import argparse
 import gc
 import logging
 import os
@@ -16,46 +17,42 @@ from config_handler import Config
 from constants import get_frag_name_from_id, FRAGMENTS
 from data.data_validation import validate_fragments, format_ranges
 from data.utils import write_to_config
+from data_modules.utils import balance_dataset
 
 Image.MAX_IMAGE_PIXELS = None
 
 
-def extract_patches(config, processing_type):
-    frag_id_2_channel = validate_fragments(config, processing_type=processing_type)
+def extract_patches(config, label_dir):
+    frag_id_2_channel = validate_fragments(config, label_dir)
 
-    logging.info(f"Starting to extract {processing_type} patches..")
+    logging.info(f"Starting to extract image and label patches..")
 
     for fragment_id, channels in frag_id_2_channel.items():
-        process_fragment(config=config, fragment_id=fragment_id, channels=channels, processing_type=processing_type)
+        process_fragment(config=config, fragment_id=fragment_id, channels=channels)
 
-    if processing_type == 'labels':
-        root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
-        df = pd.DataFrame(LABEL_INFO_LIST, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
-        df.to_csv(os.path.join(root_dir, "label_infos.csv"))
+    root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
+    df = pd.DataFrame(LABEL_INFO_LIST, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
+    df.to_csv(os.path.join(root_dir, "label_infos.csv"))
 
-        write_to_config(os.path.join(root_dir),
-                        patch_size=config.patch_size,
-                        label_size=config.label_size,
-                        stride=config.stride,
-                        in_chans=config.in_chans,
-                        fragment_names=[get_frag_name_from_id(frag_id).upper() for frag_id in frag_id_2_channel.keys()],
-                        frag_id_2_channel=frag_id_2_channel)
+    write_to_config(os.path.join(root_dir),
+                    patch_size=config.patch_size,
+                    label_size=config.label_size,
+                    stride=config.stride,
+                    in_chans=config.in_chans,
+                    fragment_names=[get_frag_name_from_id(frag_id).upper() for frag_id in frag_id_2_channel.keys()],
+                    frag_id_2_channel=frag_id_2_channel)
 
 
-def process_fragment(config, fragment_id, channels, processing_type):
+def process_fragment(config, fragment_id, channels):
     frag_name = '_'.join([get_frag_name_from_id(fragment_id)]).upper()
     target_dir = os.path.join(config.dataset_target_dir, str(config.patch_size), frag_name)
 
-    if processing_type == 'images':
-        write_to_config(target_dir, frag_id=fragment_id, channels=channels)
+    write_to_config(target_dir, frag_id=fragment_id, channels=channels)
 
     create_dataset(target_dir=target_dir,
                    config=config,
                    frag_id=fragment_id,
-                   channels=channels,
-                   processing_type=processing_type)
-
-    # TODO: PRUNE LABEL_INFO_LIST for blacks
+                   channels=channels)
 
 
 def clean_all_fragment_label_dirs(config: Config):
@@ -72,8 +69,8 @@ def clean_all_fragment_label_dirs(config: Config):
             os.remove(file_path)
 
 
-def create_dataset(target_dir, config, frag_id, channels, processing_type):
-    target_dir = os.path.join(target_dir, processing_type)
+def create_dataset(target_dir, config, frag_id, channels):
+    target_dir = os.path.join(target_dir)
 
     os.makedirs(target_dir, exist_ok=True)
 
@@ -89,6 +86,7 @@ def create_dataset(target_dir, config, frag_id, channels, processing_type):
 
     total_skipped_cnt = 0
     total_patch_cnt = 0
+    total_pruned_cnt = 0
     pbar = tqdm(total=(len(channels)), desc="Initializing...")
 
     first_channel_processed = False
@@ -100,56 +98,63 @@ def create_dataset(target_dir, config, frag_id, channels, processing_type):
                              f"{format_ranges(sorted(list(channels)), '')}")
 
         # Tensor may either be images or labels
-        tensor = read_fragment_for_channels(frag_dir=fragment_dir,
-                                            processing_type=processing_type,
-                                            channels=range(start_channel, end_channel + 1),
-                                            patch_size=config.patch_size,
-                                            ch_block_size=config.in_chans)
+        image_tensor, label_tensor = read_fragment_for_channels(frag_dir=fragment_dir,
+                                                                channels=range(start_channel, end_channel + 1),
+                                                                patch_size=config.patch_size,
+                                                                ch_block_size=config.in_chans)
 
         # Only required for TQDM
         if not first_channel_processed:
-            x1_list = list(range(0, tensor.shape[2] - config.patch_size + 1, config.stride))
-            y1_list = list(range(0, tensor.shape[1] - config.patch_size + 1, config.stride))
+            x1_list = list(range(0, image_tensor.shape[2] - config.patch_size + 1, config.stride))
+            y1_list = list(range(0, image_tensor.shape[1] - config.patch_size + 1, config.stride))
             total_length = len(channels[::config.in_chans]) * len(x1_list) * len(y1_list)
             pbar.reset(total=total_length)
             first_channel_processed = True
 
-        patch_cnt, skipped_cnt = process_channel_stack(config=config,
-                                                       target_dir=target_dir,
-                                                       frag_id=frag_id,
-                                                       mask=mask,
-                                                       tensor=tensor,
-                                                       start_channel=start_channel,
-                                                       processing_type=processing_type,
-                                                       pbar=pbar)
+        patch_cnt, skipped_cnt, pruned_cnt = process_channel_stack(config=config,
+                                                                   target_dir=target_dir,
+                                                                   frag_id=frag_id,
+                                                                   mask=mask,
+                                                                   image_tensor=image_tensor,
+                                                                   label_tensor=label_tensor,
+                                                                   start_channel=start_channel,
+                                                                   pbar=pbar)
 
         total_patch_cnt += patch_cnt
         total_skipped_cnt += skipped_cnt
-        del tensor
+        total_pruned_cnt += pruned_cnt
+        del image_tensor, label_tensor
+
         gc.collect()
     pbar.set_description(f"\033[94mProcessing: Fragment: {get_frag_name_from_id(frag_id)}\033[0m "
                          f"\033[92mDone! Channels: {format_ranges(sorted(list(channels)), '')}\033[0m")
     pbar.close()
+    print(
+        f"Total discarded %: {(total_skipped_cnt + total_pruned_cnt) / total_patch_cnt * 100:.2f}% of {total_patch_cnt} => {total_skipped_cnt} skipped, {total_pruned_cnt} pruned")
 
 
-def process_channel_stack(config, target_dir, frag_id, mask, tensor, start_channel, processing_type, pbar):
+def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tensor, label_tensor, start_channel, pbar):
     """Extracts image/label patches for one 'label stack', corresponding to cfg.in_chans consecutive slice layers.
 
+    :param label_tensor:
+    :param image_tensor:
     :param pbar:
-    :param processing_type:
     :param start_channel:
     :param target_dir:
     :param config:
     :param frag_id:
     :param mask:
-    :param tensor:
     :return:
     """
-    x1_list = list(range(0, tensor.shape[2] - config.patch_size + 1, config.stride))
-    y1_list = list(range(0, tensor.shape[1] - config.patch_size + 1, config.stride))
+    x1_list = list(range(0, image_tensor.shape[2] - config.patch_size + 1, config.stride))
+    y1_list = list(range(0, image_tensor.shape[1] - config.patch_size + 1, config.stride))
 
     patches = 0
     mask_skipped = 0
+
+    STACK_PATCHES = {}
+    STACK_PATCH_INFOS = []
+
     for y1 in y1_list:
         for x1 in x1_list:
             pbar.update(1)
@@ -162,71 +167,87 @@ def process_channel_stack(config, target_dir, frag_id, mask, tensor, start_chann
                 continue
 
             file_name = f"f{frag_id}_ch{start_channel:02d}_{x1}_{y1}_{x2}_{y2}.npy"
-            file_path = os.path.join(target_dir, file_name)
+            # file_path = os.path.join(target_dir, file_name)
 
-            if processing_type == 'labels':
-                if tensor.ndim < 3 or tensor.shape[0] < 2 or len(tensor[0]) + len(tensor[1]) == 0:
-                    raise ValueError(f"Expected tensor with shape (2, height, width), got {tensor.shape}")
+            if label_tensor.ndim != 3 or label_tensor.shape[0] != 2 or len(label_tensor[0]) + len(label_tensor[1]) == 0:
+                raise ValueError(f"Expected tensor with shape (2, height, width), got {label_tensor.shape}")
 
-                ink_percentage = 0
-                artefact_percentage = 0
-                label_exists = False
+            if image_tensor.ndim != 3 or image_tensor.shape[0] != cfg.in_chans or len(image_tensor[0]) + len(
+                    image_tensor[1]) == 0:
+                raise ValueError(
+                    f"Expected tensor with shape ({cfg.in_chans}, height, width), got {image_tensor.shape}")
 
-                # If label is existent
-                if tensor[0][0][0] != -1:
-                    label_exists = True
-                    base_label_patch = tensor[0, y1:y2, x1:x2]
+            ink_percentage = 0
+            artefact_percentage = 0
+            label_exists = False
 
-                    shape_product = np.prod(base_label_patch.shape)
+            label_patch = None
+
+            # tensor images: (4x512x512) labels (2x512x512)
+            # If label is existent
+            if label_tensor[0][0][0] != -1:
+                label_exists = True
+                base_label_patch = label_tensor[0, y1:y2, x1:x2]
+
+                shape_product = np.prod(base_label_patch.shape)
+                assert shape_product != 0
+
+                ink_percentage = int((base_label_patch.sum() / shape_product) * 100)
+                assert 0 <= ink_percentage <= 100
+
+                # np.save(file_path, base_label_patch)
+                label_patch = base_label_patch
+
+            # If artefact label is existent
+            if label_tensor[1][0][0] != -1:
+                artefact_label_patch = label_tensor[1, y1:y2, x1:x2]
+
+                artefact_percentage = int((artefact_label_patch.sum() / np.prod(artefact_label_patch.shape)) * 100)
+                assert 0 <= artefact_percentage <= 100
+
+                # If no label exists for this patch -> create zero-filled label patch
+                if not label_exists:
+                    artefact_label_patch = np.zeros_like(artefact_label_patch)
+
+                    # Check that the label contains no 0 shape
+                    shape_product = np.prod(artefact_label_patch.shape)
                     assert shape_product != 0
 
-                    ink_percentage = int((base_label_patch.sum() / shape_product) * 100)
-                    assert 0 <= ink_percentage <= 100
+                    # np.save(file_path, artefact_label_patch)
+                    label_patch = artefact_label_patch
+            assert label_patch is not None, "Label patch is None, Stack as processed without existing label or artefact label"
 
-                    np.save(file_path, base_label_patch)
-                    patches += 1
+            image_patch = image_tensor[:, y1:y2, x1:x2]
 
-                # If artefact label is existent
-                if tensor[1][0][0] != -1:
-                    artefact_label_patch = tensor[1, y1:y2, x1:x2]
+            assert image_patch.shape == (
+            cfg.in_chans, config.patch_size, config.patch_size), f"Image patch wrong shape: {image_patch.shape}"
+            assert label_patch.shape == (
+            config.patch_size, config.patch_size), f"Label patch wrong shape: {label_patch.shape}"
 
-                    artefact_percentage = int((artefact_label_patch.sum() / np.prod(artefact_label_patch.shape)) * 100)
-                    assert 0 <= artefact_percentage <= 100
+            STACK_PATCHES[file_name] = (image_patch, label_patch)
+            STACK_PATCH_INFOS.append((file_name, frag_id, start_channel, ink_percentage, artefact_percentage))
 
-                    # If no label exists for this patch -> create zero-filled label patch
-                    if not label_exists:
-                        artefact_label_patch = np.zeros_like(artefact_label_patch)
+    all_patches = len(STACK_PATCHES)
+    assert all_patches > 0, "No patches were created for this fragment"
+    df = pd.DataFrame(STACK_PATCH_INFOS, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
+    balanced_df, _, _, _ = balance_dataset(cfg, df)
+    LABEL_INFO_LIST.extend(balanced_df.values.tolist())
 
-                        # Check that the label contains no 0 shape
-                        shape_product = np.prod(artefact_label_patch.shape)
-                        assert shape_product != 0
+    for _, row in balanced_df.iterrows():
+        file_name = row['filename']
+        image_patch, label_patch = STACK_PATCHES[file_name]
+        np.save(os.path.join(target_dir, "images", file_name), image_patch)
+        np.save(os.path.join(target_dir, "labels", file_name), label_patch)
 
-                        np.save(file_path, artefact_label_patch)
-                        patches += 1
-
-                LABEL_INFO_LIST.append((file_name, frag_id, start_channel, ink_percentage, artefact_percentage))
-
-            elif processing_type == 'images':
-                if os.path.isfile(file_path):
-                    continue
-                image_patch = tensor[:, y1:y2, x1:x2]
-                np.save(file_path, image_patch)
-                patches += 1
-            else:
-                raise ValueError("Unknown processing type:", processing_type)
-
-    return patches, mask_skipped
+    patches += len(balanced_df)
+    pruned = all_patches - len(balanced_df)
+    return patches, mask_skipped, pruned
 
 
-def read_fragment_for_channels(frag_dir, channels, patch_size, processing_type, ch_block_size):
-    if processing_type == 'images':
-        image_patch = read_fragment_images_for_channels(frag_dir, patch_size, channels, ch_block_size=ch_block_size)
-        return image_patch
-    elif processing_type == 'labels':
-        label_patch = read_fragment_labels_for_channels(frag_dir, patch_size, channels, ch_block_size=ch_block_size)
-        return label_patch
-    else:
-        raise ValueError("Processing Type unknown:", processing_type)
+def read_fragment_for_channels(frag_dir, channels, patch_size, ch_block_size):
+    image_patch = read_fragment_images_for_channels(frag_dir, patch_size, channels, ch_block_size=ch_block_size)
+    label_patch = read_fragment_labels_for_channels(frag_dir, patch_size, channels, ch_block_size=ch_block_size)
+    return image_patch, label_patch
 
 
 def read_fragment_images_for_channels(fragment_dir, patch_size, channels, ch_block_size):
@@ -322,21 +343,31 @@ def read_fragment_labels_for_channels(fragment_dir, patch_size, channels, ch_blo
 
 
 def get_sys_args():
-    if len(sys.argv) < 2:
-        print("Usage: python ./data/create_dataset.py <config_path>")
-        sys.exit(1)
+    # Create the parser
+    parser = argparse.ArgumentParser(description='Process some strings.')
 
-    return sys.argv[1]
+    # Required string argument
+    parser.add_argument('config_path', type=str)
+
+    # Optional string argument
+    parser.add_argument('--label_dir', type=str, default='handmade',
+                        help='The label directory to be used for dataset creation, defaults to handmade')
+
+    args = parser.parse_args()
+    return args.config_path, args.label_dir
 
 
 if __name__ == '__main__':
-    config_path = get_sys_args()
+    config_path, label_dir = get_sys_args()
     cfg = Config.load_from_file(config_path)
 
     # TODO: add automatic binarize label layered for files that changed
     LABEL_INFO_LIST = []
 
+    if label_dir == "handmade":
+        label_dir = os.path.join(cfg.work_dir, "data", "base_label", "handmade")
+    else:
+        label_dir = os.path.join(cfg.work_dir, "data", "base_label", "model_generated", label_dir)
+
     clean_all_fragment_label_dirs(config=cfg)
-    for proc_type in ['images', 'labels']:
-        print("Processing", proc_type)
-        extract_patches(cfg, processing_type=proc_type)
+    extract_patches(cfg, label_dir)

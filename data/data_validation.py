@@ -4,7 +4,7 @@ import re
 from constants import get_frag_name_from_id, FRAGMENTS
 
 
-def validate_fragments(config, processing_type):
+def validate_fragments(config, label_dir):
     all_errors = []
     frag_id_2_channels = {}
     frag_id_2_existing_channels = {}
@@ -14,7 +14,7 @@ def validate_fragments(config, processing_type):
 
     for frag_id in FRAGMENTS.values():
         val_errors, frag_channels, existing_channels = validate_fragment_files(frag_id=frag_id, cfg=config,
-                                                                               processing_type=processing_type)
+                                                                               label_dir=label_dir)
 
         if len(frag_channels) > 0:
             frag_id_2_channels[frag_id] = frag_channels
@@ -70,13 +70,14 @@ def print_checks(errors, valids):
             print(f"\033[94mExcluded:\033[0m\t\t{error}")
 
 
-def validate_fragment_files(frag_id, cfg, processing_type):
+def validate_fragment_files(frag_id, cfg, label_dir):
     errors = []
     frag_dir = os.path.join(cfg.work_dir, "data", "fragments", f"fragment{frag_id}")
+    frag_label_dir = os.path.join(label_dir, f"{frag_id}")
 
     errors.extend(validate_fragment_dir(frag_dir))
 
-    valid_errors, valid_channels, existing_channels = validate_labels(cfg, frag_id, frag_dir, processing_type)
+    valid_errors, valid_channels, existing_channels = validate_labels(cfg, frag_id, frag_dir, frag_label_dir)
     errors.extend(valid_errors)
 
     errors.extend(validate_masks(frag_dir))
@@ -104,9 +105,8 @@ def find_consecutive_ch_blocks_of_size(channels, ch_block_size):
     return set(result)
 
 
-def validate_labels(cfg, frag_id, frag_dir, processing_type):
+def validate_labels(cfg, frag_id, frag_dir, label_dir):
     errors = []
-    label_dir = os.path.join(frag_dir, 'layered')
     slice_dir = os.path.join(frag_dir, 'slices')
 
     if not os.path.isdir(label_dir):
@@ -130,13 +130,14 @@ def validate_labels(cfg, frag_id, frag_dir, processing_type):
 
         existing_slice_channels = set(extract_indices(slice_dir, pattern=r'(\d+).tif'))
 
-        existing_dir = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), get_frag_name_from_id(frag_id).upper(),
-                                    processing_type)
+        existing_image_dir = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size),
+                                          get_frag_name_from_id(frag_id).upper(),
+                                          "images")
+
         # Check for already existing images / labels patches
-        if processing_type == 'images' and os.path.isdir(existing_dir):
-            start_indices = extract_indices(existing_dir, pattern=r".*ch(\d+)_.*\.npy$")
-            existing_channels = set([index + i for i in range(cfg.in_chans) for index in start_indices])
-            required_channels -= existing_channels
+        start_indices = extract_indices(existing_image_dir, pattern=r".*ch(\d+)_.*\.npy$")
+        existing_channels = set([index + i for i in range(cfg.in_chans) for index in start_indices])
+        required_channels -= existing_channels
 
         valid_channels = existing_slice_channels.intersection(required_channels)
 

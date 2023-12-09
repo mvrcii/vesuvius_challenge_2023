@@ -8,18 +8,7 @@ from config_handler import Config
 from constants import get_frag_name_from_id
 
 
-def generate_dataset(cfg: Config):
-    csv_path = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), 'label_infos.csv')
-
-    try:
-        data = pd.read_csv(csv_path)
-    except Exception as e:
-        print(e)
-        sys.exit(1)
-
-    if cfg.seed == -1:
-        cfg.seed = None  # Set random seed if -1 is given
-
+def balance_dataset(cfg: Config, data):
     # Filter for desired fragments
     data = data[data['frag_id'].isin(cfg.fragment_ids)]
 
@@ -51,7 +40,22 @@ def generate_dataset(cfg: Config):
                                                                           random_state=cfg.seed)
 
     # Combine all selected samples
-    balanced_dataset = pd.concat([ink_samples, selected_no_artefact_samples, selected_with_artefact_samples])
+    return pd.concat([ink_samples, selected_no_artefact_samples, selected_with_artefact_samples])
+
+
+def generate_dataset(cfg: Config):
+    csv_path = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), 'label_infos.csv')
+
+    try:
+        data = pd.read_csv(csv_path)
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
+    if cfg.seed == -1:
+        cfg.seed = None  # Set random seed if -1 is given
+
+    balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, data)
 
     # Print statistics
     print(f"Total ink samples: {num_ink_samples}")
