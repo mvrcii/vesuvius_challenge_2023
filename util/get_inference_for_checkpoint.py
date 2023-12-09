@@ -1,27 +1,14 @@
-import subprocess
-
 from constants import *
+from get_inference import get_inference_folder
 
 
-def get_inference(frag_ids, checkpoint_path, host):
+def get_inference_for_checkpoint(frag_ids, checkpoint_path, host):
     for frag_id in frag_ids:
-        command = [
-            'bash',
-            "./util/get_inference.sh",
-            frag_id,
-            checkpoint_path,
-            host
-        ]
-
-        # Execute the command
-        process = subprocess.run(command, text=True)
-
-        if process.stdout:
-            print(process.stdout)
+        get_inference_folder(fragment_id=frag_id, full_model_run_dir=checkpoint_path, hostname=host)
 
 
 if __name__ == '__main__':
-    fragments = FRAGMENTS_ALPHA
+    fragments = FRAGMENTS.values()
     checkpoint = LIVELY_MEADOW
 
-    get_inference(frag_ids=fragments, checkpoint_path=checkpoint, host="vast")
+    get_inference_for_checkpoint(frag_ids=fragments, checkpoint_path=checkpoint, host="vast")
