@@ -237,15 +237,15 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
 
     all_patches = len(STACK_PATCHES)
     assert all_patches > 0, "No patches were created for this fragment"
-    print("STACK_PATCH_INFOS", len(STACK_PATCH_INFOS))
+    # print("STACK_PATCH_INFOS", len(STACK_PATCH_INFOS))
     df = pd.DataFrame(STACK_PATCH_INFOS, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
     balanced_df, _, _, _ = balance_dataset(cfg, df)
-    print("balanced_df", len(balanced_df))
+    # print("balanced_df", len(balanced_df))
     LABEL_INFO_LIST.extend(balanced_df.values.tolist())
 
     for _, row in balanced_df.iterrows():
         file_name = row['filename']
-        print("saving row", row)
+        # print("saving row", row)
         image_patch, label_patch = STACK_PATCHES[file_name]
         img_dir = os.path.join(target_dir, "images")
         label_dir = os.path.join(target_dir, "labels")
