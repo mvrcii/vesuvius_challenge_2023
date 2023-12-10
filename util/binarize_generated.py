@@ -4,17 +4,17 @@ import sys
 import cv2
 import numpy as np
 from termcolor import colored
+from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.path.append('../')
 
+from constants import get_frag_name_from_id
 from meta import AlphaBetaMeta
 
 
 def process_image(img_src_dir, img_target_dir):
     try:
-        os.makedirs(img_target_dir, exist_ok=True)
-
         # Load label image
         label_img = cv2.imread(img_src_dir, 0)
         label_arr = np.asarray(label_img)
@@ -58,7 +58,10 @@ def main(keyword="inklabels"):
     failure_count = 0
     valid_file_count = 0
 
+    print(f"Binarizing label files for model checkpoint: {model}")
     for fragment_id in os.listdir(model_label_path):
+        frag_name = get_frag_name_from_id(fragment_id).upper()
+
         # Only process fragment directories within the layered folder
         sub_dir = os.path.join(model_label_path, fragment_id)
         out_dir = os.path.join(label_target_path, model, fragment_id)
@@ -67,7 +70,7 @@ def main(keyword="inklabels"):
             print("Skipping element ", fragment_id)
             continue
 
-        for img_src_name in os.listdir(sub_dir):
+        for img_src_name in tqdm(os.listdir(sub_dir), desc=f"Processing {frag_name}"):
             if not img_src_name.endswith(".png") or "inklabels" not in img_src_name:
                 continue
 
@@ -81,13 +84,15 @@ def main(keyword="inklabels"):
                 exist_count += 1
                 continue
 
+            os.makedirs(out_dir, exist_ok=True)
+
             success, message = process_image(img_src_dir=img_src_path, img_target_dir=img_target_path)
 
             if success:
-                print(colored(f"Success: Processed {message}", "green"))
+                # print(colored(f"Success: Processed {message}", "green"))
                 success_count += 1
             else:
-                print(colored(f"Failure: {message}", "red"))
+                # print(colored(f"Failure: {message}", "red"))
                 failure_count += 1
 
     print(f"\n")
