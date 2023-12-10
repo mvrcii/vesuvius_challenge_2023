@@ -11,6 +11,8 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
+from meta import AlphaBetaMeta
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config_handler import Config
@@ -370,25 +372,18 @@ def get_sys_args():
     # Required string argument
     parser.add_argument('config_path', type=str)
 
-    # Optional string argument
-    parser.add_argument('--label_dir', type=str, default='handmade',
-                        help='The label directory to be used for dataset creation, defaults to handmade')
-
     args = parser.parse_args()
-    return args.config_path, args.label_dir
+    return args.config_path
 
 
 if __name__ == '__main__':
-    config_path, label_dir = get_sys_args()
+    config_path = get_sys_args()
     cfg = Config.load_from_file(config_path)
 
-    # TODO: add automatic binarize label layered for files that changed
     LABEL_INFO_LIST = []
 
-    if label_dir == "handmade":
-        label_dir = os.path.join(cfg.work_dir, "data", "base_label_files", "handmade")
-    else:
-        label_dir = os.path.join(cfg.work_dir, "data", "base_label_binarized", label_dir)
+    label_dir = AlphaBetaMeta().get_current_label_dir()
+    label_dir = os.path.join(cfg.work_dir, label_dir)
 
     clean_all_fragment_label_dirs(config=cfg)
     extract_patches(cfg, label_dir)
