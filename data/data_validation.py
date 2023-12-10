@@ -110,6 +110,7 @@ def validate_labels(cfg, frag_id, frag_dir, label_dir):
     slice_dir = os.path.join(frag_dir, 'slices')
 
     if not os.path.isdir(label_dir):
+        print(label_dir)
         errors.append(f"\033[91mReason:\t\tLabel directory not found\033[0m")
 
     if not os.path.isdir(slice_dir):
