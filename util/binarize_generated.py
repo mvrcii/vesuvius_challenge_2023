@@ -48,9 +48,13 @@ def extract_image_target_name(full_image_name):
 
 
 def main(keyword="inklabels"):
-    model_label_path = AlphaBetaMeta().get_current_label_dir()
-    model = AlphaBetaMeta().get_current_model()
+    model_label_path = AlphaBetaMeta().get_current_base_label_dir()
+    model = AlphaBetaMeta().get_previous_model()
     label_target_path = AlphaBetaMeta().get_label_target_dir()
+    it = AlphaBetaMeta().get_current_iteration()
+    phase = AlphaBetaMeta().get_current_phase()
+    fragments = AlphaBetaMeta().get_current_train_fragments()
+    fragments_str = " ".join(fragments)
 
     os.makedirs(label_target_path, exist_ok=True)
     success_count = 0
@@ -58,7 +62,14 @@ def main(keyword="inklabels"):
     failure_count = 0
     valid_file_count = 0
 
-    print(f"Binarizing label files for model checkpoint: {model}")
+    if not model:
+        print("Make sure that ")
+        raise Exception("Make sure that the iteration is set correctly.")
+
+    print(f">>> BINARIZE LABELS <<<")
+    print(f"Iteration:\t\t\t{it}\nTrain Phase:\t\t{phase}")
+    print(f"Train Fragments:\t{fragments_str}")
+    print(f"Label Model:\t\t{model}\t")
     for fragment_id in os.listdir(model_label_path):
         frag_name = get_frag_name_from_id(fragment_id).upper()
 
@@ -70,7 +81,7 @@ def main(keyword="inklabels"):
             print("Skipping element ", fragment_id)
             continue
 
-        for img_src_name in tqdm(os.listdir(sub_dir), desc=f"Processing {frag_name}"):
+        for img_src_name in tqdm(os.listdir(sub_dir), desc=f"Processing {frag_name} '{fragment_id}'"):
             if not img_src_name.endswith(".png") or "inklabels" not in img_src_name:
                 continue
 
@@ -95,8 +106,7 @@ def main(keyword="inklabels"):
                 # print(colored(f"Failure: {message}", "red"))
                 failure_count += 1
 
-    print(f"\n")
-    print(colored(f"Total Files:\t\t{valid_file_count}", "blue"))
+    print(colored(f"\nTotal Files:\t\t{valid_file_count}", "blue"))
     print(colored(f"Total Existing:\t\t{exist_count}", "blue"))
     print(colored(f"Total Successful:\t{success_count}", "green"))
     print(colored(f"Total Failures:\t\t{failure_count}", "red"))

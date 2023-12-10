@@ -30,6 +30,9 @@ class AlphaBetaMeta:
     def get_model_for_it(iteration):
         return IT_2_MODEL.get(iteration, None)
 
+    def get_current_iteration(self):
+        return self.iteration
+
     def get_current_base_label_dir(self):
         """The current label dir is always specified by the model prior to this iteration."""
         label_type = self.get_current_label_type()

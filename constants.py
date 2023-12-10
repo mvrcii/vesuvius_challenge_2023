@@ -149,7 +149,7 @@ IT_2_MODEL = {
 #       - perform the batch inference       with iteration i
 #       - download the inference results    with iteration i
 #       - copy the labels to base labels    with iteration i
-#       - binarize the labels               with iteration i+1      >>> increment iteration here <<<
+#       - binarize the labels               with iteration i+1      >>> increment iteration before this step <<<
 #       - create the dataset                with iteration i+1
 #       - perform the model training        with iteration i+1
 #       ...
