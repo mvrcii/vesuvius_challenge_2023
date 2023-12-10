@@ -13,7 +13,6 @@ def balance_dataset(cfg: Config, data):
     data = data[data['frag_id'].isin(cfg.fragment_ids)]
 
     print(cfg.ink_ratio)
-    print(data[data['ink_p'] > cfg.ink_ratio])
 
     # Select ink samples
     ink_samples = data[data['ink_p'] > cfg.ink_ratio]
