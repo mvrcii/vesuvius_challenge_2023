@@ -76,8 +76,6 @@ def clean_all_fragment_label_dirs(config: Config):
 
 
 def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
-    target_dir = os.path.join(target_dir)
-
     os.makedirs(target_dir, exist_ok=True)
 
     fragment_dir = os.path.join(config.data_root_dir, "fragments", f"fragment{frag_id}")
@@ -109,7 +107,6 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
 
         read_chans = range(start_channel, end_channel + 1)
 
-        # Tensor may either be images or labels
         image_tensor = read_fragment_images_for_channels(root_dir=fragment_dir, patch_size=config.patch_size,
                                                          channels=read_chans, ch_block_size=config.in_chans)
         label_tensor = read_fragment_labels_for_channels(root_dir=label_dir, patch_size=config.patch_size,
@@ -245,7 +242,7 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
     # print("STACK_PATCH_INFOS", len(STACK_PATCH_INFOS))
     df = pd.DataFrame(STACK_PATCH_INFOS, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
     balanced_df, _, _, _ = balance_dataset(cfg, df)
-    # print("balanced_df", len(balanced_df))
+    print("balanced_df", len(balanced_df))
     LABEL_INFO_LIST.extend(balanced_df.values.tolist())
 
     for _, row in balanced_df.iterrows():
