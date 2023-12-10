@@ -62,9 +62,10 @@ def clean_all_fragment_label_dirs(config: Config):
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
     for fragment_id in FRAGMENTS.values():
         frag_name = '_'.join([get_frag_name_from_id(fragment_id)]).upper()
-        label_dir = os.path.join(root_dir, frag_name, 'labels')
-        if os.path.isdir(label_dir):
-            shutil.rmtree(label_dir)
+        frag_dir = os.path.join(root_dir, frag_name)
+        if os.path.isdir(frag_dir):
+            shutil.rmtree(frag_dir)
+            print(f"Deleted dataset fragment directory: {frag_dir}")
 
     for file in ['label_infos.csv', 'config.json']:
         file_path = os.path.join(root_dir, file)
