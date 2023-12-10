@@ -1,7 +1,7 @@
 import os
 
 from constants import FRAGMENTS_ALPHA, FRAGMENTS_BETA, ITERATION, LABEL_TYPE, ALPHA, BETA, IT_2_MODEL, LABEL_BASE_PATH, \
-    LABEL_TARGET_PATH
+    LABEL_BINARIZED_PATH
 
 
 class AlphaBetaMeta:
@@ -30,7 +30,7 @@ class AlphaBetaMeta:
     def get_model_for_it(iteration):
         return IT_2_MODEL.get(iteration, None)
 
-    def get_current_label_dir(self):
+    def get_current_base_label_dir(self):
         """The current label dir is always specified by the model prior to this iteration."""
         label_type = self.get_current_label_type()
         model = self.get_previous_model()
@@ -40,11 +40,21 @@ class AlphaBetaMeta:
         else:
             raise Exception(f"No prior model for iteration {self.iteration} ({self.get_current_phase()}) found")
 
+    def get_current_binarized_label_dir(self):
+        """The current label dir is always specified by the model prior to this iteration."""
+        label_type = self.get_current_label_type()
+        model = self.get_previous_model()
+
+        if model:
+            return os.path.join(LABEL_BINARIZED_PATH, label_type, model)
+        else:
+            raise Exception(f"No prior model for iteration {self.iteration} ({self.get_current_phase()}) found")
+
     def get_label_base_dir(self):
         return os.path.join(LABEL_BASE_PATH, self.get_current_label_type())
 
     def get_label_target_dir(self):
-        return os.path.join(LABEL_TARGET_PATH, self.get_current_label_type())
+        return os.path.join(LABEL_BINARIZED_PATH, self.get_current_label_type())
 
     def get_current_model(self):
         return self.get_model_for_it(self.iteration)

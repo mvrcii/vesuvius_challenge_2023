@@ -127,7 +127,7 @@ SOLAR_OATH = CHECKPOINTS["solar-oath"]
 HANDMADE_LABELS = "handmade"
 GENERATED_LABELS = "model_generated"
 LABEL_BASE_PATH = os.path.join("data", "base_label_files")
-LABEL_TARGET_PATH = os.path.join("data", "base_label_binarized")
+LABEL_BINARIZED_PATH = os.path.join("data", "base_label_binarized")
 
 # ITERATION PHASE
 ALPHA = "Alpha"
