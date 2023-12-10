@@ -241,6 +241,7 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
     assert all_patches > 0, "No patches were created for this fragment"
     # print("STACK_PATCH_INFOS", len(STACK_PATCH_INFOS))
     df = pd.DataFrame(STACK_PATCH_INFOS, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
+    print("df", len(df))
     balanced_df, _, _, _ = balance_dataset(cfg, df)
     print("balanced_df", len(balanced_df))
     LABEL_INFO_LIST.extend(balanced_df.values.tolist())

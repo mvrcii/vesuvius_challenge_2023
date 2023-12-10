@@ -18,6 +18,8 @@ def balance_dataset(cfg: Config, data):
     # Calculate the number of non-ink samples to select
     num_ink_samples = len(ink_samples)
 
+    print(num_ink_samples)
+
     # Split non-ink samples into two groups
     non_ink_samples_no_artefact = data[(data['ink_p'] <= cfg.ink_ratio) & (data['artefact_p'] == 0)]
     non_ink_samples_with_artefact = data[
