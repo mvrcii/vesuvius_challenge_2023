@@ -4,24 +4,19 @@ import subprocess
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from constants import FRAGMENTS
+from meta import AlphaBetaMeta
 
 download_script = "./util/download.sh"
-label_files_dir = "./data/base_label_files/layered"
-
-
-def get_fragment_ids():
-    return list(FRAGMENTS.values())
-
 
 def determine_slice_range(fragment_id):
     file_pattern = re.compile(r'_([0-9]+)_([0-9]+)\.png')
     min_slice = 99999
     max_slice = 0
 
+    label_dir = AlphaBetaMeta().get_current_label_dir()
+
     try:
-        files = os.listdir(f"{label_files_dir}/{fragment_id}")
+        files = os.listdir(f"{label_dir}/{fragment_id}")
         for file in files:
             match = file_pattern.search(file)
             if match:
@@ -48,7 +43,6 @@ def check_downloaded_slices(fragment_id, start_slice, end_slice):
     for i in range(start_slice, end_slice + 1):
         slice_file = f"{fragment_dir}/{i:05d}.tif"
         if not os.path.isfile(slice_file):
-            print(f"Missing slice file: {slice_file}", file=sys.stderr)
             missing_slices.append(i)
         else:
             existing_slices.append(i)
@@ -58,7 +52,7 @@ def check_downloaded_slices(fragment_id, start_slice, end_slice):
 
     for slice in existing_slices:
         if slice_sizes[slice] != first_slice_size:
-            print(f"File size mismatch in slice file: {fragment_dir}/{slice:05d}.tif", file=sys.stderr)
+            print(f"File size mismatch in slice file: {fragment_dir}/{slice:05d}.tif - {slice_sizes[slice]}", file=sys.stderr)
 
     if not missing_slices:
         return None
@@ -85,13 +79,13 @@ def get_consecutive_ranges(missing_slices):
     return ranges
 
 
-def batch_download_frags(frag_list, include_labels=True):
+def batch_download_frags(frag_list, consider_label_files=True):
     for fragment_id in frag_list:
         print(f"\nFragment ID: {fragment_id}")
 
         start_slice = 0
         end_slice = 63
-        if include_labels:
+        if consider_label_files:
             start_slice, end_slice = determine_slice_range(fragment_id)
 
         if start_slice == 99999 or end_slice == 0:
@@ -115,6 +109,6 @@ def batch_download_frags(frag_list, include_labels=True):
 
 
 if __name__ == '__main__':
-    fragment_list = get_fragment_ids()
+    fragment_list = AlphaBetaMeta().get_current_fragments()
 
     batch_download_frags(fragment_list)

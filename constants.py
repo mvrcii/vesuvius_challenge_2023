@@ -77,7 +77,7 @@ INTER_COLUMN_MAPPING = {
         "CENTER_LAYERS": (22, 45),
         "OFFSET_LAYERS": {
             (0, 22): {
-                "X":  0.0,
+                "X": 0.0,
                 "Y": 0.0,
                 "X_SCALE": 0.0,
                 "Y_SCALE": 0.0,
@@ -118,6 +118,24 @@ KIND_DONKEY = CHECKPOINTS["kind-donkey"]
 ELATED_WIND = CHECKPOINTS["elated-wind"]
 FINE_WILDFLOWER = CHECKPOINTS["fine-wildflower"]
 SOLAR_OATH = CHECKPOINTS["solar-oath"]
+
+# LABEL TYPES
+HANDMADE_LABELS = "handmade"
+GENERATED_LABELS = "model_generated"
+
+# ITERATION PHASE
+ALPHA = "Alpha"
+BETA = "Beta"
+
+IT_2_MODEL = {
+    1: STELLAR_VIOLET,
+    2: LIVELY_MEADOW,
+    3: PLAYFUL_FIREFLY
+}
+
+# META INFORMATION
+ITERATION = 3  # Iteration of model to be trained currently
+LABEL_TYPE = GENERATED_LABELS
 
 
 def get_flip_value(frag_id):

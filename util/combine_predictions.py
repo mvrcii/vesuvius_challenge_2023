@@ -218,6 +218,7 @@ def main():
     test_get_selected_layer_range()
 
     selected_layers = get_selected_layer_range(args.start_idx, args.end_idx, exclude=args.exclude)
+    layer_info = (args.start_idx, args.end_idx, args.exclude)
     common_layers = get_common_layers(sub_dirs, selected_layers=selected_layers)
     target_dims = get_target_dims(work_dir=config.work_dir, frag_id=frag_id)
 
@@ -226,11 +227,12 @@ def main():
         arrays = load_predictions(root_dir=sub_dir, layer_indices=common_layers)
         model_arrays[sub_dir] = arrays
 
-    Visualization(frag_id=frag_id, root_dir=frag_dir, target_dims=target_dims, model_arrays=model_arrays)
+    Visualization(frag_id=frag_id, root_dir=frag_dir, target_dims=target_dims, model_arrays=model_arrays,
+                  layer_info=layer_info)
 
 
 class Visualization:
-    def __init__(self, frag_id, root_dir, target_dims, model_arrays: dict):
+    def __init__(self, frag_id, root_dir, target_dims, model_arrays: dict, layer_info):
         assert isinstance(target_dims, tuple) and len(target_dims) == 2, "target_dims must be a tuple of two elements"
         assert isinstance(model_arrays, dict) and model_arrays, "model_arrays must be a non-empty dictionary"
 
@@ -243,6 +245,7 @@ class Visualization:
         self.models = list(model_arrays.values())
         self.model_count = len(self.models)
         self.layer_idxs = list(self.models[0].keys())
+        self.start_layer, self.end_layer, self.exclude = layer_info
 
         assert all(isinstance(model, dict) and model for model in
                    self.models), "Each value in model_arrays must be a non-empty list"
@@ -402,7 +405,7 @@ class Visualization:
         model_names_str = self.create_ensemble_dir_simple_names(self.model_names, file_prefix)
 
         mode_key = self.mode_var.get()
-        mode = self.modes[mode_key]
+        mode = self.modes[mode_key].upper()
         inverted_str = f'_inverted' if self.inverted else ""
 
         save_all = False
@@ -411,7 +414,7 @@ class Visualization:
         if mode_key == 2:
             if save_all:
                 for idx, layer in enumerate(self.layer_idxs):
-                    file_name = f"{model_names_str}_{mode.lower()}_{layer}{inverted_str}.png"
+                    file_name = f"{model_names_str}_mode={mode}_layer={layer}{inverted_str}.png"
                     file_path = os.path.join(target_dir, file_name)
                     layer_arr = self.get_layer_weighted_arr(int(idx))
                     image = self.process_image(array=layer_arr, max_size=self.target_dims, save_img=True)
@@ -419,14 +422,23 @@ class Visualization:
                     image.save(file_path)
             else:
                 layer = int(self.get_threshold())
-                file_name = f"{model_names_str}_{mode.lower()}_{layer}{inverted_str}.png"
+                file_name = f"{model_names_str}_mode={mode}_layer={layer}{inverted_str}.png"
                 file_path = os.path.join(target_dir, file_name)
                 image = self.process_image(array=self.array, max_size=self.target_dims, save_img=True)
                 print(f"Saving {file_name}")
                 image.save(file_path)
         else:
             threshold = self.get_threshold()
-            file_path = os.path.join(target_dir, f"{model_names_str}_{mode.lower()}_{threshold}{inverted_str}.png")
+
+            layer_str = f'{self.start_layer}-{self.end_layer}'
+            if self.exclude:
+                layer_str = f'0-{self.start_layer - 1}_{self.end_layer + 1}-60'
+
+            file_path = os.path.join(target_dir, f"{model_names_str}_"
+                                                 f"mode={mode}_"
+                                                 f"layer={layer_str}_"
+                                                 f"th={float(threshold):.2f}"
+                                                 f"{inverted_str}.png")
 
             image = self.process_image(array=self.array, max_size=self.target_dims, save_img=True)
             image.save(file_path)

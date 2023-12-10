@@ -27,7 +27,7 @@ verbose = False
 
 if labels:
     # Make sure that all fragments TIF files are existent
-    batch_download_frags(FRAGMENT_IDS, include_labels=False)
+    batch_download_frags(FRAGMENT_IDS, consider_label_files=False)
 
 for fragment_id in FRAGMENT_IDS:
     for checkpoint in CHECKPOINTS:
