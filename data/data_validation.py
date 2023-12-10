@@ -1,10 +1,10 @@
 import os
 import re
 
-from constants import get_frag_name_from_id, FRAGMENTS
+from constants import get_frag_name_from_id
 
 
-def validate_fragments(config, label_dir):
+def validate_fragments(config, fragments, label_dir):
     all_errors = []
     frag_id_2_channels = {}
     frag_id_2_existing_channels = {}
@@ -12,7 +12,7 @@ def validate_fragments(config, label_dir):
     valid_fragments = {}
     excluded_fragments = []
 
-    for frag_id in FRAGMENTS.values():
+    for frag_id in fragments:
         val_errors, frag_channels, existing_channels = validate_fragment_files(frag_id=frag_id, cfg=config,
                                                                                label_dir=label_dir)
 
@@ -74,6 +74,8 @@ def validate_fragment_files(frag_id, cfg, label_dir):
     errors = []
     frag_dir = os.path.join(cfg.work_dir, "data", "fragments", f"fragment{frag_id}")
     frag_label_dir = os.path.join(label_dir, f"{frag_id}")
+
+    print(frag_label_dir)
 
     errors.extend(validate_fragment_dir(frag_dir))
 

@@ -25,8 +25,8 @@ from skimage.transform import resize
 Image.MAX_IMAGE_PIXELS = None
 
 
-def extract_patches(config: Config, label_dir):
-    frag_id_2_channel = validate_fragments(config, label_dir)
+def extract_patches(config: Config, frags, label_dir):
+    frag_id_2_channel = validate_fragments(config, frags, label_dir)
 
     logging.info(f"Starting to extract image and label patches..")
 
@@ -239,11 +239,8 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
 
     all_patches = len(STACK_PATCHES)
     assert all_patches > 0, "No patches were created for this fragment"
-    print("STACK_PATCH_INFOS", len(STACK_PATCH_INFOS))
     df = pd.DataFrame(STACK_PATCH_INFOS, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
-    print("df", len(df))
     balanced_df, _, _, _ = balance_dataset(cfg, df)
-    print("balanced_df", len(balanced_df))
     LABEL_INFO_LIST.extend(balanced_df.values.tolist())
 
     for _, row in balanced_df.iterrows():
@@ -381,7 +378,8 @@ if __name__ == '__main__':
     LABEL_INFO_LIST = []
 
     label_dir = AlphaBetaMeta().get_current_binarized_label_dir()
+    fragments = AlphaBetaMeta().get_current_train_fragments()
     label_dir = os.path.join(cfg.work_dir, label_dir)
 
     clean_all_fragment_label_dirs(config=cfg)
-    extract_patches(cfg, label_dir)
+    extract_patches(cfg, fragments, label_dir)

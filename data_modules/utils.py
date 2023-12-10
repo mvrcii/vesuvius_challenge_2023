@@ -10,20 +10,13 @@ from constants import get_frag_name_from_id
 
 def balance_dataset(cfg: Config, data):
     # Filter for desired fragments
-
-    print(cfg.fragment_ids)
     data = data[data['frag_id'].isin(cfg.fragment_ids)]
-
-    print(cfg.ink_ratio)
-    print(data.head())
 
     # Select ink samples
     ink_samples = data[data['ink_p'] > cfg.ink_ratio]
 
     # Calculate the number of non-ink samples to select
     num_ink_samples = len(ink_samples)
-
-    print(num_ink_samples)
 
     # Split non-ink samples into two groups
     non_ink_samples_no_artefact = data[(data['ink_p'] <= cfg.ink_ratio) & (data['artefact_p'] == 0)]
