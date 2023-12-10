@@ -71,6 +71,8 @@ class Config:
         # Read the source file
         with open(config_path, 'r') as file:
             prepend_info = ''.join(line for line in file if line.startswith('import'))
+            prepend_info += ''.join(line for line in file if line.startswith('from'))
+            prepend_info += ''.join(line for line in file if line.startswith('sys.path'))
 
         with open(config_path, 'r') as file:
             content = file.read()
