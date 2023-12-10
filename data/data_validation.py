@@ -105,12 +105,11 @@ def find_consecutive_ch_blocks_of_size(channels, ch_block_size):
     return set(result)
 
 
-def validate_labels(cfg, frag_id, frag_dir, label_dir):
+def validate_labels(cfg, frag_dir, label_dir):
     errors = []
     slice_dir = os.path.join(frag_dir, 'slices')
 
     if not os.path.isdir(label_dir):
-        print(label_dir)
         errors.append(f"\033[91mReason:\t\tLabel directory not found\033[0m")
 
     if not os.path.isdir(slice_dir):
@@ -130,11 +129,6 @@ def validate_labels(cfg, frag_id, frag_dir, label_dir):
         required_channels = existing_label_channels.union(existing_negative_channels)
 
         existing_slice_channels = set(extract_indices(slice_dir, pattern=r'(\d+).tif'))
-
-        # Check for already existing images / labels patches
-        # start_indices = extract_indices(existing_image_dir, pattern=r".*ch(\d+)_.*\.npy$")
-        # existing_channels = set([index + i for i in range(cfg.in_chans) for index in start_indices])
-        # required_channels -= existing_channels
 
         valid_channels = existing_slice_channels.intersection(required_channels)
 
