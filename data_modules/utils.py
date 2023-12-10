@@ -10,9 +10,12 @@ from constants import get_frag_name_from_id
 
 def balance_dataset(cfg: Config, data):
     # Filter for desired fragments
+
+    print(cfg.fragment_ids)
     data = data[data['frag_id'].isin(cfg.fragment_ids)]
 
     print(cfg.ink_ratio)
+    print(data.head())
 
     # Select ink samples
     ink_samples = data[data['ink_p'] > cfg.ink_ratio]
