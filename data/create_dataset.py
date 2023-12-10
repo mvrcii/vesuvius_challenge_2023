@@ -382,7 +382,7 @@ if __name__ == '__main__':
 
     LABEL_INFO_LIST = []
 
-    label_dir = AlphaBetaMeta().get_current_label_dir()
+    label_dir = AlphaBetaMeta().get_current_binarized_label_dir()
     label_dir = os.path.join(cfg.work_dir, label_dir)
 
     clean_all_fragment_label_dirs(config=cfg)
