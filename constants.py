@@ -1,3 +1,5 @@
+import os
+
 FRAGMENTS = {
     # TRAIN SET ALPHA
     "ULTRA_MAGNUS": "20231106155351",
@@ -65,7 +67,8 @@ ROTATE = {
     BLASTER_FRAG_ID: -1,
     THUNDERCRACKER_FRAG_ID: -1,
     IRONHIDE_FRAG_ID: -1,
-    MEGATRON_FRAG_ID: 2
+    MEGATRON_FRAG_ID: 2,
+    OPTIMUS_FRAG_ID: -1
 }
 
 FLIP = {
@@ -123,6 +126,8 @@ SOLAR_OATH = CHECKPOINTS["solar-oath"]
 # LABEL TYPES
 HANDMADE_LABELS = "handmade"
 GENERATED_LABELS = "model_generated"
+LABEL_BASE_PATH = os.path.join("data", "base_label_files")
+LABEL_TARGET_PATH = os.path.join("data", "base_label_binarized")
 
 # ITERATION PHASE
 ALPHA = "Alpha"
@@ -131,7 +136,7 @@ BETA = "Beta"
 IT_2_MODEL = {
     1: STELLAR_VIOLET,
     2: LIVELY_MEADOW,
-    3: PLAYFUL_FIREFLY
+    3: DEFT_YOGURT
 }
 
 # META INFORMATION
