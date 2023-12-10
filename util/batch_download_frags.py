@@ -109,6 +109,6 @@ def batch_download_frags(frag_list, consider_label_files=True):
 
 
 if __name__ == '__main__':
-    fragment_list = AlphaBetaMeta().get_current_fragments()
+    fragment_list = AlphaBetaMeta().get_current_train_fragments()
 
     batch_download_frags(fragment_list)
