@@ -77,7 +77,7 @@ def validate_fragment_files(frag_id, cfg, label_dir):
 
     errors.extend(validate_fragment_dir(frag_dir))
 
-    valid_errors, valid_channels, existing_channels = validate_labels(cfg, frag_id, frag_dir, frag_label_dir)
+    valid_errors, valid_channels, existing_channels = validate_labels(cfg, frag_dir, frag_label_dir)
     errors.extend(valid_errors)
 
     errors.extend(validate_masks(frag_dir))
