@@ -106,8 +106,9 @@ CHECKPOINTS = {
     "elated-wind": "elated-wind-555-segformer-b2-231203-000033",
     "fine-wildflower": "fine-wildflower-497-segformer-b2-231128-164424",
     "solar-oath": "solar-oath-401-segformer-b2-231126-043455",
+    "deft-yogurt": "deft-yogurt-738-segformer-b2-231209-215717"
 }
-
+DEFT_YOGURT = CHECKPOINTS["deft-yogurt"]
 PLAYFUL_FIREFLY = CHECKPOINTS["playful-firefly"]
 CHOCOLATE_FOG = CHECKPOINTS["chocolate-fog"]
 AMBER_PLANT = CHECKPOINTS["amber-plant"]
