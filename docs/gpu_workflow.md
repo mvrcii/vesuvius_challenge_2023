@@ -9,8 +9,22 @@ SSH Key Micha: `DUMMY`
 SSH Key Marcel: `DUMMY`
 
 ### Clone Git Repository
+
 ```bash
 git clone git@github.com:JakeGonder/kaggle1stReimp.git
+```
+Username: JakeGonder
+
+Token: `DUMMY`
+
+Cache credentials:
+```bash
+git config --global credential.helper cache
+```
+
+Set cache timeout to 2 weeks:
+```bash
+git config --global credential.helper 'cache --timeout=1209600'
 ```
 
 ### Setup Virtual Environment (Conda)
