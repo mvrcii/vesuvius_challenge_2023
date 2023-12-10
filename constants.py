@@ -140,7 +140,21 @@ IT_2_MODEL = {
 }
 
 # META INFORMATION
-ITERATION = 3  # Iteration of model to be trained currently
+
+# The iteration of model to be trained currently. Increase this value as soon as you have a good
+# performing model run, and you want to prepare the training for a follow-up model, including:
+# while(True):
+#       ...
+#       - perform the model training        with iteration i
+#       - perform the batch inference       with iteration i
+#       - download the inference results    with iteration i
+#       - copy the labels to base labels    with iteration i
+#       - binarize the labels               with iteration i+1      >>> increment iteration here <<<
+#       - create the dataset                with iteration i+1
+#       - perform the model training        with iteration i+1
+#       ...
+
+ITERATION = 4
 LABEL_TYPE = GENERATED_LABELS
 
 
