@@ -16,6 +16,7 @@ from transformers.utils import logging
 
 from config_handler import Config
 from constants import get_frag_name_from_id, get_ckpt_name_from_id
+from meta import AlphaBetaMeta
 from models.simplecnn import SimpleCNNModule
 
 '''
@@ -148,8 +149,6 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     out_height = height // 4
     out_width = width // 4
 
-    # assert out_height % 128 == 0 and out_width % 128 == 0, "Out height/width not valid"
-
     out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device='cuda')
     pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
 
@@ -263,6 +262,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     out_arr = torch.where(pred_counts > 0, torch.div(out_arr, pred_counts), out_arr)
 
     if use_advanced_tta:
+        global total_advanced_tta_patches
         print(f"Advanced TTA Patches for layer start {layer_start}: {total_advanced_tta_patches}")
     return out_arr
 
@@ -309,22 +309,27 @@ def normalize_npy_preds(array):
     return normalized_array
 
 
-def save_npy_as_img(cfg: Config, target_dir, array, frag_id, layer_index):
-    image_file_name = f"{frag_id}_inklabels_{layer_index}_{layer_index + cfg.in_chans - 1}.png"
-    image_root_dir = os.path.join(target_dir, 'labels', frag_id)
-    image_file_path = os.path.join(image_root_dir, image_file_name)
+def generate_and_save_label_file(cfg: Config, _model_name, array, frag_id, layer_index):
+    binarized_label_dir = AlphaBetaMeta().get_label_target_dir()
+    target_dir = os.path.join(binarized_label_dir, _model_name, frag_id)
+
+    label_filename = f"{frag_id}_inklabels_{layer_index}_{layer_index + cfg.in_chans - 1}.png"
+    label_path = os.path.join(target_dir, label_filename)
 
     # Check if label PNG file exists -> skip
-    if os.path.isfile(image_file_path):
+    if os.path.isfile(label_path):
         return
 
-    os.makedirs(image_root_dir, exist_ok=True)
+    os.makedirs(target_dir, exist_ok=True)
+
     target_dims = get_target_dims(work_dir=cfg.work_dir, frag_id=frag_id)
 
     image = process_image(array=array, dimensions=target_dims)
-    image.save(image_file_path)
 
-    print("Saved label file:", image_file_name)
+    if verbose:
+        print("Saved label file to:", label_path)
+
+    return image
 
 
 def process_image(array, dimensions):
@@ -375,7 +380,33 @@ def parse_args(default_start_idx, default_end_idx):
     return args
 
 
-if __name__ == '__main__':
+def load_model(cfg: Config, model_path):
+    if cfg.architecture == 'segformer':
+        model = SegformerForSemanticSegmentation.from_pretrained(cfg.from_pretrained,
+                                                                 num_labels=1,
+                                                                 num_channels=cfg.in_chans,
+                                                                 ignore_mismatched_sizes=True)
+    elif cfg.architecture == 'simplecnn':
+        model = SimpleCNNModule(cfg=cfg)
+    else:
+        print("Error")
+        sys.exit(1)
+
+    model = model.to("cuda")
+    checkpoint = torch.load(model_path)
+    state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
+
+    return model
+
+
+verbose = None
+total_advanced_tta_patches = None
+start_idx = None
+end_idx = None
+
+
+def main():
     warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
     logging.set_verbosity_error()
     Image.MAX_IMAGE_PIXELS = None
@@ -387,11 +418,13 @@ if __name__ == '__main__':
 
     checkpoint_folder_name = args.checkpoint_folder_name
     fragment_id = args.fragment_id
-    start_idx = args.start_idx
-    end_idx = args.end_idx
     batch_size = args.batch_size
     save_labels = args.labels
+
+    global verbose, start_idx, end_idx
     verbose = args.v
+    start_idx = args.start_idx
+    end_idx = args.end_idx
 
     # Determine the path to the configuration based on the checkpoint folder
     checkpoint_folder_path = os.path.join('checkpoints', checkpoint_folder_name)
@@ -400,42 +433,30 @@ if __name__ == '__main__':
     config_path = find_py_in_dir(checkpoint_folder_path)
 
     # Find the checkpoint path
-    checkpoint_path = find_ckpt_in_dir(checkpoint_folder_path)
+    model_path = find_ckpt_in_dir(checkpoint_folder_path)
 
-    if checkpoint_path is None:
-        print("No valid checkpoint file found")
+    if model_path is None:
+        print("No valid model checkpoint file found")
         sys.exit(1)
 
     config = Config.load_from_file(config_path)
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
-    model_run_name = '-'.join(checkpoint_path.split(f"checkpoints{os.sep}")[-1].split('-')[0:5])
+    model_name = model_path.split(f"checkpoints{os.sep}")[-1]
+    model_name_modified = '-'.join(model_name.split('-')[0:5])
     root_dir = os.path.join("inference", "results", f"fragment{fragment_id}")
-    results_dir = os.path.join("inference", "results", f"fragment{fragment_id}", f"{date_time_string}_{model_run_name}")
+    results_dir = os.path.join("inference", "results", f"fragment{fragment_id}",
+                               f"{date_time_string}_{model_name_modified}")
 
     os.makedirs(root_dir, exist_ok=True)
 
-    dirs = [x for x in os.listdir(root_dir) if x.endswith(model_run_name)]
+    dirs = [x for x in os.listdir(root_dir) if x.endswith(model_name_modified)]
     if len(dirs) == 1:
         results_dir = os.path.join(root_dir, dirs[0])
 
     os.makedirs(results_dir, exist_ok=True)
 
-    if config.architecture == 'segformer':
-        model = SegformerForSemanticSegmentation.from_pretrained(config.from_pretrained,
-                                                                 num_labels=1,
-                                                                 num_channels=config.in_chans,
-                                                                 ignore_mismatched_sizes=True)
-    elif config.architecture == 'simplecnn':
-        model = SimpleCNNModule(cfg=config)
-    else:
-        print("Error")
-        sys.exit(1)
-
-    model = model.to("cuda")
-    checkpoint = torch.load(checkpoint_path)
-    state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-    model.load_state_dict(state_dict)
+    model = load_model(cfg=config, model_path=model_path)
 
     # Calculate valid label indices
     valid_start_idxs = set()
@@ -444,6 +465,7 @@ if __name__ == '__main__':
         selected_range = set(range(start_idx, end_idx + 1))
         valid_start_idxs = default_range.intersection(selected_range)
 
+    global total_advanced_tta_patches
     total_advanced_tta_patches = 0
 
     for layer_idx in range(start_idx, end_idx + 1, 1):
@@ -454,11 +476,11 @@ if __name__ == '__main__':
             npy_file = np.load(npy_file_path)
 
             if save_labels and layer_idx in valid_start_idxs:
-                save_npy_as_img(config,
-                                target_dir=results_dir,
-                                array=npy_file,
-                                frag_id=fragment_id,
-                                layer_index=layer_idx)
+                generate_and_save_label_file(config,
+                                             _model_name=model_name,
+                                             array=npy_file,
+                                             frag_id=fragment_id,
+                                             layer_index=layer_idx)
             if verbose:
                 print(f"Skip layer {layer_idx}")
             continue
@@ -475,8 +497,12 @@ if __name__ == '__main__':
         np.save(npy_file_path, output)
 
         if save_labels and layer_idx in valid_start_idxs:
-            save_npy_as_img(config,
-                            target_dir=results_dir,
-                            array=output,
-                            frag_id=fragment_id,
-                            layer_index=layer_idx)
+            generate_and_save_label_file(config,
+                                         _model_name=model_name,
+                                         array=output,
+                                         frag_id=fragment_id,
+                                         layer_index=layer_idx)
+
+
+if __name__ == '__main__':
+    main()
