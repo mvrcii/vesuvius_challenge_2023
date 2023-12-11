@@ -30,7 +30,7 @@ model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
-seed = 3445774
+seed = 34324412
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
@@ -41,14 +41,14 @@ val_interval = 2
 # TODO: DROPOUT & Batch Normalization
 # TODO: Learning Rate Schedule where LR reduction is triggered based on performance metrics / loss peaks at later epochs
 # TODO: Think about a more complex model architecture (B3, B4, B5) since larger dataset introduces more complexity/variations
-lr = 1e-4
+lr = 5e-5
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
 num_workers = 32
-train_batch_size = 16
-val_batch_size = 16
+train_batch_size = 20
+val_batch_size = 20
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
