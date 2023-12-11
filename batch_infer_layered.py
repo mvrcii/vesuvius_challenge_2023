@@ -2,6 +2,7 @@ import subprocess
 import sys
 
 from constants import *
+from meta import AlphaBetaMeta
 from util.batch_download_frags import batch_download_frags
 
 
@@ -15,15 +16,18 @@ def print_colored(message, color):
     print(f"{colors[color]}{message}{colors['end']}")
 
 
-FRAGMENT_IDS = FRAGMENTS_BETA
-CHECKPOINTS = ["deft-yogurt-738-segformer-b2-231209-215717"]
+FRAGMENT_IDS = AlphaBetaMeta().get_current_inference_fragments()
+model = AlphaBetaMeta().get_current_model()
+
+print("Fragments for inference:\t", ", ".join(FRAGMENT_IDS))
+print("Model for inference:\t", model)
+CHECKPOINTS = [model]
 
 start_idx = 0
 end_idx = 60
 batch_size = 32
 labels = True
 verbose = False
-
 
 if labels:
     # Make sure that all fragments TIF files are existent

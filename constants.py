@@ -71,8 +71,11 @@ ROTATE = {
     OPTIMUS_FRAG_ID: -1
 }
 
+# 0 -> flip vertical axis
+# 1 -> flip horizontal axis
 FLIP = {
     JAZZILLA_FRAG_ID: None,
+    THUNDERCRACKER_FRAG_ID: 1,
 }
 
 INTER_COLUMN_MAPPING = {
@@ -109,8 +112,11 @@ CHECKPOINTS = {
     "elated-wind": "elated-wind-555-segformer-b2-231203-000033",
     "fine-wildflower": "fine-wildflower-497-segformer-b2-231128-164424",
     "solar-oath": "solar-oath-401-segformer-b2-231126-043455",
-    "deft-yogurt": "deft-yogurt-738-segformer-b2-231209-215717"
+    "deft-yogurt": "deft-yogurt-738-segformer-b2-231209-215717",
+    "upbeat-tree": "upbeat-tree-741-segformer-b2-231210-210131",
 }
+
+UPBEAT_TREE = CHECKPOINTS["upbeat-tree"]
 DEFT_YOGURT = CHECKPOINTS["deft-yogurt"]
 PLAYFUL_FIREFLY = CHECKPOINTS["playful-firefly"]
 CHOCOLATE_FOG = CHECKPOINTS["chocolate-fog"]
@@ -136,7 +142,8 @@ BETA = "Beta"
 IT_2_MODEL = {
     1: STELLAR_VIOLET,
     2: LIVELY_MEADOW,
-    3: DEFT_YOGURT
+    3: DEFT_YOGURT,
+    4: UPBEAT_TREE
 }
 
 # META INFORMATION
@@ -159,10 +166,7 @@ LABEL_TYPE = GENERATED_LABELS
 
 
 def get_flip_value(frag_id):
-    flip_val = FLIP.get(frag_id)
-    if flip_val is not None:
-        return flip_val
-    return 0
+    return FLIP.get(frag_id, None)
 
 
 def get_rotate_value(frag_id):
