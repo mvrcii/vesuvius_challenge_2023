@@ -70,6 +70,8 @@ ROTATE = {
     MEGATRON_FRAG_ID: 2,
     OPTIMUS_FRAG_ID: -1,
     STARSCREAM_FRAG_ID: -1,
+    RATCHET_FRAG_ID: -1,
+    SOUNDWAVE_FRAG_ID: -1,
 }
 
 # 0 -> flip vertical axis
