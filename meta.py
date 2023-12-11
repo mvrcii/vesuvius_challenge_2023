@@ -51,7 +51,8 @@ class AlphaBetaMeta:
         if model:
             return os.path.join(LABEL_BINARIZED_PATH, label_type, model)
         else:
-            raise Exception(f"No prior model for iteration {self.iteration} ({self.get_current_phase()}) found")
+            # If there is no previous model, we are probably in te first iteration and thus we use the baseline labels
+            return os.path.join(LABEL_BINARIZED_PATH, label_type, "baseline")
 
     def get_label_base_dir(self):
         return os.path.join(LABEL_BASE_PATH, self.get_current_label_type())

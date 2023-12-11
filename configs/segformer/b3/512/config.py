@@ -14,14 +14,7 @@ base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")
 
-# dataset creation parameters
-patch_size = 512
-label_size = patch_size // 4
-stride = patch_size // 2
-ink_ratio = 3
-artefact_threshold = 5
-fragment_ids = AlphaBetaMeta().get_current_train_fragments()
-train_split = 0.8
+
 
 # training parameters
 model_type = "b3"
@@ -30,10 +23,22 @@ model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
+
 seed = 34324412
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
+
+# dataset creation parameters
+patch_size = 512
+label_size = patch_size // 4
+stride = patch_size // 2
+ink_ratio = 3
+artefact_threshold = 5
+excluded_label_blocks = 3
+excluded_label_layers = in_chans * excluded_label_blocks  # excluded from bottom and top of the stack
+fragment_ids = AlphaBetaMeta().get_current_train_fragments()
+train_split = 0.8
 
 val_interval = 2
 

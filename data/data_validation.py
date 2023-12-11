@@ -75,8 +75,6 @@ def validate_fragment_files(frag_id, cfg, label_dir):
     frag_dir = os.path.join(cfg.work_dir, "data", "fragments", f"fragment{frag_id}")
     frag_label_dir = os.path.join(label_dir, f"{frag_id}")
 
-    print(frag_label_dir)
-
     errors.extend(validate_fragment_dir(frag_dir))
 
     valid_errors, valid_channels, existing_channels = validate_labels(cfg, frag_dir, frag_label_dir)
@@ -127,8 +125,15 @@ def validate_labels(cfg, frag_dir, label_dir):
 
         existing_negative_channels = find_consecutive_ch_blocks_of_size(list(existing_negative_channels), cfg.in_chans)
         existing_label_channels = find_consecutive_ch_blocks_of_size(list(existing_label_channels), cfg.in_chans)
+        existing_channels = existing_label_channels.union(existing_negative_channels)
 
-        required_channels = existing_label_channels.union(existing_negative_channels)
+        # Exclude some channel blocks (channels) as given from the config
+        default_channels = set(range(64))
+        exclude_count = cfg.excluded_label_layers
+        exclude_count = min(exclude_count, len(default_channels) // 2)
+        selected_channels = set(list(default_channels)[exclude_count:-exclude_count])
+
+        required_channels = existing_channels.intersection(selected_channels)
 
         existing_slice_channels = set(extract_indices(slice_dir, pattern=r'(\d+).tif'))
 

@@ -146,7 +146,7 @@ ALPHA = "Alpha"
 BETA = "Beta"
 
 IT_2_MODEL = {
-    0: DEFT_YOGURT,
+    # 0: DEFT_YOGURT,
     1: None,
 }
 
