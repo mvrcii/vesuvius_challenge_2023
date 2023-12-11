@@ -13,7 +13,7 @@ def determine_slice_range(fragment_id):
     min_slice = 99999
     max_slice = 0
 
-    label_dir = AlphaBetaMeta().get_current_label_dir()
+    label_dir = AlphaBetaMeta().get_current_binarized_label_dir()
 
     try:
         files = os.listdir(f"{label_dir}/{fragment_id}")

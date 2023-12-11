@@ -7,10 +7,11 @@ from datetime import datetime
 
 import numpy as np
 import torch
-from lightning import seed_everything, Callback
+from lightning import seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
+from lightning_fabric.accelerators import find_usable_cuda_devices
 
 from config_handler import Config
 from data_modules.cnn.cnn_datamodule import CNNDataModule
@@ -20,7 +21,6 @@ from models.cnn3d_segformer import CNN3D_SegformerModule
 from models.segformer import SegformerModule
 from models.simplecnn import SimpleCNNModule
 from models.unetplusplus import UnetPlusPlusModule
-from util.train_utils import get_device_configuration
 
 torch.set_float32_matmul_precision('medium')
 
@@ -55,10 +55,6 @@ def get_model(config: Config):
         return UnetPlusPlusModule(cfg=config)
     elif architecture == 'simplecnn':
         return SimpleCNNModule(cfg=config)
-    # elif architecture == 'inception':
-    #     return InceptionModule(cfg=config)
-    # elif architecture == 'inceptionv1':
-    #     return RegressionPLModel(cfg=config, enc='i3d', size=config.patch_size)
     else:
         print("Invalid architecture for model:", architecture)
         sys.exit(1)
@@ -83,31 +79,27 @@ def get_data_module(config: Config):
         return UnetPlusPlusDataModule(cfg=config)
     elif architecture == "simplecnn":
         return CNNDataModule(cfg=config)
-    # elif architecture == "inception" or architecture == 'inceptionv1':
-    #     return InceptionDataModule(cfg=config)
     else:
         print("Invalid architecture for data module:", architecture)
         sys.exit(1)
 
 
-class NaNStoppingCallback(Callback):
-    def __init__(self, logger):
-        super().__init__()
-        self.logger = logger
+def get_device_configuration():
+    """
+    Determines the appropriate device configuration for training based on
+    the availability of CUDA-enabled GPUs.
 
-    def on_validation_end(self, trainer, pl_module):
-        val_loss = trainer.callback_metrics.get('val_loss')
-        val_iou = trainer.callback_metrics.get('val_iou')
-        if val_loss is not None and torch.isnan(val_loss).any():
-            trainer.should_stop = True
-            print(f"Halting training due to NaN in validation loss at epoch {trainer.current_epoch}")
-            # Use the logger passed to the callback
-            self.logger.experiment.log({'halted': True, 'reason': 'NaN in val_loss', 'epoch': trainer.current_epoch})
-        if val_iou is not None and torch.isnan(val_iou).any():
-            trainer.should_stop = True
-            print(f"Halting training due to NaN in validation IoU at epoch {trainer.current_epoch}")
-            # Use the logger passed to the callback
-            self.logger.experiment.log({'halted': True, 'reason': 'NaN in val_iou', 'epoch': trainer.current_epoch})
+    :return: A tuple (accelerator, devices) where:
+        - 'accelerator' is a string indicating the type of accelerator ('gpu' or 'cpu').
+        - 'devices' is an int or list indicating the devices to be used.
+    """
+    if torch.cuda.is_available():
+        # Return all available GPUs
+        gpu_ids = find_usable_cuda_devices()
+        return gpu_ids
+    else:
+        # No GPUs available, use CPU
+        return 1
 
 
 def main():
@@ -145,8 +137,6 @@ def main():
         mode="max",
         every_n_epochs=1
     )
-
-    nan_stopping_callback = NaNStoppingCallback(logger=wandb_logger)
 
     devices = get_device_configuration()
     print("Using Devices:", devices)

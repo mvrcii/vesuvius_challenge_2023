@@ -67,6 +67,9 @@ class AlphaBetaMeta:
 
     def get_current_train_fragments(self):
         phase = self.get_current_phase()
+
+        assert not set(FRAGMENTS_ALPHA).intersection(set(FRAGMENTS_BETA)), "Fragments Alpha and Beta are overlapping!"
+
         if phase == ALPHA:
             return list(FRAGMENTS_ALPHA)
         elif phase == BETA:
