@@ -416,7 +416,7 @@ def main():
 
     args = parse_args(default_start_idx, default_end_idx)
 
-    checkpoint_folder_name = args.checkpoint_folder_name
+    model_folder_name = args.checkpoint_folder_name
     fragment_id = args.fragment_id
     batch_size = args.batch_size
     save_labels = args.labels
@@ -427,13 +427,13 @@ def main():
     end_idx = args.end_idx
 
     # Determine the path to the configuration based on the checkpoint folder
-    checkpoint_folder_path = os.path.join('checkpoints', checkpoint_folder_name)
+    model_folder_path = os.path.join('checkpoints', model_folder_name)
 
     # Find config path
-    config_path = find_py_in_dir(checkpoint_folder_path)
+    config_path = find_py_in_dir(model_folder_path)
 
     # Find the checkpoint path
-    model_path = find_ckpt_in_dir(checkpoint_folder_path)
+    model_path = find_ckpt_in_dir(model_folder_path)
 
     if model_path is None:
         print("No valid model checkpoint file found")
@@ -477,7 +477,7 @@ def main():
 
             if save_labels and layer_idx in valid_start_idxs:
                 generate_and_save_label_file(config,
-                                             _model_name=model_name,
+                                             _model_name=model_folder_name,
                                              array=npy_file,
                                              frag_id=fragment_id,
                                              layer_index=layer_idx)
@@ -486,7 +486,7 @@ def main():
             continue
 
         sigmoid_logits = infer_full_fragment_layer(model=model,
-                                                   ckpt_name=checkpoint_folder_name,
+                                                   ckpt_name=model_folder_name,
                                                    batch_size=batch_size,
                                                    fragment_id=fragment_id,
                                                    config=config,
@@ -498,7 +498,7 @@ def main():
 
         if save_labels and layer_idx in valid_start_idxs:
             generate_and_save_label_file(config,
-                                         _model_name=model_name,
+                                         _model_name=model_folder_name,
                                          array=output,
                                          frag_id=fragment_id,
                                          layer_index=layer_idx)
