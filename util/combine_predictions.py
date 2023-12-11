@@ -278,6 +278,9 @@ class Visualization:
 
         # Variable to hold the selected mode
         self.inverted = False
+        self.max_ensemble = False
+        self.transparent = False
+        self.save_all_layers = False
 
         # Create main window
         self.root = Tk()
@@ -344,10 +347,13 @@ class Visualization:
         self.root.mainloop()
 
     @staticmethod
-    def calc_weighted_arr(array, weight):
+    def calc_weighted_arr(array, weight, _max=False):
         array_cp = array.copy()
         assert len(array) == 2
-        return array_cp[0] * weight + array_cp[1] * (1 - weight)
+        if _max:
+            return np.maximum.reduce(array_cp)
+        else:
+            return array_cp[0] * weight + array_cp[1] * (1 - weight)
 
     def get_threshold(self):
         mode = self.mode_var.get()
@@ -407,12 +413,11 @@ class Visualization:
         mode_key = self.mode_var.get()
         mode = self.modes[mode_key].upper()
         inverted_str = f'_inverted' if self.inverted else ""
-
-        save_all = False
+        transparent_str = f'_transparent' if self.transparent else ""
 
         # Layer mode
         if mode_key == 2:
-            if save_all:
+            if self.save_all_layers:
                 for idx, layer in enumerate(self.layer_idxs):
                     file_name = f"{model_names_str}_mode={mode}_layer={layer}{inverted_str}.png"
                     file_path = os.path.join(target_dir, file_name)
@@ -438,14 +443,25 @@ class Visualization:
                                                  f"mode={mode}_"
                                                  f"layer={layer_str}_"
                                                  f"th={float(threshold):.2f}"
-                                                 f"{inverted_str}.png")
+                                                 f"{inverted_str}"
+                                                 f"{transparent_str}.png")
 
             image = self.process_image(array=self.array, max_size=self.target_dims, save_img=True)
+
+            if self.transparent:
+                processed = image.convert('RGBA')
+                datas = processed.getdata()
+
+                newData = []
+                print("Start converting transparent image")
+                for item in tqdm(datas):
+                    alpha = 255 - item[0]
+                    newData.append((0, 0, 0, alpha))
+                processed.putdata(newData)
+                image = processed
+                print("Done converting transparent image")
+
             image.save(file_path)
-
-
-
-
 
     def invert_colors(self):
         self.inverted = not self.inverted
@@ -475,7 +491,7 @@ class Visualization:
         if not weight:
             weight = self.curr_weight_th_val
         if self.model_count == 2:
-            return self.calc_weighted_arr(array=self.array_maxs, weight=weight)
+            return self.calc_weighted_arr(array=self.array_maxs, weight=weight, _max=self.max_ensemble)
         else:
             return self.array_maxs[0]
 
@@ -545,8 +561,9 @@ class Visualization:
 
         if not save_img:
             processed = self.rot90(processed, self.rotate_num)  # Rotate
-            # TODO: fix flipping!
-            # processed = np.flip(processed, self.flip_num)
+
+            if self.flip_num is not None:
+                processed = np.flip(processed, self.flip_num)
 
         threshold = self.get_threshold()
         if self.mode_var.get() == 2:
