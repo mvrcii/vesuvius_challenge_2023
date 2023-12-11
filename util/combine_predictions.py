@@ -140,6 +140,9 @@ def parse_args():
     parser.add_argument('--start_idx', type=int, default=0, help='Start index (default: 0)')
     parser.add_argument('--end_idx', type=int, default=61, help='End index (default: 61)')
     parser.add_argument('--exclude', action='store_true', help='Exclude the range (default: False)')
+    parser.add_argument('--transparent', action='store_true', help='Save the combined image in transparent')
+    parser.add_argument('--save_all_layers', action='store_true', help='Save all layer files (in total 61)')
+    parser.add_argument('--max_ensemble', action='store_true', help='Show the max ensemble between two models')
 
     args = parser.parse_args()
 
@@ -217,6 +220,11 @@ def main():
 
     test_get_selected_layer_range()
 
+    global transparent, save_all_layers, max_ensemble
+    transparent = args.transparent
+    save_all_layers = args.save_all_layers
+    max_ensemble = args.max_ensemble
+
     selected_layers = get_selected_layer_range(args.start_idx, args.end_idx, exclude=args.exclude)
     layer_info = (args.start_idx, args.end_idx, args.exclude)
     common_layers = get_common_layers(sub_dirs, selected_layers=selected_layers)
@@ -278,9 +286,11 @@ class Visualization:
 
         # Variable to hold the selected mode
         self.inverted = False
-        self.max_ensemble = False
-        self.transparent = False
-        self.save_all_layers = False
+
+        global transparent, save_all_layers, max_ensemble
+        self.max_ensemble = max_ensemble
+        self.transparent = transparent
+        self.save_all_layers = save_all_layers
 
         # Create main window
         self.root = Tk()
@@ -679,4 +689,8 @@ def load_predictions(root_dir, layer_indices=None):
 
 
 if __name__ == "__main__":
+    transparent = False
+    save_all_layers = False
+    max_ensemble = False
+
     main()
