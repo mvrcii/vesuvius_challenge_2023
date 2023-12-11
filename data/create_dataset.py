@@ -243,14 +243,15 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
     balanced_df, _, _, _ = balance_dataset(cfg, df)
     LABEL_INFO_LIST.extend(balanced_df.values.tolist())
 
+    img_dir = os.path.join(target_dir, "images")
+    label_dir = os.path.join(target_dir, "labels")
+    os.makedirs(img_dir, exist_ok=True)
+    os.makedirs(label_dir, exist_ok=True)
+
     for _, row in balanced_df.iterrows():
         file_name = row['filename']
         # print("saving row", row)
         image_patch, label_patch = STACK_PATCHES[file_name]
-        img_dir = os.path.join(target_dir, "images")
-        label_dir = os.path.join(target_dir, "labels")
-        os.makedirs(img_dir, exist_ok=True)
-        os.makedirs(label_dir, exist_ok=True)
 
         # save image
         np.save(os.path.join(img_dir, file_name), image_patch)
