@@ -325,11 +325,10 @@ def generate_and_save_label_file(cfg: Config, _model_name, array, frag_id, layer
     target_dims = get_target_dims(work_dir=cfg.work_dir, frag_id=frag_id)
 
     image = process_image(array=array, dimensions=target_dims)
+    image.save(label_path)
 
     if verbose:
         print("Saved label file to:", label_path)
-
-    return image
 
 
 def process_image(array, dimensions):
