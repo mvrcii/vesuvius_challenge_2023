@@ -1,8 +1,9 @@
 import os
+import sys
 
 import albumentations as A
-
-from constants import FRAGMENTS_ALPHA
+sys.path.append('../')
+from meta import AlphaBetaMeta
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -19,7 +20,7 @@ label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
 artefact_threshold = 5
-fragment_ids = FRAGMENTS_ALPHA
+fragment_ids = AlphaBetaMeta().get_current_train_fragments()
 train_split = 0.8
 
 # training parameters
@@ -29,24 +30,21 @@ model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
-seed = 5693
+seed = 3445774
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
 
-val_interval = 1
+val_interval = 2
 
 # TODO: Add warmup phase and gradually increase the learning rate over the first few epochs -> adapt to new data smoothly
 # TODO: DROPOUT & Batch Normalization
 # TODO: Learning Rate Schedule where LR reduction is triggered based on performance metrics / loss peaks at later epochs
 # TODO: Think about a more complex model architecture (B3, B4, B5) since larger dataset introduces more complexity/variations
-lr = 4e-4  # default: 2e-4 -> also try 3e-4
-step_lr_steps = 2  # default: 2 -> try higher step sizes
-step_lr_factor = 0.75
-weight_decay = 0.005  # default: 0.01  -> Lower weight decay if we have more data
-
-# LR 1 2 3 4 2 1 0.5
-#    1 2 3 4 5 6 7 8
+lr = 1e-4
+step_lr_steps = 1
+step_lr_factor = 0.98
+weight_decay = 0.001
 
 num_workers = 16
 train_batch_size = 24
