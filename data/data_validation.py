@@ -7,20 +7,16 @@ from constants import get_frag_name_from_id
 def validate_fragments(config, fragments, label_dir):
     all_errors = []
     frag_id_2_channels = {}
-    frag_id_2_existing_channels = {}
 
     valid_fragments = {}
     excluded_fragments = []
 
     for frag_id in fragments:
-        val_errors, frag_channels, existing_channels = validate_fragment_files(frag_id=frag_id, cfg=config,
-                                                                               label_dir=label_dir)
+        val_errors, frag_channels = validate_fragment_files(frag_id=frag_id, cfg=config,
+                                                            label_dir=label_dir)
 
         if len(frag_channels) > 0:
             frag_id_2_channels[frag_id] = frag_channels
-
-        if len(existing_channels) > 0:
-            frag_id_2_existing_channels[frag_id] = existing_channels
 
         frag_str = f"Fragment:\t{get_frag_name_from_id(frag_id)} ({frag_id})"
         if val_errors:
@@ -33,22 +29,13 @@ def validate_fragments(config, fragments, label_dir):
         type_str = 'Images & Labels'
 
         new_channels = frag_id_2_channels.get(frag_id, False)
-        existing_channels = frag_id_2_existing_channels.get(frag_id, False)
 
-        if existing_channels and not new_channels:
+        if new_channels:
             valid.append(
-                f"Reason:\t\t{type_str} for channels {format_ranges(sorted(list(existing_channels)), '')} already exist")
+                f"Reason:\t\t{type_str} for channels {format_ranges(sorted(list(new_channels)), '')} will be created")
+            print_checks([], valid)
+        elif not new_channels:
             excluded_fragments.append(valid)
-        elif not existing_channels and new_channels:
-            valid.append(
-                f"Reason:\t\t{type_str} for channels {format_ranges(sorted(list(new_channels)), '')} will be created")
-            print_checks([], valid)
-        elif existing_channels and new_channels:
-            valid.append(
-                f"Reason:\t\t{type_str} for channels {format_ranges(sorted(list(existing_channels)), '')} already exist")
-            valid.append(
-                f"Reason:\t\t{type_str} for channels {format_ranges(sorted(list(new_channels)), '')} will be created")
-            print_checks([], valid)
         else:
             pass
 
@@ -77,12 +64,12 @@ def validate_fragment_files(frag_id, cfg, label_dir):
 
     errors.extend(validate_fragment_dir(frag_dir))
 
-    valid_errors, valid_channels, existing_channels = validate_labels(cfg, frag_dir, frag_label_dir)
+    valid_errors, valid_channels = validate_labels(cfg, frag_dir, frag_label_dir)
     errors.extend(valid_errors)
 
     errors.extend(validate_masks(frag_dir))
 
-    return errors, valid_channels, existing_channels
+    return errors, valid_channels
 
 
 def validate_fragment_dir(frag_dir):
@@ -116,7 +103,6 @@ def validate_labels(cfg, frag_dir, label_dir):
         errors.append(f"\033[91mReason:\t\tSlice directory not found\033[0m")
 
     valid_channels = []
-    existing_channels = []
 
     # If no errors yet, continue
     if len(errors) == 0:
@@ -144,7 +130,7 @@ def validate_labels(cfg, frag_dir, label_dir):
             errors.append(
                 f"\033[91mReason:\t\tSlice channel files {format_ranges(sorted(list(missing_slice_channels)))} not found\033[0m")
 
-    return errors, sorted(list(valid_channels)), sorted(list(existing_channels))
+    return errors, sorted(list(valid_channels))
 
 
 def validate_masks(frag_dir):
@@ -176,7 +162,7 @@ def extract_indices(directory, pattern):
     return indices
 
 
-def format_ranges(numbers, file_ending=".tif"):
+def format_ranges(numbers, file_ending=".tif", digits=5):
     """Convert a list of numbers into a string of ranges."""
     if not numbers:
         return ""
@@ -193,4 +179,5 @@ def format_ranges(numbers, file_ending=".tif"):
     ranges.append((start, end))
 
     return ', '.join(
-        [f"{s:02d}{file_ending}-{e:02d}{file_ending}" if s != e else f"{s:02d}.tif" for s, e in ranges])
+        [f"{s:0{digits}d}{file_ending} - {e:0{digits}d}{file_ending}" if s != e else f"{s:0{digits}d}.tif" for s, e in
+         ranges])
