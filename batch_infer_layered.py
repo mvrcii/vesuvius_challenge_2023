@@ -30,6 +30,8 @@ print("Fragments for inference:\t", ", ".join(FRAGMENT_IDS))
 print("Model for inference:\t", model)
 CHECKPOINTS = [model]
 
+print(CHECKPOINTS)
+
 start_idx = 0
 end_idx = 60
 batch_size = 32
