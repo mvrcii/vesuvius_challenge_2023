@@ -36,7 +36,7 @@ start_idx = 0
 end_idx = 60
 batch_size = 32
 labels = True
-boosted_threshold = True
+boost_threshold = True
 verbose = False
 
 if labels:
@@ -58,8 +58,8 @@ for fragment_id in FRAGMENT_IDS:
         if labels:
             command.append('--labels')
 
-        if boosted_threshold:
-            command.append('--boosted_threshold')
+        if boost_threshold:
+            command.append('--boost_threshold')
 
         if verbose:
             command.append('--v')
