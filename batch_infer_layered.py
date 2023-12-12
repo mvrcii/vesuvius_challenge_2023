@@ -15,9 +15,16 @@ def print_colored(message, color):
     }
     print(f"{colors[color]}{message}{colors['end']}")
 
+BOOST_EXP_FRAG_IDS = [HOT_ROD_FRAG_ID, THUNDERCRACKER_FRAG_ID, SUNSTREAKER_FRAG_ID, BLASTER_FRAG_ID, JAZZILLA_FRAG_ID]
+model = DEFT_YOGURT
 
-FRAGMENT_IDS = AlphaBetaMeta().get_current_inference_fragments()
-model = AlphaBetaMeta().get_current_model()
+# BOOST_EXP_FRAG_IDS = [DEVASTATOR_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, IRONHIDE_FRAG_ID]
+# model = UPBEAT_TREE
+
+FRAGMENT_IDS = BOOST_EXP_FRAG_IDS
+# FRAGMENT_IDS = AlphaBetaMeta().get_current_inference_fragments()
+# model = AlphaBetaMeta().get_current_model()
+
 
 print("Fragments for inference:\t", ", ".join(FRAGMENT_IDS))
 print("Model for inference:\t", model)
@@ -27,6 +34,7 @@ start_idx = 0
 end_idx = 60
 batch_size = 32
 labels = True
+boosted_threshold = True
 verbose = False
 
 if labels:
@@ -47,6 +55,9 @@ for fragment_id in FRAGMENT_IDS:
 
         if labels:
             command.append('--labels')
+
+        if boosted_threshold:
+            command.append('--boosted_threshold')
 
         if verbose:
             command.append('--v')

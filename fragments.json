@@ -1,0 +1,73 @@
+[
+  {
+    "id": "20231005123336",
+    "name": "JETFIRE",
+    "rotation": 0,
+    "boost_threshold": 0,
+    "center_layers": [
+      28,
+      39
+    ]
+  },
+  {
+    "id": "20231012184422",
+    "name": "GRIMLARGE",
+    "rotation": 0
+  },
+  {
+    "id": "20231012173610",
+    "name": "THUNDERCRACKER",
+    "rotation": -1,
+    "boost_threshold": 0.00001,
+    "flip": 1
+  },
+  {
+    "id": "20231031143852",
+    "name": "SUNSTREAKER",
+    "boost_threshold": 0.00001,
+    "rotation": 0
+  },
+  {
+    "id": "20231016151001",
+    "name": "JAZZILLA",
+    "boost_threshold": 0.00005,
+    "rotation": 0
+  },
+  {
+    "id": "20230929220926",
+    "name": "HOT_ROD",
+    "boost_threshold": 0.00001,
+    "rotation": 0
+  },
+  {
+    "id": "20231007101615",
+    "name": "SKYWARP",
+    "boost_threshold": 0.00001,
+    "rotation": -1,
+    "flip": 1
+  },
+  {
+    "id": "20231022170900",
+    "name": "DEVASTATOR",
+    "boost_threshold": 0.00001,
+    "rotation": -1
+  },
+  {
+    "id": "20231106155351",
+    "name": "ULTRA_MAGNUS",
+    "boost_threshold": 0.000001,
+    "rotation": 0
+  },
+  {
+    "id": "20230702185753",
+    "name": "BLASTER",
+    "boost_threshold": 0.00005,
+    "rotation": -1
+  },
+  {
+    "id": "20230905134255",
+    "name": "IRONHIDE",
+    "boost_threshold": 0.00001,
+    "rotation": -1
+  }
+]

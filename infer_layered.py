@@ -16,6 +16,7 @@ from transformers.utils import logging
 
 from config_handler import Config
 from constants import get_frag_name_from_id, get_ckpt_name_from_id
+from fragment import FragmentHandler
 from meta import AlphaBetaMeta
 from models.simplecnn import SimpleCNNModule
 
@@ -324,18 +325,24 @@ def generate_and_save_label_file(cfg: Config, _model_name, array, frag_id, layer
 
     target_dims = get_target_dims(work_dir=cfg.work_dir, frag_id=frag_id)
 
-    image = process_image(array=array, dimensions=target_dims)
+    image = process_image(array=array, frag_id=frag_id, dimensions=target_dims)
     image.save(label_path)
 
     if verbose:
         print("Saved label file to:", label_path)
 
 
-def process_image(array, dimensions):
+def process_image(array, frag_id, dimensions):
     processed = normalize_npy_preds(array)  # Normalize
 
+    threshold = 0.5
+
+    global boost_threshold
+    if boost_threshold:
+        threshold = FragmentHandler().get_boost_threshold(frag_id=frag_id)
+
     # Binarize
-    processed = np.where(processed > 0.5, 1, 0)
+    processed = np.where(processed > threshold, 1, 0)
 
     image = Image.fromarray(np.uint8(processed * 255), 'L')
 
@@ -373,6 +380,7 @@ def parse_args(default_start_idx, default_end_idx):
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
                                                               'for the inference')
+    parser.add_argument('--boost_threshold', action='store_true', help='Use a boosted threshold for saved images')
     parser.add_argument('--v', action='store_false', help='Print stuff (default True)')
     args = parser.parse_args()
 
@@ -403,6 +411,7 @@ verbose = None
 total_advanced_tta_patches = None
 start_idx = None
 end_idx = None
+boost_threshold = None
 
 
 def main():
@@ -420,7 +429,8 @@ def main():
     batch_size = args.batch_size
     save_labels = args.labels
 
-    global verbose, start_idx, end_idx
+    global verbose, start_idx, end_idx, boost_threshold
+    boost_threshold = args.boost_threshold
     verbose = args.v
     start_idx = args.start_idx
     end_idx = args.end_idx

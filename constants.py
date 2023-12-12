@@ -1,110 +1,27 @@
 import os
 
-FRAGMENTS = {
-    # ALPHA
-    "JETFIRE": "20231005123336",
-    "GRIMLARGE": "20231012184422",
-    "THUNDERCRACKER": "20231012173610",
-    "SUNSTREAKER": "20231031143852",
-    "JAZZILLA": "20231016151001",
+from fragment import FragmentHandler
 
-    # BETA
-    "HOT_ROD": "20230929220926",
-    "SKYWARP": "20231007101615",
-    "DEVASTATOR": "20231022170900",
-    "ULTRA_MAGNUS": "20231106155351",
-    "BLASTER": "20230702185753",
-    "IRONHIDE": "20230905134255",
-
-    # DUPLICATE
-    # "SIDESWIPE": "20230701020044",
-    # "STARSCREAM": "20230827161847",
-    # "RATCHET": "20230909121925",
-    # "SOUNDWAVE": "20230904135535",
-    # "OPTIMUS": "20231024093300",
-    # "MEGATRON": "20230522181603",
-
-    # DEPRECATED
-    # "GRIMLOCK": "20231012184421",
-    # "JAZZ": "20231016151000",
-    # "BUMBLEBEE": "20230702185752_superseded",
-}
+fragments = FragmentHandler()
 
 # TRAIN SET ALPHA
-ULTRA_MAGNUS_FRAG_ID = FRAGMENTS["ULTRA_MAGNUS"]
-IRONHIDE_FRAG_ID = FRAGMENTS["IRONHIDE"]
-JAZZILLA_FRAG_ID = FRAGMENTS["JAZZILLA"]
-JETFIRE_FRAG_ID = FRAGMENTS["JETFIRE"]
-BLASTER_FRAG_ID = FRAGMENTS["BLASTER"]
-HOT_ROD_FRAG_ID = FRAGMENTS["HOT_ROD"]
-GRIMLARGE_FRAG_ID = FRAGMENTS["GRIMLARGE"]
-DEVASTATOR_FRAG_ID = FRAGMENTS["DEVASTATOR"]
-SKYWARP_FRAG_ID = FRAGMENTS["SKYWARP"]
-THUNDERCRACKER_FRAG_ID = FRAGMENTS["THUNDERCRACKER"]
-SUNSTREAKER_FRAG_ID = FRAGMENTS["SUNSTREAKER"]
-
-# DEPRECATED
-# OPTIMUS_FRAG_ID = FRAGMENTS["OPTIMUS"]
-# BUMBLEBEE_FRAG_ID = FRAGMENTS["BUMBLEBEE"]
-# MEGATRON_FRAG_ID = FRAGMENTS["MEGATRON"]
-# STARSCREAM_FRAG_ID = FRAGMENTS["STARSCREAM"]
-# SOUNDWAVE_FRAG_ID = FRAGMENTS["SOUNDWAVE"]
-# RATCHET_FRAG_ID = FRAGMENTS["RATCHET"]
-# JAZZ_FRAG_ID = FRAGMENTS["JAZZ"]
-# GRIMLOCK_FRAG_ID = FRAGMENTS["GRIMLOCK"]
-# SIDESWIPE_FRAG_ID = FRAGMENTS["SIDESWIPE"]
+ULTRA_MAGNUS_FRAG_ID = fragments.get_id("ULTRA_MAGNUS")
+IRONHIDE_FRAG_ID = fragments.get_id("IRONHIDE")
+JAZZILLA_FRAG_ID = fragments.get_id("JAZZILLA")
+JETFIRE_FRAG_ID = fragments.get_id("JETFIRE")
+BLASTER_FRAG_ID = fragments.get_id("BLASTER")
+HOT_ROD_FRAG_ID = fragments.get_id("HOT_ROD")
+GRIMLARGE_FRAG_ID = fragments.get_id("GRIMLARGE")
+DEVASTATOR_FRAG_ID = fragments.get_id("DEVASTATOR")
+SKYWARP_FRAG_ID = fragments.get_id("SKYWARP")
+THUNDERCRACKER_FRAG_ID = fragments.get_id("THUNDERCRACKER")
+SUNSTREAKER_FRAG_ID = fragments.get_id("SUNSTREAKER")
 
 FRAGMENTS_ALPHA = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID,
                    SUNSTREAKER_FRAG_ID, JAZZILLA_FRAG_ID]
 
 FRAGMENTS_BETA = [BLASTER_FRAG_ID, HOT_ROD_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,
                   DEVASTATOR_FRAG_ID, SKYWARP_FRAG_ID, IRONHIDE_FRAG_ID]
-
-ROTATE = {
-    # JAZZ_FRAG_ID: -1,
-    JETFIRE_FRAG_ID: 0,
-    SKYWARP_FRAG_ID: -1,
-    DEVASTATOR_FRAG_ID: -1,
-    BLASTER_FRAG_ID: -1,
-    THUNDERCRACKER_FRAG_ID: -1,
-    IRONHIDE_FRAG_ID: -1,
-    # MEGATRON_FRAG_ID: 2,
-    # OPTIMUS_FRAG_ID: -1,
-    # STARSCREAM_FRAG_ID: -1,
-    # RATCHET_FRAG_ID: -1,
-    # SOUNDWAVE_FRAG_ID: -1,
-}
-
-# 0 -> flip vertical axis
-# 1 -> flip horizontal axis
-FLIP = {
-    JAZZILLA_FRAG_ID: None,
-    THUNDERCRACKER_FRAG_ID: 1,
-    SKYWARP_FRAG_ID: 1,
-    # SIDESWIPE_FRAG_ID: 0,
-}
-
-INTER_COLUMN_MAPPING = {
-    JAZZILLA_FRAG_ID: {
-        "CENTER_LAYERS": (22, 45),
-        "OFFSET_LAYERS": {
-            (0, 22): {
-                "X": 0.0,
-                "Y": 0.0,
-                "X_SCALE": 0.0,
-                "Y_SCALE": 0.0,
-                "ROT": 0.0,
-            },
-            (45, 63): {
-                "X": 0.0,
-                "Y": 0.0,
-                "X_SCALE": 0.0,
-                "Y_SCALE": 0.0,
-                "ROT": 0.0,
-            }
-        }
-    }
-}
 
 # CHECKPOINTS
 CHECKPOINTS = {
@@ -168,23 +85,8 @@ IT_2_MODEL = {
 ITERATION = 1
 LABEL_TYPE = GENERATED_LABELS
 
-
-def get_flip_value(frag_id):
-    return FLIP.get(frag_id, None)
-
-
-def get_rotate_value(frag_id):
-    rot_val = ROTATE.get(frag_id)
-    if rot_val is not None:
-        return rot_val
-    return 0
-
-
 def get_frag_name_from_id(frag_id):
-    for name, id in FRAGMENTS.items():
-        if str(id) == str(frag_id):
-            return name
-    return "Unknown Fragment"
+    return FragmentHandler().get_name(frag_id)
 
 
 def get_ckpt_name_from_id(checkpoint_name):
@@ -193,27 +95,6 @@ def get_ckpt_name_from_id(checkpoint_name):
             return name
     return "Unknown Checkpoint"
 
-
-def get_frag_id_from_name(frag_name):
-    for name, id in FRAGMENTS.items():
-        if frag_name == name:
-            return name
-    return "Unknown Fragment"
-
-
-def get_all_frag_infos():
-    return [(name, FRAGMENTS[name]) for name in FRAGMENTS]
-
-
-def get_all_frag_names():
-    return FRAGMENTS.keys()
-
-
-def get_all_frag_ids():
-    return FRAGMENTS.values()
-
-# Additional Transformers character names for IDs
-# HOT_ROD_FRAG_ID = "your_id_here_3"  # Replace 'your_id_here_3' with the actual ID
 
 # WHEELJACK
 # GALVATRON
