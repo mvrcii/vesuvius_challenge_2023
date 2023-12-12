@@ -2,7 +2,7 @@ import argparse
 import datetime
 import os
 import sys
-from tkinter import Tk, Scale, HORIZONTAL, Label, Button, Frame, IntVar, Radiobutton
+from tkinter import Tk, Scale, HORIZONTAL, Label, Button, Frame, IntVar, Radiobutton, Entry, StringVar
 
 import cv2
 import numpy as np
@@ -16,7 +16,6 @@ from constants import get_all_frag_infos
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config_handler import Config
-
 
 def combine_layers(predictions, max_distance):
     """
@@ -50,28 +49,20 @@ def combine_layers(predictions, max_distance):
     return combined
 
 
-def get_common_layers(folder_paths, selected_layers):
-    common_layers = set()
+def get_common_layers(model_dir, selected_layers):
+    paths = [x for x in os.listdir(model_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
+    layers = set(int(x.split('_')[2]) for x in paths)
 
-    for i, folder_path in enumerate(folder_paths):
-        paths = [x for x in os.listdir(folder_path) if x.endswith('.npy') and not x.startswith('maxed_logits')]
-        layers = set(int(x.split('_')[2]) for x in paths)
+    layers = layers.intersection(selected_layers)
 
-        if i == 0:
-            common_layers = layers
-        else:
-            common_layers = common_layers.intersection(layers)
-
-    result_layers = common_layers.intersection(selected_layers)
-
-    if len(result_layers) == 0:
+    if len(layers) == 0:
         print("No intersecting layers found for the given range.")
         sys.exit(1)
 
-    return result_layers
+    return layers
 
 
-def get_valid_ckpt_dirs(folder_path):
+def get_valid_model_dirs(folder_path):
     def is_valid(path):
         return os.path.isdir(os.path.join(folder_path, path)) and not path.__contains__('snapshots')
 
@@ -81,38 +72,40 @@ def get_valid_ckpt_dirs(folder_path):
     return [_dir for _dir in os.listdir(folder_path) if is_valid(path=_dir)]
 
 
-def get_selected_ckpt_dirs(frag_dir):
+def get_selected_model_name(frag_dir):
     if not os.path.exists(frag_dir):
         print(f"No such directory: {frag_dir}")
         sys.exit(1)
 
-    sub_dirs = get_valid_ckpt_dirs(frag_dir)
-    if not sub_dirs:
+    model_dirs = get_valid_model_dirs(frag_dir)
+    if not model_dirs:
         print(f"No subdirectories found in {frag_dir}")
         sys.exit(1)
 
-    if len(sub_dirs) == 1:
-        selected_subdirs = [sub_dirs[0]]
+    if len(model_dirs) == 1:
+        selected_subdir = model_dirs[0]
     else:
         print("\nAvailable model predictions:")
-        for idx, subdir in enumerate(sub_dirs):
+        for idx, subdir in enumerate(model_dirs):
             print(f"{idx}: {subdir}")
-        selected_indices = input("Enter numbers of subdirectories you want to use (comma-separated): ")
-        try:
-            selected_indices = [int(idx.strip()) for idx in selected_indices.split(',')]
-            selected_subdirs = [sub_dirs[idx] for idx in selected_indices if 0 <= idx < len(sub_dirs)]
-            if not selected_subdirs:
-                raise ValueError
-        except ValueError:
-            print("Invalid selection. Please enter valid numbers.")
-            sys.exit(1)
+        while True:
+            selected_index = input("Enter the number of the subdirectory you want to use: ")
+            try:
+                selected_index = int(selected_index.strip())
+                if 0 <= selected_index < len(model_dirs):
+                    selected_subdir = model_dirs[selected_index]
+                    break
+                else:
+                    print("Invalid selection. Please enter a valid number.")
+            except ValueError:
+                print("Invalid selection. Please enter a valid number.")
 
-    return [os.path.join(frag_dir, subdir) for subdir in selected_subdirs]
+    return os.path.join(frag_dir, selected_subdir), selected_subdir
 
 
 def has_valid_ckpt_dirs(work_dir, frag_id):
     frag_dir = os.path.join(work_dir, 'inference', 'results', f'fragment{frag_id}')
-    return bool(get_valid_ckpt_dirs(frag_dir))
+    return bool(get_valid_model_dirs(frag_dir))
 
 
 def get_target_dims(work_dir, frag_id):
@@ -137,9 +130,6 @@ def get_target_dims(work_dir, frag_id):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Batch Infer Layered Script')
-    parser.add_argument('--start_idx', type=int, default=0, help='Start index (default: 0)')
-    parser.add_argument('--end_idx', type=int, default=61, help='End index (default: 61)')
-    parser.add_argument('--exclude', action='store_true', help='Exclude the range (default: False)')
     parser.add_argument('--transparent', action='store_true', help='Save the combined image in transparent')
     parser.add_argument('--save_all_layers', action='store_true', help='Save all layer files (in total 61)')
     parser.add_argument('--max_ensemble', action='store_true', help='Show the max ensemble between two models')
@@ -149,7 +139,7 @@ def parse_args():
     return args
 
 
-def get_selected_layer_range(start_idx, end_idx, exclude=False):
+def get_selected_layer_range(start_idx, end_idx):
     default_start = 0
     default_end = 62
 
@@ -160,32 +150,8 @@ def get_selected_layer_range(start_idx, end_idx, exclude=False):
     if start_idx < default_start:
         start_idx = default_start
 
-    if exclude:
-        start_range = list(range(default_start, max(start_idx, default_start)))
-        end_range = list(range(min(end_idx + 1, default_end + 1), default_end + 1))
-        return start_range + end_range
-    else:
-        # Return the range between start_idx and end_idx
-        return list(range(start_idx, end_idx + 1))
-
-
-def test_get_selected_layer_range():
-    # Normal Inclusion
-    assert get_selected_layer_range(10, 20, exclude=False) == list(range(10, 21))
-    # Normal Exclusion
-    assert get_selected_layer_range(10, 20, exclude=True) == list(range(0, 10)) + list(range(21, 63))
-    # Start Index Exceeding Default End
-    assert get_selected_layer_range(65, 70, exclude=False) == []
-    # End Index Exceeding Default End
-    assert get_selected_layer_range(45, 70, exclude=False) == list(range(45, 63))
-    # Start Index Less Than Default Start
-    assert get_selected_layer_range(-5, 20, exclude=False) == list(range(0, 21))
-    # Empty Range
-    assert get_selected_layer_range(20, 20, exclude=False) == [20]
-    # Full Range Inclusion
-    assert get_selected_layer_range(0, 62, exclude=False) == list(range(0, 63))
-    # Full Range Exclusion
-    assert get_selected_layer_range(0, 62, exclude=True) == []
+    # Return the range between start_idx and end_idx
+    return list(range(start_idx, end_idx + 1))
 
 
 def main():
@@ -216,78 +182,53 @@ def main():
         sys.exit(1)
 
     frag_dir = os.path.join(config.work_dir, 'inference', 'results', f'fragment{frag_id}')
-    sub_dirs = get_selected_ckpt_dirs(frag_dir=frag_dir)
-
-    test_get_selected_layer_range()
+    model_dir, model_name = get_selected_model_name(frag_dir=frag_dir)
 
     global transparent, save_all_layers, max_ensemble
     transparent = args.transparent
     save_all_layers = args.save_all_layers
     max_ensemble = args.max_ensemble
 
-    selected_layers = get_selected_layer_range(args.start_idx, args.end_idx, exclude=args.exclude)
-    layer_info = (args.start_idx, args.end_idx, args.exclude)
-    common_layers = get_common_layers(sub_dirs, selected_layers=selected_layers)
     target_dims = get_target_dims(work_dir=config.work_dir, frag_id=frag_id)
 
-    model_arrays = {}
-    for sub_dir in sub_dirs:
-        arrays = load_predictions(root_dir=sub_dir, layer_indices=common_layers)
-        model_arrays[sub_dir] = arrays
-
-    Visualization(frag_id=frag_id, root_dir=frag_dir, target_dims=target_dims, model_arrays=model_arrays,
-                  layer_info=layer_info)
+    Visualization(frag_id=frag_id, root_dir=frag_dir, target_dims=target_dims, model_name=model_name,
+                  model_dir=model_dir)
 
 
 class Visualization:
-    def __init__(self, frag_id, root_dir, target_dims, model_arrays: dict, layer_info):
+    def __init__(self, frag_id, root_dir, target_dims, model_name, model_dir):
         assert isinstance(target_dims, tuple) and len(target_dims) == 2, "target_dims must be a tuple of two elements"
-        assert isinstance(model_arrays, dict) and model_arrays, "model_arrays must be a non-empty dictionary"
 
         self.root_dir = root_dir
         self.target_dims = target_dims
         self.rotate_num = constants.get_rotate_value(frag_id=frag_id)
         self.flip_num = constants.get_flip_value(frag_id=frag_id)
 
-        self.model_names = list(model_arrays.keys())
-        self.models = list(model_arrays.values())
-        self.model_count = len(self.models)
-        self.layer_idxs = list(self.models[0].keys())
-        self.start_layer, self.end_layer, self.exclude = layer_info
+        start_layer = 25
+        end_layer = 41
 
-        assert all(isinstance(model, dict) and model for model in
-                   self.models), "Each value in model_arrays must be a non-empty list"
-        assert all(len(list(self.models[0].values())[0].shape) == 2 for model in
-                   self.models), "Each numpy array must be two-dimensional"
+        selected_layers = get_selected_layer_range(start_idx=start_layer, end_idx=end_layer)
+        valid_layers = get_common_layers(model_dir=model_dir, selected_layers=selected_layers)
 
-        self.array_maxs = []
-        self.array_sums = []
-        self.curr_weight_th_val = 0.5
+        self.model_layer_idcs, self.model_layer_values = load_predictions(root_dir=model_dir,
+                                                                          layer_indices=valid_layers)
+        self.model_name = model_name
+        self.model_dir = model_dir
 
         # Initially calculate max and sum once
-        for model in self.models:
-            model = list(model.values())
-            max_arr = np.maximum.reduce(model)
-            # max_arr = np.clip(max_arr * 4, 0, 1)
-            self.array_maxs.append(max_arr)
-
-            sum_arr = np.sum(model, axis=0)
-            # sum_arr = np.clip(sum_arr * 2, 0, 1)
-            self.array_sums.append(sum_arr)
-
-        if self.model_count == 1:
-            self.array = self.array_sums[0]
-        else:
-            self.array = self.calc_weighted_arr(array=self.array_maxs, weight=self.curr_weight_th_val)
+        self.array_maxs = np.maximum.reduce(self.model_layer_values)
+        self.array_sums = np.sum(self.model_layer_values, axis=0)
+        self.array = self.array_sums
 
         # Slider idxs
         self.curr_layer_val = 0
         self.curr_th_val = 0.5
 
+        self.curr_weight_th_val = 0.5
+
         # Variable to hold the selected mode
         self.inverted = False
 
-        global transparent, save_all_layers, max_ensemble
         self.max_ensemble = max_ensemble
         self.transparent = transparent
         self.save_all_layers = save_all_layers
@@ -295,7 +236,11 @@ class Visualization:
         # Create main window
         self.root = Tk()
         self.root.title("Threshold Visualizer")
+
         self.mode_var = IntVar(value=0)  # Default to mode 0
+        self.start_layer_var = IntVar(value=start_layer)
+        self.end_layer_var = IntVar(value=end_layer)
+        self.threshold_var = StringVar(value="0.00001")
 
         # Utility frame
         utility_frame = Frame(self.root)
@@ -320,41 +265,77 @@ class Visualization:
         # Create a frame for the slider and buttons
         control_frame = Frame(self.root)
         control_frame.pack(side='top')
-        left_button = Button(control_frame, text="  -  ", command=self.decrease_slider)
-        left_button.pack(side='left')
-        self.slider = Scale(control_frame, from_=0, to=1, orient=HORIZONTAL, resolution=0.001, length=500,
-                            command=self.update_image)
-        self.slider.set(0.5)
-        self.slider.pack(side='left')
 
+        self.threshold_input = Entry(self.root, textvariable=self.threshold_var)
+        self.threshold_input.bind("<Return>", self.on_threshold_input_enter)
+        self.threshold_input.pack()
+
+        self.left_button = Button(control_frame, text="  -  ", command=self.decrease_slider)
+        self.slider = Scale(control_frame, from_=0, to=len(self.model_layer_idcs) - 1, orient=HORIZONTAL, resolution=1,
+                            length=500, command=self.update_image)
+        self.slider.set(self.curr_layer_val)
         self.layer_label = Label(control_frame, text="Current Layer: ")
-        self.layer_label.config(text=f"Value: {self.layer_idxs[self.curr_layer_val]}")
+        self.layer_label.config(text=f"{self.model_layer_idcs[self.curr_layer_val]}")
+        self.right_button = Button(control_frame, text="  +  ", command=self.increase_slider)
 
-        right_button = Button(control_frame, text="  +  ", command=self.increase_slider)
-        right_button.pack(side='left')
-
-        # Create another control frame for weighting
-        if self.model_count > 1:
-            control_frame_weighting = Frame(self.root)
-            control_frame_weighting.pack(side='top')
-            left_button_weighting = Button(control_frame_weighting, text="  --  ",
-                                           command=self.decrease_slider_weighting)
-            left_button_weighting.pack(side='left')
-            self.slider_weighting = Scale(control_frame_weighting, from_=0, to=1, orient=HORIZONTAL, resolution=0.1,
-                                          length=500,
-                                          command=self.update_weighting)
-            self.slider_weighting.set(self.curr_weight_th_val)
-            self.slider_weighting.pack(side='left')
-            right_button_weighting = Button(control_frame_weighting, text="  ++  ",
-                                            command=self.increase_slider_weighting)
-            right_button_weighting.pack(side='left')
+        # Added: Slider for start and end layer index
+        # self.layer_range_frame = Frame(self.root)
+        # self.layer_range_frame.pack(side='top')
+        #
+        # Label(self.layer_range_frame, text="Start Layer:").pack(side='left')
+        # Scale(self.layer_range_frame, from_=0, to=len(self.model_layer_idcs) - 1, orient=HORIZONTAL,
+        #       variable=self.start_layer_var, command=self.update_layer_range).pack(side='left')
+        #
+        # Label(self.layer_range_frame, text="End Layer:").pack(side='left')
+        # Scale(self.layer_range_frame, from_=0, to=len(self.model_layer_idcs) - 1, orient=HORIZONTAL,
+        #       variable=self.end_layer_var, command=self.update_layer_range).pack(side='left')
 
         # Display area for the image
         self.label = Label(self.root)
         self.label.pack()
 
+        new_img = self.process_image(array=self.array)
+        imgtk = ImageTk.PhotoImage(image=new_img)
+        self.label.imgtk = imgtk
+        self.label.config(image=imgtk)
+
         # Start the application
         self.root.mainloop()
+
+
+    def on_threshold_input_enter(self, event):
+        try:
+            threshold_val = self.threshold_input.get()
+            self.threshold_var.set(threshold_val)
+
+            self.update_image()
+            # new_img = self.process_image(array=self.array)
+            # imgtk = ImageTk.PhotoImage(image=new_img)
+            # self.label.imgtk = imgtk
+            # self.label.config(image=imgtk)
+
+            print(f"Entered value: {float(threshold_val)}")
+        except ValueError:
+            print("Please enter a valid float number")
+
+    def update_layer_range(self, _=None):
+        start_layer = int(self.start_layer_var.get())
+        end_layer = int(self.end_layer_var.get())
+
+        # Recalculate layers and update image
+        selected_layers = get_selected_layer_range(start_layer, end_layer)
+        valid_layers = get_common_layers(self.model_dir, selected_layers=selected_layers)
+        valid_layers = sorted(list(valid_layers))
+
+        array = self.model_layer_values[valid_layers[0]:valid_layers[-1]]
+
+        new_img = self.process_image(array=array)
+        imgtk = ImageTk.PhotoImage(image=new_img)
+        self.label.imgtk = imgtk
+        self.label.config(image=imgtk)
+
+        # ... [Add logic to recalculate the model predictions based on the new layer range]
+        self.update_image()
 
     @staticmethod
     def calc_weighted_arr(array, weight, _max=False):
@@ -371,7 +352,7 @@ class Visualization:
         if mode == 2:
             threshold = self.curr_layer_val
         else:
-            threshold = self.curr_th_val
+            threshold = float(self.threshold_var.get())
 
         return threshold
 
@@ -381,18 +362,17 @@ class Visualization:
         if mode == 2:
             self.curr_layer_val = threshold
         else:
-            self.curr_th_val = threshold
+            self.threshold_var.set(threshold)
 
         return threshold
 
-    def create_ensemble_dir_simple_names(self, dir_list, prefix):
+    def create_ensemble_dir_simple_names(self, model_dir, prefix):
         parts = []
-        for d in dir_list:
-            if 'superseded' in d:
-                part = d.split('_')[2].split('-')[0:2]
-            else:
-                part = d.split('_')[1].split('-')[0:2]
-            parts.append(part)
+        if 'superseded' in model_dir:
+            part = model_dir.split('_')[2].split('-')[0:2]
+        else:
+            part = model_dir.split('_')[1].split('-')[0:2]
+        parts.append(part)
 
         # Joining the first two parts (words) of each directory name
         simplified_parts = ["-".join(p) for p in parts]
@@ -405,20 +385,14 @@ class Visualization:
         return new_dir_name
 
     def save_snapshot(self):
-        # Save in fragment root dir for ensemble
-        target_dir = os.path.join(self.root_dir, "snapshots")
-        file_prefix = 'ensemble_'
-
         # Save in model dir within fragment for single model
-        if self.model_count == 1:
-            assert len(self.model_names) == 1
-            model_dir = self.model_names[0]
-            target_dir = os.path.join(self.root_dir, model_dir, "snapshots")
-            file_prefix = ''
+        model_dir = self.model_dir
+        target_dir = os.path.join(self.root_dir, model_dir, "snapshots")
+        file_prefix = ''
 
         os.makedirs(target_dir, exist_ok=True)
 
-        model_names_str = self.create_ensemble_dir_simple_names(self.model_names, file_prefix)
+        model_names_str = self.create_ensemble_dir_simple_names(self.model_dir, file_prefix)
 
         mode_key = self.mode_var.get()
         mode = self.modes[mode_key].upper()
@@ -428,10 +402,10 @@ class Visualization:
         # Layer mode
         if mode_key == 2:
             if self.save_all_layers:
-                for idx, layer in enumerate(self.layer_idxs):
+                for idx, layer in enumerate(self.model_layer_idcs):
                     file_name = f"{model_names_str}_mode={mode}_layer={layer}{inverted_str}.png"
                     file_path = os.path.join(target_dir, file_name)
-                    layer_arr = self.get_layer_weighted_arr(int(idx))
+                    layer_arr = self.model_layer_values[int(idx)]
                     image = self.process_image(array=layer_arr, max_size=self.target_dims, save_img=True)
                     print(f"Saving {file_name}")
                     image.save(file_path)
@@ -444,10 +418,10 @@ class Visualization:
                 image.save(file_path)
         else:
             threshold = self.get_threshold()
+            start_layer = int(self.start_layer_var.get())
+            end_layer = int(self.end_layer_var.get())
 
-            layer_str = f'{self.start_layer}-{self.end_layer}'
-            if self.exclude:
-                layer_str = f'0-{self.start_layer - 1}_{self.end_layer + 1}-60'
+            layer_str = f'{start_layer}-{end_layer}'
 
             file_path = os.path.join(target_dir, f"{model_names_str}_"
                                                  f"mode={mode}_"
@@ -489,30 +463,6 @@ class Visualization:
     def rot90(array, count):
         return np.rot90(array, count)
 
-    def get_layer_weighted_arr(self, layer, weight=None):
-        if not weight:
-            weight = self.curr_weight_th_val
-        if self.model_count == 2:
-            return self.calc_weighted_arr(array=[model[layer] for model in self.models], weight=weight)
-        else:
-            return list(self.models[0].values())[layer]
-
-    def get_array_max(self, weight=None):
-        if not weight:
-            weight = self.curr_weight_th_val
-        if self.model_count == 2:
-            return self.calc_weighted_arr(array=self.array_maxs, weight=weight, _max=self.max_ensemble)
-        else:
-            return self.array_maxs[0]
-
-    def get_array_sum(self, weight=None):
-        if not weight:
-            weight = self.curr_weight_th_val
-        if self.model_count == 2:
-            return self.calc_weighted_arr(array=self.array_sums, weight=weight)
-        else:
-            return self.array_sums[0]
-
     def mode_changed(self):
         mode = self.mode_var.get()
         print("Selected Mode", self.modes[mode])
@@ -520,34 +470,22 @@ class Visualization:
 
         if mode in [0, 1]:
             if mode == 0:
-                self.array = self.get_array_sum()
+                self.array = self.array_sums
             else:  # mode == 1
-                self.array = self.get_array_max()
+                self.array = self.array_maxs
 
-            self.slider.config(resolution=0.01, from_=0, to=1)
-            self.slider.set(threshold)
+            # self.slider.config(resolution=0.01, from_=0, to=1)
+            # self.slider.set(threshold)
             self.layer_label.pack_forget()
 
         elif mode == 2:
             self.layer_label.pack(side='right')
-            self.slider.config(resolution=1, from_=0, to=len(self.models[0]) - 1)
-            self.slider.set(self.layer_idxs[int(threshold)])
-            self.array = self.get_layer_weighted_arr(int(threshold))
+            self.left_button.pack(side='left')
+            self.slider.pack(side='left')
+            self.right_button.pack(side='left')
+            self.array = self.model_layer_values[int(threshold)]
 
         self.update_image()
-
-    def update_weighting(self, weight=None):
-        if self.mode_var.get() == 0:
-            self.array = self.get_array_sum(weight=float(weight))
-        elif self.mode_var.get() == 1:
-            self.array = self.get_array_max(weight=float(weight))
-        else:
-            self.array = self.get_layer_weighted_arr(layer=int(self.get_threshold()), weight=float(weight))
-
-        new_img = self.process_image(array=self.array)
-        imgtk = ImageTk.PhotoImage(image=new_img)
-        self.label.imgtk = imgtk
-        self.label.config(image=imgtk)
 
     def update_image(self, threshold=None):
         if threshold:
@@ -556,9 +494,8 @@ class Visualization:
         if self.mode_var.get() == 2:
             layer = int(self.get_threshold())
             print("Selected layer", layer)
-            self.array = self.get_layer_weighted_arr(layer=layer)
-            self.set_threshold(layer)
-            self.layer_label.config(text=f"Value: {self.layer_idxs[int(layer)]}")
+            self.array = self.model_layer_values[layer]
+            self.layer_label.config(text=f"Layer: {self.model_layer_idcs[int(layer)]}")
 
         new_img = self.process_image(array=self.array)
         imgtk = ImageTk.PhotoImage(image=new_img)
@@ -575,12 +512,12 @@ class Visualization:
             if self.flip_num is not None:
                 processed = np.flip(processed, self.flip_num)
 
-        threshold = self.get_threshold()
-        if self.mode_var.get() == 2:
-            threshold = 0
+        threshold = float(self.threshold_var.get())
 
         # Apply threshold
-        processed[processed < float(threshold)] = 0
+        processed[processed >= float(threshold)] = 1  # clamp all values that are not 0 (or threshold) to 1
+        print("Applied threshold:", float(threshold))
+
         if self.inverted:
             processed = 1 - processed
 
@@ -624,52 +561,30 @@ class Visualization:
 
     def decrease_slider(self):
         mode = self.mode_var.get()
-        step = 0.01
 
         if mode == 2:
-            step = 1  # step size = 1 for layers
-        current_value = self.slider.get()
-        new_threshold = max(current_value - step, 0)  # Ensure the value does not go below the minimum
+            current_value = self.slider.get()
+            new_threshold = max(current_value - 1, 0)  # Ensure the value does not go below the minimum
 
-        self.set_threshold(new_threshold)
-        self.slider.set(new_threshold)
-        if mode == 2:
-            self.layer_label.config(text=f"Value: {self.layer_idxs[int(new_threshold)]}")
+            self.set_threshold(new_threshold)
+            self.slider.set(new_threshold)
+            self.layer_label.config(text=f"Value: {self.model_layer_idcs[int(new_threshold)]}")
 
     def increase_slider(self):
         mode = self.mode_var.get()
-        step = 0.01
-        max_val = 1
 
         if mode == 2:
-            step = 1
-            max_val = len(self.models[0]) - 1
-        current_value = self.slider.get()
-        new_threshold = min(current_value + step, max_val)  # Ensure the value does not exceed the maximum
+            max_val = len(self.model_layer_values) - 1
+            current_value = self.slider.get()
+            new_layer = min(current_value + 1, max_val)  # Ensure the value does not exceed the maximum
 
-        self.set_threshold(new_threshold)
-        self.slider.set(new_threshold)
-        if mode == 2:
-            self.layer_label.config(text=f"Value: {self.layer_idxs[int(new_threshold)]}")
-
-    def decrease_slider_weighting(self):
-        step = 0.1
-        current_value = self.slider_weighting.get()
-        new_threshold = max(current_value - step, 0)
-        self.curr_weight_th_val = new_threshold
-        self.slider_weighting.set(new_threshold)
-
-    def increase_slider_weighting(self):
-        step = 0.1
-        max_val = 1
-        current_value = self.slider_weighting.get()
-        new_threshold = min(current_value + step, max_val)  # Ensure the value does not exceed the maximum
-        self.curr_weight_th_val = new_threshold
-        self.slider_weighting.set(new_threshold)
-
+            self.set_threshold(new_layer)
+            self.slider.set(new_layer)
+            self.layer_label.config(text=f"Value: {self.model_layer_idcs[int(new_layer)]}")
 
 def load_predictions(root_dir, layer_indices=None):
-    npy_preds_array = {}
+    layer_idcs = list()
+    layer_values = []
 
     file_paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
     file_paths.sort(key=lambda x: int(x.split('_')[2]))
@@ -683,13 +598,15 @@ def load_predictions(root_dir, layer_indices=None):
 
         file_path = os.path.join(root_dir, filename)
         array = np.load(file_path)
-        npy_preds_array[layer_start_idx] = array
 
-    return npy_preds_array
+        layer_idcs.append(layer_start_idx)
+        layer_values.append(array)
+
+    return layer_idcs, layer_values
 
 
 if __name__ == "__main__":
-    transparent = False
+    transparent = True
     save_all_layers = False
     max_ensemble = False
 
