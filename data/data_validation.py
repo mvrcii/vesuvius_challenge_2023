@@ -25,6 +25,8 @@ def validate_fragments(config, fragments, label_dir):
         else:
             valid_fragments[frag_id] = [frag_str]
 
+    print(frag_id_2_channels)
+
     for frag_id, valid in valid_fragments.items():
         type_str = 'Images & Labels'
 
