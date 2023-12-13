@@ -175,7 +175,7 @@ def get_device(model):
 
 
 if __name__ == "__main__":
-    model = UNETR(input_dim=1, output_dim=2, img_shape=(16, 512, 512))
+    model = UNETR(input_dim=1, output_dim=2, img_shape=(16, 1024, 1024))
     # model = UNETR_Segformer(CFG)
     #
     if torch.cuda.is_available():
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     #
     # x = np.random.rand(1, 1, 16, 512, 512)
     # x = torch.from_numpy(x).float()
-    x = torch.randn(4, 1, 16, 1024, 1024)
+    x = torch.randn(1,  1, 16, 1024, 1024)
     # # move x to cuda
     x = x.to(get_device(model))
     print(x.shape)
