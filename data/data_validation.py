@@ -112,6 +112,7 @@ def validate_labels(cfg, frag_dir, label_dir):
         existing_negative_channels = set(extract_indices(label_dir, pattern=r'negatives_(\d+)_(\d+).png'))
         existing_label_channels = set(extract_indices(label_dir, pattern=r'inklabels_(\d+)_(\d+).png'))
 
+        print(list(existing_label_channels))
         existing_negative_channels = find_consecutive_ch_blocks_of_size(list(existing_negative_channels), cfg.in_chans)
         existing_label_channels = find_consecutive_ch_blocks_of_size(list(existing_label_channels), cfg.in_chans)
         existing_channels = existing_label_channels.union(existing_negative_channels)
@@ -120,14 +121,13 @@ def validate_labels(cfg, frag_dir, label_dir):
         default_channels = set(range(64))
         exclude_count = cfg.excluded_label_layers
         exclude_count = min(exclude_count, len(default_channels) // 2)
-        print("exclude count", exclude_count)
+
         if exclude_count == 0:
             selected_channels = set(list(default_channels))
         else:
             selected_channels = set(list(default_channels)[exclude_count:-exclude_count])
-        print("selected channels", selected_channels)
 
-        required_channels = selected_channels - existing_channels
+        required_channels = existing_channels.intersection(selected_channels)
 
         existing_slice_channels = set(extract_indices(slice_dir, pattern=r'(\d+).tif'))
 
