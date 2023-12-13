@@ -67,7 +67,7 @@ def generate_dataset(cfg: Config):
 
     def test_function(row):
         result = os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename'])
-        print(result)  # Or store it in a list to examine later
+        print("RESULT", result)  # Or store it in a list to examine later
         return result
 
     balanced_dataset['file_path'] = balanced_dataset.apply(test_function, axis=1)
