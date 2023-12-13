@@ -2,6 +2,7 @@ import os
 import sys
 
 import albumentations as A
+
 sys.path.append('../')
 from meta import AlphaBetaMeta
 
@@ -13,15 +14,6 @@ work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
 base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")
-
-# dataset creation parameters
-patch_size = 512
-label_size = patch_size // 4
-stride = patch_size // 2
-ink_ratio = 3
-artefact_threshold = 5
-fragment_ids = AlphaBetaMeta().get_current_train_fragments()
-train_split = 0.8
 
 # training parameters
 model_type = "b2"
@@ -36,6 +28,17 @@ losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
 
 val_interval = 2
+
+# dataset creation parameters
+patch_size = 512
+label_size = patch_size // 4
+stride = patch_size // 2
+ink_ratio = 3
+artefact_threshold = 5
+fragment_ids = AlphaBetaMeta().get_current_train_fragments()
+excluded_label_blocks = 3
+excluded_label_layers = in_chans * excluded_label_blocks  # excluded from bottom and top of the stack
+train_split = 0.8
 
 # TODO: Add warmup phase and gradually increase the learning rate over the first few epochs -> adapt to new data smoothly
 # TODO: DROPOUT & Batch Normalization

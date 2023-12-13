@@ -17,16 +17,6 @@ base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")
 
-# dataset creation parameters
-patch_size = 512
-label_size = patch_size // 4
-stride = patch_size // 2
-ink_ratio = 3
-artefact_threshold = 5
-fragment_ids = [HOT_ROD_FRAG_ID, THUNDERCRACKER_FRAG_ID, SUNSTREAKER_FRAG_ID, BLASTER_FRAG_ID, JAZZILLA_FRAG_ID,
-                DEVASTATOR_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, IRONHIDE_FRAG_ID]
-train_split = 0.8
-
 # training parameters
 model_type = "b2"
 architecture = 'segformer'
@@ -40,6 +30,18 @@ losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
 
 val_interval = 2
+
+# dataset creation parameters
+patch_size = 512
+label_size = patch_size // 4
+stride = patch_size // 2
+ink_ratio = 3
+artefact_threshold = 5
+excluded_label_blocks = 5
+excluded_label_layers = in_chans * excluded_label_blocks  # excluded from bottom and top of the stack
+fragment_ids = [HOT_ROD_FRAG_ID, THUNDERCRACKER_FRAG_ID, SUNSTREAKER_FRAG_ID, BLASTER_FRAG_ID, JAZZILLA_FRAG_ID,
+                DEVASTATOR_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, IRONHIDE_FRAG_ID]
+train_split = 0.8
 
 # TODO: Add warmup phase and gradually increase the learning rate over the first few epochs -> adapt to new data smoothly
 # TODO: DROPOUT & Batch Normalization
