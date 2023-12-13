@@ -126,7 +126,7 @@ def validate_labels(cfg, frag_dir, label_dir):
         else:
             selected_channels = set(list(default_channels)[exclude_count:-exclude_count])
         print("selected channels", selected_channels)
-
+        print(existing_channels)
         required_channels = existing_channels.intersection(selected_channels)
 
         existing_slice_channels = set(extract_indices(slice_dir, pattern=r'(\d+).tif'))
