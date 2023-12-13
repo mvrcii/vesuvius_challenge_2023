@@ -11,12 +11,13 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
+from fragment import FragmentHandler
 from meta import AlphaBetaMeta
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config_handler import Config
-from constants import get_frag_name_from_id, FRAGMENTS
+from constants import get_frag_name_from_id
 from data.data_validation import validate_fragments, format_ranges
 from data.utils import write_to_config
 from data_modules.utils import balance_dataset
@@ -62,7 +63,7 @@ def process_fragment(config: Config, fragment_id, channels, label_dir):
 
 def clean_all_fragment_label_dirs(config: Config):
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
-    for fragment_id in FRAGMENTS.values():
+    for fragment_id in FragmentHandler().get_ids():
         frag_name = '_'.join([get_frag_name_from_id(fragment_id)]).upper()
         frag_dir = os.path.join(root_dir, frag_name)
         if os.path.isdir(frag_dir):
