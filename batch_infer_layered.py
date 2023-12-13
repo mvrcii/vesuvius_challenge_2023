@@ -30,7 +30,7 @@ def print_colored(message, color):
 # verbose = False
 
 FRAGMENT_IDS = [JETFIRE_FRAG_ID]
-model = ["trim-sun-761-segformer-b2-231213-021154"]
+model = "trim-sun-761-segformer-b2-231213-021154"
 
 print("Fragments for inference:\t", ", ".join(FRAGMENT_IDS))
 print("Model for inference:\t", model)
