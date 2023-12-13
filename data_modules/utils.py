@@ -64,19 +64,13 @@ def generate_dataset(cfg: Config):
     # print(f"Total non-ink samples with no artefact: {num_no_artefact_samples}")
     # print(f"Total non-ink samples with artefact > {cfg.artefact_threshold}: {num_with_artefact_samples}")
     # print(f"Total samples: {num_ink_samples + num_no_artefact_samples + num_with_artefact_samples}")
-    any_nan = balanced_dataset.isna().any().any()
-    print(f"Are there any NaN values in the DataFrame? {any_nan}")
 
-    # Step 2: Count of NaN values in each column
-    nan_count_per_column = balanced_dataset.isna().sum()
-    print("Number of NaN values in each column:\n", nan_count_per_column)
+    def test_function(row):
+        result = os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename'])
+        print(result)  # Or store it in a list to examine later
+        return result
 
-    # Step 3: Identify specific rows and columns where values are NaN
-    nan_locations = balanced_dataset[balanced_dataset.isna().any(axis=1)]
-    print("Rows with NaN values:\n", nan_locations)
-
-    balanced_dataset['file_path'] = balanced_dataset.apply(
-        lambda row: os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename']), axis=1)
+    balanced_dataset['file_path'] = balanced_dataset.apply(test_function, axis=1)
 
     train_df, valid_df = train_test_split(balanced_dataset, train_size=cfg.train_split, random_state=cfg.seed)
 
