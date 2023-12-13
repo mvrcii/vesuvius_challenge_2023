@@ -30,7 +30,7 @@ class CFG:
 
     in_chans = 16
     # ============== training cfg =============
-    size = 1024
+    size = 512
     tile_size = 1024
     stride = tile_size // 4
 
@@ -175,18 +175,21 @@ def get_device(model):
 
 
 if __name__ == "__main__":
-    model = UNETR_Segformer(CFG)
-
+    model = UNETR(input_dim=1, output_dim=2, img_shape=(16, 512, 512))
+    # model = UNETR_Segformer(CFG)
+    #
     if torch.cuda.is_available():
         model.to('cuda')
     else:
         print("CUDA is not available. The model will remain on the CPU.")
-
-    print(get_device(model))
-
-    x = np.random.rand(1, 1, 16, 1024, 1024)
-    x = torch.from_numpy(x).float()
-    # move x to cuda
+    #
+    # print(get_device(model))
+    #
+    # x = np.random.rand(1, 1, 16, 512, 512)
+    # x = torch.from_numpy(x).float()
+    x = torch.randn(1, 1, 16, 512, 512)
+    # # move x to cuda
     x = x.to(get_device(model))
+    print(x.shape)
     output = model(x)
     print(output.shape)
