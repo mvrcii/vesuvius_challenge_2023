@@ -57,8 +57,8 @@ def generate_dataset(cfg: Config):
         cfg.seed = None  # Set random seed if -1 is given
 
     # BALANCING IS DONE ON CREATION
-    # balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, data)
-    #
+    balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, balanced_dataset)
+
     # # Print statistics
     # print(f"Total ink samples: {num_ink_samples}")
     # print(f"Total non-ink samples with no artefact: {num_no_artefact_samples}")
