@@ -112,7 +112,8 @@ def validate_labels(cfg, frag_dir, label_dir):
         existing_negative_channels = set(extract_indices(label_dir, pattern=r'negatives_(\d+)_(\d+).png'))
         existing_label_channels = set(extract_indices(label_dir, pattern=r'inklabels_(\d+)_(\d+).png'))
 
-        print(list(existing_label_channels))
+        print("Warning: No existing label files found for fragment:", frag_dir)
+
         existing_negative_channels = find_consecutive_ch_blocks_of_size(list(existing_negative_channels), cfg.in_chans)
         existing_label_channels = find_consecutive_ch_blocks_of_size(list(existing_label_channels), cfg.in_chans)
         existing_channels = existing_label_channels.union(existing_negative_channels)
