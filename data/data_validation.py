@@ -120,7 +120,11 @@ def validate_labels(cfg, frag_dir, label_dir):
         default_channels = set(range(64))
         exclude_count = cfg.excluded_label_layers
         exclude_count = min(exclude_count, len(default_channels) // 2)
-        selected_channels = set(list(default_channels)[exclude_count:-exclude_count])
+
+        if exclude_count == 0:
+            selected_channels = set(list(default_channels))
+        else:
+            selected_channels = set(list(default_channels)[exclude_count:-exclude_count])
 
         required_channels = existing_channels.intersection(selected_channels)
 
