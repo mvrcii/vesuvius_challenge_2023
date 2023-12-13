@@ -12,7 +12,6 @@ def validate_fragments(config, fragments, label_dir):
     excluded_fragments = []
 
     for frag_id in fragments:
-        print(label_dir)
         val_errors, frag_channels = validate_fragment_files(frag_id=frag_id, cfg=config,
                                                             label_dir=label_dir)
 
@@ -25,8 +24,6 @@ def validate_fragments(config, fragments, label_dir):
             excluded_fragments.append([frag_str] + val_errors)
         else:
             valid_fragments[frag_id] = [frag_str]
-
-    print(frag_id_2_channels)
 
     for frag_id, valid in valid_fragments.items():
         type_str = 'Images & Labels'
