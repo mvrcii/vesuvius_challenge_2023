@@ -380,8 +380,10 @@ if __name__ == '__main__':
     LABEL_INFO_LIST = []
 
     label_dir = AlphaBetaMeta().get_current_binarized_label_dir()
-    fragments = AlphaBetaMeta().get_current_train_fragments()
     label_dir = os.path.join(cfg.work_dir, label_dir)
+
+    fragments = cfg.fragment_ids
+    # fragments = AlphaBetaMeta().get_current_train_fragments()
 
     clean_all_fragment_label_dirs(config=cfg)
     extract_patches(cfg, fragments, label_dir)
