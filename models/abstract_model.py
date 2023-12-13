@@ -44,11 +44,14 @@ class AbstractVesuvLightningModule(LightningModule):
             # Set T_0 to a reasonable value based on your dataset and model
             # scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=25, T_mult=2)
 
-            step_lr_scheduler = StepLR(
-                optimizer,
-                step_size=self.step_lr_steps,
-                gamma=self.step_lr_factor
-            )
+            # step_lr_scheduler = StepLR(
+            #     optimizer,
+            #     step_size=self.step_lr_steps,
+            #     gamma=self.step_lr_factor
+            # )
+            optimizer = torch.optim.SGD(self.parameters(), lr=0.1, momentum=0.9)
+            cycle_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.01, steps_per_epoch=1734,
+                                                            epochs=10)
 
             # if self.warmup_epochs > 0:
             #     warmup_scheduler = LinearLR(
@@ -65,7 +68,8 @@ class AbstractVesuvLightningModule(LightningModule):
             #         milestones=[self.warmup_epochs]
             #     )
             # else:
-            scheduler = step_lr_scheduler
+            scheduler = cycle_scheduler
+            # scheduler = step_lr_scheduler
         else:
             scheduler = CosineAnnealingLR(
                 optimizer,
