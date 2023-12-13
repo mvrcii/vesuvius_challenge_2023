@@ -57,7 +57,7 @@ def generate_dataset(cfg: Config):
         cfg.seed = None  # Set random seed if -1 is given
 
     # BALANCING IS DONE ON CREATION
-    balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, balanced_dataset)
+    # balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, balanced_dataset)
 
     # # Print statistics
     # print(f"Total ink samples: {num_ink_samples}")
@@ -65,17 +65,8 @@ def generate_dataset(cfg: Config):
     # print(f"Total non-ink samples with artefact > {cfg.artefact_threshold}: {num_with_artefact_samples}")
     # print(f"Total samples: {num_ink_samples + num_no_artefact_samples + num_with_artefact_samples}")
 
-    def test_function(row):
-        print("RESULT before")
-        input = row['frag_id']
-        print(input)
-        output = get_frag_name_from_id(input)
-        print("output", output)
-        result = os.path.join(output, 'images', row['filename'])
-        print("RESULT", result)  # Or store it in a list to examine later
-        return result
-
-    balanced_dataset['file_path'] = balanced_dataset.apply(test_function, axis=1)
+    balanced_dataset['file_path'] = balanced_dataset.apply(
+        lambda row: os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename']), axis=1)
 
     train_df, valid_df = train_test_split(balanced_dataset, train_size=cfg.train_split, random_state=cfg.seed)
 

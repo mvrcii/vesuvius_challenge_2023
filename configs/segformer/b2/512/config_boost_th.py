@@ -27,7 +27,7 @@ in_chans = 4
 seed = 45245
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
-dataset_fraction = 1
+dataset_fraction = 0.5
 
 val_interval = 2
 
