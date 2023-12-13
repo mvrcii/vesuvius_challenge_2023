@@ -75,7 +75,7 @@ class FragmentHandler(metaclass=SingletonMeta):
 
     def get_name(self, frag_id):
         for name, id in self.FRAGMENTS.items():
-            if id == frag_id:
+            if str(id) == str(frag_id):
                 return name
         return "Unknown Fragment"
 
