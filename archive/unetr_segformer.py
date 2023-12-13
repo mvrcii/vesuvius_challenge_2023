@@ -187,7 +187,7 @@ if __name__ == "__main__":
     #
     # x = np.random.rand(1, 1, 16, 512, 512)
     # x = torch.from_numpy(x).float()
-    x = torch.randn(4, 1, 16, 512, 512)
+    x = torch.randn(2, 1, 16, 512, 512)
     # # move x to cuda
     x = x.to(get_device(model))
     print(x.shape)
