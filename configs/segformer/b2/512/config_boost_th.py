@@ -37,7 +37,7 @@ label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
 artefact_threshold = 5
-excluded_label_blocks = 2
+excluded_label_blocks = 0
 excluded_label_layers = in_chans * excluded_label_blocks  # excluded from bottom and top of the stack
 fragment_ids = [HOT_ROD_FRAG_ID, THUNDERCRACKER_FRAG_ID, SUNSTREAKER_FRAG_ID, BLASTER_FRAG_ID, JAZZILLA_FRAG_ID,
                 DEVASTATOR_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, IRONHIDE_FRAG_ID]
