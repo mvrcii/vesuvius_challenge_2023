@@ -175,8 +175,8 @@ def get_device(model):
 
 
 if __name__ == "__main__":
-    model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 512, 512))
-    # model = UNETR_Segformer(CFG)
+    # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 512, 512))
+    model = UNETR_Segformer(CFG)
     #
     if torch.cuda.is_available():
         model.to('cuda')
