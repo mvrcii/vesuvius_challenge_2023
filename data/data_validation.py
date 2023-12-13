@@ -109,6 +109,7 @@ def validate_labels(cfg, frag_dir, label_dir):
 
     # If no errors yet, continue
     if len(errors) == 0:
+        print("no errors")
         existing_negative_channels = set(extract_indices(label_dir, pattern=r'negatives_(\d+)_(\d+).png'))
         existing_label_channels = set(extract_indices(label_dir, pattern=r'inklabels_(\d+)_(\d+).png'))
 
