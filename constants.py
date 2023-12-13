@@ -86,7 +86,9 @@ ITERATION = 1
 LABEL_TYPE = GENERATED_LABELS
 
 def get_frag_name_from_id(frag_id):
-    return FragmentHandler().get_name(frag_id)
+    output = FragmentHandler().get_name(frag_id)
+    print(output)
+    return output
 
 
 def get_ckpt_name_from_id(checkpoint_name):
