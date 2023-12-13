@@ -14,7 +14,8 @@ class Fragment:
         self.rotation = data.get('rotation', DEFAULT_ROTATION)
         self.flip = data.get('flip', DEFAULT_FLIP)
         self.boost_threshold = data.get('boost_threshold', DEFAULT_BOOST_THRESHOLD)
-        self.center_layers = tuple(data.get('center_layers', (DEFAULT_START_CENTER_LAYER, DEFAULT_END_CENTER_LAYER)))
+        self.center_layers = tuple(data.get('center_layers_start_indices', (DEFAULT_START_CENTER_LAYER, DEFAULT_END_CENTER_LAYER)))
+        self.best_12_layers = tuple(data.get('best_12_inclusive_layers', None))
 
     @classmethod
     def load_from_json(cls, file_path):
@@ -51,6 +52,12 @@ class FragmentHandler(metaclass=SingletonMeta):
             if fragment.id == frag_id:
                 return fragment.center_layers
         return DEFAULT_START_CENTER_LAYER, DEFAULT_END_CENTER_LAYER
+
+    def get_best_12_layers(self, frag_id):
+        for fragment in self.fragments:
+            if fragment.id == frag_id:
+                return fragment.best_12_layers
+        return None, None
 
     def get_boost_threshold(self, frag_id):
         for fragment in self.fragments:

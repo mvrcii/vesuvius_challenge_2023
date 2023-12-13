@@ -51,7 +51,7 @@ def combine_layers(predictions, max_distance):
 
 def get_common_layers(model_dir, selected_layers):
     paths = [x for x in os.listdir(model_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
-    layers = set(int(x.split('_')[2]) for x in paths)
+    layers = set(int(x.split('_')[2]) for x in paths)  # take start layer
 
     layers = layers.intersection(selected_layers)
 
@@ -206,15 +206,16 @@ class Visualization:
         self.rotate_num = frag_handler.get_rotation(frag_id=frag_id)
         self.flip_num = frag_handler.get_flip(frag_id=frag_id)
 
-        start_layer, end_layer = 0, 62
-
-        selected_layers = get_selected_layer_range(start_idx=start_layer, end_idx=end_layer)
+        # start layer idx = start index for a label/numpy file
+        # start and end layer idx are both inclusive!
+        start_layer_idx, end_layer_idx = 0, 60
+        selected_layers = list(range(start_layer_idx, end_layer_idx + 1))
         valid_layers = get_common_layers(model_dir=model_dir, selected_layers=selected_layers)
 
         self.model_layer_idcs, self.model_layer_values = load_predictions(root_dir=model_dir,
                                                                           layer_indices=valid_layers)
 
-        start_layer, end_layer = FragmentHandler().get_center_layers(frag_id=frag_id)
+        start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=frag_id)  # inclusive
 
         self.model_name = model_name
         self.model_dir = model_dir
@@ -236,9 +237,9 @@ class Visualization:
         self.root = Tk()
         self.root.title("Threshold Visualizer")
 
-        self.mode_var = IntVar(value=0)  # Default to mode 0
-        self.start_layer_var = IntVar(value=start_layer)
-        self.end_layer_var = IntVar(value=end_layer)
+        self.mode_var = IntVar(value=1)  # Default to mode 0
+        self.start_layer_var = IntVar(value=start_layer_idx)  # inclusive
+        self.end_layer_var = IntVar(value=end_layer_idx)  # inclusive
 
         threshold = FragmentHandler().get_boost_threshold(frag_id=frag_id)
         self.threshold_var = StringVar(value=str(threshold))
@@ -294,6 +295,10 @@ class Visualization:
         self.end_layer_label.pack(side='left')
 
 
+        self.clear_focus_button = Button(self.root, text="Clear Focus", command=self.root.focus_set)
+        self.clear_focus_button.pack()
+        self.root.bind("<KeyPress>", self.on_key_press)
+
         # Added: Slider for start and end layer index
         # self.layer_range_frame = Frame(self.root)
         # self.layer_range_frame.pack(side='top')
@@ -317,6 +322,21 @@ class Visualization:
 
         # Start the application
         self.root.mainloop()
+
+    def on_key_press(self, event):
+        if event.keysym == "Left":
+            self.end_layer_var.set(max(self.end_layer_var.get() - 1, 0))
+            self.update_image()
+        elif event.keysym == "Right":
+            self.end_layer_var.set(min(self.end_layer_var.get() + 1, len(self.model_layer_idcs)))
+            self.update_image()
+        elif event.keysym == "a":
+            self.start_layer_var.set(max(self.start_layer_var.get() - 1, 0))
+            self.update_image()
+        elif event.keysym == "d":
+            self.start_layer_var.set(min(self.start_layer_var.get() + 1, len(self.model_layer_idcs)))
+            self.update_image()
+        print("Key pressed")
 
     def on_threshold_input_enter(self, event):
         try:
@@ -503,7 +523,6 @@ class Visualization:
     def mode_changed(self):
         mode = self.mode_var.get()
         print("Selected Mode", self.modes[mode])
-        threshold = self.get_threshold()
 
         if mode in [0, 1]:
             # if mode == 0:
@@ -518,7 +537,6 @@ class Visualization:
             self.left_button.pack(side='left')
             self.slider.pack(side='left')
             self.right_button.pack(side='left')
-            # self.array = self.model_layer_values[int(threshold)]
 
         self.update_image()
 
@@ -541,8 +559,8 @@ class Visualization:
         if save_img:
             max_size = self.target_dims
 
-        start_layer = int(self.start_layer_var.get())
-        end_layer = int(self.end_layer_var.get())
+        start_layer = self.start_layer_var.get()  # inclusive
+        end_layer = self.end_layer_var.get()  # inclusive
 
         mode = self.modes[self.mode_var.get()].lower()
         processed = None
