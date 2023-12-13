@@ -10,12 +10,12 @@ from PIL import Image, ImageTk
 from PIL.Image import Resampling
 from tqdm import tqdm
 
-import constants
-from constants import get_all_frag_infos
+from fragment import FragmentHandler
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config_handler import Config
+
 
 def combine_layers(predictions, max_distance):
     """
@@ -158,7 +158,7 @@ def main():
     args = parse_args()
 
     config = Config().load_local_cfg()
-    frag_infos = get_all_frag_infos()
+    frag_infos = FragmentHandler().get_name_2_id()
 
     # Filter valid fragments only
     valid_frags = [(name, frag_id) for (name, frag_id) in frag_infos if has_valid_ckpt_dirs(config.work_dir, frag_id)]
@@ -201,24 +201,23 @@ class Visualization:
 
         self.root_dir = root_dir
         self.target_dims = target_dims
-        self.rotate_num = constants.get_rotate_value(frag_id=frag_id)
-        self.flip_num = constants.get_flip_value(frag_id=frag_id)
 
-        start_layer = 25
-        end_layer = 41
+        frag_handler = FragmentHandler()
+        self.rotate_num = frag_handler.get_rotation(frag_id=frag_id)
+        self.flip_num = frag_handler.get_flip(frag_id=frag_id)
+
+        start_layer, end_layer = 0, 62
 
         selected_layers = get_selected_layer_range(start_idx=start_layer, end_idx=end_layer)
         valid_layers = get_common_layers(model_dir=model_dir, selected_layers=selected_layers)
 
         self.model_layer_idcs, self.model_layer_values = load_predictions(root_dir=model_dir,
                                                                           layer_indices=valid_layers)
+
+        start_layer, end_layer = FragmentHandler().get_center_layers(frag_id=frag_id)
+
         self.model_name = model_name
         self.model_dir = model_dir
-
-        # Initially calculate max and sum once
-        self.array_maxs = np.maximum.reduce(self.model_layer_values)
-        self.array_sums = np.sum(self.model_layer_values, axis=0)
-        self.array = self.array_sums
 
         # Slider idxs
         self.curr_layer_val = 0
@@ -240,7 +239,9 @@ class Visualization:
         self.mode_var = IntVar(value=0)  # Default to mode 0
         self.start_layer_var = IntVar(value=start_layer)
         self.end_layer_var = IntVar(value=end_layer)
-        self.threshold_var = StringVar(value="0.00001")
+
+        threshold = FragmentHandler().get_boost_threshold(frag_id=frag_id)
+        self.threshold_var = StringVar(value=str(threshold))
 
         # Utility frame
         utility_frame = Frame(self.root)
@@ -266,6 +267,8 @@ class Visualization:
         control_frame = Frame(self.root)
         control_frame.pack(side='top')
 
+        self.threshold_layer = Label(self.root, text="Threshold:")
+        self.threshold_layer.pack()
         self.threshold_input = Entry(self.root, textvariable=self.threshold_var)
         self.threshold_input.bind("<Return>", self.on_threshold_input_enter)
         self.threshold_input.pack()
@@ -274,9 +277,22 @@ class Visualization:
         self.slider = Scale(control_frame, from_=0, to=len(self.model_layer_idcs) - 1, orient=HORIZONTAL, resolution=1,
                             length=500, command=self.update_image)
         self.slider.set(self.curr_layer_val)
-        self.layer_label = Label(control_frame, text="Current Layer: ")
+        self.layer_label = Label(control_frame, text="Current Layer:")
         self.layer_label.config(text=f"{self.model_layer_idcs[self.curr_layer_val]}")
         self.right_button = Button(control_frame, text="  +  ", command=self.increase_slider)
+
+        self.start_layer_input = Entry(control_frame, textvariable=self.start_layer_var)
+        self.start_layer_input.bind("<Return>", self.on_start_layer_input_enter)
+        self.start_layer_input.pack(side='left')
+        self.start_layer_label = Label(control_frame, text="Start Layer:")
+        self.start_layer_label.pack(side='left')
+
+        self.end_layer_input = Entry(control_frame, textvariable=self.end_layer_var)
+        self.end_layer_input.bind("<Return>", self.on_end_layer_input_enter)
+        self.end_layer_input.pack(side='left')
+        self.end_layer_label = Label(control_frame, text="End Layer:")
+        self.end_layer_label.pack(side='left')
+
 
         # Added: Slider for start and end layer index
         # self.layer_range_frame = Frame(self.root)
@@ -294,14 +310,13 @@ class Visualization:
         self.label = Label(self.root)
         self.label.pack()
 
-        new_img = self.process_image(array=self.array)
-        imgtk = ImageTk.PhotoImage(image=new_img)
+        image = self.process_image()
+        imgtk = ImageTk.PhotoImage(image=image)
         self.label.imgtk = imgtk
         self.label.config(image=imgtk)
 
         # Start the application
         self.root.mainloop()
-
 
     def on_threshold_input_enter(self, event):
         try:
@@ -318,24 +333,45 @@ class Visualization:
         except ValueError:
             print("Please enter a valid float number")
 
-    def update_layer_range(self, _=None):
-        start_layer = int(self.start_layer_var.get())
-        end_layer = int(self.end_layer_var.get())
+    def on_start_layer_input_enter(self, event):
+        try:
+            start_layer = self.start_layer_var.get()
+            self.start_layer_var.set(start_layer)
+            self.update_image()
 
-        # Recalculate layers and update image
-        selected_layers = get_selected_layer_range(start_layer, end_layer)
-        valid_layers = get_common_layers(self.model_dir, selected_layers=selected_layers)
-        valid_layers = sorted(list(valid_layers))
+            print(f"Entered value: {start_layer}")
+        except ValueError:
+            print("Please enter a valid int number")
 
-        array = self.model_layer_values[valid_layers[0]:valid_layers[-1]]
+    def on_end_layer_input_enter(self, event):
+        try:
+            end_layer = self.end_layer_var.get()
+            self.end_layer_var.set(end_layer)
+            self.update_image()
 
-        new_img = self.process_image(array=array)
-        imgtk = ImageTk.PhotoImage(image=new_img)
-        self.label.imgtk = imgtk
-        self.label.config(image=imgtk)
+            print(f"Entered value: {end_layer}")
+        except ValueError:
+            print("Please enter a valid int number")
 
-        # ... [Add logic to recalculate the model predictions based on the new layer range]
-        self.update_image()
+    # def update_layer_range(self, _=None):
+    #     start_layer = int(self.start_layer_var.get())
+    #     end_layer = int(self.end_layer_var.get())
+    #
+    #     # Recalculate layers and update image
+    #     selected_layers = get_selected_layer_range(start_layer, end_layer)
+    #     valid_layers = get_common_layers(self.model_dir, selected_layers=selected_layers)
+    #     valid_layers = sorted(list(valid_layers))
+    #
+    #     array = self.model_layer_values[valid_layers[0]:valid_layers[-1]]
+    #
+    #
+    #     image = self.process_image()
+    #     imgtk = ImageTk.PhotoImage(image=image)
+    #     self.label.imgtk = imgtk
+    #     self.label.config(image=imgtk)
+    #
+    #     # ... [Add logic to recalculate the model predictions based on the new layer range]
+    #     self.update_image()
 
     @staticmethod
     def calc_weighted_arr(array, weight, _max=False):
@@ -405,17 +441,18 @@ class Visualization:
                 for idx, layer in enumerate(self.model_layer_idcs):
                     file_name = f"{model_names_str}_mode={mode}_layer={layer}{inverted_str}.png"
                     file_path = os.path.join(target_dir, file_name)
-                    layer_arr = self.model_layer_values[int(idx)]
-                    image = self.process_image(array=layer_arr, max_size=self.target_dims, save_img=True)
+                    self.curr_layer_val = int(idx)
+                    image = self.process_image(save_img=True)
                     print(f"Saving {file_name}")
                     image.save(file_path)
             else:
                 layer = int(self.get_threshold())
+                self.curr_layer_val = layer
                 file_name = f"{model_names_str}_mode={mode}_layer={layer}{inverted_str}.png"
                 file_path = os.path.join(target_dir, file_name)
-                image = self.process_image(array=self.array, max_size=self.target_dims, save_img=True)
-                print(f"Saving {file_name}")
+                image = self.process_image(save_img=True)
                 image.save(file_path)
+                print(f"Saving {file_name}")
         else:
             threshold = self.get_threshold()
             start_layer = int(self.start_layer_var.get())
@@ -430,7 +467,7 @@ class Visualization:
                                                  f"{inverted_str}"
                                                  f"{transparent_str}.png")
 
-            image = self.process_image(array=self.array, max_size=self.target_dims, save_img=True)
+            image = self.process_image(save_img=True)
 
             if self.transparent:
                 processed = image.convert('RGBA')
@@ -469,13 +506,11 @@ class Visualization:
         threshold = self.get_threshold()
 
         if mode in [0, 1]:
-            if mode == 0:
-                self.array = self.array_sums
-            else:  # mode == 1
-                self.array = self.array_maxs
+            # if mode == 0:
+            #     self.array = self.array_sums
+            # else:  # mode == 1
+            #     self.array = self.array_maxs
 
-            # self.slider.config(resolution=0.01, from_=0, to=1)
-            # self.slider.set(threshold)
             self.layer_label.pack_forget()
 
         elif mode == 2:
@@ -483,7 +518,7 @@ class Visualization:
             self.left_button.pack(side='left')
             self.slider.pack(side='left')
             self.right_button.pack(side='left')
-            self.array = self.model_layer_values[int(threshold)]
+            # self.array = self.model_layer_values[int(threshold)]
 
         self.update_image()
 
@@ -492,18 +527,36 @@ class Visualization:
             self.set_threshold(threshold)
 
         if self.mode_var.get() == 2:
-            layer = int(self.get_threshold())
+            layer = self.curr_layer_val
             print("Selected layer", layer)
-            self.array = self.model_layer_values[layer]
-            self.layer_label.config(text=f"Layer: {self.model_layer_idcs[int(layer)]}")
+            self.layer_label.config(text=f"Current Layer: {self.model_layer_idcs[int(layer)]}")
 
-        new_img = self.process_image(array=self.array)
-        imgtk = ImageTk.PhotoImage(image=new_img)
+        image = self.process_image()
+        imgtk = ImageTk.PhotoImage(image=image)
         self.label.imgtk = imgtk
         self.label.config(image=imgtk)
 
-    def process_image(self, array, max_size=(1500, 800), save_img=False):
-        processed = array.copy()
+    def process_image(self, save_img=False):
+        max_size = (1500, 800)
+        if save_img:
+            max_size = self.target_dims
+
+        start_layer = int(self.start_layer_var.get())
+        end_layer = int(self.end_layer_var.get())
+
+        mode = self.modes[self.mode_var.get()].lower()
+        processed = None
+
+        if mode == "sum":
+            processed = np.sum(self.model_layer_values[start_layer:end_layer + 1], axis=0)
+        elif mode == "max":
+            processed = np.maximum.reduce(self.model_layer_values[start_layer:end_layer + 1])
+        elif mode == "layers":
+            layer = self.curr_layer_val
+            processed = self.model_layer_values.copy()[int(layer)]
+
+        assert processed is not None and len(processed.shape) == 2
+
         processed = self.normalize_npy_preds(processed)  # Normalize
 
         if not save_img:
@@ -581,6 +634,7 @@ class Visualization:
             self.set_threshold(new_layer)
             self.slider.set(new_layer)
             self.layer_label.config(text=f"Value: {self.model_layer_idcs[int(new_layer)]}")
+
 
 def load_predictions(root_dir, layer_indices=None):
     layer_idcs = list()
