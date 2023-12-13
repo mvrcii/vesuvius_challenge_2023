@@ -84,4 +84,7 @@ def generate_dataset(cfg: Config):
     train_label_paths = [path.replace('images', 'labels') for path in train_image_paths]
     val_label_paths = [path.replace('images', 'labels') for path in val_image_paths]
 
+    print(f"Total train samples: {len(train_image_paths)}")
+    print(f"Total validation samples: {len(val_image_paths)}")
+
     return train_image_paths, train_label_paths, val_image_paths, val_label_paths
