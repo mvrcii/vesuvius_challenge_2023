@@ -67,7 +67,8 @@ def generate_dataset(cfg: Config):
 
     def test_function(row):
         print("RESULT before")
-        output = get_frag_name_from_id(row['frag_id'])
+        input = row['frag_id']
+        output = get_frag_name_from_id(input)
         print("output", output)
         result = os.path.join(output, 'images', row['filename'])
         print("RESULT", result)  # Or store it in a list to examine later
