@@ -30,7 +30,8 @@ class CFG:
 
     in_chans = 16
     # ============== training cfg =============
-    size = 512
+    # size = 64
+    size = 256
     tile_size = 1024
     stride = tile_size // 4
 
@@ -187,7 +188,7 @@ if __name__ == "__main__":
     #
     # x = np.random.rand(1, 1, 16, 512, 512)
     # x = torch.from_numpy(x).float()
-    x = torch.randn(2, 1, 16, 512, 512)
+    x = torch.randn(4, 1, 16, 256, 256)
     # # move x to cuda
     x = x.to(get_device(model))
     print(x.shape)
