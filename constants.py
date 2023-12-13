@@ -86,9 +86,7 @@ ITERATION = 1
 LABEL_TYPE = GENERATED_LABELS
 
 def get_frag_name_from_id(frag_id):
-    print(frag_id)
     output = FragmentHandler().get_name(frag_id)
-    print(output)
     return output
 
 
