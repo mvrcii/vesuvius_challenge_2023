@@ -66,6 +66,7 @@ def generate_dataset(cfg: Config):
     # print(f"Total samples: {num_ink_samples + num_no_artefact_samples + num_with_artefact_samples}")
 
     def test_function(row):
+        print("RESULT before")
         result = os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename'])
         print("RESULT", result)  # Or store it in a list to examine later
         return result
