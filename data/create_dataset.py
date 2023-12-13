@@ -384,6 +384,6 @@ if __name__ == '__main__':
 
     fragments = cfg.fragment_ids
     # fragments = AlphaBetaMeta().get_current_train_fragments()
-
+    print(label_dir)
     clean_all_fragment_label_dirs(config=cfg)
     extract_patches(cfg, fragments, label_dir)
