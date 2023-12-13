@@ -15,19 +15,32 @@ def print_colored(message, color):
     }
     print(f"{colors[color]}{message}{colors['end']}")
 
+# FRAGMENT_IDS = AlphaBetaMeta().get_current_inference_fragments()
+# model = AlphaBetaMeta().get_current_model()
+#
+# print("Fragments for inference:\t", ", ".join(FRAGMENT_IDS))
+# print("Model for inference:\t", model)
+# CHECKPOINTS = [model]
+#
+# start_idx = 0
+# end_idx = 60
+# batch_size = 32
+# labels = True
+# boost_threshold = True
+# verbose = False
 
-FRAGMENT_IDS = AlphaBetaMeta().get_current_inference_fragments()
-model = AlphaBetaMeta().get_current_model()
+FRAGMENT_IDS = [JETFIRE_FRAG_ID]
+model = ["trim-sun-761-segformer-b2-231213-021154"]
 
 print("Fragments for inference:\t", ", ".join(FRAGMENT_IDS))
 print("Model for inference:\t", model)
 CHECKPOINTS = [model]
 
-start_idx = 0
-end_idx = 60
-batch_size = 32
-labels = True
-boost_threshold = True
+start_idx = 28
+end_idx = 40
+batch_size = 4
+labels = False
+boost_threshold = False
 verbose = False
 
 if labels:
