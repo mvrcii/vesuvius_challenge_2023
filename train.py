@@ -55,6 +55,8 @@ def get_model(config: Config):
         return UnetPlusPlusModule(cfg=config)
     elif architecture == 'simplecnn':
         return SimpleCNNModule(cfg=config)
+    elif architecture == 'unetr-sf':
+        return UNETR_SFModule(cfg=config)
     else:
         print("Invalid architecture for model:", architecture)
         sys.exit(1)

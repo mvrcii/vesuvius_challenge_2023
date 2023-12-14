@@ -175,22 +175,22 @@ def get_device(model):
     return next(model.parameters()).device
 
 
-if __name__ == "__main__":
-    # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 512, 512))
-    model = UNETR_Segformer(CFG)
-    #
-    if torch.cuda.is_available():
-        model.to('cuda')
-    else:
-        print("CUDA is not available. The model will remain on the CPU.")
-    #
-    # print(get_device(model))
-    #
-    # x = np.random.rand(1, 1, 16, 512, 512)
-    # x = torch.from_numpy(x).float()
-    x = torch.randn(4, 1, 16, 256, 256)
-    # # move x to cuda
-    x = x.to(get_device(model))
-    print(x.shape)
-    output = model(x)
-    print(output.shape)
+# if __name__ == "__main__":
+#     # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 512, 512))
+#     model = UNETR_Segformer(CFG)
+#     #
+#     if torch.cuda.is_available():
+#         model.to('cuda')
+#     else:
+#         print("CUDA is not available. The model will remain on the CPU.")
+#     #
+#     # print(get_device(model))
+#     #
+#     # x = np.random.rand(1, 1, 16, 512, 512)
+#     # x = torch.from_numpy(x).float()
+#     x = torch.randn(4, 1, 16, 256, 256)
+#     # # move x to cuda
+#     x = x.to(get_device(model))
+#     print(x.shape)
+#     output = model(x)
+#     print(output.shape)

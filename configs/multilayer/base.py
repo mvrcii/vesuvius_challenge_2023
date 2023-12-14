@@ -18,10 +18,9 @@ data_root_dir = "data"
 dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # training parameters
-model_type = "b2"
-architecture = 'segformer'
-model_name = f"{architecture}-{model_type}"
-from_pretrained = f"nvidia/mit-{model_type}"
+architecture = 'unetr-sf'
+model_name = f"{architecture}"
+
 # from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 12
 seed = 3445774
