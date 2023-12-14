@@ -1,5 +1,5 @@
 from models.abstract_model import AbstractVesuvLightningModule
-from models.architectures.unetr_segformer import CFG, unet_3d_jumbo_config, UNETR_Segformer
+from models.architectures.unetr_segformer import UNETR_Segformer
 
 
 class UNETR_SFModule(AbstractVesuvLightningModule):
