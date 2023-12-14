@@ -585,8 +585,11 @@ class Visualization:
 
         threshold = float(self.threshold_var.get())
 
+        processed = (processed > threshold).astype(int)
+        print(np.unique(processed))
+
         # Apply threshold
-        processed[processed >= float(threshold)] = 1  # clamp all values that are not 0 (or threshold) to 1
+        # processed[processed >= float(threshold)] = 1  # clamp all values that are not 0 (or threshold) to 1
         print("Applied threshold:", float(threshold))
 
         if self.inverted:
