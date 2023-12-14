@@ -1,0 +1,46 @@
+from data_modules.abstract.abstract_dataset import AbstractDataset
+import numpy as np
+import os
+from skimage.transform import resize
+import torch
+
+
+class UNETR_SFDataset(AbstractDataset):
+    def __init__(self, root_dir, images, label_size, patch_size, transform, labels=None):
+        super().__init__(root_dir=root_dir,
+                         images=images,
+                         transform=transform,
+                         labels=labels,
+                         label_size=label_size,
+                         patch_size=patch_size)
+
+    def __getitem__(self, idx):
+        image = np.load(os.path.join(self.root_dir, self.images[idx]))
+        label = np.load(os.path.join(self.root_dir, self.labels[idx]))
+        label = np.unpackbits(label).reshape(self.label_shape)
+
+        # Scale label up to patch shape
+        label = resize(label, self.patch_shape, order=0, preserve_range=True, anti_aliasing=False)
+
+        # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
+        image = np.transpose(image, (1, 2, 0))
+
+        # Apply augmentations and normalization
+        if self.transform:
+            augmented = self.transform(image=image, mask=label)
+            image, label = augmented['image'], augmented['mask']
+
+        # Rearrange image back from (height, width, channels) to (channels, height, width) to work with segformer input
+        image = np.transpose(image, (2, 0, 1))
+
+        # Scale label back down to label shape
+        label = resize(label, self.label_shape, order=0, preserve_range=True, anti_aliasing=False)
+
+        # go from (layers, patch_size, patch_size) to (1, layers, patch_size, patch_size) => add "1" channel
+        image = torch.tensor(image).unsqueeze(0)
+
+        # pad image to have 16 layers
+        image = torch.cat([image, torch.zeros(1, 16 - image.shape[1], 256, 256)], dim=1)
+        # x = torch.cat([x, torch.zeros(1, 1, 4, 256, 256)], dim=2)
+
+        return image, label

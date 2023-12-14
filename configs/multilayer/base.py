@@ -22,7 +22,8 @@ architecture = 'unetr-sf'
 model_name = f"{architecture}"
 
 # from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
-in_chans = 12
+# in_chans = 12
+in_chans = 2
 seed = 3445774
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
@@ -31,13 +32,15 @@ dataset_fraction = 1
 val_interval = 1
 
 # dataset creation parameters
-patch_size = 512
+patch_size = 256
 label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
 artefact_threshold = 5
-fragment_ids = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID,
-                BLASTER_FRAG_ID, IRONHIDE_FRAG_ID]
+# todo revert
+# fragment_ids = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID,
+#                 BLASTER_FRAG_ID, IRONHIDE_FRAG_ID]
+fragment_ids = [GRIMLARGE_FRAG_ID]
 train_split = 0.8
 
 lr = 1e-4
@@ -45,9 +48,9 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-num_workers = 16
-train_batch_size = 24
-val_batch_size = 24
+num_workers = 1
+train_batch_size = 1
+val_batch_size = 1
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
@@ -66,7 +69,6 @@ train_aug = [
         A.GridDistortion(always_apply=True, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
                          border_mode=0,
                          value=(0, 0, 0), mask_value=None, normalized=False),
-        A.ImageCompression(always_apply=True, quality_lower=62, quality_upper=91, compression_type=1),
         A.RandomResizedCrop(always_apply=True, height=patch_size, width=patch_size, scale=(0.78, 1.0),
                             ratio=(0.75, 1.51),
                             interpolation=0)

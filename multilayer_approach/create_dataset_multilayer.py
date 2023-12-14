@@ -60,6 +60,7 @@ def process_fragment(config: Config, fragment_id, channels, label_dir):
 
 
 def clear_dataset(config: Config):
+    print("clearing with patch size ", config.patch_size)
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
     if os.path.isdir(root_dir):
         shutil.rmtree(root_dir)
@@ -88,16 +89,14 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     mask = np.asarray(Image.open(mask_path))
 
     start_channel = min(channels)
+    end_channel = max(channels)
 
     # todo revert
     # read_chans = range(start_channel, end_channel + 1)
     read_chans = range(start_channel, start_channel + 2)
 
-    # todo revert
-    # image_tensor = read_fragment_images_for_channels(root_dir=fragment_dir, patch_size=config.patch_size,
-    #                                                  channels=read_chans, ch_block_size=config.in_chans)
     image_tensor = read_fragment_images_for_channels(root_dir=fragment_dir, patch_size=config.patch_size,
-                                                     channels=read_chans, ch_block_size=2)
+                                                     channels=read_chans, ch_block_size=config.in_chans)
     label_arr = read_label(label_path=label_path, patch_size=config.patch_size)
     ignore_arr = read_label(label_path=ignore_path, patch_size=config.patch_size)
 
@@ -148,11 +147,10 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
     if ignore_arr.ndim != 2:
         raise ValueError(f"Invalid ignore arr shape: {ignore_arr.shape}")
 
-    # todo uncomment
-    # if image_tensor.ndim != 3 or image_tensor.shape[0] != cfg.in_chans or len(image_tensor[0]) + len(
-    #         image_tensor[1]) == 0:
-    #     raise ValueError(
-    #         f"Expected tensor with shape ({cfg.in_chans}, height, width), got {image_tensor.shape}")
+    if image_tensor.ndim != 3 or image_tensor.shape[0] != cfg.in_chans or len(image_tensor[0]) + len(
+            image_tensor[1]) == 0:
+        raise ValueError(
+            f"Expected tensor with shape ({cfg.in_chans}, height, width), got {image_tensor.shape}")
 
     img_dest_dir = os.path.join(target_dir, "images")
     label_dest_dir = os.path.join(target_dir, "labels")
@@ -191,9 +189,8 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
                 continue
 
             # Check shapes
-            # todo uncomment
-            # assert image_patch.shape == (
-            #     cfg.in_chans, config.patch_size, config.patch_size), f"Image patch wrong shape: {image_patch.shape}"
+            assert image_patch.shape == (
+                cfg.in_chans, config.patch_size, config.patch_size), f"Image patch wrong shape: {image_patch.shape}"
             assert label_patch.shape == (
                 config.patch_size, config.patch_size), f"Label patch wrong shape: {label_patch.shape}"
 
@@ -278,8 +275,6 @@ if __name__ == '__main__':
     label_dir = os.path.join(cfg.work_dir, "multilayer_approach", "base_labels", "3_binarized")
     print("Using label dir:", label_dir)
 
-    # todo read from config
-    # fragments = cfg.fragment_ids
-    fragments = [GRIMLARGE_FRAG_ID]
+    fragments = cfg.fragment_ids
     clear_dataset(config=cfg)
     extract_patches(cfg, fragments, label_dir)

@@ -17,10 +17,12 @@ from config_handler import Config
 from data_modules.cnn.cnn_datamodule import CNNDataModule
 from data_modules.segformer.segformer_datamodule import SegFormerDataModule
 from data_modules.unetplusplus.unetplusplus_datamodule import UnetPlusPlusDataModule
+from data_modules.unetrsf.unetrsf_datamodule import UNETR_SFDataModule
 from models.cnn3d_segformer import CNN3D_SegformerModule
 from models.segformer import SegformerModule
 from models.simplecnn import SimpleCNNModule
 from models.unetplusplus import UnetPlusPlusModule
+from models.unetrsf import UNETR_SFModule
 
 torch.set_float32_matmul_precision('medium')
 
@@ -81,6 +83,8 @@ def get_data_module(config: Config):
         return UnetPlusPlusDataModule(cfg=config)
     elif architecture == "simplecnn":
         return CNNDataModule(cfg=config)
+    elif architecture == "unetr-sf":
+        return UNETR_SFDataModule(cfg=config)
     else:
         print("Invalid architecture for data module:", architecture)
         sys.exit(1)
@@ -116,23 +120,23 @@ def main():
         seed_everything(config.seed)
         np.random.seed(config.seed)
 
-    wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
+    # wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
 
-    log_wandb_hyperparams(config=config, wandb_logger=wandb_logger)
+    # log_wandb_hyperparams(config=config, wandb_logger=wandb_logger)
 
     # Model name related stuff
     timestamp = datetime.now().strftime('%y%m%d-%H%M%S')
     model_name = config.model_name if hasattr(config, 'model_name') else "default_model"
-    wandb_generated_name = wandb_logger.experiment.name
-    model_run_name = f"{wandb_generated_name}-{model_name}-{timestamp}"
-    wandb_logger.experiment.name = model_run_name
-    model_run_dir = os.path.join(config.work_dir, "checkpoints", model_run_name)
+    # wandb_generated_name = wandb_logger.experiment.name
+    # model_run_name = f"{wandb_generated_name}-{model_name}-{timestamp}"
+    # wandb_logger.experiment.name = model_run_name
+    # model_run_dir = os.path.join(config.work_dir, "checkpoints", model_run_name)
 
     model = get_model(config=config)
     data_module = get_data_module(config=config)
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath=model_run_dir,
+        # dirpath=model_run_dir,
         filename="best-checkpoint-{epoch}-{val_iou:.2f}",
         save_top_k=1,
         monitor="val_iou",
@@ -145,7 +149,8 @@ def main():
 
     trainer = Trainer(
         max_epochs=config.epochs,
-        logger=wandb_logger,
+        # logger=wandb_logger,
+        logger=False,
         callbacks=[checkpoint_callback],
         accelerator="auto",
         devices=devices,
@@ -156,8 +161,8 @@ def main():
         check_val_every_n_epoch=config.val_interval
     )
 
-    os.makedirs(model_run_dir, exist_ok=True)
-    config.save_to_file(model_run_dir)
+    # os.makedirs(model_run_dir, exist_ok=True)
+    # config.save_to_file(model_run_dir)
 
     trainer.fit(model, data_module)
 

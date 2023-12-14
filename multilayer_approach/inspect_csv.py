@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('datasets/512/label_infos.csv')
+df = pd.read_csv('datasets/256/label_infos.csv')
 
 # Plotting the histogram
 plt.hist(df['ink_p'], bins=20, edgecolor='black')

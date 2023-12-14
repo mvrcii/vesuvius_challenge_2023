@@ -5,7 +5,7 @@ from albumentations.pytorch import ToTensorV2
 from transformers import SegformerForSemanticSegmentation, SegformerConfig
 import numpy as np
 
-from unetr import UNETR
+from models.architectures.unetr import UNETR
 
 
 class CFG:
@@ -17,6 +17,7 @@ class CFG:
     comp_folder_name = 'vesuvius-challenge-ink-detection'
     # comp_dataset_path = f'{comp_dir_path}datasets/{comp_folder_name}/'
     comp_dataset_path = f'{comp_dir_path}{comp_folder_name}/'
+    patch_size = 256
 
     exp_name = '3d_unet_subv2'
 
@@ -109,14 +110,14 @@ class UNETR_Segformer(nn.Module):
         self.encoder = UNETR(
             input_dim=1,
             output_dim=32,
-            img_shape=(16, self.cfg.size, self.cfg.size),
+            img_shape=(16, self.cfg.patch_size, self.cfg.patch_size)
         )
 
         self.encoder_2d = SegformerForSemanticSegmentation(unet_3d_jumbo_config)
-        self.upscaler1 = nn.ConvTranspose2d(
-            1, 1, kernel_size=(4, 4), stride=2, padding=1)
-        self.upscaler2 = nn.ConvTranspose2d(
-            1, 1, kernel_size=(4, 4), stride=2, padding=1)
+        # self.upscaler1 = nn.ConvTranspose2d(
+        #     1, 1, kernel_size=(4, 4), stride=2, padding=1)
+        # self.upscaler2 = nn.ConvTranspose2d(
+        #     1, 1, kernel_size=(4, 4), stride=2, padding=1)
 
         # self.batch_norm = nn.BatchNorm2d(16) <- 16 = number of feature maps/channels (applied channel-wise)
         # self.batch_norm_upscale1 = nn.BatchNorm2d(..)
@@ -128,10 +129,10 @@ class UNETR_Segformer(nn.Module):
         # TODO: output = self.batch_norm(output)
         output = self.dropout(output)
         output = self.encoder_2d(output).logits
-        output = self.upscaler1(output)
+        # output = self.upscaler1(output)
         # TODO: Add BatchNorm2d/3D
         # TODO: output = self.batch_norm_upscale1(output)
-        output = self.upscaler2(output)
+        # output = self.upscaler2(output)
         # TODO: Add BatchNorm2d/3D
         # TODO: output = self.batch_norm_upscale2(output)
 
@@ -175,22 +176,25 @@ def get_device(model):
     return next(model.parameters()).device
 
 
-# if __name__ == "__main__":
-#     # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 512, 512))
-#     model = UNETR_Segformer(CFG)
-#     #
-#     if torch.cuda.is_available():
-#         model.to('cuda')
-#     else:
-#         print("CUDA is not available. The model will remain on the CPU.")
-#     #
-#     # print(get_device(model))
-#     #
-#     # x = np.random.rand(1, 1, 16, 512, 512)
-#     # x = torch.from_numpy(x).float()
-#     x = torch.randn(4, 1, 16, 256, 256)
-#     # # move x to cuda
-#     x = x.to(get_device(model))
-#     print(x.shape)
-#     output = model(x)
-#     print(output.shape)
+if __name__ == "__main__":
+    # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 256, 256))
+    model = UNETR_Segformer(CFG)
+    #
+    if torch.cuda.is_available():
+        model.to('cuda')
+    else:
+        print("CUDA is not available. The model will remain on the CPU.")
+    #
+    # print(get_device(model))
+    #
+    # x = np.random.rand(1, 1, 16, 512, 512)
+    # x = torch.from_numpy(x).float()
+    x = torch.randn(1, 1, 12, 256, 256)
+    print(x.shape)
+    # pad to have depth 16 instead of 12
+    x = torch.cat([x, torch.zeros(1, 1, 4, 256, 256)], dim=2)
+    print(x.shape)
+    # # move x to cuda
+    x = x.to(get_device(model))
+    output = model(x)
+    print(output.shape)
