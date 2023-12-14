@@ -21,9 +21,7 @@ dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 architecture = 'unetr-sf'
 model_name = f"{architecture}"
 
-# from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
-# in_chans = 12
-in_chans = 2
+in_chans = 12
 seed = 3445774
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
@@ -32,15 +30,14 @@ dataset_fraction = 1
 val_interval = 1
 
 # dataset creation parameters
-patch_size = 256
+patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
 artefact_threshold = 5
-# todo revert
-# fragment_ids = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID,
-#                 BLASTER_FRAG_ID, IRONHIDE_FRAG_ID]
-fragment_ids = [GRIMLARGE_FRAG_ID]
+fragment_ids = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID,
+                BLASTER_FRAG_ID, IRONHIDE_FRAG_ID]
+validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
 lr = 1e-4
@@ -48,7 +45,7 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-num_workers = 1
+num_workers = 8
 train_batch_size = 1
 val_batch_size = 1
 
