@@ -112,6 +112,9 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     print("Label Shape:", label_arr.shape)
     print("Mask Shape:", mask.shape)
 
+    assert label_arr.shape == mask.shape == image_tensor[0].shape, (f"Shape mismatch for Fragment {frag_id}: Img={image_tensor[0].shape} "
+                                                                    f"Mask={mask.shape} Label={label_arr.shape}")
+
     patch_cnt, skipped_cnt, ignore_skipped_count = process_channel_stack(config=config,
                                                                          target_dir=target_dir,
                                                                          frag_id=frag_id,
