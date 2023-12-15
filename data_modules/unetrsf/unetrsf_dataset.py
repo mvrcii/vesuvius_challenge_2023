@@ -18,6 +18,7 @@ class UNETR_SFDataset(AbstractDataset):
         # label[0] is ink, label[1] is ignore
         self.label_shape = (2, label_size, label_size)
         self.label_shape_upscaled = (2, patch_size, patch_size)
+        self.patch_size = patch_size
 
     def __getitem__(self, idx):
         image = np.load(os.path.join(self.root_dir, self.images[idx]))
@@ -50,7 +51,7 @@ class UNETR_SFDataset(AbstractDataset):
         image = torch.tensor(image).unsqueeze(0)
 
         # pad image to have 16 layers
-        image = torch.cat([image, torch.zeros(1, 16 - image.shape[1], 256, 256)], dim=1)
+        image = torch.cat([image, torch.zeros(1, 16 - image.shape[1], self.patch_size, self.patch_size)], dim=1)
         # x = torch.cat([x, torch.zeros(1, 1, 4, 256, 256)], dim=2)
 
         return image, label
