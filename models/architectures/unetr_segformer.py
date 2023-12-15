@@ -107,13 +107,19 @@ class UNETR_Segformer(nn.Module):
         super().__init__()
         self.cfg = cfg
         self.dropout = nn.Dropout2d(dropout)
+
         self.encoder = UNETR(
             input_dim=1,
-            output_dim=32,
+            output_dim=self.cfg.unetr_out_channels,
             img_shape=(16, self.cfg.patch_size, self.cfg.patch_size)
         )
 
-        self.encoder_2d = SegformerForSemanticSegmentation(unet_3d_jumbo_config)
+        self.encoder_2d = SegformerForSemanticSegmentation.from_pretrained(
+            pretrained_model_name_or_path=self.cfg.from_pretrained,
+            num_channels=self.cfg.unetr_out_channels,
+            ignore_mismatched_sizes=True,
+            num_labels=1,
+        )
         # self.upscaler1 = nn.ConvTranspose2d(
         #     1, 1, kernel_size=(4, 4), stride=2, padding=1)
         # self.upscaler2 = nn.ConvTranspose2d(
@@ -142,34 +148,6 @@ class UNETR_Segformer(nn.Module):
         return output
 
 
-unet_3d_jumbo_config = SegformerConfig(
-    **{
-        "architectures": ["SegformerForImageClassification"],
-        "attention_probs_dropout_prob": 0.0,
-        "classifier_dropout_prob": 0.1,
-        "decoder_hidden_size": 768,
-        "depths": [3, 6, 40, 3],
-        "downsampling_rates": [1, 4, 8, 16],
-        "drop_path_rate": 0.1,
-        "hidden_act": "gelu",
-        "hidden_dropout_prob": 0.0,
-        "hidden_sizes": [64, 128, 320, 512],
-        "image_size": 224,
-        "initializer_range": 0.02,
-        "layer_norm_eps": 1e-06,
-        "mlp_ratios": [4, 4, 4, 4],
-        "model_type": "segformer",
-        "num_attention_heads": [1, 2, 5, 8],
-        "num_channels": 32,
-        "num_encoder_blocks": 4,
-        "patch_sizes": [7, 3, 3, 3],
-        "sr_ratios": [8, 4, 2, 1],
-        "strides": [4, 2, 2, 2],
-        "torch_dtype": "float32",
-        "transformers_version": "4.12.0.dev0",
-        "num_labels": 1,
-    }
-)
 
 
 def get_device(model):
