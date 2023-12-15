@@ -26,7 +26,7 @@ model_name = f"{architecture}-{from_pretrained}"
 in_chans = 12
 seed = 3445774
 epochs = -1
-# losses = [("bce", 1.0), ("dice", 1.0)]
+losses = []
 dataset_fraction = 1
 unetr_out_channels = 32
 
