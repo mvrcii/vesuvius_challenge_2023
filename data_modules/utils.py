@@ -63,17 +63,19 @@ def generate_dataset(cfg: Config):
     # BALANCING IS DONE ON CREATION
     # balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, balanced_dataset)
 
-    # Step 1: Filter out rows where ink_p > 1
-    df_ink_p_greater_than_1 = df[df['ink_p'] > 0]
+    # Step 1: Filter out rows where ink_p > 0
+    df_ink_p_greater_than_15 = df[df['ink_p'] > 15]
+    # df_ink_p_greater_than_1 = df[df['ink_p'] > 0]
 
-    # Step 2: Count the number of rows
-    count = df_ink_p_greater_than_1.shape[0]
-
-    # Step 3: Filter out rows where ink_p <= 0 and limit the number of rows
-    df_ink_p_zero_or_less = df[df['ink_p'] == 0].head(count)
-
-    # Step 4: Concatenate the two DataFrames
-    df = pd.concat([df_ink_p_greater_than_1, df_ink_p_zero_or_less])
+    # # Step 2: Count the number of rows
+    # count = df_ink_p_greater_than_1.shape[0]
+    #
+    # # Step 3: Filter out rows where ink_p <= 0 and limit the number of rows
+    # df_ink_p_zero_or_less = df[df['ink_p'] == 0].head(count)
+    #
+    # # Step 4: Concatenate the two DataFrames
+    # df = pd.concat([df_ink_p_greater_than_1, df_ink_p_zero_or_less])
+    df = df_ink_p_greater_than_15
 
     count_zero = (df['ink_p'] == 0).sum()
     count_greater_than_zero = (df['ink_p'] > 0).sum()
