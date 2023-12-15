@@ -18,14 +18,18 @@ data_root_dir = "data"
 dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # training parameters
+model_type = "b2"
+from_pretrained = f"nvidia/mit-{model_type}"
 architecture = 'unetr-sf'
-model_name = f"{architecture}"
+model_name = f"{architecture}-{from_pretrained}"
+segformer_type = 'b5'
 
 in_chans = 12
 seed = 3445774
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
+unetr_out_channels = 32
 
 val_interval = 1
 
