@@ -91,9 +91,7 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     start_channel = min(channels)
     end_channel = max(channels)
 
-    # todo revert
-    # read_chans = range(start_channel, end_channel + 1)
-    read_chans = range(start_channel, start_channel + 2)
+    read_chans = range(start_channel, end_channel + 1)
 
     image_tensor = read_fragment_images_for_channels(root_dir=fragment_dir, patch_size=config.patch_size,
                                                      channels=read_chans, ch_block_size=config.in_chans)
