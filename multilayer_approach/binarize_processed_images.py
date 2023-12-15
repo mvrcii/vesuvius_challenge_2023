@@ -15,6 +15,9 @@ for frag_id in tqdm(os.listdir(source_path)):
     for img_name in os.listdir(frag_dir_source):
         img_src_path = os.path.join(frag_dir_source, img_name)
         img_dest_path = os.path.join(destination_path, frag_id, img_name)
+        if os.path.isfile(img_dest_path):
+            print("SKIP: Binarized label exists:", img_dest_path)
+            continue
 
         img = cv2.imread(img_src_path, 0)
         img_arr = np.asarray(img)
@@ -27,7 +30,7 @@ for frag_id in tqdm(os.listdir(source_path)):
         assert np.all(np.unique(binary_img) == [0, 255])
 
         cv2.imwrite(img_dest_path, binary_img)
-        print("saved to ", img_dest_path)
+        print("Saved binarized label for", frag_id)
 
 
 
