@@ -48,7 +48,7 @@ def generate_dataset(cfg: Config):
     csv_path = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), 'label_infos.csv')
 
     try:
-        balanced_dataset = pd.read_csv(csv_path)
+        df = pd.read_csv(csv_path)
     except Exception as e:
         print(e)
         sys.exit(1)
@@ -56,19 +56,38 @@ def generate_dataset(cfg: Config):
     if cfg.seed == -1:
         cfg.seed = None  # Set random seed if -1 is given
 
+    count_zero = (df['ink_p'] == 0).sum()
+    count_greater_than_zero = (df['ink_p'] > 0).sum()
+    print(f"Before balancing: {count_zero} samples with ink_p = 0 and {count_greater_than_zero} samples with ink_p > 0")
+
     # BALANCING IS DONE ON CREATION
     # balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, balanced_dataset)
 
+    # Step 1: Filter out rows where ink_p > 1
+    df_ink_p_greater_than_1 = df[df['ink_p'] > 0]
+
+    # Step 2: Count the number of rows
+    count = df_ink_p_greater_than_1.shape[0]
+
+    # Step 3: Filter out rows where ink_p <= 0 and limit the number of rows
+    df_ink_p_zero_or_less = df[df['ink_p'] == 0].head(count)
+
+    # Step 4: Concatenate the two DataFrames
+    df = pd.concat([df_ink_p_greater_than_1, df_ink_p_zero_or_less])
+
+    count_zero = (df['ink_p'] == 0).sum()
+    count_greater_than_zero = (df['ink_p'] > 0).sum()
+    print(f"After balancing: {count_zero} samples with ink_p = 0 and {count_greater_than_zero} samples with ink_p > 0")
     # # Print statistics
     # print(f"Total ink samples: {num_ink_samples}")
     # print(f"Total non-ink samples with no artefact: {num_no_artefact_samples}")
     # print(f"Total non-ink samples with artefact > {cfg.artefact_threshold}: {num_with_artefact_samples}")
     # print(f"Total samples: {num_ink_samples + num_no_artefact_samples + num_with_artefact_samples}")
 
-    balanced_dataset['file_path'] = balanced_dataset.apply(
+    df['file_path'] = df.apply(
         lambda row: os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename']), axis=1)
 
-    train_df, valid_df = train_test_split(balanced_dataset, train_size=cfg.train_split, random_state=cfg.seed)
+    train_df, valid_df = train_test_split(df, train_size=cfg.train_split, random_state=cfg.seed)
 
     if cfg.dataset_fraction != 1.0 or cfg.dataset_fraction != 1:
         train_df, _ = train_test_split(train_df,
