@@ -16,7 +16,6 @@ for frag_id in tqdm(os.listdir(source_path)):
         img_src_path = os.path.join(frag_dir_source, img_name)
         img_dest_path = os.path.join(destination_path, frag_id, img_name)
         if os.path.isfile(img_dest_path):
-            print("SKIP: Binarized label exists:", img_dest_path)
             continue
 
         img = cv2.imread(img_src_path, 0)
