@@ -55,8 +55,8 @@ def load_test_image(cfg):
 
     label = label[0]  # 128, 128 now
 
-    label = torch.tensor(label, dtype=float16, device='cuda')
-    image = torch.Tensor(image, dtype=float16, device='cuda').unsqueeze(0).unsqueeze(0)
+    label = torch.from_numpy(label).to(dtype=float16, device='cuda')
+    image = torch.from_numpy(image).to(dtype=float16, device='cuda').unsqueeze(0).unsqueeze(0)
 
     return image, label
 
