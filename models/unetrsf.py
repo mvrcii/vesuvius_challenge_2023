@@ -49,8 +49,8 @@ def calculate_masked_metrics(outputs, labels, mask):
 
 def load_test_image(cfg):
     path = os.path.join("multilayer_approach/datasets/sanity/JETFIRE")
-    image = np.load(os.path.join(path, 'images', 'f20231005123336_ch30_17134_2873_17390_3129.npy'))
-    label = np.load(os.path.join(path, 'labels', 'f20231005123336_ch30_17134_2873_17390_3129.npy'))
+    image = np.load(os.path.join(path, 'images', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
+    label = np.load(os.path.join(path, 'labels', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
     label = np.unpackbits(label).reshape(cfg.label_size)  # 2, 128, 128
 
     label = label[0]  # 128, 128 now
