@@ -57,8 +57,15 @@ def load_test_image(cfg):
 
     label = torch.from_numpy(label).to(dtype=float16, device='cuda')
     image = torch.from_numpy(image).to(dtype=float16, device='cuda')
-    image = torch.cat([image, torch.zeros(1, 16 - image.shape[1], cfg.patch_size, cfg.patch_size).to(dtype=float16, device='cuda')], dim=1)
+
     image = image.unsqueeze(0)
+    print("Image Shape", image.shape)
+
+    pad_array = torch.zeros(1, 16 - image.shape[1], cfg.patch_size, cfg.patch_size).to(dtype=float16, device='cuda')
+    print("Pad Shape", pad_array.shape)
+
+    image = torch.cat([image, pad_array], dim=1)
+
     return image, label
 
 
