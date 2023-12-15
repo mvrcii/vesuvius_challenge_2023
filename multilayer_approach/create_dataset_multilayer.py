@@ -161,13 +161,19 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             y2 = y1 + config.patch_size
             x2 = x1 + config.patch_size
 
+            mask_patch = mask[y1:y2, x1:x2]
+
             # Check if patch is fully in mask => discard
-            if mask[y1:y2, x1:x2].all() != 1:
+            if mask_patch.all() != 1:
                 mask_skipped += 1
+                continue
+
+            if mask_patch.shape != (config.patch_size, config.patch_size):
                 continue
 
             # Get label patch, calculate ink percentage
             label_patch = label_arr[y1:y2, x1:x2]
+
             label_pixel_count = np.prod(label_patch.shape)
             assert label_pixel_count != 0
             ink_percentage = int((label_patch.sum() / label_pixel_count) * 100)
