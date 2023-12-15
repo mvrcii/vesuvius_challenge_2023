@@ -38,8 +38,8 @@ patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
-fragment_ids = [THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, JAZZILLA_FRAG_ID,
-                BLASTER_FRAG_ID, IRONHIDE_FRAG_ID]
+fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
+                JAZZILLA_FRAG_ID]
 validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
