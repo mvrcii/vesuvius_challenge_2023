@@ -21,7 +21,6 @@ def dice_loss_with_mask_batch(outputs, labels, mask):
 
     # Calculate intersection and union with masking
     intersection = (outputs_masked * labels_masked).sum(axis=(1, 2))
-    print(intersection)
     union = (outputs_masked + labels_masked).sum(axis=(1, 2))
 
     # Compute dice loss per batch and average
