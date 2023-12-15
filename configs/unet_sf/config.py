@@ -26,7 +26,7 @@ model_name = f"{architecture}-{from_pretrained}"
 in_chans = 12
 seed = 3445774
 epochs = -1
-losses = [("bce", 1.0), ("dice", 1.0)]
+# losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
 unetr_out_channels = 32
 
@@ -37,18 +37,18 @@ patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
-# fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
-#                 JAZZILLA_FRAG_ID]
-fragment_ids = [JETFIRE_FRAG_ID]
+fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
+                JAZZILLA_FRAG_ID]
+# fragment_ids = [JETFIRE_FRAG_ID]
 validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
-lr = 1e-5
+lr = 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-num_workers = 16
+num_workers = 1
 train_batch_size = 1
 val_batch_size = train_batch_size
 
@@ -72,7 +72,7 @@ train_aug = [
         A.RandomResizedCrop(always_apply=True, height=patch_size, width=patch_size, scale=(0.78, 1.0),
                             ratio=(0.75, 1.51),
                             interpolation=0)
-    ], p=0.5),
+    ], p=0.1),
     # A.ChannelDropout(p=0.05, channel_drop_range=(1, 1), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
