@@ -36,13 +36,11 @@ def calculate_masked_metrics_batchwise(outputs, labels, mask):
     # Flatten tensors except for the batch dimension
     outputs_flat = (outputs * mask).view(batch_size, -1)
     labels_flat = (labels * mask).view(batch_size, -1)
-    print("Positives: ", outputs_flat.sum(dim=1))
 
     # Calculate True Positives, False Positives, and False Negatives for each batch
     true_positives = (outputs_flat * labels_flat).sum(dim=1)
     false_positives = (outputs_flat * (1 - labels_flat)).sum(dim=1)
     false_negatives = ((1 - outputs_flat) * labels_flat).sum(dim=1)
-    print("True Positives:", true_positives, "False Positives:", false_positives, "False Negatives:", false_negatives)
 
     # Calculate metrics for each batch
     iou = true_positives / (
