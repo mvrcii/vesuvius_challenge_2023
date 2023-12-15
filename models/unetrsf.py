@@ -11,38 +11,47 @@ from models.abstract_model import AbstractVesuvLightningModule
 from models.architectures.unetr_segformer import UNETR_Segformer
 
 
-def binary_cross_entropy_with_mask(outputs, labels, mask):
-    bce_loss = F.binary_cross_entropy_with_logits(outputs, labels, reduction='none')
-    masked_bce_loss = bce_loss * mask
-    return masked_bce_loss.mean()
-
-
-def dice_loss_with_mask(outputs, labels, mask):
+def dice_loss_with_mask_batch(outputs, labels, mask):
+    # all 3 input variables should be shape (batch_size, label_size, label_size)
+    # outputs should be sigmoided (0-1)
+    # labels should be binary
+    # mask should be binary
     smooth = 1.0
     # Apply mask
     outputs_masked = outputs * mask
     labels_masked = labels * mask
-    intersection = (outputs_masked * labels_masked).sum()
-    union = outputs_masked.sum() + labels_masked.sum()
+
+    # Sum over spatial dimensions, keep batch dimension
+    intersection = (outputs_masked * labels_masked).sum(dim=[1, 2])
+    union = outputs_masked.sum(dim=[1, 2]) + labels_masked.sum(dim=[1, 2]) - intersection
+
+    # Compute dice loss per batch and average
     dice_loss = 1 - (2. * intersection + smooth) / (union + smooth)
-    return dice_loss
+    return dice_loss.mean()
 
 
-def calculate_masked_metrics(outputs, labels, mask):
-    # Flatten tensors for simplicity
-    outputs_flat = (outputs * mask).view(-1)
-    labels_flat = (labels * mask).view(-1)
+def calculate_masked_metrics_batchwise(outputs, labels, mask):
+    # Ensure batch dimension is maintained during operations
+    outputs = (outputs > 0.5).float()
+    batch_size = outputs.size(0)
 
-    # Calculate True Positives, False Positives, and False Negatives
-    true_positives = (outputs_flat * labels_flat).sum()
-    false_positives = (outputs_flat * (1 - labels_flat)).sum()
-    false_negatives = ((1 - outputs_flat) * labels_flat).sum()
+    # Flatten tensors except for the batch dimension
+    outputs_flat = (outputs * mask).view(batch_size, -1)
+    labels_flat = (labels * mask).view(batch_size, -1)
+    print("Positives: ", outputs_flat.sum(dim=1))
 
-    # Calculate metrics
-    iou = true_positives / (true_positives + false_positives + false_negatives)
-    precision = true_positives / (true_positives + false_positives)
-    recall = true_positives / (true_positives + false_negatives)
-    f1 = 2 * (precision * recall) / (precision + recall)
+    # Calculate True Positives, False Positives, and False Negatives for each batch
+    true_positives = (outputs_flat * labels_flat).sum(dim=1)
+    false_positives = (outputs_flat * (1 - labels_flat)).sum(dim=1)
+    false_negatives = ((1 - outputs_flat) * labels_flat).sum(dim=1)
+    print("True Positives:", true_positives, "False Positives:", false_positives, "False Negatives:", false_negatives)
+
+    # Calculate metrics for each batch
+    iou = true_positives / (
+            true_positives + false_positives + false_negatives + 1e-6)  # Added epsilon for numerical stability
+    precision = true_positives / (true_positives + false_positives + 1e-6)
+    recall = true_positives / (true_positives + false_negatives + 1e-6)
+    f1 = 2 * (precision * recall) / (precision + recall + 1e-6)  # Added epsilon for F1 calculation
 
     return iou, precision, recall, f1
 
@@ -81,17 +90,14 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
     def training_step(self, batch, batch_idx):
         data, label = batch
-        logits = self.forward(data)
-        probabilities = torch.sigmoid(logits)
+        probabilities = torch.sigmoid(self.forward(data))
 
         target = label[:, 0]
         keep_mask = label[:, 1]
 
-        bce_loss = binary_cross_entropy_with_mask(logits, target, keep_mask)
-        dice_loss = dice_loss_with_mask(probabilities, target, keep_mask)
-        total_loss = bce_loss + dice_loss
+        dice_loss = dice_loss_with_mask_batch(probabilities, target, keep_mask)
 
-        self.update_unetr_training_metrics(total_loss)
+        self.update_unetr_training_metrics(dice_loss)
 
         # if self.global_step % 20 == 0:
         #     with torch.no_grad():
@@ -109,24 +115,20 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         #
         #         self.log({"test_image_pred": test_image})
 
-        return total_loss
+        return dice_loss
 
     def validation_step(self, batch, batch_idx):
-        # data shape is (batch_size, 1, 16, patch_size, patch_size) (1 for channel)
         data, label = batch
-        logits = self.forward(data)
-        probabilities = torch.sigmoid(logits)
+        probabilities = torch.sigmoid(self.forward(data))
 
         target = label[:, 0]
         keep_mask = label[:, 1]
 
-        bce_loss = binary_cross_entropy_with_mask(logits, target, keep_mask)
-        dice_loss = dice_loss_with_mask(probabilities, target, keep_mask)
-        total_loss = bce_loss + dice_loss
+        dice_loss = dice_loss_with_mask_batch(probabilities, target, keep_mask)
 
-        iou, precision, recall, f1 = calculate_masked_metrics(probabilities, target, keep_mask)
+        iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probabilities, target, keep_mask)
 
-        self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
+        self.update_unetr_validation_metrics(dice_loss, iou, precision, recall, f1)
 
     def update_unetr_validation_metrics(self, loss, iou, precision, recall, f1):
         self.log(f'val_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
