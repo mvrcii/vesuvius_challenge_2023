@@ -16,17 +16,16 @@ def dice_loss_with_mask_batch(outputs, labels, mask):
     # outputs should be sigmoided (0-1)
     # labels should be binary
     # mask should be binary
-    smooth = 1.0
-    # Apply mask
     outputs_masked = outputs * mask
     labels_masked = labels * mask
 
-    # Sum over spatial dimensions, keep batch dimension
-    intersection = (outputs_masked * labels_masked).sum(dim=[1, 2])
-    union = outputs_masked.sum(dim=[1, 2]) + labels_masked.sum(dim=[1, 2]) - intersection
+    # Calculate intersection and union with masking
+    intersection = (outputs_masked * labels_masked).sum(axis=(1, 2))
+    print(intersection)
+    union = (outputs_masked + labels_masked).sum(axis=(1, 2))
 
     # Compute dice loss per batch and average
-    dice_loss = 1 - (2. * intersection + smooth) / (union + smooth)
+    dice_loss = 1 - (2. * intersection) / union
     return dice_loss.mean()
 
 
