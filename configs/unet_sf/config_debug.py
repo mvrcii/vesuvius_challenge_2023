@@ -37,20 +37,19 @@ patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
-# fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
-#                 JAZZILLA_FRAG_ID]
-fragment_ids = [JETFIRE_FRAG_ID]
+fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
+                JAZZILLA_FRAG_ID]
 validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
-lr = 1e-5
+lr = 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-num_workers = 16
-train_batch_size = 2
-val_batch_size = train_batch_size
+num_workers = 1
+train_batch_size = 1
+val_batch_size = 1
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [

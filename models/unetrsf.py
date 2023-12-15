@@ -1,5 +1,11 @@
+import os
+
+import numpy as np
 import torch
 import torch.nn.functional as F
+import wandb
+from torch import float16
+from torchvision.utils import make_grid
 
 from models.abstract_model import AbstractVesuvLightningModule
 from models.architectures.unetr_segformer import UNETR_Segformer
@@ -41,10 +47,25 @@ def calculate_masked_metrics(outputs, labels, mask):
     return iou, precision, recall, f1
 
 
+def load_test_image(cfg):
+    path = os.path.join("multilayer_approach/datasets/sanity/JETFIRE")
+    image = np.load(os.path.join(path, 'images', 'f20231005123336_ch30_17134_2873_17390_3129.npy'))
+    label = np.load(os.path.join(path, 'labels', 'f20231005123336_ch30_17134_2873_17390_3129.npy'))
+    label = np.unpackbits(label).reshape(cfg.label_size)  # 2, 128, 128
+
+    label = label[0]  # 128, 128 now
+
+    label = torch.tensor(label, dtype=float16).to('cuda')
+    image = torch.Tensor(image, dtype=float16).unsqueeze(0).unsqueeze(0).cuda('cuda')
+
+    return image, label
+
+
 class UNETR_SFModule(AbstractVesuvLightningModule):
     def __init__(self, cfg):
         super().__init__(cfg=cfg)
         self.model = UNETR_Segformer(cfg=cfg)
+        self.test_image, self.test_label = load_test_image(cfg=cfg)
 
     def forward(self, x):
         output = self.model(x)
@@ -63,6 +84,19 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         total_loss = bce_loss + dice_loss
 
         self.update_unetr_training_metrics(total_loss)
+
+        if self.global_step % 20 == 0:
+            test_logits = self.forward(self.test_image)
+            test_probs = torch.sigmoid(test_logits)
+
+            combined = torch.cat([test_probs, self.test_label], dim=2)
+
+            # Convert your output tensor to an image or grid of images
+            grid = make_grid(combined).detach().cpu()
+
+            test_image = wandb.Image(grid, caption="Step {}".format(self.global_step))
+
+            self.log({"test_image_pred": test_image})
 
         return total_loss
 
