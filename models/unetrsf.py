@@ -73,7 +73,6 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
     def __init__(self, cfg):
         super().__init__(cfg=cfg)
         self.model = UNETR_Segformer(cfg=cfg)
-        self.test_image, self.test_label = load_test_image(cfg=cfg)
 
     def forward(self, x):
         output = self.model(x)
@@ -94,17 +93,20 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         self.update_unetr_training_metrics(total_loss)
 
         if self.global_step % 20 == 0:
-            test_logits = self.forward(self.test_image)
-            test_probs = torch.sigmoid(test_logits)
+            with torch.no_grad():
+                test_img_tensor, test_label_tensor = load_test_image(cfg=self.cfg)
 
-            combined = torch.cat([test_probs, self.test_label], dim=2)
+                test_logits = self.forward(test_img_tensor)
+                test_probs = torch.sigmoid(test_logits)
 
-            # Convert your output tensor to an image or grid of images
-            grid = make_grid(combined).detach().cpu()
+                combined = torch.cat([test_probs, test_label_tensor], dim=2)
 
-            test_image = wandb.Image(grid, caption="Step {}".format(self.global_step))
+                # Convert your output tensor to an image or grid of images
+                grid = make_grid(combined).detach().cpu()
 
-            self.log({"test_image_pred": test_image})
+                test_image = wandb.Image(grid, caption="Step {}".format(self.global_step))
+
+                self.log({"test_image_pred": test_image})
 
         return total_loss
 
