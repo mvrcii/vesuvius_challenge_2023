@@ -108,6 +108,10 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     assert label_arr.sum() > 0, "Label array is empty"
     assert ignore_arr.sum() > 0, "Ignore array is empty"
 
+    print("Image Shape:", image_tensor.shape)
+    print("Label Shape:", label_arr.shape)
+    print("Mask Shape:", mask.shape)
+
     patch_cnt, skipped_cnt, ignore_skipped_count = process_channel_stack(config=config,
                                                                          target_dir=target_dir,
                                                                          frag_id=frag_id,
