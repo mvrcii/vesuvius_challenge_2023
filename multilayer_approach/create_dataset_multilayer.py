@@ -169,6 +169,7 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
                 continue
 
             if mask_patch.shape != (config.patch_size, config.patch_size):
+                mask_skipped += 1
                 continue
 
             # Get label patch, calculate ink percentage
