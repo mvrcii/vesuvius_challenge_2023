@@ -86,7 +86,9 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     mask_path = os.path.join(fragment_dir, f"mask.png")
     if not os.path.isfile(mask_path):
         raise ValueError(f"Mask file does not exist for fragment: {frag_id}")
-    mask = np.asarray(Image.open(mask_path))
+    # mask = np.asarray(Image.open(mask_path))
+
+    mask = read_label(label_path=mask_path, patch_size=config.patch_size)
 
     start_channel = min(channels)
     end_channel = max(channels)
