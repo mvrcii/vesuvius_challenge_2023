@@ -93,4 +93,5 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
     def update_unetr_training_metrics(self, loss):
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
         self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log(f'train_loss_step', loss, on_step=True, on_epoch=False, prog_bar=True, sync_dist=True)
         self.log(f'train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
