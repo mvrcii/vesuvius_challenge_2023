@@ -179,12 +179,13 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             image_patch = image_tensor[:, y1:y2, x1:x2]
             ignore_patch = ignore_arr[y1:y2, x1:x2]
 
-            # Set ignore pixels to 0 in image and label
-            image_patch[:, ignore_patch == 1] = 0
-            label_patch[ignore_patch == 1] = 0
+            # invert ignore_patch so "ignored" areas are 0 and rest is 1
+            keep_patch = np.logical_not(ignore_patch)
+            keep_percent = int((keep_patch.sum() / np.prod(keep_patch.shape)) * 100)
+            assert 0 <= keep_percent <= 100
 
-            # if image patch is fully black, discard
-            if image_patch.sum() == 0:
+            # if ignore patch is fully black, discard
+            if keep_percent < 5:
                 ignore_skipped += 1
                 continue
 
@@ -200,8 +201,14 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             # save image
             np.save(os.path.join(img_dest_dir, file_name), image_patch)
 
-            # save label
+            # scale label and ignore patch down to label size
             label_patch = resize(label_patch, label_shape, order=0, preserve_range=True, anti_aliasing=False)
+            keep_patch = resize(keep_patch, label_shape, order=0, preserve_range=True, anti_aliasing=False)
+
+            # stack label and keep patch
+            label_patch = np.stack([label_patch, keep_patch], axis=0)
+
+            # save label
             label_patch = np.packbits(label_patch.flatten())
             np.save(os.path.join(label_dest_dir, file_name), label_patch)
 
