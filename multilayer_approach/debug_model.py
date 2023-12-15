@@ -109,10 +109,10 @@ if __name__ == "__main__":
         total_loss = bce_loss + dice_loss
 
         optimizer.zero_grad()
-        total_loss.backward()
+        dice_loss.backward()
         optimizer.step()
 
-        print("Loss:", total_loss)
+        print("Loss:", dice_loss)
 
         prediction = probabilities.squeeze().detach().cpu().numpy()
         plt.imshow(prediction, cmap='gray')
