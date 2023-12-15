@@ -34,7 +34,6 @@ patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
-artefact_threshold = 5
 fragment_ids = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID,
                 BLASTER_FRAG_ID, IRONHIDE_FRAG_ID]
 validation_fragments = [HOT_ROD_FRAG_ID]
