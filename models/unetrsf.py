@@ -72,6 +72,7 @@ def load_test_image(cfg):
 class UNETR_SFModule(AbstractVesuvLightningModule):
     def __init__(self, cfg):
         super().__init__(cfg=cfg)
+        self.cfg = cfg
         self.model = UNETR_Segformer(cfg=cfg)
 
     def forward(self, x):
