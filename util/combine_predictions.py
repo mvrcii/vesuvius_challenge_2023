@@ -205,6 +205,7 @@ class Visualization:
         frag_handler = FragmentHandler()
         self.rotate_num = frag_handler.get_rotation(frag_id=frag_id)
         self.flip_num = frag_handler.get_flip(frag_id=frag_id)
+        self.center_layers = frag_handler.get_center_layers(frag_id=frag_id)
 
         # start layer idx = start index for a label/numpy file
         # start and end layer idx are both inclusive!
@@ -458,13 +459,19 @@ class Visualization:
         # Layer mode
         if mode_key == 2:
             if self.save_all_layers:
-                for idx, layer in enumerate(self.model_layer_idcs):
-                    file_name = f"{model_names_str}_mode={mode}_layer={layer}{inverted_str}.png"
-                    file_path = os.path.join(target_dir, file_name)
-                    self.curr_layer_val = int(idx)
-                    image = self.process_image(save_img=True)
-                    print(f"Saving {file_name}")
-                    image.save(file_path)
+                start, end = self.center_layers
+                center_layers = set(range(start, end + 1))
+                intersecting_layers = center_layers.intersection(self.model_layer_idcs)
+
+                for relative_idx, layer_idx in enumerate(list(intersecting_layers)):
+                    # Check if the current layer is within the specified range and is part of model_layer_indices
+                    if start <= layer_idx <= end and layer_idx in self.model_layer_idcs:
+                        file_name = f"{model_names_str}_mode={mode}_layer={layer_idx}{inverted_str}.png"
+                        file_path = os.path.join(target_dir, file_name)
+                        self.curr_layer_val = int(relative_idx)
+                        image = self.process_image(save_img=True)
+                        print(f"Saving {file_name}")
+                        image.save(file_path)
             else:
                 layer = int(self.get_threshold())
                 self.curr_layer_val = layer
