@@ -8,8 +8,10 @@ def validate_fragments(config, fragments, label_dir):
     frag_id_2_channels = {}
 
     for frag_id in fragments:
+        print(frag_id)
         val_errors, frag_channels = validate_fragment_files(frag_id=frag_id, cfg=config,
                                                             label_dir=label_dir)
+        print(val_errors)
         if len(val_errors) > 0:
             print("Excluded fragment", frag_id)
             print("\n".join(val_errors))
@@ -51,7 +53,7 @@ def validate_fragment_files(frag_id, cfg, label_dir):
     # Check if mask exists
     if not os.path.isfile(mask_path):
         return errors.append(f"\033[91mReason:\t\tMask file not found\033[0m")
-    print("test")
+
     # Stop if any errors occurred
     if len(errors) > 0:
         print("errors occured")
