@@ -1,4 +1,5 @@
 import os
+import sys
 
 import numpy as np
 import torch
@@ -58,6 +59,12 @@ def load_test_image(cfg):
     label = np.load(os.path.join(path, 'labels', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
     label = np.unpackbits(label).reshape((2, cfg.label_size, cfg.label_size))  # 2, 128, 128
 
+    # Measure RAM usage of numpy arrays
+    image_size_bytes = sys.getsizeof(image)
+    label_size_bytes = sys.getsizeof(label)
+    print(f"Image size in RAM: {image_size_bytes} bytes")
+    print(f"Label size in RAM: {label_size_bytes} bytes")
+
     label = label[0]  # 128, 128 now
 
     label = torch.from_numpy(label).to(dtype=float16, device='cuda')
@@ -71,6 +78,10 @@ def load_test_image(cfg):
 
     image = torch.cat([image, pad_array], dim=1)
 
+    # Measure VRAM usage
+    vram_usage_bytes = torch.cuda.memory_allocated()
+    print(f"VRAM used for image and label: {vram_usage_bytes} bytes")
+
     return image, label
 
 
@@ -79,6 +90,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         super().__init__(cfg=cfg)
         self.cfg = cfg
         self.model = UNETR_Segformer(cfg=cfg)
+        self.test_img_tensor, self.test_label_tensor = load_test_image(cfg=self.cfg)
 
     def forward(self, x):
         output = self.model(x)
@@ -86,6 +98,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
     def training_step(self, batch, batch_idx):
         data, label = batch
+
         probabilities = torch.sigmoid(self.forward(data))
 
         target = label[:, 0]
@@ -95,21 +108,22 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_training_metrics(dice_loss)
 
-        # if self.global_step % 20 == 0:
-        #     with torch.no_grad():
-        #         test_img_tensor, test_label_tensor = load_test_image(cfg=self.cfg)
-        #
-        #         test_logits = self.forward(test_img_tensor)
-        #         test_probs = torch.sigmoid(test_logits)
-        #
-        #         combined = torch.cat([test_probs, test_label_tensor], dim=2)
-        #
-        #         # Convert your output tensor to an image or grid of images
-        #         grid = make_grid(combined).detach().cpu()
-        #
-        #         test_image = wandb.Image(grid, caption="Step {}".format(self.global_step))
-        #
-        #         self.log({"test_image_pred": test_image})
+        if self.global_step % 50 == 0:
+
+            with torch.no_grad():
+                test_logits = self.forward(self.test_img_tensor)
+                test_probs = torch.sigmoid(test_logits)
+
+                combined = torch.cat([test_probs, self.test_label_tensor], dim=2)
+
+                # Convert your output tensor to an image or grid of images
+                grid = make_grid(combined).detach().cpu()
+
+                test_image = wandb.Image(grid, caption="Step {}".format(self.global_step))
+
+                self.log({"test_image_pred": test_image})
+
+        torch.cuda.empty_cache()
 
         return dice_loss
 
