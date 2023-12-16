@@ -1,46 +1,58 @@
+import os
+import sys
+
 import albumentations as A
-weight_decay = 0.001
-lr = 0.0001
-eta_min = 1e-05
-label_smoothing = 0.0
-pos_weight = 1.0
-optimizer = 'adamw'
-JETFIRE_FRAG_ID = '20231005123336'
-GRIMLARGE_FRAG_ID = '20231012184422'
-THUNDERCRACKER_FRAG_ID = '20231012173610'
-JAZZILLA_FRAG_ID = '20231016151001'
-HOT_ROD_FRAG_ID = '20230929220926'
-BLASTER_FRAG_ID = '20230702185753'
-IRONHIDE_FRAG_ID = '20230905134255'
-_base_ = ['configs/schedules/adamw_cosine_lr.py']
-work_dir = ''
-base_label_dir = 'data/base_label_files'
-data_root_dir = 'data'
-dataset_target_dir = 'multilayer_approach/datasets'
-model_type = 'b3'
-segformer_from_pretrained = 'nvidia/mit-b3'
+
+from constants import JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID, \
+    BLASTER_FRAG_ID, IRONHIDE_FRAG_ID
+
+sys.path.append('../')
+
+_base_ = [
+    "configs/schedules/adamw_cosine_lr.py",
+]
+
+work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
+base_label_dir = os.path.join("data", "base_label_files")
+data_root_dir = "data"
+dataset_target_dir = os.path.join("multilayer_approach", "datasets")
+
+# training parameters
+model_type = "b3"
+segformer_from_pretrained = f"nvidia/mit-{model_type}"
+from_pretrained = "playful-glade-812-unetr-sf-b3-231216-041654"
 architecture = 'unetr-sf'
-model_name = 'unetr-sf-nvidia/mit-b3'
+model_name = f"{architecture}-{model_type}"
+
 in_chans = 12
-seed = 3445774
+seed = 1241245
 epochs = -1
 losses = []
 dataset_fraction = 1
 unetr_out_channels = 32
+
 val_interval = 1
+
+# dataset creation parameters
 patch_size = 512
-label_size = 128
-stride = 256
+label_size = patch_size // 4
+stride = patch_size // 2
 ink_ratio = 3
-fragment_ids = ['20230702185753', '20230905134255', '20231012173610', '20231005123336', '20231012184422', '20231016151001']
-validation_fragments = ['20230929220926']
+fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
+                JAZZILLA_FRAG_ID]
+validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
+
+lr = 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
+weight_decay = 0.001
+
 num_workers = 1
 train_batch_size = 1
-val_batch_size = 1
-save = True
+val_batch_size = train_batch_size
+
+# TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
     A.OneOf([
         A.HorizontalFlip(),
