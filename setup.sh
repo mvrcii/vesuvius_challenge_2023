@@ -8,6 +8,10 @@ echo "alias vsv='cd ~/kaggle1stReimp && pp'" >> ~/.bashrc
 touch conf_local.py
 echo -e 'import os\nwork_dir = os.path.join("")' > conf_local.py
 
+# Git
+git config --global credential.helper cache
+git config --global credential.helper 'cache --timeout=1209600'
+
 # Install requirements
 pip install -r requirements.txt
 sudo apt-get install libgl1-mesa-glx
