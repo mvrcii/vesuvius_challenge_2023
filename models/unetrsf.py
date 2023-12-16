@@ -116,7 +116,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
                 test_image = wandb.Image(grid, caption="Step {}".format(self.global_step))
 
-                self.log({"test_image_pred": test_image})
+                wandb.log({"test_image_pred": test_image})
 
         return dice_loss
 
