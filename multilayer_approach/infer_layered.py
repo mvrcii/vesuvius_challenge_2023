@@ -21,7 +21,6 @@ from fragment import FragmentHandler
 from meta import AlphaBetaMeta
 from models.architectures.unetr_segformer import UNETR_Segformer
 from models.simplecnn import SimpleCNNModule
-from models.unetrsf import UNETR_SFModule
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -112,7 +111,7 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     return torch.stack(reverted_outputs)
 
 
-def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
+def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
     patch_size = config.patch_size
     expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
 
@@ -185,6 +184,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     transform = A.Compose(val_image_aug, is_check_shapes=False)
     use_advanced_tta = False
 
+    batch_counter = 0
     for y in range(y_patches):
         for x in range(x_patches):
             progress_bar.update(1)
@@ -214,6 +214,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
 
             # When batch is full, process it
             if len(batches) == batch_size:
+                batch_counter += 1
                 transformed_images = [transform(image=image)['image'] for image in batches]
 
                 for idx, patch in enumerate(transformed_images):
@@ -229,6 +230,10 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
 
                 batches = []
                 batch_indices = []
+
+            if batch_counter % 20 == 0:
+                print("Saving")
+                np.save(npy_file_path, out_arr.cpu().numpy())
 
     # Process any remaining patches
     if batches:
@@ -251,7 +256,11 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     if use_advanced_tta:
         global total_advanced_tta_patches
         print(f"Advanced TTA Patches for layer start {layer_start}: {total_advanced_tta_patches}")
-    return out_arr
+
+    torch.cuda.empty_cache()
+    output = out_arr.cpu().numpy()
+    print("Saving finally")
+    np.save(npy_file_path, output)
 
 
 def find_ckpt_in_dir(path):
@@ -461,16 +470,13 @@ def main():
 
         return
 
-    sigmoid_logits = infer_full_fragment_layer(model=model,
-                                               ckpt_name=model_folder_name,
-                                               batch_size=batch_size,
-                                               fragment_id=fragment_id,
-                                               config=config,
-                                               layer_start=start_layer_idx)
-
-    torch.cuda.empty_cache()
-    output = sigmoid_logits.cpu().numpy()
-    np.save(npy_file_path, output)
+    infer_full_fragment_layer(model=model,
+                              ckpt_name=model_folder_name,
+                              batch_size=batch_size,
+                              fragment_id=fragment_id,
+                              config=config,
+                              layer_start=start_layer_idx,
+                              npy_file_path=npy_file_path)
 
 
 if __name__ == '__main__':
