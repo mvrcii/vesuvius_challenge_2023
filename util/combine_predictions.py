@@ -133,6 +133,7 @@ def parse_args():
     parser.add_argument('--transparent', action='store_true', help='Save the combined image in transparent')
     parser.add_argument('--save_all_layers', action='store_true', help='Save all layer files (in total 61)')
     parser.add_argument('--max_ensemble', action='store_true', help='Show the max ensemble between two models')
+    parser.add_argument('--submission', action='store_true', help='Formats file names in submission mode')
 
     args = parser.parse_args()
 
@@ -184,10 +185,11 @@ def main():
     frag_dir = os.path.join(config.work_dir, 'inference', 'results', f'fragment{frag_id}')
     model_dir, model_name = get_selected_model_name(frag_dir=frag_dir)
 
-    global transparent, save_all_layers, max_ensemble
+    global transparent, save_all_layers, max_ensemble, submission_mode
     transparent = args.transparent
     save_all_layers = args.save_all_layers
     max_ensemble = args.max_ensemble
+    submission_mode = args.submission
 
     target_dims = get_target_dims(work_dir=config.work_dir, frag_id=frag_id)
 
@@ -201,6 +203,7 @@ class Visualization:
 
         self.root_dir = root_dir
         self.target_dims = target_dims
+        self.frag_id = frag_id
 
         frag_handler = FragmentHandler()
         self.rotate_num = frag_handler.get_rotation(frag_id=frag_id)
@@ -233,6 +236,7 @@ class Visualization:
         self.max_ensemble = max_ensemble
         self.transparent = transparent
         self.save_all_layers = save_all_layers
+        self.submission_mode = submission_mode
 
         # Create main window
         self.root = Tk()
@@ -449,7 +453,10 @@ class Visualization:
 
         os.makedirs(target_dir, exist_ok=True)
 
-        model_names_str = self.create_ensemble_dir_simple_names(self.model_dir, file_prefix)
+        if self.submission_mode:
+            model_names_str = str(self.frag_id)
+        else:
+            model_names_str = self.create_ensemble_dir_simple_names(self.model_dir, file_prefix)
 
         mode_key = self.mode_var.get()
         mode = self.modes[mode_key].upper()
@@ -467,7 +474,7 @@ class Visualization:
                     # Check if the current layer is within the specified range and is part of model_layer_indices
                     if start <= layer_idx <= end and layer_idx in self.model_layer_idcs:
                         threshold = float(self.threshold_var.get())
-                        file_name = f"{model_names_str}_mode={mode}_layer={layer_idx}_th={threshold:.2f}{inverted_str}.png"
+                        file_name = f"{model_names_str}_mode={mode}_layer={layer_idx}_th={threshold:g}{inverted_str}.png"
                         file_path = os.path.join(target_dir, file_name)
                         self.curr_layer_val = int(layer_idx)
                         image = self.process_image(save_img=True)
@@ -477,7 +484,7 @@ class Visualization:
                 layer = int(self.get_threshold())
                 self.curr_layer_val = layer
                 threshold = float(self.threshold_var.get())
-                file_name = f"{model_names_str}_mode={mode}_layer={layer}_th={threshold:.2f}{inverted_str}.png"
+                file_name = f"{model_names_str}_mode={mode}_layer={layer}_th={threshold:g}{inverted_str}.png"
                 file_path = os.path.join(target_dir, file_name)
                 image = self.process_image(save_img=True)
                 image.save(file_path)
@@ -492,7 +499,7 @@ class Visualization:
             file_path = os.path.join(target_dir, f"{model_names_str}_"
                                                  f"mode={mode}_"
                                                  f"layer={layer_str}_"
-                                                 f"th={float(threshold):.2f}"
+                                                 f"th={float(threshold):g}"
                                                  f"{inverted_str}"
                                                  f"{transparent_str}.png")
 
@@ -693,5 +700,6 @@ if __name__ == "__main__":
     transparent = True
     save_all_layers = False
     max_ensemble = False
+    submission_mode = False
 
     main()
