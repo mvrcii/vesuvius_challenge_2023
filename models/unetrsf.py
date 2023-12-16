@@ -52,36 +52,36 @@ def calculate_masked_metrics_batchwise(outputs, labels, mask):
     return iou, precision, recall, f1
 
 
-def load_test_image(cfg):
-    path = os.path.join("multilayer_approach/datasets/sanity/JETFIRE")
-    image = np.load(os.path.join(path, 'images', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
-    label = np.load(os.path.join(path, 'labels', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
-    label = np.unpackbits(label).reshape((2, cfg.label_size, cfg.label_size))  # 2, 128, 128
-
-    # Measure RAM usage of numpy arrays
-    image_size_bytes = sys.getsizeof(image)
-    label_size_bytes = sys.getsizeof(label)
-    print(f"Image size in RAM: {image_size_bytes} bytes")
-    print(f"Label size in RAM: {label_size_bytes} bytes")
-
-    label = label[0]  # 128, 128 now
-
-    label = torch.from_numpy(label).to(dtype=float16, device='cuda')
-    image = torch.from_numpy(image).to(dtype=float16, device='cuda')
-
-    image = image.unsqueeze(0)
-    print("Image Shape", image.shape)
-
-    pad_array = torch.zeros(1, 16 - image.shape[1], cfg.patch_size, cfg.patch_size).to(dtype=float16, device='cuda')
-    print("Pad Shape", pad_array.shape)
-
-    image = torch.cat([image, pad_array], dim=1)
-
-    # Measure VRAM usage
-    vram_usage_bytes = torch.cuda.memory_allocated()
-    print(f"VRAM used for image and label: {vram_usage_bytes} bytes")
-
-    return image, label
+# def load_test_image(cfg):
+#     path = os.path.join("multilayer_approach/datasets/sanity/JETFIRE")
+#     image = np.load(os.path.join(path, 'images', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
+#     label = np.load(os.path.join(path, 'labels', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
+#     label = np.unpackbits(label).reshape((2, cfg.label_size, cfg.label_size))  # 2, 128, 128
+#
+#     # Measure RAM usage of numpy arrays
+#     image_size_bytes = sys.getsizeof(image)
+#     label_size_bytes = sys.getsizeof(label)
+#     print(f"Image size in RAM: {image_size_bytes} bytes")
+#     print(f"Label size in RAM: {label_size_bytes} bytes")
+#
+#     label = label[0]  # 128, 128 now
+#
+#     label = torch.from_numpy(label).to(dtype=float16, device='cuda')
+#     image = torch.from_numpy(image).to(dtype=float16, device='cuda')
+#
+#     image = image.unsqueeze(0)
+#     print("Image Shape", image.shape)
+#
+#     pad_array = torch.zeros(1, 16 - image.shape[1], cfg.patch_size, cfg.patch_size).to(dtype=float16, device='cuda')
+#     print("Pad Shape", pad_array.shape)
+#
+#     image = torch.cat([image, pad_array], dim=1)
+#
+#     # Measure VRAM usage
+#     vram_usage_bytes = torch.cuda.memory_allocated()
+#     print(f"VRAM used for image and label: {vram_usage_bytes} bytes")
+#
+#     return image, label
 
 
 class UNETR_SFModule(AbstractVesuvLightningModule):
@@ -124,14 +124,14 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_training_metrics(dice_loss)
 
-        if self.train_step % 500 == 0:
+        if batch_idx == 1:
             with torch.no_grad():
                 combined = torch.cat([probabilities, target, keep_mask], dim=2)
                 grid = make_grid(combined).detach().cpu()
 
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
 
-                wandb.log({"Image Prediction": test_image})
+                wandb.log({"Train Image": test_image})
 
         return dice_loss
 
@@ -147,6 +147,15 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probabilities, target, keep_mask)
 
         self.update_unetr_validation_metrics(dice_loss, iou, precision, recall, f1)
+
+        if batch_idx == 1:
+            with torch.no_grad():
+                combined = torch.cat([probabilities, target, keep_mask], dim=2)
+                grid = make_grid(combined).detach().cpu()
+
+                test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
+
+                wandb.log({"Validation Image": test_image})
 
     def update_unetr_validation_metrics(self, loss, iou, precision, recall, f1):
         self.log(f'val_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)

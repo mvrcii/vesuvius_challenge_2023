@@ -28,7 +28,7 @@ in_chans = 12
 seed = 1241245
 epochs = -1
 losses = []
-dataset_fraction = 1
+dataset_fraction = 0.2
 unetr_out_channels = 32
 
 val_interval = 1
