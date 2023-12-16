@@ -115,7 +115,7 @@ class UNETR_Segformer(nn.Module):
         )
 
         self.encoder_2d = SegformerForSemanticSegmentation.from_pretrained(
-            pretrained_model_name_or_path=self.cfg.from_pretrained,
+            pretrained_model_name_or_path=self.cfg.segformer_from_pretrained,
             num_channels=self.cfg.unetr_out_channels,
             ignore_mismatched_sizes=True,
             num_labels=1,
