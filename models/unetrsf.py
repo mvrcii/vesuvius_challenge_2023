@@ -3,9 +3,7 @@ import sys
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 import wandb
-from matplotlib import pyplot as plt
 from torch import float16
 from torchvision.utils import make_grid
 
@@ -90,9 +88,24 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
     def __init__(self, cfg):
         super().__init__(cfg=cfg)
         self.cfg = cfg
-        self.model = UNETR_Segformer(cfg=cfg)
-        # self.test_img_tensor, self.test_label_tensor = load_test_image(cfg=self.cfg)
         self.train_step = 0
+
+        self.model = UNETR_Segformer(cfg=cfg)
+
+        from_checkpoint = getattr(cfg, 'from_checkpoint', None)
+        if from_checkpoint:
+            checkpoint_root_path = os.path.join("checkpoints", cfg.from_checkpoint)
+            checkpoint_files = [file for file in os.listdir(checkpoint_root_path) if file.startswith('best-checkpoint')]
+            checkpoint_path = os.path.join(checkpoint_root_path, checkpoint_files[-1])
+
+            checkpoint = torch.load(checkpoint_path)
+            assert checkpoint
+
+            state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+            self.model.load_state_dict(state_dict)
+            print("Loaded model from checkpoint:", cfg.from_checkpoint)
+        else:
+            print("Loaded model from pretrained:", cfg.from_pretrained)
 
     def forward(self, x):
         output = self.model(x)
@@ -103,8 +116,6 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         data, label = batch
 
         probabilities = torch.sigmoid(self.forward(data))
-
-        colormap = plt.get_cmap('cool')  # You can choose any available colormap
 
         target = label[:, 0]
         keep_mask = label[:, 1]
