@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import wandb
+from matplotlib import pyplot as plt
 from torch import float16
 from torchvision.utils import make_grid
 
@@ -91,15 +92,21 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         self.cfg = cfg
         self.model = UNETR_Segformer(cfg=cfg)
         # self.test_img_tensor, self.test_label_tensor = load_test_image(cfg=self.cfg)
+        self.train_step = 0
 
     def forward(self, x):
         output = self.model(x)
         return output
 
     def training_step(self, batch, batch_idx):
+        self.train_step += 1
         data, label = batch
 
         probabilities = torch.sigmoid(self.forward(data))
+
+        colormap = plt.get_cmap('cool')  # You can choose any available colormap
+        probabilities_heatmap = colormap(probabilities.detach().cpu().numpy())  # Apply colormap
+        probabilities_heatmap = torch.from_numpy(probabilities_heatmap).float().permute(0, 3, 1, 2)
 
         target = label[:, 0]
         keep_mask = label[:, 1]
@@ -108,22 +115,14 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_training_metrics(dice_loss)
 
-        # if self.global_step % 50 == 0:
-        #
-        #     with torch.no_grad():
-        #         test_logits = self.forward(self.test_img_tensor)
-        #         test_probs = torch.sigmoid(test_logits)
-        #
-        #         combined = torch.cat([test_probs, self.test_label_tensor], dim=2)
-        #
-        #         # Convert your output tensor to an image or grid of images
-        #         grid = make_grid(combined).detach().cpu()
-        #
-        #         test_image = wandb.Image(grid, caption="Step {}".format(self.global_step))
-        #
-        #         self.log({"test_image_pred": test_image})
+        if self.train_step % 18 == 0:
+            with torch.no_grad():
+                combined = torch.cat([probabilities_heatmap, target, keep_mask], dim=2)
+                grid = make_grid(combined).detach().cpu()
 
-        # torch.cuda.empty_cache()
+                test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
+
+                wandb.log({"Image Prediction": test_image})
 
         return dice_loss
 

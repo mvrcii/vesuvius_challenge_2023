@@ -463,19 +463,21 @@ class Visualization:
                 center_layers = set(range(start, end + 1))
                 intersecting_layers = center_layers.intersection(self.model_layer_idcs)
 
-                for relative_idx, layer_idx in enumerate(list(intersecting_layers)):
+                for layer_idx in sorted(list(intersecting_layers)):
                     # Check if the current layer is within the specified range and is part of model_layer_indices
                     if start <= layer_idx <= end and layer_idx in self.model_layer_idcs:
-                        file_name = f"{model_names_str}_mode={mode}_layer={layer_idx}{inverted_str}.png"
+                        threshold = float(self.threshold_var.get())
+                        file_name = f"{model_names_str}_mode={mode}_layer={layer_idx}_th={threshold:.2f}{inverted_str}.png"
                         file_path = os.path.join(target_dir, file_name)
-                        self.curr_layer_val = int(relative_idx)
+                        self.curr_layer_val = int(layer_idx)
                         image = self.process_image(save_img=True)
                         print(f"Saving {file_name}")
                         image.save(file_path)
             else:
                 layer = int(self.get_threshold())
                 self.curr_layer_val = layer
-                file_name = f"{model_names_str}_mode={mode}_layer={layer}{inverted_str}.png"
+                threshold = float(self.threshold_var.get())
+                file_name = f"{model_names_str}_mode={mode}_layer={layer}_th={threshold:.2f}{inverted_str}.png"
                 file_path = os.path.join(target_dir, file_name)
                 image = self.process_image(save_img=True)
                 image.save(file_path)
