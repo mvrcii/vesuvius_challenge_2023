@@ -7,7 +7,7 @@ username = 'registeredusers'
 password = 'only'
 
 # Directory containing the fragment folders
-base_dir = '../data/fragments'
+base_dir = 'data/fragments'
 
 # Iterate through each folder in base_dir
 for folder in os.listdir(base_dir):
