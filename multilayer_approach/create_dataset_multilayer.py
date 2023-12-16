@@ -33,7 +33,7 @@ def extract_patches(config: Config, frags, label_dir):
         process_fragment(label_dir=label_dir, config=config, fragment_id=fragment_id, channels=channels)
 
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
-    df = pd.DataFrame(LABEL_INFO_LIST, columns=['filename', 'frag_id', 'channels', 'ink_p'])
+    df = pd.DataFrame(LABEL_INFO_LIST, columns=['filename', 'frag_id', 'channels', 'ink_p', 'ignore_p'])
     os.makedirs(root_dir, exist_ok=True)
     df.to_csv(os.path.join(root_dir, "label_infos.csv"))
 
@@ -181,17 +181,18 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
                 mask_skipped += 1
                 continue
 
-            # Get label patch, calculate ink percentage
+            # Get label patch and ignore patch
             label_patch = label_arr[y1:y2, x1:x2]
+            ignore_patch = ignore_arr[y1:y2, x1:x2]
+
+            # Set label patch to 0 where ignore patch is 1 (to not count ink towards ink_p when it is ignored)
+            label_patch[ignore_patch == 1] = 0
+            image_patch = image_tensor[:, y1:y2, x1:x2]
 
             label_pixel_count = np.prod(label_patch.shape)
             assert label_pixel_count != 0
             ink_percentage = int((label_patch.sum() / label_pixel_count) * 100)
             assert 0 <= ink_percentage <= 100
-
-            # Get image patch
-            image_patch = image_tensor[:, y1:y2, x1:x2]
-            ignore_patch = ignore_arr[y1:y2, x1:x2]
 
             # invert ignore_patch so "ignored" areas are 0 and rest is 1
             keep_patch = np.logical_not(ignore_patch)
@@ -210,7 +211,7 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
                 config.patch_size, config.patch_size), f"Label patch wrong shape: {label_patch.shape}"
 
             file_name = f"f{frag_id}_ch{start_channel:02d}_{x1}_{y1}_{x2}_{y2}.npy"
-            STACK_PATCH_INFOS.append((file_name, frag_id, start_channel, ink_percentage))
+            STACK_PATCH_INFOS.append((file_name, frag_id, start_channel, ink_percentage, keep_percent))
 
             # save image
             np.save(os.path.join(img_dest_dir, file_name), image_patch)
