@@ -138,6 +138,10 @@
   {
     "id": "20231210121320",
     "name": "BLUESTREAK",
-    "boost_threshold": 1
+    "boost_threshold": 1,
+    "center_layers_start_indices": [
+      29,
+      39
+    ]
   }
 ]
