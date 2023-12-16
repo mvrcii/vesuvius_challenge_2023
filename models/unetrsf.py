@@ -126,7 +126,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         if batch_idx == 1:
             with torch.no_grad():
-                combined = torch.cat([probabilities, target, keep_mask], dim=2)
+                combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=2)
                 grid = make_grid(combined).detach().cpu()
 
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
