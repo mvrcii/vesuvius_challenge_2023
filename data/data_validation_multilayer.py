@@ -51,7 +51,7 @@ def validate_fragment_files(frag_id, cfg, label_dir):
     # Check if mask exists
     if not os.path.isfile(mask_path):
         return errors.append(f"\033[91mReason:\t\tMask file not found\033[0m")
-
+    print("test")
     # Stop if any errors occurred
     if len(errors) > 0:
         print("errors occured")
