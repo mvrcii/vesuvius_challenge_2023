@@ -91,12 +91,14 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         self.cfg = cfg
         self.model = UNETR_Segformer(cfg=cfg)
         # self.test_img_tensor, self.test_label_tensor = load_test_image(cfg=self.cfg)
+        self.train_step = 0
 
     def forward(self, x):
         output = self.model(x)
         return output
 
     def training_step(self, batch, batch_idx):
+        self.train_step += 1
         data, label = batch
 
         probabilities = torch.sigmoid(self.forward(data))
@@ -108,15 +110,14 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_training_metrics(dice_loss)
 
-        if self.global_step % 30 == 0:
-
+        if self.train_step % 18 == 0:
             with torch.no_grad():
-                combined = torch.cat([probabilities, target], dim=2)
+                combined = torch.cat([probabilities, target, keep_mask], dim=2)
                 grid = make_grid(combined).detach().cpu()
 
-                test_image = wandb.Image(grid, caption="Step {}".format(self.global_step))
+                test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
 
-                wandb.log({"test_image_pred": test_image})
+                wandb.log({"Image Prediction": test_image})
 
         return dice_loss
 
