@@ -117,7 +117,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         if self.train_step % 10 == 0:
             with torch.no_grad():
-                combined = torch.cat([probabilities_heatmap.to('cuda'), target, keep_mask], dim=2)
+                combined = torch.cat([probabilities_heatmap.to('cuda'), target.unsqueeze(1), keep_mask.unsqueeze(1)], dim=2)
                 grid = make_grid(combined).detach().cpu()
 
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
