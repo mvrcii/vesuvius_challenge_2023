@@ -14,6 +14,7 @@ print(os.listdir(base_dir))
 for folder in os.listdir(base_dir):
     # Check if the folder name starts with 'fragment'
     if folder.startswith('fragment'):
+        print("Fragment folder found:", folder)
         fragment_id = folder.replace('fragment', '')
         mask_path = os.path.join(base_dir, folder, 'mask.png')
 
