@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import wandb
+from matplotlib import pyplot as plt
 from torch import float16
 from torchvision.utils import make_grid
 
@@ -103,6 +104,10 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         probabilities = torch.sigmoid(self.forward(data))
 
+        colormap = plt.get_cmap('cool')  # You can choose any available colormap
+        probabilities_heatmap = colormap(probabilities.detach().cpu().numpy())  # Apply colormap
+        probabilities_heatmap = torch.from_numpy(probabilities_heatmap).float().permute(0, 3, 1, 2)
+
         target = label[:, 0]
         keep_mask = label[:, 1]
 
@@ -112,7 +117,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         if self.train_step % 18 == 0:
             with torch.no_grad():
-                combined = torch.cat([probabilities, target, keep_mask], dim=2)
+                combined = torch.cat([probabilities_heatmap, target, keep_mask], dim=2)
                 grid = make_grid(combined).detach().cpu()
 
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
