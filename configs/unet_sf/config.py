@@ -25,7 +25,7 @@ architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
 in_chans = 12
-seed = 1241245
+seed = 770
 epochs = -1
 losses = []
 dataset_fraction = 1
@@ -48,8 +48,8 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-num_workers = 1
-train_batch_size = 1
+num_workers = 16
+train_batch_size = 2
 val_batch_size = train_batch_size
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
