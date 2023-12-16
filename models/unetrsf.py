@@ -49,7 +49,7 @@ def calculate_masked_metrics_batchwise(outputs, labels, mask):
     recall = true_positives / (true_positives + false_negatives + 1e-6)
     f1 = 2 * (precision * recall) / (precision + recall + 1e-6)  # Added epsilon for F1 calculation
 
-    return iou, precision, recall, f1
+    return iou.mean(), precision.mean(), recall.mean(), f1.mean()
 
 
 # def load_test_image(cfg):
