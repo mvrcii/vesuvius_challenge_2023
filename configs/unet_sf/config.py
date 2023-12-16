@@ -19,9 +19,9 @@ dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # training parameters
 model_type = "b3"
-from_pretrained = f"nvidia/mit-{model_type}"
+from_pretrained = "playful-glade-812-unetr-sf-b3-231216-041654"
 architecture = 'unetr-sf'
-model_name = f"{architecture}-{from_pretrained}"
+model_name = f"{architecture}-{model_type}"
 
 in_chans = 12
 seed = 3445774
