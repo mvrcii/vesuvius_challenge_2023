@@ -113,7 +113,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_training_metrics(dice_loss)
 
-        if self.train_step % 10 == 0:
+        if self.train_step % 500 == 0:
             with torch.no_grad():
                 combined = torch.cat([probabilities, target, keep_mask], dim=2)
                 grid = make_grid(combined).detach().cpu()
