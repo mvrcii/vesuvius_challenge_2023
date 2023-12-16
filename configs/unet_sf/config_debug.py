@@ -33,7 +33,7 @@ unetr_out_channels = 32
 val_interval = 1
 
 # dataset creation parameters
-patch_size = 512
+patch_size = 256
 label_size = patch_size // 4
 stride = patch_size // 2
 ink_ratio = 3
