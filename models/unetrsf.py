@@ -105,7 +105,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
             self.model.load_state_dict(state_dict)
             print("Loaded model from checkpoint:", cfg.from_checkpoint)
         else:
-            print("Loaded model from pretrained:", cfg.from_pretrained)
+            print("Loaded blank unetr and segformer from pretrained:", cfg.segformer_from_pretrained)
 
     def forward(self, x):
         output = self.model(x)
