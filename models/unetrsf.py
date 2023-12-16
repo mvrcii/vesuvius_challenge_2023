@@ -129,7 +129,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         print("Target shape:", target[0].shape)
         print("Keep mask shape:", keep_mask[0].shape)
 
-        if batch_idx == 1:
+        if batch_idx == 5:
             with torch.no_grad():
                 combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=2)
                 grid = make_grid(combined).detach().cpu()
@@ -158,7 +158,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         print("Target shape:", target[0].shape)
         print("Keep mask shape:", keep_mask[0].shape)
 
-        if batch_idx == 1:
+        if batch_idx == 5:
             with torch.no_grad():
                 combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=2)
                 grid = make_grid(combined).detach().cpu()
