@@ -13,6 +13,7 @@ for filename in tqdm(os.listdir('.')):
     if filename.endswith('.png'):
         img = Image.open(filename)
         # Scale the image down to 25% of its size
-        img = img.resize((img.width // 4, img.height // 4), Image.ANTIALIAS)
+        factor = 2
+        img = img.resize((img.width // factor, img.height // factor))
         # Save the scaled image in the subfolder
         img.save(f'scaled_down/{filename}')
