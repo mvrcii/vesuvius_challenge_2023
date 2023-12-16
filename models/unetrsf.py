@@ -90,7 +90,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         super().__init__(cfg=cfg)
         self.cfg = cfg
         self.model = UNETR_Segformer(cfg=cfg)
-        self.test_img_tensor, self.test_label_tensor = load_test_image(cfg=self.cfg)
+        # self.test_img_tensor, self.test_label_tensor = load_test_image(cfg=self.cfg)
 
     def forward(self, x):
         output = self.model(x)
@@ -108,22 +108,22 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_training_metrics(dice_loss)
 
-        if self.global_step % 50 == 0:
+        # if self.global_step % 50 == 0:
+        #
+        #     with torch.no_grad():
+        #         test_logits = self.forward(self.test_img_tensor)
+        #         test_probs = torch.sigmoid(test_logits)
+        #
+        #         combined = torch.cat([test_probs, self.test_label_tensor], dim=2)
+        #
+        #         # Convert your output tensor to an image or grid of images
+        #         grid = make_grid(combined).detach().cpu()
+        #
+        #         test_image = wandb.Image(grid, caption="Step {}".format(self.global_step))
+        #
+        #         self.log({"test_image_pred": test_image})
 
-            with torch.no_grad():
-                test_logits = self.forward(self.test_img_tensor)
-                test_probs = torch.sigmoid(test_logits)
-
-                combined = torch.cat([test_probs, self.test_label_tensor], dim=2)
-
-                # Convert your output tensor to an image or grid of images
-                grid = make_grid(combined).detach().cpu()
-
-                test_image = wandb.Image(grid, caption="Step {}".format(self.global_step))
-
-                self.log({"test_image_pred": test_image})
-
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
 
         return dice_loss
 
