@@ -24,7 +24,7 @@ architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
 in_chans = 12
-seed = 3445774
+seed = 1241245
 epochs = -1
 losses = []
 dataset_fraction = 1
@@ -39,7 +39,6 @@ stride = patch_size // 2
 ink_ratio = 3
 fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
                 JAZZILLA_FRAG_ID]
-# fragment_ids = [JETFIRE_FRAG_ID]
 validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 

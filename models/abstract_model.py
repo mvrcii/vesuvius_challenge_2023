@@ -30,10 +30,6 @@ class AbstractVesuvLightningModule(LightningModule):
         self.iou = IoU()
         self.dice_coefficient = Dice(multiclass=False, threshold=0.5)
 
-        # self.warmup_epochs = cfg.warmup_epochs
-        # self.warmup_start = cfg.warmup_start
-        # self.warmup_end = cfg.warmup_end
-
     def configure_optimizers(self):
         if self.optimizer == 'adamw':
             optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
@@ -41,35 +37,11 @@ class AbstractVesuvLightningModule(LightningModule):
             raise NotImplementedError()
 
         if self.epochs == -1:
-            # Set T_0 to a reasonable value based on your dataset and model
-            # scheduler = CosineAnnealingWarmRestarts(optimizer, T_0=25, T_mult=2)
-
-            # step_lr_scheduler = StepLR(
-            #     optimizer,
-            #     step_size=self.step_lr_steps,
-            #     gamma=self.step_lr_factor
-            # )
-            optimizer = torch.optim.SGD(self.parameters(), lr=0.1, momentum=0.9)
-            cycle_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.01, steps_per_epoch=1734,
-                                                            epochs=10)
-
-            # if self.warmup_epochs > 0:
-            #     warmup_scheduler = LinearLR(
-            #         optimizer,
-            #         start_factor=self.warmup_start,
-            #         end_factor=self.warmup_end,
-            #         total_iters=self.warmup_epochs
-            #     )
-            #
-            #     # Combine them using SequentialLR
-            #     scheduler = SequentialLR(
-            #         optimizer,
-            #         schedulers=[warmup_scheduler, step_lr_scheduler],
-            #         milestones=[self.warmup_epochs]
-            #     )
-            # else:
-            scheduler = cycle_scheduler
-            # scheduler = step_lr_scheduler
+            scheduler = StepLR(
+                optimizer,
+                step_size=self.step_lr_steps,
+                gamma=self.step_lr_factor
+            )
         else:
             scheduler = CosineAnnealingLR(
                 optimizer,

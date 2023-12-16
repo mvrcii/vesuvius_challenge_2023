@@ -64,7 +64,7 @@ def generate_dataset(cfg: Config):
     # balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, balanced_dataset)
 
     # Step 1: Filter out rows where ink_p > 0
-    df_ink_p_greater_than_15 = df[df['ink_p'] > 15]
+    df_ink_p_greater_than_ink_ratio = df[df['ink_p'] > cfg.ink_ratio]
     # df_ink_p_greater_than_1 = df[df['ink_p'] > 0]
 
     # # Step 2: Count the number of rows
@@ -75,7 +75,7 @@ def generate_dataset(cfg: Config):
     #
     # # Step 4: Concatenate the two DataFrames
     # df = pd.concat([df_ink_p_greater_than_1, df_ink_p_zero_or_less])
-    df = df_ink_p_greater_than_15
+    df = df_ink_p_greater_than_ink_ratio
 
     count_zero = (df['ink_p'] == 0).sum()
     count_greater_than_zero = (df['ink_p'] > 0).sum()
