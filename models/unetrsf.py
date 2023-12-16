@@ -124,11 +124,6 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_training_metrics(dice_loss)
 
-        print("Train")
-        print("Probabilities shape:", probabilities[0].shape)
-        print("Target shape:", target[0].shape)
-        print("Keep mask shape:", keep_mask[0].shape)
-
         if batch_idx == 5:
             with torch.no_grad():
                 combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=2)
@@ -152,11 +147,6 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
         iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probabilities, target, keep_mask)
 
         self.update_unetr_validation_metrics(dice_loss, iou, precision, recall, f1)
-
-        print("Val")
-        print("Probabilities shape:", probabilities[0].shape)
-        print("Target shape:", target[0].shape)
-        print("Keep mask shape:", keep_mask[0].shape)
 
         if batch_idx == 5:
             with torch.no_grad():
