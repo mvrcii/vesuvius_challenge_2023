@@ -54,6 +54,8 @@ def validate_fragment_files(frag_id, cfg, label_dir):
 
     # Stop if any errors occurred
     if len(errors) > 0:
+        print("errors occured")
+        print(errors)
         return errors, []
 
     # Get required 12 channels for this fragment
