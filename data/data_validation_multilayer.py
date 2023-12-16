@@ -8,10 +8,8 @@ def validate_fragments(config, fragments, label_dir):
     frag_id_2_channels = {}
 
     for frag_id in fragments:
-        print(frag_id)
         val_errors, frag_channels = validate_fragment_files(frag_id=frag_id, cfg=config,
                                                             label_dir=label_dir)
-        print(val_errors)
         if len(val_errors) > 0:
             print("Excluded fragment", frag_id)
             print("\n".join(val_errors))
@@ -29,8 +27,6 @@ def validate_fragment_files(frag_id, cfg, label_dir):
     inklabel_path = os.path.join(frag_label_dir, f"{frag_id}_inklabels.png")
     ignore_path = os.path.join(frag_label_dir, f"{frag_id}_ignore.png")
     mask_path = os.path.join(frag_dir, "mask.png")
-
-    print("Validating fragment", frag_id)
 
     # check if fragment directory exists (data/fragments/fragment{frag_id})
     if not os.path.isdir(frag_dir):
