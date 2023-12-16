@@ -30,6 +30,8 @@ def validate_fragment_files(frag_id, cfg, label_dir):
     ignore_path = os.path.join(frag_label_dir, f"{frag_id}_ignore.png")
     mask_path = os.path.join(frag_dir, "mask.png")
 
+    print("Validating fragment", frag_id)
+
     # check if fragment directory exists (data/fragments/fragment{frag_id})
     if not os.path.isdir(frag_dir):
         errors.append(f"\033[91mReason:\t\tFragment directory '{frag_dir}' does not exist\033[0m")
@@ -52,7 +54,7 @@ def validate_fragment_files(frag_id, cfg, label_dir):
 
     # Check if mask exists
     if not os.path.isfile(mask_path):
-        return errors.append(f"\033[91mReason:\t\tMask file not found\033[0m")
+        errors.append(f"\033[91mReason:\t\tMask file not found\033[0m")
 
     # Stop if any errors occurred
     if len(errors) > 0:
