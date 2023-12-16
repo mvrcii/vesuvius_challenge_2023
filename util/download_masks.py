@@ -9,6 +9,7 @@ password = 'only'
 # Directory containing the fragment folders
 base_dir = 'data/fragments'
 
+print(os.listdir(base_dir))
 # Iterate through each folder in base_dir
 for folder in os.listdir(base_dir):
     # Check if the folder name starts with 'fragment'
