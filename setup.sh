@@ -4,6 +4,8 @@ echo "export PS1='\\[\\033[38;5;79m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[38;5;33m\\
 echo "alias pp='export PYTHONPATH=\"\$PWD:\$PYTHONPATH\"'" >> ~/.bashrc
 echo "alias vsv='cd ~/kaggle1stReimp && pp'" >> ~/.bashrc
 
+source ~/.bashrc
+
 # Create local config file
 touch conf_local.py
 echo -e 'import os\nwork_dir = os.path.join("")' > conf_local.py
