@@ -48,7 +48,7 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-num_workers = 4
+num_workers = 32
 train_batch_size = 4
 val_batch_size = train_batch_size
 
