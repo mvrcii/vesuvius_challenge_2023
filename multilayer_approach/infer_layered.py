@@ -45,9 +45,10 @@ def pad_image_to_be_divisible_by_4(image, patch_size):
 
 
 def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
+    print("Start reading images")
     images = []
 
-    for i in range(layer_start, layer_start + layer_count):
+    for i in tqdm(range(layer_start, layer_start + layer_count)):
         img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
