@@ -1,15 +1,11 @@
 import os
-import sys
 
-import numpy as np
 import torch
 import wandb
-from torch import float16
 from torchvision.utils import make_grid
 
 from models.abstract_model import AbstractVesuvLightningModule
 from models.architectures.unet3d_segformer import UNET3D_Segformer
-from models.architectures.unetr_segformer import UNETR_Segformer
 from multilayer_approach.focal_loss import FocalLoss2d
 
 
@@ -161,7 +157,7 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
 
-        if batch_idx % 100 == 0 and self.trainer.is_global_zero:
+        if batch_idx == 5 and self.trainer.is_global_zero:
             with torch.no_grad():
                 combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()

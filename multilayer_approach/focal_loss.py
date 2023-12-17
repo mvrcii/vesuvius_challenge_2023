@@ -13,14 +13,17 @@ class FocalLoss2d(nn.Module):
 
     def forward(self, _input, target, mask):
         """
-        :param _input: [N, H, W]
-        :param target: [H, W]
+        :param _input: Logits [N, H, W]
+        :param target: [N, H, W]
+        :param mask: [N, H, W]
         :return:
         """
         _input = _input.squeeze()
 
-        bce_loss = F.binary_cross_entropy_with_logits(_input, target.float())
+        _input *= mask
+        target *= mask
 
+        bce_loss = F.binary_cross_entropy_with_logits(_input, target.float())
 
         pt = torch.exp(-bce_loss)
 

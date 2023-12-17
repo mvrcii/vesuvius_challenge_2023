@@ -61,16 +61,15 @@ def generate_dataset(cfg: Config):
     print(f"Before balancing: {count_zero} samples with ink_p = 0 and {count_greater_than_zero} samples with ink_p > 0")
 
     # BALANCING IS DONE ON CREATION
-    # balanced_dataset, num_ink_samples, num_no_artefact_samples, num_with_artefact_samples = balance_dataset(cfg, balanced_dataset)
-
     # Step 1: Filter out rows where ink_p > ratio
     df_ink_p_greater_than_ink_ratio = df[df['ink_p'] > cfg.ink_ratio]
 
-    # Decide how many no-ink samples
+    # Step 2: Decide how many no-ink samples
     no_ink_sample_count = int(len(df_ink_p_greater_than_ink_ratio) * 0.2)
 
     # Step 3: Filter out rows where ink_p <= 0 and limit the number of rows
-    df_good_no_inks = df[(df['ink_p'] == 0) & (df['ignore_p'] < 10)].head(no_ink_sample_count)
+    max_ignore_percentage_th = 10
+    df_good_no_inks = df[(df['ink_p'] == 0) & (df['ignore_p'] < max_ignore_percentage_th)].head(no_ink_sample_count)
 
     # # Step 4: Concatenate the two DataFrames
     df = pd.concat([df_ink_p_greater_than_ink_ratio, df_good_no_inks])
