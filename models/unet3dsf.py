@@ -116,6 +116,10 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
         data, label = batch
 
         logits = self.forward(data)
+        print("UNET 3D Segformer Forward Output Logits:")
+        print(torch.min(logits))
+        print(torch.max(logits))
+
         probabilities = torch.sigmoid(logits)
 
         target = label[:, 0]
