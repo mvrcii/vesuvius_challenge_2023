@@ -25,7 +25,7 @@ architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
 in_chans = 12
-seed = 1241245
+seed = 770
 epochs = -1
 losses = []
 dataset_fraction = 1
@@ -43,7 +43,7 @@ fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFI
 validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
-lr = 2e-4  # 1e-4
+lr = 1e-3  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
