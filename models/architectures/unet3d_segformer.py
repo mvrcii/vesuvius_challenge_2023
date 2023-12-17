@@ -133,9 +133,9 @@ class UNET3D_Segformer(nn.Module):
         # output of self.encoder(image) is: (BS, 16, 12, 512, 512) => BS, channels, depth, height, width
         # .max() returns tuple of max values and max indices, that's why we need [0] here
         # after .max(axis=2) (we max over the depth dimension) we get: (BS, 16, 512, 512)
-        # output = self.encoder(image).max(axis=2)[0]
         # Mean does not return a tuple, so the [0] access is not needed, resulting shape is (BS, 16, 512, 512)
-        inner_output = self.encoder(image).mean(axis=2)
+        # FOR LEGENDARY ELEVATOR
+        inner_output = self.encoder(image).max(axis=2)[0]
         inner_output = self.dropout(inner_output)
         inner_output = self.encoder_2d(inner_output).logits
         inner_output = inner_output.squeeze(1)
