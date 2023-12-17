@@ -122,11 +122,11 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
                 wandb.log({"Validation Image": test_image})
 
-    def on_after_backward(self):
-        if self.trainer.global_step % 100 == 0 and self.trainer.is_global_zero:  # Log every 100 steps
-            for name, param in self.named_parameters():
-                if param.requires_grad and param.grad is not None:
-                    wandb.log({f"grads/{name}": wandb.Histogram(param.grad.cpu().numpy())})
+    # def on_after_backward(self):
+    #     if self.trainer.global_step % 100 == 0 and self.trainer.is_global_zero:  # Log every 100 steps
+    #         for name, param in self.named_parameters():
+    #             if param.requires_grad and param.grad is not None:
+    #                 wandb.log({f"grads/{name}": wandb.Histogram(param.grad.cpu().numpy())})
 
     def update_unetr_validation_metrics(self, loss, iou, precision, recall, f1):
         self.log(f'val_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
