@@ -14,14 +14,10 @@ from lightning.pytorch.trainer import Trainer
 from lightning_fabric.accelerators import find_usable_cuda_devices
 
 from config_handler import Config
-from data_modules.cnn.cnn_datamodule import CNNDataModule
 from data_modules.segformer.segformer_datamodule import SegFormerDataModule
-from data_modules.unetplusplus.unetplusplus_datamodule import UnetPlusPlusDataModule
 from data_modules.unetrsf.unetrsf_datamodule import UNETR_SFDataModule
 from models.cnn3d_segformer import CNN3D_SegformerModule
 from models.segformer import SegformerModule
-from models.simplecnn import SimpleCNNModule
-from models.unetplusplus import UnetPlusPlusModule
 from models.unetrsf import UNETR_SFModule
 
 torch.set_float32_matmul_precision('medium')
@@ -53,10 +49,6 @@ def get_model(config: Config):
         return SegformerModule(cfg=config)
     elif architecture == 'cnn3d_segformer':
         return CNN3D_SegformerModule(cfg=config)
-    elif architecture == 'unetplusplus':
-        return UnetPlusPlusModule(cfg=config)
-    elif architecture == 'simplecnn':
-        return SimpleCNNModule(cfg=config)
     elif architecture == 'unetr-sf':
         return UNETR_SFModule(cfg=config)
     else:
@@ -79,10 +71,6 @@ def get_data_module(config: Config):
 
     if architecture == "segformer":
         return SegFormerDataModule(cfg=config)
-    elif architecture == "unetplusplus":
-        return UnetPlusPlusDataModule(cfg=config)
-    elif architecture == "simplecnn":
-        return CNNDataModule(cfg=config)
     elif architecture == "unetr-sf":
         return UNETR_SFDataModule(cfg=config)
     else:

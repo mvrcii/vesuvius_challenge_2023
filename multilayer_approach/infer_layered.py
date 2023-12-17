@@ -20,7 +20,6 @@ from constants import get_frag_name_from_id, get_ckpt_name_from_id
 from fragment import FragmentHandler
 from meta import AlphaBetaMeta
 from models.architectures.unetr_segformer import UNETR_Segformer
-from models.simplecnn import SimpleCNNModule
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -388,11 +387,6 @@ def load_model(cfg: Config, model_path):
         state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
 
-    elif cfg.architecture == 'simplecnn':
-        model = SimpleCNNModule(cfg=cfg)
-        checkpoint = torch.load(model_path)
-        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict)
     elif cfg.architecture == 'unetr-sf':
         model = UNETR_Segformer(cfg=cfg)
         checkpoint = torch.load(model_path)

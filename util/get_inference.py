@@ -16,9 +16,6 @@ def validate_folder(local_path, model_run_dir):
 
         path = os.path.join(local_path, model_dirs[0])
         files = [f for f in os.listdir(path) if f.endswith('.npy')]
-        # if len(files) != 61:
-        #     print_colored(f"Error: Expected 61 .npy files in {model_run_dir}, found {len(files)}", "red")
-        #     return False
 
         file_sizes = [os.path.getsize(os.path.join(path, f)) for f in files]
         if len(set(file_sizes)) != 1:

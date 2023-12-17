@@ -18,7 +18,6 @@ from config_handler import Config
 from constants import get_frag_name_from_id, get_ckpt_name_from_id
 from fragment import FragmentHandler
 from meta import AlphaBetaMeta
-from models.simplecnn import SimpleCNNModule
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -393,8 +392,6 @@ def load_model(cfg: Config, model_path):
                                                                  num_labels=1,
                                                                  num_channels=cfg.in_chans,
                                                                  ignore_mismatched_sizes=True)
-    elif cfg.architecture == 'simplecnn':
-        model = SimpleCNNModule(cfg=cfg)
     else:
         print("Error")
         sys.exit(1)
