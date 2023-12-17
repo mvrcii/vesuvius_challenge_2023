@@ -115,7 +115,9 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
 def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
     print("Starting full inference")
     patch_size = config.patch_size
-    expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
+    expected_patch_shape = (1, config.in_chans, patch_size, patch_size)
+    # todo SEPARATE INFERENCE FOR UNET3D AND UNETR
+    # expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
 
     # Loading images [12, Height, Width]
     images = read_fragment(patch_size=patch_size, work_dir=config.work_dir, fragment_id=fragment_id,
