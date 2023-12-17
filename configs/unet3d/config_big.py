@@ -43,9 +43,9 @@ fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFI
 validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
-lr = 1e-6  # 1e-4
+lr = 5e-5
 step_lr_steps = 1
-step_lr_factor = 0.98
+step_lr_factor = 0.96
 weight_decay = 0.001
 
 num_workers = 16
