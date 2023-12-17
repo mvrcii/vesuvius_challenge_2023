@@ -10,9 +10,9 @@ from PIL import Image, ImageTk
 from PIL.Image import Resampling
 from tqdm import tqdm
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from fragment import FragmentHandler
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config_handler import Config
 
@@ -501,7 +501,7 @@ class Visualization:
 
             layer_str = f'{start_layer}-{end_layer}'
 
-            file_path = os.path.join(target_dir, f"{model_names_str}_"
+            file_path = os.path.join(target_dir, f"{os.path.basename(model_names_str)}_"
                                                  f"mode={mode}_"
                                                  f"layer={layer_str}_"
                                                  f"th={float(threshold):g}"
@@ -606,7 +606,11 @@ class Visualization:
 
         threshold = float(self.threshold_var.get())
 
-        processed = (processed > threshold).astype(int)
+        if threshold > 0:
+            processed = (processed > threshold).astype(int)
+        else:
+            processed = processed * (threshold * -1)
+            processed[processed > 1] = 1
         print(np.unique(processed))
 
         # Apply threshold

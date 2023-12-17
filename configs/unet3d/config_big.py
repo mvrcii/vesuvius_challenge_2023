@@ -18,7 +18,7 @@ data_root_dir = "data"
 dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # training parameters
-model_type = "b2"
+model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
 # from_pretrained = "playful-glade-812-unetr-sf-b3-231216-041654"
 architecture = 'unet3d-sf'
@@ -29,7 +29,7 @@ seed = 12424
 epochs = 200
 losses = []
 dataset_fraction = 1
-unet3d_out_channels = 16
+unet3d_out_channels = 32
 
 val_interval = 1
 
@@ -78,8 +78,8 @@ train_aug = [
         A.RandomResizedCrop(always_apply=True, height=patch_size, width=patch_size, scale=(0.78, 1.0),
                             ratio=(0.75, 1.51),
                             interpolation=0)
-    ], p=0.1),
-    # A.ChannelDropout(p=0.05, channel_drop_range=(1, 1), fill_value=0),
+    ], p=0.5),
+    A.ChannelDropout(p=1, channel_drop_range=(1, 4), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
