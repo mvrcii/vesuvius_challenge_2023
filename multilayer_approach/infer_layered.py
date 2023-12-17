@@ -113,6 +113,7 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
 
 
 def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
+    print("Starting full inference")
     patch_size = config.patch_size
     expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
 
