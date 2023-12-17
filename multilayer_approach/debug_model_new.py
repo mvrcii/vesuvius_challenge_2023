@@ -3,10 +3,10 @@ import numpy as np
 import torch
 from skimage.transform import resize
 from torch import float16
-from torch.nn import BCELoss
 
 from config_handler import Config
-from focal_loss import FocalLoss2d
+from losses.binary_dice_loss import MaskedBinaryDiceLoss
+from losses.focal_loss import MaskedFocalLoss
 from models.architectures.unetr_segformer import UNETR_Segformer
 
 
@@ -34,57 +34,6 @@ def calculate_masked_metrics_batchwise(outputs, labels, mask):
     f1 = 2 * (precision * recall) / (precision + recall + 1e-6)  # Added epsilon for F1 calculation
 
     return iou, precision, recall, f1
-
-
-def dice_loss_with_mask_batch_new(outputs, labels, mask):
-    # all 3 input variables should be shape (batch_size, label_size, label_size)
-    # outputs should be sigmoided (0-1)
-    # labels should be binary
-    # mask should be binary
-    outputs_masked = outputs * mask
-    labels_masked = labels * mask
-
-    # Calculate intersection and union with masking
-    intersection = (outputs_masked * labels_masked).sum(axis=(1, 2))
-    union = (outputs_masked + labels_masked).sum(axis=(1, 2))
-
-    # Compute dice loss per batch and average
-    dice_loss = 1 - (2. * intersection) / union
-    return dice_loss.mean()
-
-
-def dice_loss_with_mask_batch(outputs, labels, mask):
-    # all 3 input variables should be shape (batch_size, label_size, label_size)
-    # outputs should be sigmoided (0-1)
-    # labels should be binary
-    # mask should be binary
-    smooth = 1.0
-    # Apply mask
-    outputs_masked = outputs * mask
-    labels_masked = labels * mask
-
-    # Sum over spatial dimensions, keep batch dimension
-    intersection = (outputs_masked * labels_masked).sum(dim=[1, 2])
-    union = outputs_masked.sum(dim=[1, 2]) + labels_masked.sum(dim=[1, 2]) - intersection
-
-    # Compute dice loss per batch and average
-    dice_loss = 1 - (2. * intersection + smooth) / (union + smooth)
-    return dice_loss.mean()
-
-
-def binary_cross_entropy_with_mask_batch(outputs, labels, mask):
-    # all 3 input variables should be shape (batch_size, label_size, label_size)
-    # outputs should be sigmoided (0-1)
-    # labels should be binary
-    # mask should be binary
-    criterion = BCELoss(reduction='none')
-    bce_loss = criterion(outputs, labels)
-
-    # Apply mask and keep batch dimension
-    masked_bce_loss = bce_loss * mask
-
-    # Average over all dimensions
-    return masked_bce_loss.mean(dim=[0, 1, 2])
 
 
 def create_data(cfg):
@@ -151,7 +100,8 @@ if __name__ == "__main__":
     epochs = 200
 
     # criterion = torch.nn.BCEWithLogitsLoss()
-    focal_loss_fn = FocalLoss2d(gamma=0.5)
+    focal_loss_fn = MaskedFocalLoss(gamma=0.5)
+    dice_loss_fn = MaskedBinaryDiceLoss(from_logits=True)
 
     for x in range(epochs):
         # Forward Pass
@@ -163,7 +113,7 @@ if __name__ == "__main__":
         probabilities = torch.sigmoid(logits)
 
         # bce_loss = binary_cross_entropy_with_mask_batch(probabilities, label.unsqueeze(0), mask.unsqueeze(0))
-        dice_loss = dice_loss_with_mask_batch_new(probabilities, label.unsqueeze(0), mask.unsqueeze(0))
+        dice_loss = MaskedBinaryDiceLoss(logits, label.unsqueeze(0), mask.unsqueeze(0))
 
         # iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probabilities, label.unsqueeze(0),
         #                                                                 mask.unsqueeze(0))
