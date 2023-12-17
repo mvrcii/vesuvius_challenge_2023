@@ -161,14 +161,14 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
 
-        # if batch_idx % 100 == 0:
-        #     with torch.no_grad():
-        #         combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
-        #         grid = make_grid(combined).detach().cpu()
-        #
-        #         test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
-        #
-        #         wandb.log({"Validation Image": test_image})
+        if batch_idx % 100 == 0 and self.trainer.is_global_zero:
+            with torch.no_grad():
+                combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
+                grid = make_grid(combined).detach().cpu()
+
+                test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
+
+                wandb.log({"Validation Image": test_image})
 
     def update_unetr_validation_metrics(self, loss, iou, precision, recall, f1):
         self.log(f'val_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
