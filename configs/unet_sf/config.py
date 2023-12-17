@@ -47,6 +47,9 @@ lr = 1e-3  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
+take_full_dataset = False
+no_ink_sample_percentage = 0.2  # Given the count of N ink samples, take this percentage of the count as no ink
+max_ignore_th = 10  # For no ink samples, how much ignore percentage (%) is allowed maximum
 
 num_workers = 16
 train_batch_size = 1
