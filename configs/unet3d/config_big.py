@@ -78,8 +78,8 @@ train_aug = [
         A.RandomResizedCrop(always_apply=True, height=patch_size, width=patch_size, scale=(0.78, 1.0),
                             ratio=(0.75, 1.51),
                             interpolation=0)
-    ], p=0.5),
-    A.ChannelDropout(p=1, channel_drop_range=(1, 4), fill_value=0),
+    ], p=0.1),
+    # A.ChannelDropout(p=0.05, channel_drop_range=(1, 1), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
