@@ -116,16 +116,12 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
         data, label = batch
 
         logits = self.forward(data)
-        print("UNET 3D Segformer Forward Output Logits:")
-        print(torch.min(logits))
-        print(torch.max(logits))
-
-        probabilities = torch.sigmoid(logits)
+        probs = torch.sigmoid(logits)
 
         target = label[:, 0]
         keep_mask = label[:, 1]
 
-        dice_loss = dice_loss_with_mask_batch(probabilities, target, keep_mask)
+        dice_loss = dice_loss_with_mask_batch(probs, target, keep_mask)
         focal_loss = self.focal_loss_fn(logits, target, keep_mask)
 
         total_loss = dice_loss + focal_loss
@@ -134,7 +130,7 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
 
         if batch_idx % 100 == 0 and self.trainer.is_global_zero:
             with torch.no_grad():
-                combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
+                combined = torch.cat([probs[0], target[0], keep_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
 
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
@@ -147,23 +143,23 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
         data, label = batch
 
         logits = self.forward(data)
-        probabilities = torch.sigmoid(logits)
+        probs = torch.sigmoid(logits)
 
         target = label[:, 0]
         keep_mask = label[:, 1]
 
-        dice_loss = dice_loss_with_mask_batch(probabilities, target, keep_mask)
+        dice_loss = dice_loss_with_mask_batch(probs, target, keep_mask)
         focal_loss = self.focal_loss_fn(logits, target, keep_mask)
 
         total_loss = dice_loss + focal_loss
 
-        iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probabilities, target, keep_mask)
+        iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probs, target, keep_mask)
 
         self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
 
         if batch_idx == 5 and self.trainer.is_global_zero:
             with torch.no_grad():
-                combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
+                combined = torch.cat([probs[0], target[0], keep_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
 
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))

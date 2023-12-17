@@ -141,7 +141,6 @@ class UNET3D_Segformer(nn.Module):
         # TODO: output = self.batch_norm_upscale2(output)
 
         output = output.squeeze(1)
-        output = torch.sigmoid(output)
 
         return output
 
