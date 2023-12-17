@@ -130,8 +130,17 @@ class UNET3D_Segformer(nn.Module):
         # self.batch_norm_upscale2 = nn.BatchNorm2d(..)
 
     def forward(self, image):
-        # output = self.encoder(image).max(axis=2)[0]  # 512, 512, 16 -> 512, 512, 16 (16 channels/feature maps??)
-        output = self.encoder(image).mean(axis=2).squeeze(-1)[0]  # 512, 512, 16 -> 512, 512, 16 (16 channels/feature maps??)
+        output = self.encoder(image)
+        max_output = output.max(axis=2)
+        final = max_output[0]
+        print("SHAPES")
+        print(output.shape)
+        print(max_output.shape)
+        print(final.shape)
+        exit()
+
+        output = self.encoder(image).max(axis=2)[0]  # 512, 512, 16 -> 512, 512, 16 (16 channels/feature maps??)
+        output = self.encoder(image).mean(axis=2)[0]  # 512, 512, 16 -> 512, 512, 16 (16 channels/feature maps??)
         # TODO: Add BatchNorm2d/3D
         # TODO: output = self.batch_norm(output)
         output = self.dropout(output)
