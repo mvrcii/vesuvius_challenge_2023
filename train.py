@@ -140,7 +140,7 @@ def main():
         max_epochs=config.epochs,
         logger=wandb_logger,
         callbacks=[checkpoint_callback],
-        accelerator="dp",
+        accelerator="auto",
         devices=devices,
         enable_progress_bar=True,
         precision='16-mixed',
