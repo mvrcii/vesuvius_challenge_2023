@@ -170,6 +170,7 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             y2 = y1 + config.patch_size
             x2 = x1 + config.patch_size
 
+            # Gte mask patch
             mask_patch = mask[y1:y2, x1:x2]
 
             # Check if patch is fully in mask => discard
@@ -177,32 +178,21 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
                 mask_skipped += 1
                 continue
 
+            # Check if mask patch shape is valid
             if mask_patch.shape != (config.patch_size, config.patch_size):
                 mask_skipped += 1
                 continue
 
-            # Get label patch and ignore patch
+            # Get label, image and ignore patch
             label_patch = label_arr[y1:y2, x1:x2]
             ignore_patch = ignore_arr[y1:y2, x1:x2]
+            image_patch = image_tensor[:, y1:y2, x1:x2]
 
             # Set label patch to 0 where ignore patch is 1 (to not count ink towards ink_p when it is ignored)
             label_patch[ignore_patch == 1] = 0
-            image_patch = image_tensor[:, y1:y2, x1:x2]
 
-            label_pixel_count = np.prod(label_patch.shape)
-            assert label_pixel_count != 0
-            ink_percentage = int((label_patch.sum() / label_pixel_count) * 100)
-            assert 0 <= ink_percentage <= 100
-
-            # invert ignore_patch so "ignored" areas are 0 and rest is 1
+            # Create keep_patch by inverting ignore patch
             keep_patch = np.logical_not(ignore_patch)
-            keep_percent = int((keep_patch.sum() / np.prod(keep_patch.shape)) * 100)
-            assert 0 <= keep_percent <= 100
-
-            # if ignore patch is fully black, discard
-            if keep_percent < 5:
-                ignore_skipped += 1
-                continue
 
             # Check shapes
             assert image_patch.shape == (
@@ -210,22 +200,38 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             assert label_patch.shape == (
                 config.patch_size, config.patch_size), f"Label patch wrong shape: {label_patch.shape}"
 
-            file_name = f"f{frag_id}_ch{start_channel:02d}_{x1}_{y1}_{x2}_{y2}.npy"
-            STACK_PATCH_INFOS.append((file_name, frag_id, start_channel, ink_percentage, keep_percent))
-
-            # save image
-            np.save(os.path.join(img_dest_dir, file_name), image_patch)
-
-            # scale label and ignore patch down to label size
+            # scale label and keep_patch patch down to label size
             label_patch = resize(label_patch, label_shape, order=0, preserve_range=True, anti_aliasing=False)
             keep_patch = resize(keep_patch, label_shape, order=0, preserve_range=True, anti_aliasing=False)
 
-            # stack label and keep patch
-            label_patch = np.stack([label_patch, keep_patch], axis=0)
+            # assert label patch has > 0 pixels
+            label_pixel_count = np.prod(label_patch.shape)
+            assert label_pixel_count != 0
 
-            # save label
+            # calculate ink percentage of scaled down label patch
+            ink_percentage = int((label_patch.sum() / label_pixel_count) * 100)
+            assert 0 <= ink_percentage <= 100
+
+            # calculate keep percentage of scaled down keep patch
+            keep_percent = int((keep_patch.sum() / np.prod(keep_patch.shape)) * 100)
+            assert 0 <= keep_percent <= 100
+            ignore_percent = 100 - keep_percent
+
+            # Discard images with less than 5% keep pixels
+            if keep_percent < 5:
+                ignore_skipped += 1
+                continue
+
+            # Create file name and save image
+            file_name = f"f{frag_id}_ch{start_channel:02d}_{x1}_{y1}_{x2}_{y2}.npy"
+            np.save(os.path.join(img_dest_dir, file_name), image_patch)
+
+            # stack label and keep patch => save
+            label_patch = np.stack([label_patch, keep_patch], axis=0)
             label_patch = np.packbits(label_patch.flatten())
             np.save(os.path.join(label_dest_dir, file_name), label_patch)
+
+            STACK_PATCH_INFOS.append((file_name, frag_id, start_channel, ink_percentage, ignore_percent))
 
     LABEL_INFO_LIST.extend(STACK_PATCH_INFOS)
     return len(STACK_PATCH_INFOS), mask_skipped, ignore_skipped
