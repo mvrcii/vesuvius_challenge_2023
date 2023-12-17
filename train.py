@@ -10,13 +10,13 @@ import torch
 from lightning import seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
-from lightning.pytorch.strategies import DDPStrategy
 from lightning.pytorch.trainer import Trainer
 from lightning_fabric.accelerators import find_usable_cuda_devices
 
 from config_handler import Config
 from data_modules.segformer.segformer_datamodule import SegFormerDataModule
 from data_modules.unetrsf.unetrsf_datamodule import UNETR_SFDataModule
+from data_modules.unet3d.unet3dsf_datamodule import UNET3D_SFDataModule
 from models.segformer import SegformerModule
 from models.unetrsf import UNETR_SFModule
 from models.unet3dsf import UNET3D_SFModule
@@ -72,8 +72,10 @@ def get_data_module(config: Config):
 
     if architecture == "segformer":
         return SegFormerDataModule(cfg=config)
-    elif architecture == "unetr-sf" or architecture == "unet3d-sf":
+    elif architecture == "unetr-sf":
         return UNETR_SFDataModule(cfg=config)
+    elif architecture == "unet3d-sf":
+        return UNET3D_SFDataModule(cfg=config)
     else:
         print("Invalid architecture for data module:", architecture)
         sys.exit(1)

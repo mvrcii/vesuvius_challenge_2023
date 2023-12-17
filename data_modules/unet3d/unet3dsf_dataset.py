@@ -7,7 +7,7 @@ from skimage.transform import resize
 from data_modules.abstract.abstract_dataset import AbstractDataset
 
 
-class UNETR_SFDataset(AbstractDataset):
+class UNET3D_SFDataset(AbstractDataset):
     def __init__(self, root_dir, images, label_size, patch_size, transform, labels=None):
         super().__init__(root_dir=root_dir,
                          images=images,
@@ -49,8 +49,5 @@ class UNETR_SFDataset(AbstractDataset):
 
         # go from (layers, patch_size, patch_size) to (1, layers, patch_size, patch_size) => add "1" channel
         image = torch.tensor(image).unsqueeze(0)
-
-        # pad image to have 16 layers
-        image = torch.cat([image, torch.zeros(1, 16 - image.shape[1], self.patch_size, self.patch_size)], dim=1)
 
         return image, label
