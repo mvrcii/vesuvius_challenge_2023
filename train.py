@@ -19,6 +19,7 @@ from data_modules.unetrsf.unetrsf_datamodule import UNETR_SFDataModule
 from models.cnn3d_segformer import CNN3D_SegformerModule
 from models.segformer import SegformerModule
 from models.unetrsf import UNETR_SFModule
+from models.unet3dsf import UNET3D_SFModule
 
 torch.set_float32_matmul_precision('medium')
 
@@ -51,6 +52,8 @@ def get_model(config: Config):
         return CNN3D_SegformerModule(cfg=config)
     elif architecture == 'unetr-sf':
         return UNETR_SFModule(cfg=config)
+    elif architecture == 'unet3d-sf':
+        return UNET3D_SFModule(cfg=config)
     else:
         print("Invalid architecture for model:", architecture)
         sys.exit(1)
@@ -71,7 +74,7 @@ def get_data_module(config: Config):
 
     if architecture == "segformer":
         return SegFormerDataModule(cfg=config)
-    elif architecture == "unetr-sf":
+    elif architecture == "unetr-sf" or architecture == "unet3d-sf":
         return UNETR_SFDataModule(cfg=config)
     else:
         print("Invalid architecture for data module:", architecture)
