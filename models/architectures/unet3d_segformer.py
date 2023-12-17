@@ -4,7 +4,7 @@ import torch.nn as nn
 from albumentations.pytorch import ToTensorV2
 from transformers import SegformerForSemanticSegmentation, SegformerConfig
 import numpy as np
-from models.architectures.pytorch3dunet.pytorch3dunet.unet3d.model import get_model
+from pytorch3dunet.pytorch3dunet.unet3d.model import get_model
 
 from models.architectures.unetr import UNETR
 
