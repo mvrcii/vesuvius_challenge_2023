@@ -28,7 +28,7 @@ in_chans = 12
 seed = 770
 epochs = -1
 losses = []
-dataset_fraction = 1
+dataset_fraction = 0.5
 unetr_out_channels = 16
 
 val_interval = 1
@@ -37,7 +37,7 @@ val_interval = 1
 patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
-ink_ratio = 3
+ink_ratio = 15
 fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
                 JAZZILLA_FRAG_ID]
 validation_fragments = [HOT_ROD_FRAG_ID]
