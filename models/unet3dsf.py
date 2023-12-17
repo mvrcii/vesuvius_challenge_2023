@@ -10,19 +10,21 @@ from multilayer_approach.focal_loss import FocalLoss2d
 
 
 def dice_loss_with_mask_batch(outputs, labels, mask):
-    # all 3 input variables should be shape (batch_size, label_size, label_size)
-    # outputs should be sigmoided (0-1)
-    # labels should be binary
-    # mask should be binary
+    """
+
+    :param outputs: Sigmoided probabilities (0-1) [N, H, W]
+    :param labels: Binary [N, H, W]
+    :param mask: Binary [N, H, W]
+    :return:
+    """
     outputs_masked = outputs * mask
     labels_masked = labels * mask
 
-    # Calculate intersection and union with masking
     intersection = (outputs_masked * labels_masked).sum(axis=(1, 2))
     union = (outputs_masked + labels_masked).sum(axis=(1, 2))
 
-    # Compute dice loss per batch and average
     dice_loss = 1 - (2. * intersection) / union
+
     return dice_loss.mean()
 
 
