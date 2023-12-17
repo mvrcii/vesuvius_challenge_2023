@@ -7,7 +7,6 @@ from datetime import datetime
 
 import numpy as np
 import torch
-import torch._dynamo
 from lightning import seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
@@ -133,10 +132,7 @@ def main():
     wandb_logger.experiment.name = model_run_name
     model_run_dir = os.path.join(config.work_dir, "checkpoints", model_run_name)
 
-    torch._dynamo.config.suppress_errors = True
-
     model = get_model(config=config)
-    model = torch.compile(model)
 
     data_module = get_data_module(config=config)
 
