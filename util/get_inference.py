@@ -49,6 +49,7 @@ def find_directory_on_remote(server_path, fragment_id, model_run_dir):
 def get_inference_folder(fragment_id, full_model_run_dir, hostname):
     server_paths = {
         "vast": "~/kaggle1stReimp/inference/results",
+        "vast2": "~/kaggle1stReimp/inference/results",
         "slurm": "/scratch/medfm/vesuv/kaggle1stReimp/inference/results",
     }
 
