@@ -43,6 +43,11 @@ fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFI
 validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
+take_full_dataset = False
+no_ink_sample_percentage = 0.2  # Given the count of N ink samples, take this percentage of the count as no ink
+max_ignore_th = 10  # For no ink samples, how much ignore percentage (%) is allowed maximum
+
+
 lr = 5e-5
 step_lr_steps = 1
 step_lr_factor = 0.98

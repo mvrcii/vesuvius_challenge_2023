@@ -56,32 +56,27 @@ def generate_dataset(cfg: Config):
     if cfg.seed == -1:
         cfg.seed = None  # Set random seed if -1 is given
 
+    if not cfg.take_full_dataset:
+        count_zero = (df['ink_p'] == 0).sum()
+        count_greater_than_zero = (df['ink_p'] > 0).sum()
+        print(f"Before balancing: {count_zero} samples with ink_p = 0 and {count_greater_than_zero} samples with ink_p > 0")
+
+        # BALANCING IS DONE ON CREATION
+        # Step 1: Filter out rows where ink_p > ratio
+        df_ink_p_greater_than_ink_ratio = df[df['ink_p'] > cfg.ink_ratio]
+
+        # Step 2: Decide how many no-ink samples
+        no_ink_sample_count = int(len(df_ink_p_greater_than_ink_ratio) * cfg.no_ink_sample_percentage)
+
+        # Step 3: Filter out rows where ink_p <= 0 and limit the number of rows
+        df_good_no_inks = df[(df['ink_p'] == 0) & (df['ignore_p'] < cfg.max_ignore_th)].head(no_ink_sample_count)
+
+        # # Step 4: Concatenate the two DataFrames
+        df = pd.concat([df_ink_p_greater_than_ink_ratio, df_good_no_inks])
+
     count_zero = (df['ink_p'] == 0).sum()
     count_greater_than_zero = (df['ink_p'] > 0).sum()
-    print(f"Before balancing: {count_zero} samples with ink_p = 0 and {count_greater_than_zero} samples with ink_p > 0")
-
-    # BALANCING IS DONE ON CREATION
-    # Step 1: Filter out rows where ink_p > ratio
-    df_ink_p_greater_than_ink_ratio = df[df['ink_p'] > cfg.ink_ratio]
-
-    # Step 2: Decide how many no-ink samples
-    no_ink_sample_count = int(len(df_ink_p_greater_than_ink_ratio) * 0.2)
-
-    # Step 3: Filter out rows where ink_p <= 0 and limit the number of rows
-    max_ignore_percentage_th = 10
-    df_good_no_inks = df[(df['ink_p'] == 0) & (df['ignore_p'] < max_ignore_percentage_th)].head(no_ink_sample_count)
-
-    # # Step 4: Concatenate the two DataFrames
-    df = pd.concat([df_ink_p_greater_than_ink_ratio, df_good_no_inks])
-
-    count_zero = (df['ink_p'] == 0).sum()
-    count_greater_than_zero = (df['ink_p'] > 0).sum()
-    print(f"After balancing: {count_zero} samples with ink_p = 0 and {count_greater_than_zero} samples with ink_p > 0")
-    # # Print statistics
-    # print(f"Total ink samples: {num_ink_samples}")
-    # print(f"Total non-ink samples with no artefact: {num_no_artefact_samples}")
-    # print(f"Total non-ink samples with artefact > {cfg.artefact_threshold}: {num_with_artefact_samples}")
-    # print(f"Total samples: {num_ink_samples + num_no_artefact_samples + num_with_artefact_samples}")
+    print(f"Final Count: {count_zero} samples with ink_p = 0 and {count_greater_than_zero} samples with ink_p > 0")
 
     df['file_path'] = df.apply(
         lambda row: os.path.join(get_frag_name_from_id(row['frag_id']), 'images', row['filename']), axis=1)
