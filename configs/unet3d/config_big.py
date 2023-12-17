@@ -45,7 +45,7 @@ train_split = 0.8
 take_full_dataset = True  # If set to true, takes full dataset and ignores thresholds below
 ink_ratio = 3
 no_ink_sample_percentage = 0.2  # Given the count of N ink samples, take this percentage of the count as no ink
-max_ignore_th = 10  # For no ink samples, how much ignore percentage (%) is allowed maximum
+max_ignore_th = 75  # For all samples, how much ignore is maximum allowed
 
 lr = 5e-5
 step_lr_steps = 1
