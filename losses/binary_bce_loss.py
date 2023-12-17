@@ -21,6 +21,8 @@ class MaskedBinaryBCELoss(nn.Module):
                 y_mask: torch.Tensor) -> torch.Tensor:
         if self.from_logits:
             y_pred_unmasked = torch.sigmoid(y_pred_unmasked)
+            assert y_pred_unmasked.min() >= 0 and y_pred_unmasked.max() <= 1, \
+                f"Values out of range after sigmoid min={y_pred_unmasked.min()}, max={y_pred_unmasked.max()}"
 
         losses = F.binary_cross_entropy(input=y_pred_unmasked, target=y_true_unmasked, reduction='none')
         losses = losses * y_mask  # Apply mask to losses

@@ -146,6 +146,11 @@ class UNET3D_Segformer(nn.Module):
 
         return output
 
+    def on_after_backward(self):
+        for name, param in self.named_parameters():
+            if param.grad is not None and torch.isnan(param.grad).any():
+                print(f"NaN gradient in {name}")
+
 
 def get_device(model):
     return next(model.parameters()).device

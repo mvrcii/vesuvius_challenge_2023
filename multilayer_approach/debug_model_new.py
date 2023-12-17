@@ -5,6 +5,7 @@ from skimage.transform import resize
 from torch import float16
 
 from config_handler import Config
+from losses.binary_bce_loss import MaskedBinaryBCELoss
 from losses.binary_dice_loss import MaskedBinaryDiceLoss
 from losses.focal_loss import MaskedFocalLoss
 from models.architectures.unetr_segformer import UNETR_Segformer
@@ -74,9 +75,6 @@ if __name__ == "__main__":
         print("CUDA is not available. The model will remain on the CPU.")
 
     mask_np = np.ones_like(label)
-    # mask_np[:, 24:40] = 0
-    # plt.imshow(mask_np, cmap='gray')
-    # plt.show()
 
     plt.imshow(mask_np, cmap='gray', vmin=0, vmax=1)
     plt.title("mask")
@@ -100,27 +98,25 @@ if __name__ == "__main__":
     epochs = 200
 
     # criterion = torch.nn.BCEWithLogitsLoss()
-    focal_loss_fn = MaskedFocalLoss(gamma=0.5)
+    # focal_loss_fn = MaskedFocalLoss(gamma=0.5)
     dice_loss_fn = MaskedBinaryDiceLoss(from_logits=True)
+    bce_loss_fn = MaskedBinaryBCELoss(from_logits=True)
 
     for x in range(epochs):
-        # Forward Pass
         logits = model(image)  # N, H, W
         logits = logits.half()
 
-        focal_loss = focal_loss_fn(logits, label)
-
         probabilities = torch.sigmoid(logits)
 
-        # bce_loss = binary_cross_entropy_with_mask_batch(probabilities, label.unsqueeze(0), mask.unsqueeze(0))
-        dice_loss = MaskedBinaryDiceLoss(logits, label.unsqueeze(0), mask.unsqueeze(0))
+        bce_loss = bce_loss_fn(logits, label.unsqueeze(0), mask.unsqueeze(0))
+        dice_loss = dice_loss_fn(logits, label.unsqueeze(0), mask.unsqueeze(0))
 
         # iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probabilities, label.unsqueeze(0),
         #                                                                 mask.unsqueeze(0))
         # print all metrics in one line
         # print("IoU:", iou.item(), "Precision:", precision.item(), "Recall:", recall.item(), "F1:", f1.item())
 
-        total_loss = dice_loss + focal_loss
+        total_loss = bce_loss
         # total_loss = dice_loss
 
         optimizer.zero_grad()

@@ -7,7 +7,7 @@ from torchmetrics import Dice
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryJaccardIndex as IoU)
 
-from losses.losses import get_loss_functions
+from losses.utils import get_loss_functions
 
 
 class AbstractVesuvLightningModule(LightningModule):
