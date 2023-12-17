@@ -37,7 +37,7 @@ val_interval = 1
 patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
-ink_ratio = 15
+ink_ratio = 5
 # fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
 #                 JAZZILLA_FRAG_ID]
 fragment_ids = [BLASTER_FRAG_ID, JETFIRE_FRAG_ID, JAZZILLA_FRAG_ID]
