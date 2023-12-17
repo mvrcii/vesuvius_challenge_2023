@@ -17,6 +17,7 @@ class FocalLoss2d(nn.Module):
         :param target: [H, W]
         :return:
         """
+        target = target[:, 0, :, :].squeeze()
         bce_loss = F.binary_cross_entropy_with_logits(input, target.float())
         pt = torch.exp(-bce_loss)
 
