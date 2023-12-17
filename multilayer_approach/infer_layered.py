@@ -204,8 +204,9 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
             patch = images[:, y_start:y_end, x_start:x_end]  # [12, 512, 512]
 
             patch = np.expand_dims(patch, 0)  # [1, 12, 512, 512]
-            zero_padding = np.zeros((1, 16 - patch.shape[1], patch_size, patch_size))  # [1, 4, 512, 512]
-            patch = np.concatenate([patch, zero_padding], axis=1)  # [1, 16, 512, 512]
+            # todo split files for unetr and unet3d
+            # zero_padding = np.zeros((1, 16 - patch.shape[1], patch_size, patch_size))  # [1, 4, 512, 512]
+            # patch = np.concatenate([patch, zero_padding], axis=1)  # [1, 16, 512, 512]
 
             # If the patch size is smaller than the expected size, skip it
             if patch.shape != expected_patch_shape:
