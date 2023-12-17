@@ -26,7 +26,7 @@ model_name = f"{architecture}-{model_type}"
 
 in_chans = 12
 seed = 12424
-epochs = -1
+epochs = 200
 losses = []
 dataset_fraction = 1
 unet3d_out_channels = 16
@@ -48,6 +48,8 @@ no_ink_sample_percentage = 0.5  # Given the count of N ink samples, take this pe
 max_ignore_th = 75  # For all samples, how much ignore is maximum allowed
 
 lr = 5e-5
+eta_min = 1e-6
+
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
