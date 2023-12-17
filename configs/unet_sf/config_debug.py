@@ -19,9 +19,9 @@ dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # training parameters
 model_type = "b2"
-from_pretrained = f"nvidia/mit-{model_type}"
+segformer_from_pretrained = f"nvidia/mit-{model_type}"
 architecture = 'unetr-sf'
-model_name = f"{architecture}-{from_pretrained}"
+model_name = f"{architecture}-{model_type}"
 
 in_chans = 12
 seed = 3445774
