@@ -29,7 +29,7 @@ seed = 12424
 epochs = -1
 losses = []
 dataset_fraction = 1
-unetr_out_channels = 16
+unet3d_out_channels = 16
 
 val_interval = 1
 

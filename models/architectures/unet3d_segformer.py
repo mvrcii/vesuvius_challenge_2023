@@ -111,12 +111,12 @@ class UNET3D_Segformer(nn.Module):
         self.cfg = cfg
         self.dropout = nn.Dropout2d(dropout)
 
-        self.encoder = get_model({"name": "UNet3D", "in_channels": 1, "out_channels": 16, "f_maps": 8, "num_groups": 4,
+        self.encoder = get_model({"name": "UNet3D", "in_channels": 1, "out_channels": self.cfg.unet3d_out_channels, "f_maps": 8, "num_groups": 4,
                                   "is_segmentation": False})
 
         self.encoder_2d = SegformerForSemanticSegmentation.from_pretrained(
             pretrained_model_name_or_path=self.cfg.segformer_from_pretrained,
-            num_channels=self.cfg.unetr_out_channels,
+            num_channels=self.cfg.unet3d_out_channels,
             ignore_mismatched_sizes=True,
             num_labels=1,
         )
