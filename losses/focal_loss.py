@@ -42,4 +42,4 @@ class MaskedFocalLoss(nn.Module):
         y_pred = y_pred_unmasked * y_mask
         y_true = y_true_unmasked * y_mask
 
-        return torchvision.ops.sigmoid_focal_loss(y_pred, y_true, self.alpha, self.gamma, self.reduction)
+        return torchvision.ops.sigmoid_focal_loss(y_pred, y_true, self.alpha, self.gamma, reduction='mean')
