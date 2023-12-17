@@ -90,7 +90,7 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
 
         self.model = UNET3D_Segformer(cfg=cfg)
 
-        self.focal_loss_fn = FocalLoss2d(gamma=0.5)
+        self.focal_loss_fn = FocalLoss2d(gamma=1.0)
 
         from_checkpoint = getattr(cfg, 'from_checkpoint', None)
         if from_checkpoint:
