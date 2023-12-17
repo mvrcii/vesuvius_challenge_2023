@@ -15,6 +15,7 @@ einops
 opencv-python
 pillow
 lightning
+h5py
 
 pandas
 requests
