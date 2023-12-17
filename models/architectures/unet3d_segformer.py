@@ -130,32 +130,16 @@ class UNET3D_Segformer(nn.Module):
         # self.batch_norm_upscale2 = nn.BatchNorm2d(..)
 
     def forward(self, image):
-        # output = self.encoder(image)
-        # # => 5, 16, 12, 512, 512 (batch_size, channels, depth, height, width)
-        # max_output, _ = output.max(axis=2)
-        # final = max_output[0]
-        # print("SHAPES")
-        # print(output.shape)
-        # print(max_output.shape)
-        # print(final.shape)
-        # exit()
-
-        # output = self.encoder(image).max(axis=2)[0]  # 512, 512, 16 -> 512, 512, 16 (16 channels/feature maps??)
-        output = self.encoder(image).mean(axis=2) # 512, 512, 16 -> 512, 512, 16 (16 channels/feature maps??)
-        # TODO: Add BatchNorm2d/3D
-        # TODO: output = self.batch_norm(output)
-        output = self.dropout(output)
-        output = self.encoder_2d(output).logits
-        # output = self.upscaler1(output)
-        # TODO: Add BatchNorm2d/3D
-        # TODO: output = self.batch_norm_upscale1(output)
-        # output = self.upscaler2(output)
-        # TODO: Add BatchNorm2d/3D
-        # TODO: output = self.batch_norm_upscale2(output)
-
-        output = output.squeeze(1)
-
-        return output
+        # output of self.encoder(image) is: (BS, 16, 12, 512, 512) => BS, channels, depth, height, width
+        # .max() returns tuple of max values and max indices, that's why we need [0] here
+        # after .max(axis=2) (we max over the depth dimension) we get: (BS, 16, 512, 512)
+        # output = self.encoder(image).max(axis=2)[0]
+        # Mean does not return a tuple, so the [0] access is not needed, resulting shape is (BS, 16, 512, 512)
+        inner_output = self.encoder(image).mean(axis=2)
+        inner_output = self.dropout(inner_output)
+        inner_output = self.encoder_2d(inner_output).logits
+        inner_output = inner_output.squeeze(1)
+        return inner_output
 
     def on_after_backward(self):
         for name, param in self.named_parameters():
@@ -167,25 +151,25 @@ def get_device(model):
     return next(model.parameters()).device
 
 
-if __name__ == "__main__":
-    # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 256, 256))
-    model = UNETR_Segformer(CFG)
-    #
-    if torch.cuda.is_available():
-        model.to('cuda')
-    else:
-        print("CUDA is not available. The model will remain on the CPU.")
-    #
-    # print(get_device(model))
-    #
-    # x = np.random.rand(1, 1, 16, 512, 512)
-    # x = torch.from_numpy(x).float()
-    x = torch.randn(1, 1, 12, 256, 256)
-    print(x.shape)
-    # pad to have depth 16 instead of 12
-    x = torch.cat([x, torch.zeros(1, 1, 4, 256, 256)], dim=2)
-    print(x.shape)
-    # # move x to cuda
-    x = x.to(get_device(model))
-    output = model(x)
-    print(output.shape)
+# if __name__ == "__main__":
+#     # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 256, 256))
+#     model = UNETR_Segformer(CFG)
+#     #
+#     if torch.cuda.is_available():
+#         model.to('cuda')
+#     else:
+#         print("CUDA is not available. The model will remain on the CPU.")
+#     #
+#     # print(get_device(model))
+#     #
+#     # x = np.random.rand(1, 1, 16, 512, 512)
+#     # x = torch.from_numpy(x).float()
+#     x = torch.randn(1, 1, 12, 256, 256)
+#     print(x.shape)
+#     # pad to have depth 16 instead of 12
+#     x = torch.cat([x, torch.zeros(1, 1, 4, 256, 256)], dim=2)
+#     print(x.shape)
+#     # # move x to cuda
+#     x = x.to(get_device(model))
+#     output = model(x)
+#     print(output.shape)
