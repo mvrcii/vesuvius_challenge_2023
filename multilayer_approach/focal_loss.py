@@ -11,13 +11,20 @@ class FocalLoss2d(nn.Module):
         self.gamma = gamma
         self.alpha = alpha
 
-    def forward(self, input, target):
+    def forward(self, _input, target, mask):
         """
-        :param input: [N, H, W]
-        :param target: [H, W]
+        :param _input: Logits [N, H, W]
+        :param target: [N, H, W]
+        :param mask: [N, H, W]
         :return:
         """
-        bce_loss = F.binary_cross_entropy_with_logits(input, target.unsqueeze(0).float())
+        _input = _input.squeeze()
+
+        _input_masked = _input * mask
+        target_masked = target * mask
+
+        bce_loss = F.binary_cross_entropy_with_logits(_input_masked, target_masked.float())
+
         pt = torch.exp(-bce_loss)
 
         # If alpha is set, use it to balance the classes

@@ -32,10 +32,10 @@ class UNETR_SFDataModule(AbstractDataModule):
                                transform=transform)
 
         batch_size = self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size
-        shuffle = dataset_type == 'train'
+        # shuffle = dataset_type == 'train'
         data_loader = DataLoader(dataset,
                                  batch_size=batch_size,
-                                 shuffle=shuffle,
+                                 shuffle=True,
                                  num_workers=self.cfg.num_workers,
                                  pin_memory=True,
                                  drop_last=False,
