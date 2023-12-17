@@ -10,6 +10,7 @@ from torchvision.utils import make_grid
 from models.abstract_model import AbstractVesuvLightningModule
 from models.architectures.unet3d_segformer import UNET3D_Segformer
 from models.architectures.unetr_segformer import UNETR_Segformer
+from multilayer_approach.focal_loss import FocalLoss2d
 
 
 def dice_loss_with_mask_batch(outputs, labels, mask):
@@ -93,6 +94,8 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
 
         self.model = UNET3D_Segformer(cfg=cfg)
 
+        self.focal_loss_fn = FocalLoss2d(gamma=0.5)
+
         from_checkpoint = getattr(cfg, 'from_checkpoint', None)
         if from_checkpoint:
             checkpoint_root_path = os.path.join("checkpoints", cfg.from_checkpoint)
@@ -116,14 +119,18 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
         self.train_step += 1
         data, label = batch
 
-        probabilities = torch.sigmoid(self.forward(data))
+        logits = self.forward(data)
+        probabilities = torch.sigmoid(logits)
 
         target = label[:, 0]
         keep_mask = label[:, 1]
 
         dice_loss = dice_loss_with_mask_batch(probabilities, target, keep_mask)
+        focal_loss = self.focal_loss_fn(logits, label)
 
-        self.update_unetr_training_metrics(dice_loss)
+        total_loss = dice_loss + focal_loss
+
+        self.update_unetr_training_metrics(total_loss)
 
         if batch_idx % 100 == 0 and self.trainer.is_global_zero:
             with torch.no_grad():
@@ -138,16 +145,21 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
 
     def validation_step(self, batch, batch_idx):
         data, label = batch
-        probabilities = torch.sigmoid(self.forward(data))
+
+        logits = self.forward(data)
+        probabilities = torch.sigmoid(logits)
 
         target = label[:, 0]
         keep_mask = label[:, 1]
 
         dice_loss = dice_loss_with_mask_batch(probabilities, target, keep_mask)
+        focal_loss = self.focal_loss_fn(logits, label)
+
+        total_loss = dice_loss + focal_loss
 
         iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probabilities, target, keep_mask)
 
-        self.update_unetr_validation_metrics(dice_loss, iou, precision, recall, f1)
+        self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
 
         # if batch_idx % 100 == 0:
         #     with torch.no_grad():
