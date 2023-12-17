@@ -8,6 +8,7 @@ from config_handler import Config
 from losses.binary_bce_loss import MaskedBinaryBCELoss
 from losses.binary_dice_loss import MaskedBinaryDiceLoss
 from losses.focal_loss import MaskedFocalLoss
+from models.architectures.unet3d_segformer import UNET3D_Segformer
 from models.architectures.unetr_segformer import UNETR_Segformer
 
 
@@ -64,10 +65,11 @@ def create_data(cfg):
 
 if __name__ == "__main__":
 
-    cfg = Config.load_from_file("configs/unet_sf/config_debug.py")
+    cfg = Config.load_from_file("configs/unet3d/config_debug.py")
     image, label = create_data(cfg)
 
-    model = UNETR_Segformer(cfg)
+    # model = UNETR_Segformer(cfg)
+    model = UNET3D_Segformer(cfg)
 
     if torch.cuda.is_available():
         model.to('cuda')
@@ -83,23 +85,17 @@ if __name__ == "__main__":
     mask = torch.tensor(mask_np, dtype=float16).to('cuda')
     label = torch.tensor(label, dtype=float16).to('cuda')
 
-    # plt.imshow(label, cmap='gray')
-    # plt.imshow(image, cmap='gray')
-    # plt.show()
-
     image = torch.Tensor(image).unsqueeze(0).unsqueeze(0).float()
-    assert image.dim() == 5
-    # print("Image Shape:", image.shape)
-
     image = image.to('cuda')
 
-    # 256, dice, 1e-4
-    optimizer = torch.optim.AdamW(model.parameters(), lr=2e-4, weight_decay=0.01)
-    epochs = 200
+    epochs = 500
+    optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5, weight_decay=0.001)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
 
     # criterion = torch.nn.BCEWithLogitsLoss()
     # focal_loss_fn = MaskedFocalLoss(gamma=0.5)
     dice_loss_fn = MaskedBinaryDiceLoss(from_logits=True)
+    focal_loss_fn = MaskedFocalLoss(gamma=2.0, alpha=0.25)
     bce_loss_fn = MaskedBinaryBCELoss(from_logits=True)
 
     for x in range(epochs):
@@ -110,21 +106,24 @@ if __name__ == "__main__":
 
         bce_loss = bce_loss_fn(logits, label.unsqueeze(0), mask.unsqueeze(0))
         dice_loss = dice_loss_fn(logits, label.unsqueeze(0), mask.unsqueeze(0))
+        focal_loss = focal_loss_fn(logits, label.unsqueeze(0), mask.unsqueeze(0))
 
         # iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probabilities, label.unsqueeze(0),
         #                                                                 mask.unsqueeze(0))
         # print all metrics in one line
         # print("IoU:", iou.item(), "Precision:", precision.item(), "Recall:", recall.item(), "F1:", f1.item())
 
-        total_loss = bce_loss
+        total_loss = focal_loss + dice_loss
         # total_loss = dice_loss
 
         optimizer.zero_grad()
         total_loss.backward()
         optimizer.step()
+        scheduler.step()
 
-        print("Loss:", total_loss)
+        print(f"Epoch={x} Lr={scheduler.get_last_lr()} Loss:", total_loss)
 
-        prediction = probabilities.squeeze().detach().cpu().numpy()
-        plt.imshow(prediction, cmap='gray')
-        plt.show()
+        if x % 20 == 0:
+            prediction = probabilities.squeeze().detach().cpu().numpy()
+            plt.imshow(prediction, cmap='gray')
+            plt.show()

@@ -4,7 +4,6 @@ import torch
 import wandb
 from torchvision.utils import make_grid
 
-from losses.binary_bce_loss import MaskedBinaryBCELoss
 from losses.binary_dice_loss import MaskedBinaryDiceLoss
 from losses.focal_loss import MaskedFocalLoss
 from models.abstract_model import AbstractVesuvLightningModule
@@ -35,38 +34,6 @@ def calculate_masked_metrics_batchwise(outputs, labels, mask):
     return iou.mean(), precision.mean(), recall.mean(), f1.mean()
 
 
-# def load_test_image(cfg):
-#     path = os.path.join("multilayer_approach/datasets/sanity/JETFIRE")
-#     image = np.load(os.path.join(path, 'images', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
-#     label = np.load(os.path.join(path, 'labels', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
-#     label = np.unpackbits(label).reshape((2, cfg.label_size, cfg.label_size))  # 2, 128, 128
-#
-#     # Measure RAM usage of numpy arrays
-#     image_size_bytes = sys.getsizeof(image)
-#     label_size_bytes = sys.getsizeof(label)
-#     print(f"Image size in RAM: {image_size_bytes} bytes")
-#     print(f"Label size in RAM: {label_size_bytes} bytes")
-#
-#     label = label[0]  # 128, 128 now
-#
-#     label = torch.from_numpy(label).to(dtype=float16, device='cuda')
-#     image = torch.from_numpy(image).to(dtype=float16, device='cuda')
-#
-#     image = image.unsqueeze(0)
-#     print("Image Shape", image.shape)
-#
-#     pad_array = torch.zeros(1, 16 - image.shape[1], cfg.patch_size, cfg.patch_size).to(dtype=float16, device='cuda')
-#     print("Pad Shape", pad_array.shape)
-#
-#     image = torch.cat([image, pad_array], dim=1)
-#
-#     # Measure VRAM usage
-#     vram_usage_bytes = torch.cuda.memory_allocated()
-#     print(f"VRAM used for image and label: {vram_usage_bytes} bytes")
-#
-#     return image, label
-
-
 class UNET3D_SFModule(AbstractVesuvLightningModule):
     def __init__(self, cfg):
         super().__init__(cfg=cfg)
@@ -75,9 +42,9 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
 
         self.model = UNET3D_Segformer(cfg=cfg)
 
-        self.focal_loss_fn = MaskedFocalLoss(gamma=0.5)
+        self.focal_loss_fn = MaskedFocalLoss(gamma=2.0, alpha=0.25)
         self.dice_loss_fn = MaskedBinaryDiceLoss(from_logits=True)
-        self.bce_loss_fn = MaskedBinaryBCELoss(from_logits=True)
+        # self.bce_loss_fn = MaskedBinaryBCELoss(from_logits=True)
 
         from_checkpoint = getattr(cfg, 'from_checkpoint', None)
         if from_checkpoint:
@@ -106,13 +73,13 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
 
         dice_loss = self.dice_loss_fn(y_pred, y_true, y_mask)
         focal_loss = self.focal_loss_fn(y_pred, y_true, y_mask)
-        bce_loss = self.bce_loss_fn(y_pred, y_true, y_mask)
+        # bce_loss = self.bce_loss_fn(y_pred, y_true, y_mask)
 
         self.log(f'train_dice_loss', dice_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
         self.log(f'train_focal_loss', focal_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log(f'train_bce_loss', bce_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        # self.log(f'train_bce_loss', bce_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
-        total_loss = dice_loss + bce_loss
+        total_loss = dice_loss + focal_loss
 
         self.update_unetr_training_metrics(total_loss)
         self.train_step += 1
@@ -125,7 +92,7 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
                 wandb.log({"Train Image": test_image})
 
-        return dice_loss
+        return total_loss
 
     def validation_step(self, batch, batch_idx):
         data, label = batch
@@ -137,13 +104,13 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
 
         dice_loss = self.dice_loss_fn(y_pred, y_true, y_mask)
         focal_loss = self.focal_loss_fn(y_pred, y_true, y_mask)
-        bce_loss = self.bce_loss_fn(y_pred, y_true, y_mask)
+        # bce_loss = self.bce_loss_fn(y_pred, y_true, y_mask)
 
         self.log(f'val_dice_loss', dice_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
         self.log(f'val_focal_loss', focal_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log(f'val_bce_loss', bce_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        # self.log(f'val_bce_loss', bce_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
-        total_loss = dice_loss + bce_loss
+        total_loss = dice_loss + focal_loss
 
         iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probs, y_true, y_mask)
         self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
@@ -156,7 +123,7 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
                 wandb.log({"Validation Image": test_image})
 
     def on_after_backward(self):
-        if self.trainer.global_step % 100 == 0:  # Log every 100 steps
+        if self.trainer.global_step % 100 == 0 and self.trainer.is_global_zero:  # Log every 100 steps
             for name, param in self.named_parameters():
                 if param.requires_grad and param.grad is not None:
                     wandb.log({f"grads/{name}": wandb.Histogram(param.grad.cpu().numpy())})
