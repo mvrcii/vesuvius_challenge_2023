@@ -149,7 +149,7 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
         keep_mask = label[:, 1]
 
         dice_loss = dice_loss_with_mask_batch(probabilities, target, keep_mask)
-        focal_loss = self.focal_loss_fn(logits, label)
+        focal_loss = self.focal_loss_fn(logits, label, keep_mask)
 
         total_loss = dice_loss + focal_loss
 
