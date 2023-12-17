@@ -18,7 +18,7 @@ data_root_dir = "data"
 dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # training parameters
-model_type = "b5"
+model_type = "b2"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
 # from_pretrained = "playful-glade-812-unetr-sf-b3-231216-041654"
 architecture = 'unet3d-sf'
@@ -29,7 +29,7 @@ seed = 12424
 epochs = 200
 losses = []
 dataset_fraction = 1
-unet3d_out_channels = 32
+unet3d_out_channels = 16
 
 val_interval = 1
 
@@ -42,9 +42,9 @@ fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFI
 validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
-take_full_dataset = True  # If set to true, takes full dataset and ignores thresholds below
+take_full_dataset = False  # If set to true, takes full dataset and ignores thresholds below
 ink_ratio = 3
-no_ink_sample_percentage = 1  # Given the count of N ink samples, take this percentage of the count as no ink
+no_ink_sample_percentage = 0.5  # Given the count of N ink samples, take this percentage of the count as no ink
 max_ignore_th = 75  # For all samples, how much ignore is maximum allowed
 
 lr = 5e-5
