@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 from torch import nn
 
 
@@ -61,4 +62,42 @@ class BinaryDiceLoss(nn.Module):
             losses = -torch.log(dice_scores.clamp_min(self.eps))
         else:
             losses = 1.0 - dice_scores
+        return losses.mean()
+
+
+class MaskedBinaryDiceLoss(nn.Module):
+    def __init__(self, from_logits: bool = True, smooth: float = 0.0, eps: float = 1e-7):
+        super().__init__()
+        self.from_logits = from_logits
+        self.smooth = smooth
+        self.eps = eps
+        """Implementation of Dice loss for binary image segmentation tasks with mask
+
+        Args:
+            from_logits: If True, assumes input is raw logits
+            smooth: Smoothness constant for dice coefficient (a)
+            eps: A small epsilon for numerical stability to avoid zero division error
+                (denominator will be always greater or equal to eps)
+        Shape
+             - **y_pred** - torch.Tensor of shape (N, H, W)
+             - **y_true** - torch.Tensor of shape (N, H, W)
+             - **y_mask** - torch.Tensor of shape (N, H, W)
+        """
+
+    def forward(self, y_pred_unmasked: torch.Tensor, y_true_unmasked: torch.Tensor,
+                y_mask: torch.Tensor) -> torch.Tensor:
+        assert y_true_unmasked.size(0) == y_pred_unmasked.size(0) == y_mask.size(0)
+
+        # Mask prediction and ground truth
+        y_pred = y_pred_unmasked * y_mask
+        y_true = y_true_unmasked * y_mask
+
+        if self.from_logits:
+            y_pred = torch.sigmoid(y_pred)
+
+        intersection = (y_pred * y_true).sum(axis=(1, 2))
+        union = (y_pred + y_true).sum(axis=(1, 2))
+
+        losses = 1. - (2. * intersection + self.smooth) / (union + self.smooth).clamp_min(self.eps)
+
         return losses.mean()

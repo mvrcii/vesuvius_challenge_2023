@@ -4,6 +4,8 @@ import torch.nn as nn
 from albumentations.pytorch import ToTensorV2
 from transformers import SegformerForSemanticSegmentation, SegformerConfig
 import numpy as np
+
+from models.architectures.unetr_segformer import UNETR_Segformer
 from pytorch3dunet.unet3d.model import get_model
 
 from models.architectures.unetr import UNETR
