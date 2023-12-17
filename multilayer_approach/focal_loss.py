@@ -20,10 +20,10 @@ class FocalLoss2d(nn.Module):
         """
         _input = _input.squeeze()
 
-        _input *= mask
-        target *= mask
+        _input_masked = _input * mask
+        target_masked = target * mask
 
-        bce_loss = F.binary_cross_entropy_with_logits(_input, target.float())
+        bce_loss = F.binary_cross_entropy_with_logits(_input_masked, target_masked.float())
 
         pt = torch.exp(-bce_loss)
 
