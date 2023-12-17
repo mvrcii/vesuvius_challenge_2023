@@ -52,6 +52,6 @@ class UNETR_SFDataset(AbstractDataset):
 
         # pad image to have 16 layers
         image = torch.cat([image, torch.zeros(1, 16 - image.shape[1], self.patch_size, self.patch_size)], dim=1)
-        # x = torch.cat([x, torch.zeros(1, 1, 4, 256, 256)], dim=2)
+        x = torch.cat([x, torch.zeros(1, 1, 4, 256, 256)], dim=2)
 
         return image, label
