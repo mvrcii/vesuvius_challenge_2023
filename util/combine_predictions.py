@@ -522,7 +522,7 @@ class Visualization:
                 processed.putdata(newData)
                 image = processed
                 print("Done converting transparent image")
-
+            print("Saved file at", file_path)
             image.save(file_path)
 
     def invert_colors(self):

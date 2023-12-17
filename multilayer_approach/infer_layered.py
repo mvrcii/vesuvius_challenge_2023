@@ -15,6 +15,7 @@ from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 from transformers.utils import logging
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config_handler import Config
 from constants import get_frag_name_from_id, get_ckpt_name_from_id
 from fragment import FragmentHandler
