@@ -19,6 +19,7 @@ from config_handler import Config
 from constants import get_frag_name_from_id, get_ckpt_name_from_id
 from fragment import FragmentHandler
 from meta import AlphaBetaMeta
+from models.architectures.unet3d_segformer import UNET3D_Segformer
 from models.architectures.unetr_segformer import UNETR_Segformer
 
 '''
@@ -386,6 +387,11 @@ def load_model(cfg: Config, model_path):
         checkpoint = torch.load(model_path)
         state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
+    elif cfg.architecture == 'unet3d-sf':
+        model = UNET3D_Segformer(cfg=cfg)
+        checkpoint = torch.load(model_path)
+        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
 
     elif cfg.architecture == 'unetr-sf':
         model = UNETR_Segformer(cfg=cfg)
@@ -393,7 +399,7 @@ def load_model(cfg: Config, model_path):
         state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
         model.load_state_dict(state_dict)
     else:
-        print("Error")
+        print("Error model type not found:", cfg.architecture)
         sys.exit(1)
 
     model = model.to("cuda")
