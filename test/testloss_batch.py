@@ -1,77 +1,6 @@
-import torch
 import matplotlib.pyplot as plt
+import torch
 from torch.nn import BCELoss
-
-
-def dice_loss_with_mask_batch(outputs, labels, mask):
-    # all 3 input variables should be shape (batch_size, label_size, label_size)
-    # outputs should be sigmoided (0-1)
-    # labels should be binary
-    # mask should be binary
-    smooth = 1.0
-    # Apply mask
-    outputs_masked = outputs * mask
-    labels_masked = labels * mask
-
-    # Sum over spatial dimensions, keep batch dimension
-    intersection = (outputs_masked * labels_masked).sum(dim=[1, 2])
-    union = outputs_masked.sum(dim=[1, 2]) + labels_masked.sum(dim=[1, 2]) - intersection
-
-    # Compute dice loss per batch and average
-    dice_loss = 1 - (2. * intersection + smooth) / (union + smooth)
-    return dice_loss.mean()
-
-
-def dice_loss_with_mask(outputs, labels, mask):
-    smooth = 1.0
-    # Apply mask
-    outputs_masked = outputs * mask
-    labels_masked = labels * mask
-    intersection = (outputs_masked * labels_masked).sum()
-    union = outputs_masked.sum() + labels_masked.sum() - intersection
-    dice_loss = 1 - (2. * intersection + smooth) / (union + smooth)
-    return dice_loss
-
-
-def binary_cross_entropy_with_mask(outputs, labels, mask):
-    # THIS EXPECTS SIGMOIDED OUTPUT
-    criterion = BCELoss(reduction='none')
-    bce_loss = criterion(outputs, labels)
-    masked_bce_loss = bce_loss * mask
-    return masked_bce_loss.mean()
-
-
-def dice_loss_with_mask_batch(outputs, labels, mask):
-    # all 3 input variables should be shape (batch_size, label_size, label_size)
-    # outputs should be sigmoided (0-1)
-    # labels should be binary
-    # mask should be binary
-    smooth = 1.0
-    # Apply mask
-    outputs_masked = outputs * mask
-    labels_masked = labels * mask
-
-    # Sum over spatial dimensions, keep batch dimension
-    intersection = (outputs_masked * labels_masked).sum(dim=[1, 2])
-    union = outputs_masked.sum(dim=[1, 2]) + labels_masked.sum(dim=[1, 2])
-
-    # Compute dice loss per batch and average
-    dice_loss = 1 - (2. * intersection + smooth) / (union + smooth)
-    return dice_loss.mean()
-
-
-def dice_loss_with_mask_batch_fixed(outputs, labels, mask):
-    outputs_masked = outputs * mask
-    labels_masked = labels * mask
-
-    # Calculate intersection and union with masking
-    intersection = (outputs_masked * labels_masked).sum(axis=(1, 2))
-    # print(intersection)
-    union = (outputs_masked + labels_masked).sum(axis=(1, 2))
-
-    # Compute dice loss per batch and average
-    dice_loss = 1 - (2. * intersection) / union
-    return dice_loss.mean()
 
 
 # Function to plot the arrays
@@ -119,6 +48,8 @@ def calculate_masked_metrics_batchwise(outputs, labels, mask):
     f1 = 2 * (precision * recall) / (precision + recall + 1e-6)  # Added epsilon for F1 calculation
 
     return iou, precision, recall, f1
+
+
 def binary_cross_entropy_with_mask_batch(outputs, labels, mask):
     # all 3 input variables should be shape (batch_size, label_size, label_size)
     # outputs should be sigmoided (0-1)
@@ -151,8 +82,9 @@ label_batch = torch.tensor([[[1.0, 1.0], [0.0, 1.0]]])
 mask_batch = torch.tensor([[[0.0, 1.0], [1.0, 1.0]]])
 
 iou, precision, recall, f1 = calculate_masked_metrics_batchwise(output_batch, label_batch, mask_batch)
-#print metrics in one string
-print("IoU: " + str(iou.item()) + " Precision: " + str(precision.item()) + " Recall: " + str(recall.item()) + " F1: " + str(f1.item()))
+# print metrics in one string
+print("IoU: " + str(iou.item()) + " Precision: " + str(precision.item()) + " Recall: " + str(
+    recall.item()) + " F1: " + str(f1.item()))
 
 loss = dice_loss_with_mask_batch_fixed(output_batch, label_batch, mask_batch)
 print("Loss: " + str(loss.item()))
