@@ -16,7 +16,6 @@ from lightning_fabric.accelerators import find_usable_cuda_devices
 from config_handler import Config
 from data_modules.segformer.segformer_datamodule import SegFormerDataModule
 from data_modules.unetrsf.unetrsf_datamodule import UNETR_SFDataModule
-from models.cnn3d_segformer import CNN3D_SegformerModule
 from models.segformer import SegformerModule
 from models.unetrsf import UNETR_SFModule
 from models.unet3dsf import UNET3D_SFModule
@@ -48,8 +47,6 @@ def get_model(config: Config):
 
     if architecture == 'segformer':
         return SegformerModule(cfg=config)
-    elif architecture == 'cnn3d_segformer':
-        return CNN3D_SegformerModule(cfg=config)
     elif architecture == 'unetr-sf':
         return UNETR_SFModule(cfg=config)
     elif architecture == 'unet3d-sf':
