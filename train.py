@@ -10,6 +10,7 @@ import torch
 from lightning import seed_everything
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
+from lightning.pytorch.strategies import DDPStrategy
 from lightning.pytorch.trainer import Trainer
 from lightning_fabric.accelerators import find_usable_cuda_devices
 
@@ -143,7 +144,7 @@ def main():
         accelerator="auto",
         devices=devices,
         enable_progress_bar=True,
-        find_unused_parameters=True,
+        strategy=DDPStrategy(find_unused_parameters=True),
         precision='16-mixed',
         gradient_clip_val=1.0,
         gradient_clip_algorithm="norm",
