@@ -124,7 +124,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_training_metrics(dice_loss)
 
-        if batch_idx == 5:
+        if batch_idx % 100 == 0:
             with torch.no_grad():
                 combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
@@ -148,7 +148,7 @@ class UNETR_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_validation_metrics(dice_loss, iou, precision, recall, f1)
 
-        if batch_idx == 5:
+        if batch_idx % 100 == 0:
             with torch.no_grad():
                 combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
