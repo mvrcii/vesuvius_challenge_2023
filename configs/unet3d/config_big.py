@@ -44,8 +44,8 @@ validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
 lr = 1e-4  # 1e-4
-step_lr_steps = 2
-step_lr_factor = 0.97
+step_lr_steps = 1
+step_lr_factor = 0.985
 weight_decay = 0.001
 
 num_workers = 16
