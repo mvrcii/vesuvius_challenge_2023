@@ -144,7 +144,6 @@ def main():
         accelerator="auto",
         devices=devices,
         enable_progress_bar=True,
-        strategy=DDPStrategy(find_unused_parameters=True),
         precision='16-mixed',
         gradient_clip_val=1.0,
         gradient_clip_algorithm="norm",

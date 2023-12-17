@@ -125,14 +125,14 @@ class UNET3D_SFModule(AbstractVesuvLightningModule):
 
         self.update_unetr_training_metrics(dice_loss)
 
-        # if batch_idx % 100 == 0:
-        #     with torch.no_grad():
-        #         combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
-        #         grid = make_grid(combined).detach().cpu()
-        #
-        #         test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
-        #
-        #         wandb.log({"Train Image": test_image})
+        if batch_idx % 100 == 0 and self.trainer.is_global_zero:
+            with torch.no_grad():
+                combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
+                grid = make_grid(combined).detach().cpu()
+
+                # Use PyTorch Lightning's logging instead of wandb directly
+                test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
+                self.log("Train Image", test_image, on_step=True, on_epoch=False, logger=True, sync_dist=False)
 
         return dice_loss
 
