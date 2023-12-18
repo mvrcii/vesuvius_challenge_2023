@@ -1,99 +1,144 @@
-import argparse
 import os
-from datetime import datetime
-import re
+import sys
 
 import numpy as np
-from tqdm import tqdm
+
+from config_handler import Config
+from fragment import FragmentHandler
+from util.combine_predictions import has_valid_ckpt_dirs
 
 
-def main(fragment__id, strategy):
-    # Check for existing inference directories
-    fragment_dir_path = os.path.join("inference", "results", f"fragment{fragment__id}")
-    print("checking ", fragment_dir_path)
+def load_and_process_data(directory, frag_id, architecture):
+    start_layer, end_layer = FragmentHandler().get_best_12_layers(frag_id)  # inclusive
+    layer_indices = set(range(start_layer, end_layer + 1))
 
-    contained_dir_paths = [os.path.join(fragment_dir_path, x) for x in os.listdir(fragment_dir_path) if os.path.isdir(
-        os.path.join(fragment_dir_path, x))]
+    files = [file for file in os.listdir(directory) if file.startswith('sigmoid_logits') and
+             file.endswith('.npy') and not file.startswith('maxed_logits')]
+    files.sort(key=lambda x: int(x.split('_')[2]))
 
-    inference_dir_paths = [x for x in contained_dir_paths if not os.path.basename(x).startswith("ensemble")]
+    data = []
+    for filename in files:
+        layer_start_idx = int(filename.split('_')[2])
 
-    # Check if enough directories exist
-    if len(inference_dir_paths) < 2:
-        print(f"{fragment_dir_path} only contains {len(inference_dir_paths)} inferences, ensemble not possible.")
-        exit()
+        if layer_start_idx not in layer_indices:
+            continue
 
-    print("Attempting ensemble with ", len(inference_dir_paths), " inferences.")
-    print(inference_dir_paths)
+        file_path = os.path.join(directory, filename)
+        prediction = np.load(file_path)
+        normalized_prediction = normalize_data(prediction)
+        data.append(normalized_prediction)
 
-    # Determine name of output directory, e.g. ensemble1
-    ensemble_dir_paths = [x for x in contained_dir_paths if x.startswith("ensemble")]
-    current_ensemble_ids = [int(os.path.basename(dir_name).split("_")[-1]) for dir_name in ensemble_dir_paths]
-    next_ensemble_id = 0
-    if len(current_ensemble_ids) > 0:
-        next_ensemble_id = max(current_ensemble_ids) + 1
+    if architecture == 'segformer':
+        return np.mean(data, axis=0)
+    else:
+        return data[0]
 
-    # Ensemble short info id
-    ensemble_info_id = "".join(
-        ["".join(re.findall("[a-zA-Z]", os.path.basename(dir_name))[:2])
-         for dir_name in inference_dir_paths]
-    ) + f"_{strategy}"
-    print("Info id: ", ensemble_info_id)
 
-    # Output path
-    out_path = os.path.join(fragment_dir_path, f"ensemble_{ensemble_info_id}_{next_ensemble_id}")
-    os.makedirs(out_path)
-    print("Outpath: ", out_path)
+def identify_architecture(directory):
+    if 'segformer' in directory:
+        return 'segformer'
+    elif 'unetr-sf' in directory:
+        return 'unetr-sf'
+    elif 'unet3d-sf' in directory:
+        return 'unet3d-sf'
+    else:
+        raise ValueError(f"Unknown architecture for directory {directory}")
 
-    # Collect all .npy file names from each directory
-    all_npy_files = {d: set([f for f in os.listdir(d) if f.endswith('.npy')]) for d in inference_dir_paths}
 
-    # Find common files across all directories
-    common_npy_files = set.intersection(*all_npy_files.values())
+def process_ensemble_strategy(strategy, data):
+    if strategy == 'mean':
+        return np.mean(data, axis=0)
+    else:
+        raise Exception("Unknown ensemble strategy")
 
-    # Find and print missing files in each directory
-    for d in inference_dir_paths:
-        missing_files = common_npy_files - all_npy_files[d]
-        for file in missing_files:
-            print(f"Skipping {file} as it is not contained in {d}")
 
-    for npy_name in tqdm(common_npy_files):
-        npy_files = []
-        for inference_dir in inference_dir_paths:
-            npy_path = os.path.join(inference_dir, npy_name)
-            npy_files.append(np.load(npy_path))
+def normalize_data(data):
+    # Normalize the data (scale to mean 0 and std 1)
+    # Ensure the data is not a single value to avoid division by zero
+    if data.size > 1:
+        return (data - np.mean(data)) / np.std(data)
+    return data
 
-        # IMPLEMENT DIFFERENT STRATEGIES HERE
-        result = None
-        if strategy == "mean":
-            result = np.mean(np.stack(npy_files), axis=0)
-        elif strategy == "max":
-            result = np.max(np.stack(npy_files), axis=0)
 
-        np.save(os.path.join(out_path, npy_name), result)
+def extract_first_name(directory):
+    return directory.split('_')[1].split('-')[0]
 
-    # Save config to output path, listing current time as well as the used inference directories
-    config = f"Ensemble of {len(inference_dir_paths)} inferences, strategy: {strategy}\n"
-    config += f"Used inferences:\n"
-    for inference_dir in inference_dir_paths:
-        config += f"{os.path.basename(inference_dir)}\n"
-    config += f"Created at {datetime.now()}"
-    with open(os.path.join(out_path, "config.txt"), "w") as f:
-        f.write(config)
 
-    print("Saved ensemble to", out_path)
+def ensemble_results(root_dir, frag_id, selected_directories, all_directories):
+    processed_data = []
+    first_names = []
+    strategy = 'mean'
+
+    for index in selected_directories:
+        directory = all_directories[index]
+        architecture = identify_architecture(directory)
+        data = load_and_process_data(os.path.join(root_dir, directory), frag_id, architecture)
+        processed_data.append(data)
+        first_names.append(extract_first_name(directory))
+
+    # Generate ensemble info ID
+    ensemble_info_id = 'ensemble_' + '-'.join(first_names) + f"_{strategy}"
+
+    ensemble_result = process_ensemble_strategy(strategy=strategy, data=processed_data)
+
+    return ensemble_result, ensemble_info_id
+
+
+def list_directories(root_dir):
+    return [d for d in os.listdir(root_dir)
+            if
+            os.path.isdir(os.path.join(root_dir, d)) and not d.startswith("ensemble") and not d.startswith("snapshot")]
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run inference on a fragment.")
-    parser.add_argument("id", type=int, help="fragment id")
-    parser.add_argument("--strategy", help="optional, specify strategy [mean, max] (default=mean)",
-                        default="mean")
+    config = Config().load_local_cfg()
+    frag_infos = FragmentHandler().get_name_2_id()
 
-    args = parser.parse_args()
+    # Filter valid fragments only
+    valid_frags = [(name, frag_id) for (name, frag_id) in frag_infos if has_valid_ckpt_dirs(config.work_dir, frag_id)]
 
-    if args.strategy not in ["mean", "max"]:
-        print("Invalid strategy, aborting.")
-        exit()
+    print("Available Fragments:")
+    for i, (name, frag_id) in enumerate(valid_frags, start=1):
+        print(f"\033[92m{i:2}. {name:15} {frag_id}\033[0m")  # Display only valid fragments in green
 
-    print("Running ensemble for fragment", args.id, "with strategy", args.strategy, "...")
-    main(args.id, args.strategy)
+    user_input = input("Fragment Number: ")
+
+    # Check if input is a number and within the range of valid fragments
+    if user_input.isdigit():
+        user_number = int(user_input)
+        if 1 <= user_number <= len(valid_frags):
+            name, fragment_id = valid_frags[user_number - 1]
+        else:
+            print("Invalid selection. Please enter a valid number.")
+            sys.exit(1)
+    else:
+        print("Invalid input. Please enter a number.")
+        sys.exit(1)
+
+    fragment_dir = os.path.join(config.work_dir, 'inference', 'results', f'fragment{fragment_id}')
+
+    all_directories = list_directories(fragment_dir)
+
+    # Display the directories for the user to choose from
+    print("Select directories for ensemble:")
+    for i, directory in enumerate(all_directories):
+        print(f"{i}: {directory}")
+
+    # User input
+    selected_indices = input("Enter the numbers of the directories you want to ensemble, separated by commas: ")
+    selected_indices = [int(x.strip()) for x in selected_indices.split(',')]
+
+    # Ensure indices are within range
+    selected_indices = [i for i in selected_indices if 0 <= i < len(all_directories)]
+
+    print("Selected indices:", selected_indices)
+
+    ensemble_result, ensemble_dir = ensemble_results(root_dir=fragment_dir, frag_id=fragment_id,
+                                                     selected_directories=selected_indices,
+                                                     all_directories=all_directories)
+
+    # Save the result
+    ensemble_dir = os.path.join(fragment_dir, f"ensemble_{ensemble_dir}")
+    os.makedirs(ensemble_dir, exist_ok=True)
+    np.save(os.path.join(ensemble_dir, f"sigmoid_logits_0_3.npy"), ensemble_result)
+    print("Ensemble result saved in:", ensemble_dir)

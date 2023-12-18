@@ -221,8 +221,6 @@ class Visualization:
         multilayer = True
         if multilayer:
             start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=frag_id)
-            end_layer_idx = 0
-            start_layer_idx = 0
         else:
             start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=frag_id)  # inclusive
 
@@ -251,7 +249,8 @@ class Visualization:
         self.start_layer_var = IntVar(value=start_layer_idx)  # inclusive
         self.end_layer_var = IntVar(value=end_layer_idx)  # inclusive
 
-        threshold = FragmentHandler().get_boost_threshold(frag_id=frag_id)
+        # threshold = FragmentHandler().get_boost_threshold(frag_id=frag_id)  # Deactivate for now
+        threshold = 0.01
         self.threshold_var = StringVar(value=str(threshold))
 
         # Utility frame
