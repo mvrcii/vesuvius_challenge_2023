@@ -11,7 +11,7 @@ FOLDER_NAME=$1
 HOSTNAME=$2
 
 # Set the server path based on the hostname
-if [ "$HOSTNAME" = "vast2" ]; then
+if [ "$HOSTNAME" = "vast" ]; then
     SERVER_PATH="~/kaggle1stReimp/checkpoints"
 else
     SERVER_PATH="/scratch/medfm/vesuv/kaggle1stReimp/checkpoints"
