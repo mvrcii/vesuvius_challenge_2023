@@ -368,9 +368,8 @@ def main():
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_name = model_path.split(f"checkpoints{os.sep}")[-1]
     model_name_modified = '-'.join(model_name.split('-')[0:5])
-    root_dir = os.path.join("", "single_results", f"fragment{fragment_id}")
-    results_dir = os.path.join("", "single_results", f"fragment{fragment_id}",
-                               f"{date_time_string}_{model_name_modified}")
+    root_dir = os.path.join("inference", "single_results", f"fragment{fragment_id}")
+    results_dir = os.path.join(root_dir, f"{date_time_string}_{model_name_modified}")
 
     os.makedirs(root_dir, exist_ok=True)
 

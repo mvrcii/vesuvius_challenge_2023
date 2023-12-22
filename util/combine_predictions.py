@@ -13,7 +13,6 @@ from tqdm import tqdm
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from fragment import FragmentHandler
 
-
 from config_handler import Config
 
 
@@ -49,11 +48,21 @@ def combine_layers(predictions, max_distance):
     return combined
 
 
-def get_common_layers(model_dir, selected_layers):
-    paths = [x for x in os.listdir(model_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
-    layers = set(int(x.split('_')[2]) for x in paths)  # take start layer
+def get_start_layer_idx(filename, single_layer):
+    if single_layer:
+        return int(filename.split('_')[2].split('.')[0])
+    else:
+        return int(filename.split('_')[2])
 
-    layers = layers.intersection(selected_layers)
+
+def get_common_layers(model_dir, selected_layers, single_layer):
+    paths = [x for x in os.listdir(model_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
+
+    layers = []
+    for filename in paths:
+        layers.append(get_start_layer_idx(filename, single_layer))
+
+    layers = set(layers).intersection(selected_layers)
 
     if len(layers) == 0:
         print("No intersecting layers found for the given range.")
@@ -103,8 +112,8 @@ def get_selected_model_name(frag_dir):
     return os.path.join(frag_dir, selected_subdir), selected_subdir
 
 
-def has_valid_ckpt_dirs(work_dir, frag_id):
-    frag_dir = os.path.join(work_dir, 'inference', 'results', f'fragment{frag_id}')
+def has_valid_ckpt_dirs(frag_root, frag_id):
+    frag_dir = os.path.join(frag_root, f'fragment{frag_id}')
     return bool(get_valid_model_dirs(frag_dir))
 
 
@@ -134,6 +143,7 @@ def parse_args():
     parser.add_argument('--save_all_layers', action='store_true', help='Save all layer files (in total 61)')
     parser.add_argument('--max_ensemble', action='store_true', help='Show the max ensemble between two models')
     parser.add_argument('--submission', action='store_true', help='Formats file names in submission mode')
+    parser.add_argument('--single_layer', action='store_true', help='Combine predictions for single layer checkpoints')
 
     args = parser.parse_args()
 
@@ -161,8 +171,12 @@ def main():
     config = Config().load_local_cfg()
     frag_infos = FragmentHandler().get_name_2_id()
 
+    single_layer = args.single_layer
+    results_dir = 'single_results' if single_layer else 'results'
+    frag_root = os.path.join(config.work_dir, 'inference', results_dir)
+
     # Filter valid fragments only
-    valid_frags = [(name, frag_id) for (name, frag_id) in frag_infos if has_valid_ckpt_dirs(config.work_dir, frag_id)]
+    valid_frags = [(name, frag_id) for (name, frag_id) in frag_infos if has_valid_ckpt_dirs(frag_root, frag_id)]
 
     print("Available Fragments:")
     for i, (name, frag_id) in enumerate(valid_frags, start=1):
@@ -182,7 +196,7 @@ def main():
         print("Invalid input. Please enter a number.")
         sys.exit(1)
 
-    frag_dir = os.path.join(config.work_dir, 'inference', 'results', f'fragment{frag_id}')
+    frag_dir = os.path.join(frag_root, f'fragment{frag_id}')
     model_dir, model_name = get_selected_model_name(frag_dir=frag_dir)
 
     global transparent, save_all_layers, max_ensemble, submission_mode
@@ -194,11 +208,11 @@ def main():
     target_dims = get_target_dims(work_dir=config.work_dir, frag_id=frag_id)
 
     Visualization(frag_id=frag_id, root_dir=frag_dir, target_dims=target_dims, model_name=model_name,
-                  model_dir=model_dir)
+                  model_dir=model_dir, single_layer=single_layer)
 
 
 class Visualization:
-    def __init__(self, frag_id, root_dir, target_dims, model_name, model_dir):
+    def __init__(self, frag_id, root_dir, target_dims, model_name, model_dir, single_layer):
         assert isinstance(target_dims, tuple) and len(target_dims) == 2, "target_dims must be a tuple of two elements"
 
         self.root_dir = root_dir
@@ -214,15 +228,17 @@ class Visualization:
         # start and end layer idx are both inclusive!
         start_layer_idx, end_layer_idx = 0, 60
         selected_layers = list(range(start_layer_idx, end_layer_idx + 1))
-        valid_layers = get_common_layers(model_dir=model_dir, selected_layers=selected_layers)
+        valid_layers = get_common_layers(model_dir=model_dir, selected_layers=selected_layers,
+                                         single_layer=single_layer)
 
         self.model_layer_idcs, self.model_layer_values = load_predictions(root_dir=model_dir,
-                                                                          layer_indices=valid_layers)
+                                                                          layer_indices=valid_layers,
+                                                                          single_layer=single_layer)
         multilayer = True
         if multilayer:
             start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=frag_id)
-            end_layer_idx = 0
-            start_layer_idx = 0
+            # end_layer_idx = 0
+            # start_layer_idx = 0
         else:
             start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=frag_id)  # inclusive
 
@@ -304,7 +320,6 @@ class Visualization:
         self.end_layer_input.pack(side='left')
         self.end_layer_label = Label(control_frame, text="End Layer:")
         self.end_layer_label.pack(side='left')
-
 
         self.clear_focus_button = Button(self.root, text="Clear Focus", command=self.root.focus_set)
         self.clear_focus_button.pack()
@@ -588,9 +603,9 @@ class Visualization:
         processed = None
 
         if mode == "sum":
-            processed = np.sum(self.model_layer_values[start_layer:end_layer + 1], axis=0)
+            processed = np.sum(self.model_layer_values[0:end_layer - start_layer + 1], axis=0)
         elif mode == "max":
-            processed = np.maximum.reduce(self.model_layer_values[start_layer:end_layer + 1])
+            processed = np.maximum.reduce(self.model_layer_values[0:end_layer - start_layer + 1])
         elif mode == "layers":
             layer = self.curr_layer_val
             processed = self.model_layer_values.copy()[int(layer)]
@@ -683,15 +698,15 @@ class Visualization:
             self.layer_label.config(text=f"Value: {self.model_layer_idcs[int(new_layer)]}")
 
 
-def load_predictions(root_dir, layer_indices=None):
+def load_predictions(root_dir, single_layer, layer_indices=None):
     layer_idcs = list()
     layer_values = []
 
     file_paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
-    file_paths.sort(key=lambda x: int(x.split('_')[2]))
+    file_paths.sort(key=lambda x: get_start_layer_idx(x, single_layer))
 
     for filename in file_paths:
-        layer_start_idx = int(filename.split('_')[2])
+        layer_start_idx = get_start_layer_idx(filename, single_layer)
 
         # If layer_indices are given, check if layer_start_idx is contained
         if layer_indices and layer_start_idx not in layer_indices:

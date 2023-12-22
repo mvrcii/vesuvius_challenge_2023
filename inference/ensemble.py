@@ -93,9 +93,10 @@ def list_directories(root_dir):
 if __name__ == "__main__":
     config = Config().load_local_cfg()
     frag_infos = FragmentHandler().get_name_2_id()
+    frag_root = os.path.join(config.work_dir, 'inference', 'results')
 
     # Filter valid fragments only
-    valid_frags = [(name, frag_id) for (name, frag_id) in frag_infos if has_valid_ckpt_dirs(config.work_dir, frag_id)]
+    valid_frags = [(name, frag_id) for (name, frag_id) in frag_infos if has_valid_ckpt_dirs(frag_root, frag_id)]
 
     print("Available Fragments:")
     for i, (name, frag_id) in enumerate(valid_frags, start=1):
