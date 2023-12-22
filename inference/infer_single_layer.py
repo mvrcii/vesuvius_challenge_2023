@@ -386,6 +386,7 @@ def main():
     if save_labels:
         valid_start_idxs = list(range(start_idx, end_idx + 1))
 
+    print("Starting inference")
     for layer_idx in valid_start_idxs:
         npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{layer_idx}.npy")
 
