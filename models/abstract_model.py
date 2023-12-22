@@ -59,22 +59,13 @@ class AbstractVesuvLightningModule(LightningModule):
     def training_step(self, batch, batch_idx):
         data, target = batch
         output = self.forward(data)
-        print("data shape", data.shape)
-        print("label shape", target.shape)
-        print(f"batch_idx={batch_idx} data", data[0])
-        print(f"batch_idx={batch_idx} label", target)
-        print(f"batch_idx={batch_idx} output", output)
 
         # Calculate individual losses, store them as (name, weight, value) tuples in list
         losses = [(name, weight, loss_function(output, target.float())) for (name, weight, loss_function) in
                   self.loss_functions]
 
         # Combine individual losses based on their weight
-        total_loss = 0
-        for (name, weight, value) in losses:
-            intermediate_loss = weight * value
-            print(f"batch_idx={batch_idx}", name, intermediate_loss)
-            total_loss += intermediate_loss
+        total_loss = sum([weight * value for (_, weight, value) in losses])
 
         # Append total loss to list which is being logged
         losses.append(("total", 1.0, total_loss))
