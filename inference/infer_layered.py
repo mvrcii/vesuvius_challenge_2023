@@ -45,7 +45,7 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
     images = []
 
     for i in range(layer_start, layer_start + layer_count):
-        img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+        img_path = os.path.join(work_dir, "../data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
@@ -117,7 +117,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
                            layer_start=layer_start, layer_count=config.in_chans)
 
     # Load mask
-    mask_path = os.path.join(config.work_dir, "data", "fragments", f"fragment{fragment_id}", "mask.png")
+    mask_path = os.path.join(config.work_dir, "../data", "fragments", f"fragment{fragment_id}", "mask.png")
     if not os.path.isfile(mask_path):
         raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
     mask = np.asarray(Image.open(mask_path))
@@ -282,7 +282,7 @@ def find_py_in_dir(path):
 
 
 def get_target_dims(work_dir, frag_id):
-    frag_dir = os.path.join(work_dir, "data", "fragments", f"fragment{frag_id}")
+    frag_dir = os.path.join(work_dir, "../data", "fragments", f"fragment{frag_id}")
     assert os.path.isdir(frag_dir)
 
     target_dims = None
@@ -433,7 +433,7 @@ def main():
     end_idx = args.end_idx
 
     # Determine the path to the configuration based on the checkpoint folder
-    model_folder_path = os.path.join('checkpoints', model_folder_name)
+    model_folder_path = os.path.join('../checkpoints', model_folder_name)
 
     # Find config path
     config_path = find_py_in_dir(model_folder_path)
@@ -450,8 +450,8 @@ def main():
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_name = model_path.split(f"checkpoints{os.sep}")[-1]
     model_name_modified = '-'.join(model_name.split('-')[0:5])
-    root_dir = os.path.join("inference", "results", f"fragment{fragment_id}")
-    results_dir = os.path.join("inference", "results", f"fragment{fragment_id}",
+    root_dir = os.path.join("", "results", f"fragment{fragment_id}")
+    results_dir = os.path.join("", "results", f"fragment{fragment_id}",
                                f"{date_time_string}_{model_name_modified}")
 
     os.makedirs(root_dir, exist_ok=True)

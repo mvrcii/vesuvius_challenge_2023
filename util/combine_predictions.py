@@ -221,6 +221,8 @@ class Visualization:
         multilayer = True
         if multilayer:
             start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=frag_id)
+            end_layer_idx = 0
+            start_layer_idx = 0
         else:
             start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=frag_id)  # inclusive
 
