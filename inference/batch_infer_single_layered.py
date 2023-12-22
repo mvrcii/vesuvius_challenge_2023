@@ -17,14 +17,14 @@ def print_colored(message, color):
     print(f"{colors[color]}{message}{colors['end']}")
 
 
-FRAGMENT_IDS = [TITLE1_FRAG_ID, TITLE2_FRAG_ID]
+FRAGMENT_IDS = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID]
 model = AlphaBetaMeta().get_previous_model()
 
 print("Fragments for inference:\t", ", ".join(FRAGMENT_IDS))
 print("Model for inference:\t", model)
 CHECKPOINTS = [model]
 
-labels = False
+labels = True
 boost_threshold = False
 verbose = True
 
