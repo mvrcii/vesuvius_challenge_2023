@@ -250,8 +250,8 @@ def generate_and_save_label_file(cfg: Config, _model_name, array, frag_id, layer
 
     target_dims = get_target_dims(work_dir=cfg.work_dir, frag_id=frag_id)
 
-    image = process_image(array=array, frag_id=frag_id, dimensions=target_dims)
-    image.save(label_path)
+    image_arr = process_image(array=array, frag_id=frag_id, dimensions=target_dims)
+    cv2.imwrite(filename=label_path, img=image_arr)
 
     if verbose:
         print("Saved label file to:", label_path)
@@ -277,7 +277,7 @@ def process_image(array, frag_id, dimensions):
     original_height, original_width = dimensions
     upscaled_image = resize(image, (new_height, new_width),
                             order=0, preserve_range=True, anti_aliasing=False)
-
+    assert(len(np.unique(upscaled_image)) < 3)
     assert new_width >= original_width and new_height >= original_height
 
     width_diff = new_width - original_width
@@ -292,7 +292,7 @@ def process_image(array, frag_id, dimensions):
     if height_diff == 0:
         out_height = new_height
 
-    return Image.fromarray(np.array(upscaled_image)[:out_height, :out_width])
+    return np.array(upscaled_image)[:out_height, :out_width]
 
 
 def parse_args():
