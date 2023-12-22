@@ -116,8 +116,8 @@ def batch_download_frags(frag_list, consider_labels=True):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Download missing fragment slices.")
-    parser.add_argument('--consider_labels', dest='consider_labels', action='store_false',
-                        help='Consider label files when determining slice range')
+    parser.add_argument('--no_label_files', dest='consider_labels', action='store_false',
+                        help='Do not consider label files when determining slice range')
     parser.set_defaults(consider_label_files=True)
     args = parser.parse_args()
 
