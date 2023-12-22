@@ -92,20 +92,6 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
         raise ValueError(f"Mask file does not exist for fragment: {frag_id}")
     mask = np.asarray(Image.open(mask_path))
 
-    # load tensors
-    image_tensor_dict = {}
-    label_tensor_dict = {}
-    for start_channel in tqdm(channels[::cfg.in_chans]):
-        end_channel = start_channel + cfg.in_chans - 1
-        read_chans = range(start_channel, end_channel + 1)
-        image_tensor_dict[start_channel] = read_fragment_images_for_channels(root_dir=fragment_dir,
-                                                                             patch_size=config.patch_size,
-                                                                             channels=read_chans,
-                                                                             ch_block_size=config.in_chans)
-        label_tensor_dict[start_channel] = read_fragment_labels_for_channels(root_dir=label_dir,
-                                                                             patch_size=config.patch_size,
-                                                                             channels=read_chans)
-
     total_skipped_cnt = 0
     total_patch_cnt = 0
     total_pruned_cnt = 0
@@ -120,8 +106,12 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
                              f"Channel: {channel_str} in "
                              f"{format_ranges(sorted(list(channels)), '')}")
 
-        image_tensor = image_tensor_dict[start_channel]
-        label_tensor = label_tensor_dict[start_channel]
+        read_chans = range(start_channel, end_channel + 1)
+
+        image_tensor = read_fragment_images_for_channels(root_dir=fragment_dir, patch_size=config.patch_size,
+                                                         channels=read_chans, ch_block_size=config.in_chans)
+        label_tensor = read_fragment_labels_for_channels(root_dir=label_dir, patch_size=config.patch_size,
+                                                         channels=read_chans)
 
         # Only required for TQDM
         if not first_channel_processed:
@@ -298,13 +288,11 @@ def read_fragment_images_for_channels(root_dir, patch_size, channels, ch_block_s
         pad1 = (patch_size - image.shape[1] % patch_size) % patch_size
         image = np.pad(image, [(0, pad0), (0, pad1)], constant_values=0)
 
-        image = image.astype(np.float16)
-
         images.append(image)
     images = np.stack(images, axis=0)
     assert images.ndim == 3 and images.shape[0] == ch_block_size
 
-    return np.array(images, dtype=np.float16)
+    return np.array(images)
 
 
 def read_fragment_labels_for_channels(root_dir, patch_size, channels):
