@@ -16,7 +16,7 @@ def determine_slice_range(fragment_id):
     min_slice = 99999
     max_slice = 0
 
-    label_dir = AlphaBetaMeta().get_current_binarized_label_dir()
+    label_dir = AlphaBetaMeta().get_current_binarized_label_dir(single=True)
     print("Label dir:", label_dir)
     try:
         files = os.listdir(f"{label_dir}/{fragment_id}")
@@ -99,7 +99,6 @@ def batch_download_frags(frag_list, consider_label_files=True):
             print(f"Labels = [{start_slice}, {end_slice}] found")
 
         print(f"Slice range: {start_slice}-{end_slice}")
-        exit()
         missing_slices = check_downloaded_slices(fragment_id, start_slice, end_slice)
         if not missing_slices:
             print("No missing slices found -> Skipping download")
