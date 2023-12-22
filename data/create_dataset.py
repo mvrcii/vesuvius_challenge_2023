@@ -102,8 +102,9 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     for start_channel in channels[::cfg.in_chans]:
         end_channel = start_channel + cfg.in_chans - 1
 
+        channel_str = f"{start_channel:02d}" if cfg.in_chans == 1 else f"{start_channel:02d}-{end_channel:02d}"
         pbar.set_description(f"\033[94mProcessing: Fragment: {get_frag_name_from_id(frag_id)}\033[0m "
-                             f"Channel: {start_channel:02d}-{end_channel:02d} in "
+                             f"Channel: {channel_str} in "
                              f"{format_ranges(sorted(list(channels)), '')}")
 
         read_chans = range(start_channel, end_channel + 1)
@@ -186,8 +187,7 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             if label_tensor.ndim != 3 or label_tensor.shape[0] != 2 or len(label_tensor[0]) + len(label_tensor[1]) == 0:
                 raise ValueError(f"Expected tensor with shape (2, height, width), got {label_tensor.shape}")
 
-            if image_tensor.ndim != 3 or image_tensor.shape[0] != cfg.in_chans or len(image_tensor[0]) + len(
-                    image_tensor[1]) == 0:
+            if image_tensor.ndim != 3 or image_tensor.shape[0] != cfg.in_chans or image_tensor.shape[0] + image_tensor.shape[1] == 0:
                 raise ValueError(
                     f"Expected tensor with shape ({cfg.in_chans}, height, width), got {image_tensor.shape}")
 
@@ -241,15 +241,18 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
     all_patches = len(STACK_PATCHES)
     assert all_patches > 0, "No patches were created for this fragment"
     df = pd.DataFrame(STACK_PATCH_INFOS, columns=['filename', 'frag_id', 'channels', 'ink_p', 'artefact_p'])
-    balanced_df, _, _, _ = balance_dataset(cfg, df)
-    LABEL_INFO_LIST.extend(balanced_df.values.tolist())
+
+    if balance_dataset:
+        df, _, _, _ = balance_dataset(cfg, df)
+
+    LABEL_INFO_LIST.extend(df.values.tolist())
 
     img_dir = os.path.join(target_dir, "images")
     label_dir = os.path.join(target_dir, "labels")
     os.makedirs(img_dir, exist_ok=True)
     os.makedirs(label_dir, exist_ok=True)
 
-    for _, row in balanced_df.iterrows():
+    for _, row in df.iterrows():
         file_name = row['filename']
         # print("saving row", row)
         image_patch, label_patch = STACK_PATCHES[file_name]
@@ -262,8 +265,8 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
         label_patch = np.packbits(label_patch.flatten())
         np.save(os.path.join(label_dir, file_name), label_patch)
 
-    patches += len(balanced_df)
-    pruned = all_patches - len(balanced_df)
+    patches += len(df)
+    pruned = all_patches - len(df)
     return patches, mask_skipped, pruned
 
 
@@ -317,12 +320,16 @@ def read_fragment_labels_for_channels(root_dir, patch_size, channels, ch_block_s
 
     start_channel = channels[0]
 
-    label_step_size = 4
+    label_step_size = cfg.in_chans
+
+    file_pattern = f"_{start_channel}_{start_channel + 3}"
+    if cfg.in_chans == 1:
+        file_pattern = f"_{start_channel}"
 
     label_blocks = []
     for i in range(ch_block_size // label_step_size):
-        base_label_path = os.path.join(root_dir, f'inklabels_{start_channel}_{start_channel + 3}.png')
-        neg_label_path = os.path.join(root_dir, f'negatives_{start_channel}_{start_channel + 3}.png')
+        base_label_path = os.path.join(root_dir, f'inklabels{file_pattern}.png')
+        neg_label_path = os.path.join(root_dir, f'negatives{file_pattern}.png')
         start_channel += label_step_size
 
         base_label = read_label(base_label_path)
@@ -364,7 +371,7 @@ def read_fragment_labels_for_channels(root_dir, patch_size, channels, ch_block_s
 
 def get_sys_args():
     # Create the parser
-    parser = argparse.ArgumentParser(description='Process some strings.')
+    parser = argparse.ArgumentParser(description='Create the dataset.')
 
     # Required string argument
     parser.add_argument('config_path', type=str)
@@ -379,11 +386,8 @@ if __name__ == '__main__':
 
     LABEL_INFO_LIST = []
 
-    label_dir = AlphaBetaMeta().get_current_binarized_label_dir()
-    label_dir = os.path.join(cfg.work_dir, label_dir)
-
+    label_dir = os.path.join(cfg.work_dir, "data", "base_label_binarized_single", "upbeat-tree-741-segformer-b2-231210-210131")
     fragments = cfg.fragment_ids
-    # fragments = AlphaBetaMeta().get_current_train_fragments()
-    print(label_dir)
+
     clean_all_fragment_label_dirs(config=cfg)
     extract_patches(cfg, fragments, label_dir)

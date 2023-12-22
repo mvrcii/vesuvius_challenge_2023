@@ -103,11 +103,14 @@ def validate_labels(cfg, frag_dir, label_dir):
         errors.append(f"\033[91mReason:\t\tSlice directory not found\033[0m")
 
     valid_channels = []
+    pattern = r"_(\d+)_(\d+)"
+    if cfg.in_chans == 1:
+        pattern = r"_(\d+)"
 
     # If no errors yet, continue
     if len(errors) == 0:
-        existing_negative_channels = set(extract_indices(label_dir, pattern=r'negatives_(\d+)_(\d+).png'))
-        existing_label_channels = set(extract_indices(label_dir, pattern=r'inklabels_(\d+)_(\d+).png'))
+        existing_negative_channels = set(extract_indices(label_dir, pattern=f'negatives{pattern}.png'))
+        existing_label_channels = set(extract_indices(label_dir, pattern=f'inklabels{pattern}.png'))
 
         print("Warning: No existing label files found for fragment:", frag_dir)
 
