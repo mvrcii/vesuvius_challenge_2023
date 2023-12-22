@@ -21,9 +21,9 @@ architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 1
-seed = 123456
+seed = 8888
 epochs = -1
-losses = [("bce", 1.0), ("dice", 1.0)]
+losses = [("focal", 5.0), ("dice", 1.0)]
 
 # dataset creation parameters
 patch_size = 512
@@ -39,7 +39,7 @@ fragment_ids = ['20231005123336', '20231012184422']
 
 # dataset usage parameters
 take_full_dataset = True
-dataset_fraction = 0.1
+dataset_fraction = 1
 train_split = 0.8
 
 # optimizer parameters
@@ -49,9 +49,9 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-num_workers = 4
-train_batch_size = 4
-val_batch_size = 4
+num_workers = 16
+train_batch_size = 24
+val_batch_size = 24
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
