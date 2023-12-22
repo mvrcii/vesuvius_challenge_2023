@@ -23,7 +23,7 @@ from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 1
 seed = 123456
 epochs = -1
-losses = [("focal", 5.0), ("dice", 1.0)]
+losses = [("focal", 1.0), ("dice", 1.0)]
 
 # dataset creation parameters
 patch_size = 512
