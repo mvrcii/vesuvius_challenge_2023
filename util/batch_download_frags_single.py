@@ -23,7 +23,7 @@ def determine_slice_range(fragment_id):
         for file in files:
             match = file_pattern.search(file)
             if match:
-                slice_num = match.group(1)
+                slice_num = int(match.group(1))
                 min_slice = min(min_slice, slice_num)
                 max_slice = max(max_slice, slice_num)
     except FileNotFoundError:
