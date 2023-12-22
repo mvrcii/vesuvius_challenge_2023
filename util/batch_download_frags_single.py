@@ -3,12 +3,13 @@ import re
 import subprocess
 import sys
 
-from fragment import FragmentHandler
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from fragment import FragmentHandler
 from meta import AlphaBetaMeta
 
 download_script = "./util/download.sh"
+
 
 def determine_slice_range(fragment_id):
     file_pattern = re.compile(r'_([0-9]+)\.png')
@@ -22,7 +23,7 @@ def determine_slice_range(fragment_id):
         for file in files:
             match = file_pattern.search(file)
             if match:
-                slice_num  = match.group(1)
+                slice_num = match.group(1)
                 min_slice = min(min_slice, slice_num)
                 max_slice = max(max_slice, slice_num)
     except FileNotFoundError:
@@ -54,7 +55,8 @@ def check_downloaded_slices(fragment_id, start_slice, end_slice):
 
     for slice in existing_slices:
         if slice_sizes[slice] != first_slice_size:
-            print(f"File size mismatch in slice file: {fragment_dir}/{slice:05d}.tif - {slice_sizes[slice]}", file=sys.stderr)
+            print(f"File size mismatch in slice file: {fragment_dir}/{slice:05d}.tif - {slice_sizes[slice]}",
+                  file=sys.stderr)
 
     if not missing_slices:
         return None
