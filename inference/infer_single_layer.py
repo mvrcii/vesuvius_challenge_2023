@@ -341,6 +341,7 @@ def main():
     save_labels = args.labels
 
     start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=fragment_id)
+    print(f"Center Layers: {start_layer_idx}-{end_layer_idx}")
 
     global verbose, boost_threshold
     boost_threshold = args.boost_threshold
