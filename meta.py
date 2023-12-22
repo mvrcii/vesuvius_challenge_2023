@@ -1,7 +1,7 @@
 import os
 
 from constants import FRAGMENTS_ALPHA, FRAGMENTS_BETA, ITERATION, LABEL_TYPE, ALPHA, BETA, IT_2_MODEL, LABEL_BASE_PATH, \
-    LABEL_BINARIZED_PATH
+    LABEL_BINARIZED_PATH, LABEL_BINARIZED_SINGLE_PATH
 
 
 class AlphaBetaMeta:
@@ -43,13 +43,16 @@ class AlphaBetaMeta:
         else:
             raise Exception(f"No prior model for iteration {self.iteration} ({self.get_current_phase()}) found")
 
-    def get_current_binarized_label_dir(self):
+    def get_current_binarized_label_dir(self, single=False):
         """The current label dir is always specified by the model prior to this iteration."""
         label_type = self.get_current_label_type()
         model = self.get_previous_model()
 
         if model:
-            return os.path.join(LABEL_BINARIZED_PATH, label_type, model)
+            if single:
+                return os.path.join(LABEL_BINARIZED_SINGLE_PATH, label_type, model)
+            else:
+                return os.path.join(LABEL_BINARIZED_PATH, label_type, model)
         else:
             # If there is no previous model, we are probably in te first iteration and thus we use the baseline labels
             return os.path.join(LABEL_BINARIZED_PATH, label_type, "baseline")

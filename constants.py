@@ -17,8 +17,7 @@ SKYWARP_FRAG_ID = fragments.get_id("SKYWARP")
 THUNDERCRACKER_FRAG_ID = fragments.get_id("THUNDERCRACKER")
 SUNSTREAKER_FRAG_ID = fragments.get_id("SUNSTREAKER")
 
-FRAGMENTS_ALPHA = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID,
-                   SUNSTREAKER_FRAG_ID, JAZZILLA_FRAG_ID]
+FRAGMENTS_ALPHA = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID]
 
 FRAGMENTS_BETA = [BLASTER_FRAG_ID, HOT_ROD_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,
                   DEVASTATOR_FRAG_ID, SKYWARP_FRAG_ID, IRONHIDE_FRAG_ID]
@@ -57,13 +56,14 @@ HANDMADE_LABELS = "handmade"
 GENERATED_LABELS = "model_generated"
 LABEL_BASE_PATH = os.path.join("data", "base_label_files")
 LABEL_BINARIZED_PATH = os.path.join("data", "base_label_binarized")
+LABEL_BINARIZED_SINGLE_PATH = os.path.join("data", "base_label_binarized_single")
 
 # ITERATION PHASE
 ALPHA = "Alpha"
 BETA = "Beta"
 
 IT_2_MODEL = {
-    # 0: DEFT_YOGURT,
+    0: UPBEAT_TREE,
     1: None,
 }
 
