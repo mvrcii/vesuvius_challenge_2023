@@ -78,6 +78,8 @@ def get_inference_folder(fragment_id, full_model_run_dir, hostname, single):
 
     if len(model_dirs) == 1:
         if validate_folder(local_path, short_model_run_dir):
+            print(os.path.join(local_path, short_model_run_dir))
+
             frag_name = get_frag_name_from_id(fragment_id).upper()
             print_colored(
                 f"SKIP:\tInference download for {short_model_run_dir.upper()} and {frag_name} '{fragment_id}' already exists",
