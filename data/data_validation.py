@@ -42,8 +42,6 @@ def validate_fragments(config, fragments, label_dir):
     for excluded in excluded_fragments:
         print_checks(excluded, [])
 
-    print("\n")
-
     return frag_id_2_channels
 
 

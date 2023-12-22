@@ -20,9 +20,11 @@ def generate_dataset(cfg: Config):
     if cfg.seed == -1:
         cfg.seed = None  # Set random seed if -1 is given
 
-    print("Before ignoring: ", len(df.index))
-    df = df[df["ignore_p"] < cfg.max_ignore_th]
-    print(f"After ignoring patches with ignore_p > {cfg.max_ignore_th}: ", len(df.index))
+    if "ignore_p" in df.columns:
+        print("Before ignoring: ", len(df.index))
+        df = df[df["ignore_p"] < cfg.max_ignore_th]
+        print(f"After ignoring patches with ignore_p > {cfg.max_ignore_th}: ", len(df.index))
+
     if not cfg.take_full_dataset:
         count_zero = (df['ink_p'] == 0).sum()
         count_greater_than_zero = (df['ink_p'] > 0).sum()

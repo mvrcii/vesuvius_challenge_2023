@@ -143,5 +143,30 @@
       29,
       39
     ]
+  },
+  {
+    "id": "20231210121321",
+    "name": "BLUEBIGGER",
+    "boost_threshold": 1
+  },
+  {
+    "id": "20231012184423",
+    "name": "GRIMHUGE",
+    "boost_threshold": 1
+  },
+  {
+    "id": "20231007101616",
+    "name": "SKYBIGGER",
+    "boost_threshold": 1
+  },
+  {
+    "id": "20231022170901",
+    "name": "DEVASBIGGER",
+    "boost_threshold": 1
+  },
+  {
+    "id": "20231221180250",
+    "name": "TRAILBREAKER",
+    "boost_threshold": 1
   }
 ]

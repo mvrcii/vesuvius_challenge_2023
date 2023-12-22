@@ -150,7 +150,7 @@ def extract_img_patch(_cfg: Config, tensor, x1, x2, y1, y2):
     if tensor.ndim != 3 or tensor.shape[0] != cfg.in_chans or tensor.shape[0] + tensor.shape[1] == 0:
         raise ValueError(f"Expected tensor with shape ({cfg.in_chans}, height, width), got {tensor.shape}")
 
-    assert tensor, "Image tensor is None"
+    assert tensor is not None, "Image tensor is None"
 
     img_patch = tensor[:, y1:y2, x1:x2]
 
@@ -161,10 +161,10 @@ def extract_img_patch(_cfg: Config, tensor, x1, x2, y1, y2):
 
 
 def extract_label_patch(_cfg: Config, tensor, x1, x2, y1, y2):
-    if tensor.ndim != 3 or len(tensor[0]) + len(tensor[1]) == 0:
+    if tensor.ndim != 3:
         raise ValueError(f"Expected tensor with shape (1, height, width), got {tensor.shape}")
 
-    assert tensor, "Label tensor is None"
+    assert tensor is not None, "Label tensor is None"
 
     label_patch = tensor[0, y1:y2, x1:x2]
 
@@ -175,9 +175,9 @@ def extract_label_patch(_cfg: Config, tensor, x1, x2, y1, y2):
     assert 0 <= ink_percentage <= 100
 
     assert label_patch is not None, "Label patch is None"
-    assert label_patch.shape == (1, _cfg.patch_size, _cfg.patch_size), f"Label patch wrong shape: {label_patch.shape}"
+    assert label_patch.shape == (_cfg.patch_size, _cfg.patch_size), f"Label patch wrong shape: {label_patch.shape}"
 
-    return label_patch
+    return label_patch, ink_percentage
 
 
 def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tensor, label_tensor, start_channel, pbar):
@@ -206,7 +206,7 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             label_patch, ink_p = extract_label_patch(_cfg=config, tensor=label_tensor, x1=x1, x2=x2, y1=y1, y2=y2)
             image_patch = extract_img_patch(_cfg=config, tensor=image_tensor, x1=x1, x2=x2, y1=y1, y2=y2)
 
-            patch_stack[file_name] = (image_patch, label_patch)
+            patch_stack[file_name] = (image_patch, label_patch)  # [1, 512, 512] and [512, 512] with single layer
             patch_metainfo_stack.append((file_name, frag_id, start_channel, ink_p))
 
     assert len(patch_stack) > 0, f"Warning: No patches were created for fragment {frag_id} and channel {start_channel}"
@@ -247,6 +247,7 @@ def balance_dataset(_cfg: Config, patch_df):
 
     # Skip balancing
     if _cfg.ink_ratio == -1:
+        print(f"Balanced Channel: Samples={len(data)}")
         return data
 
     # BALANCING IS DONE ON CREATION
@@ -261,6 +262,8 @@ def balance_dataset(_cfg: Config, patch_df):
 
     # Step 4: Concatenate the two DataFrames
     df = pd.concat([ink_samples, non_ink_samples])
+
+    print(f"Balanced Dataset: Ink Samples={len(ink_samples)} > {_cfg.ink_ratio} and Non-Ink Samples={non_ink_sample_count}")
 
     return df
 
