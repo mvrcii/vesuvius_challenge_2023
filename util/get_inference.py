@@ -46,11 +46,13 @@ def find_directory_on_remote(server_path, fragment_id, model_run_dir):
     return os.path.join(full_server_path, f"*{model_run_dir}*"), model_run_dir
 
 
-def get_inference_folder(fragment_id, full_model_run_dir, hostname):
+def get_inference_folder(fragment_id, full_model_run_dir, hostname, single):
+
+    result_dir = "single_results" if single else "results"
+
     server_paths = {
-        "vast": "~/kaggle1stReimp/inference/results",
-        "vast2": "~/kaggle1stReimp/inference/results",
-        "slurm": "/scratch/medfm/vesuv/kaggle1stReimp/inference/results",
+        "vast": f"~/kaggle1stReimp/inference/{result_dir}",
+        "vast2": f"~/kaggle1stReimp/inference/{result_dir}",
     }
 
     if hostname not in server_paths:
@@ -65,7 +67,7 @@ def get_inference_folder(fragment_id, full_model_run_dir, hostname):
         model_run_dir=full_model_run_dir,
     )
 
-    local_path = os.path.join(os.getcwd(), f"inference/results/fragment{fragment_id}")
+    local_path = os.path.join(os.getcwd(), f"inference/{result_dir}/fragment{fragment_id}")
     os.makedirs(local_path, exist_ok=True)
 
     model_dirs = [_dir for _dir in os.listdir(local_path) if short_model_run_dir in _dir]
@@ -106,6 +108,7 @@ if __name__ == "__main__":
     parser.add_argument("fragment_id", type=str, help="Fragment ID")
     parser.add_argument("checkpoint_folder_name", type=str, help="Checkpoint folder name")
     parser.add_argument("hostname", type=str, help="Hostname")
+    parser.add_argument('--single', action='store_true', help='Get single inference results')
     args = parser.parse_args()
 
-    get_inference_folder(args.fragment_id, args.checkpoint_folder_name, args.hostname)
+    get_inference_folder(args.fragment_id, args.checkpoint_folder_name, args.hostname, args.single)
