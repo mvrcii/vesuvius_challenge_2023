@@ -147,26 +147,60 @@
   {
     "id": "20231210121321",
     "name": "BLUEBIGGER",
-    "boost_threshold": 1
+    "boost_threshold": 1,
+    "center_layers_start_indices": [
+      29,
+      39
+    ]
   },
   {
     "id": "20231012184423",
     "name": "GRIMHUGE",
-    "boost_threshold": 1
+    "rotation": 0,
+    "boost_threshold": 1,
+    "center_layers_start_indices": [
+      28,
+      41
+    ],
+    "best_12_inclusive_layers": [
+      30,
+      41
+    ]
   },
   {
     "id": "20231007101616",
     "name": "SKYBIGGER",
-    "boost_threshold": 1
+    "boost_threshold": 0.00001,
+    "rotation": -1,
+    "flip": 1
   },
   {
     "id": "20231022170901",
     "name": "DEVASBIGGER",
-    "boost_threshold": 1
+    "boost_threshold": 0.00001,
+    "center_layers_start_indices": [
+      24,
+      30
+    ],
+    "rotation": -1
   },
   {
     "id": "20231221180250",
     "name": "TRAILBREAKER",
     "boost_threshold": 1
+  },
+  {
+    "id": "20231016151002",
+    "name": "JAZZBIGGER",
+    "center_layers_start_indices": [
+      28,
+      42
+    ],
+    "best_12_inclusive_layers": [
+      31,
+      42
+    ],
+    "boost_threshold": 0.00005,
+    "rotation": 0
   }
 ]
