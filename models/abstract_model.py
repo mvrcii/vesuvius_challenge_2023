@@ -65,7 +65,11 @@ class AbstractVesuvLightningModule(LightningModule):
                   self.loss_functions]
 
         # Combine individual losses based on their weight
-        total_loss = sum([weight * value for (_, weight, value) in losses])
+        total_loss = 0
+        for (name, weight, value) in losses:
+            intermediate_loss = weight * value
+            print(f"batch_idx={batch_idx}", name, intermediate_loss)
+            total_loss += intermediate_loss
 
         # Append total loss to list which is being logged
         losses.append(("total", 1.0, total_loss))
