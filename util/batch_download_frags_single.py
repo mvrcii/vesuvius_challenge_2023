@@ -121,6 +121,7 @@ if __name__ == '__main__':
     parser.set_defaults(consider_label_files=True)
     args = parser.parse_args()
 
-    fragment_list = AlphaBetaMeta().get_current_train_fragments()
+    fragment_list = FragmentHandler().get_ids()
+    # fragment_list = AlphaBetaMeta().get_current_train_fragments()
     print("Fragments to download:", fragment_list)
     batch_download_frags(frag_list=fragment_list, consider_labels=args.consider_labels)
