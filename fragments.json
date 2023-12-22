@@ -170,9 +170,11 @@
   {
     "id": "20231007101616",
     "name": "SKYBIGGER",
-    "boost_threshold": 0.00001,
-    "rotation": -1,
-    "flip": 1
+    "center_layers_start_indices": [
+      25,
+      40
+    ],
+    "boost_threshold": 0.0001
   },
   {
     "id": "20231022170901",
@@ -181,8 +183,7 @@
     "center_layers_start_indices": [
       24,
       30
-    ],
-    "rotation": -1
+    ]
   },
   {
     "id": "20231221180250",
@@ -202,5 +203,13 @@
     ],
     "boost_threshold": 0.00005,
     "rotation": 0
+  },
+    {
+    "id": "20231205141500",
+    "name": "TITLE1"
+  },
+    {
+    "id": "20231206155550",
+    "name": "TITLE2"
   }
 ]

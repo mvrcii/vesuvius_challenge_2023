@@ -1,6 +1,7 @@
 import subprocess
 import sys
-
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from constants import *
 from meta import AlphaBetaMeta
 from util.batch_download_frags import batch_download_frags
@@ -16,8 +17,7 @@ def print_colored(message, color):
     print(f"{colors[color]}{message}{colors['end']}")
 
 
-FRAGMENT_IDS = [BLUEBIGGER_FRAG_ID, GRIMHUGE_FRAG_ID, SKYBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, TRAILBREAKER_FRAG_ID,
-                JAZZBIGGER_FRAG_ID]
+FRAGMENT_IDS = [TITLE1_FRAG_ID, TITLE2_FRAG_ID]
 model = AlphaBetaMeta().get_previous_model()
 
 print("Fragments for inference:\t", ", ".join(FRAGMENT_IDS))
