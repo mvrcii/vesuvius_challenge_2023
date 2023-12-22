@@ -61,8 +61,8 @@ class AbstractVesuvLightningModule(LightningModule):
         output = self.forward(data)
         print("data shape", data.shape)
         print("label shape", target.shape)
-        print(f"batch_idx={batch_idx} data", len(torch.unique(data)))
-        print(f"batch_idx={batch_idx} label", torch.sum(target))
+        print(f"batch_idx={batch_idx} data", data[0])
+        print(f"batch_idx={batch_idx} label", target)
         print(f"batch_idx={batch_idx} output", output)
 
         # Calculate individual losses, store them as (name, weight, value) tuples in list
