@@ -99,7 +99,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
 
     progress_bar = tqdm(total=x_patches * y_patches,
-                        desc=f"Step {layer_start}/{end_idx}: Infer Fragment {get_frag_name_from_id(fragment_id)} "
+                        desc=f"Step {layer_start}: Infer Fragment {get_frag_name_from_id(fragment_id)} "
                              f"with {get_ckpt_name_from_id(ckpt_name).upper()}: Processing patches"
                              f" for layer {layer_start}")
 
@@ -325,8 +325,6 @@ def load_model(cfg: Config, model_path):
 
 
 verbose = None
-start_idx = None
-end_idx = None
 boost_threshold = None
 
 
@@ -344,11 +342,9 @@ def main():
 
     start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=fragment_id)
 
-    global verbose, start_idx, end_idx, boost_threshold
+    global verbose, boost_threshold
     boost_threshold = args.boost_threshold
     verbose = args.v
-    start_idx = start_layer_idx
-    end_idx = end_layer_idx
 
     # Determine the path to the configuration based on the checkpoint folder
     model_folder_path = os.path.join('checkpoints', model_folder_name)
@@ -384,7 +380,7 @@ def main():
     # Calculate valid label indices
     valid_start_idxs = []
     if save_labels:
-        valid_start_idxs = list(range(start_idx, end_idx + 1))
+        valid_start_idxs = list(range(start_layer_idx, end_layer_idx + 1))
 
     print("Starting inference for", valid_start_idxs)
     for layer_idx in valid_start_idxs:
