@@ -1,3 +1,4 @@
+import argparse
 import os
 import re
 import subprocess
@@ -83,13 +84,13 @@ def get_consecutive_ranges(missing_slices):
     return ranges
 
 
-def batch_download_frags(frag_list, consider_label_files=True):
+def batch_download_frags(frag_list, consider_labels=True):
     for fragment_id in frag_list:
         print(f"\nFragment ID: {fragment_id}")
 
         start_slice, end_slice = FragmentHandler().get_center_layers(frag_id=fragment_id)
 
-        if consider_label_files:
+        if consider_labels:
             start_slice, end_slice = determine_slice_range(fragment_id)
 
         if start_slice == 99999 or end_slice == 0:
@@ -114,6 +115,12 @@ def batch_download_frags(frag_list, consider_label_files=True):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Download missing fragment slices.")
+    parser.add_argument('--consider_labels', dest='consider_labels', action='store_false',
+                        help='Consider label files when determining slice range')
+    parser.set_defaults(consider_label_files=True)
+    args = parser.parse_args()
+
     fragment_list = AlphaBetaMeta().get_current_train_fragments()
     print("Fragments to download:", fragment_list)
-    batch_download_frags(fragment_list)
+    batch_download_frags(frag_list=fragment_list, consider_labels=args.consider_labels)

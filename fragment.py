@@ -44,8 +44,6 @@ class FragmentHandler(metaclass=SingletonMeta):
             self.fragment_dict = {fragment.name: fragment for fragment in self.fragments}
 
             self.FRAGMENTS = {fragment.name: fragment.id for fragment in self.fragments}
-            self.FRAGMENTS_ALPHA = ['JETFIRE', 'GRIMLARGE', 'THUNDERCRACKER', 'SUNSTREAKER', 'JAZZILLA']
-            self.FRAGMENTS_BETA = ['BLASTER', 'HOT_ROD', 'ULTRA_MAGNUS', 'DEVASTATOR', 'SKYWARP', 'IRONHIDE']
 
     def get_center_layers(self, frag_id):
         for fragment in self.fragments:
