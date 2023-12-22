@@ -9,7 +9,7 @@ model = SegformerForSemanticSegmentation.from_pretrained(
     num_channels=1,
 )
 
-sample_input = torch.rand((1, 1, 512, 512), dtype=float16)
+sample_input = torch.rand((1, 1, 512, 512))
 
 output = model(sample_input)
 
