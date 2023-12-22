@@ -17,7 +17,6 @@ from transformers.utils import logging
 from config_handler import Config
 from constants import get_frag_name_from_id, get_ckpt_name_from_id
 from fragment import FragmentHandler
-from meta import AlphaBetaMeta
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -41,71 +40,18 @@ def pad_image_to_be_divisible_by_4(image, patch_size):
     return padded_image
 
 
-def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
-    images = []
+def read_fragment(patch_size, work_dir, fragment_id, layer_start):
+    img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices",
+                            f"{layer_start:05}.tif")
 
-    for i in range(layer_start, layer_start + layer_count):
-        img_path = os.path.join(work_dir, "../data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+    image = cv2.imread(img_path, 0)
+    assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(layer_start)
 
-        image = cv2.imread(img_path, 0)
-        assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
+    image = pad_image_to_be_divisible_by_4(image, patch_size)
 
-        image = pad_image_to_be_divisible_by_4(image, patch_size)
-
-        images.append(image)
-    images = np.stack(images, axis=0)
+    images = np.stack([image for _ in range(4)], axis=0)
 
     return images
-
-
-def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizontal=False):
-    """
-    Apply test-time augmentation to the input tensor and make a batch inference with PyTorch.
-
-    :param tensor: Image tensor with shape (4, 512, 512).
-    :param rotate: Apply rotation if True.
-    :param flip_vertical: Apply vertical flip if True.
-    :param flip_horizontal: Apply horizontal flip if True.
-    :return: Batch of TTA-processed tensors.
-    """
-    tta_batch = []
-
-    # Apply rotation augmentations
-    if rotate:
-        tta_batch.append(torch.rot90(tensor, 1, [1, 2]).clone())  # Rotate left 90 degrees
-        tta_batch.append(torch.rot90(tensor, 2, [1, 2]).clone())  # Rotate 180 degrees
-        tta_batch.append(torch.rot90(tensor, 3, [1, 2]).clone())  # Rotate right 90 degrees
-
-    # Apply flip augmentations
-    if flip_vertical:
-        tta_batch.append(torch.flip(tensor, [1]).clone())  # Vertical flip
-    if flip_horizontal:
-        tta_batch.append(torch.flip(tensor, [2]).clone())  # Horizontal flip
-
-    # Convert list to torch tensor
-    tta_batch = torch.stack(tta_batch).half()  # Assuming the model is in half precision
-
-    # Get the model's predictions for the batch
-    tta_outputs = model(tta_batch).logits
-
-    # Post-process to revert the TTA
-    reverted_outputs = []
-    for i, output in enumerate(tta_outputs):
-        output = output.clone()
-        if rotate:
-            if i == 1:  # Revert rotate left
-                output = torch.rot90(output, 3, [1, 2])
-            elif i == 2:  # Revert rotate 180
-                output = torch.rot90(output, 2, [1, 2])
-            elif i == 3:  # Revert rotate right
-                output = torch.rot90(output, 1, [1, 2])
-        if flip_vertical and i == len(tta_outputs) - 2 + int(flip_horizontal):
-            output = torch.flip(output, [1])
-        if flip_horizontal and i == len(tta_outputs) - 1:
-            output = torch.flip(output, [2])
-        reverted_outputs.append(output.clone().squeeze())
-
-    return torch.stack(reverted_outputs)
 
 
 def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
@@ -114,10 +60,10 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
 
     # Loading images
     images = read_fragment(patch_size=patch_size, work_dir=config.work_dir, fragment_id=fragment_id,
-                           layer_start=layer_start, layer_count=config.in_chans)
+                           layer_start=layer_start)
 
     # Load mask
-    mask_path = os.path.join(config.work_dir, "../data", "fragments", f"fragment{fragment_id}", "mask.png")
+    mask_path = os.path.join(config.work_dir, "data", "fragments", f"fragment{fragment_id}", "mask.png")
     if not os.path.isfile(mask_path):
         raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
     mask = np.asarray(Image.open(mask_path))
@@ -155,14 +101,13 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     progress_bar = tqdm(total=x_patches * y_patches,
                         desc=f"Step {layer_start}/{end_idx}: Infer Fragment {get_frag_name_from_id(fragment_id)} "
                              f"with {get_ckpt_name_from_id(ckpt_name).upper()}: Processing patches"
-                             f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
+                             f" for layer {layer_start}")
 
     preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device='cuda')
     model = model.half()
 
     batches = []
     batch_indices = []
-    advanced_tta_patch_counter = 0
 
     def process_patch(logits, x, y):
         # Calculate the margin to ignore (10% of the patch size)
@@ -181,7 +126,6 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
         pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
 
     transform = A.Compose(val_image_aug, is_check_shapes=False)
-    use_advanced_tta = False
 
     for y in range(y_patches):
         for x in range(x_patches):
@@ -218,22 +162,6 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
 
                 sigmoid_output = torch.sigmoid(outputs.logits).detach().squeeze()
 
-                # Check 'improved' TTA for every image patch
-                if use_advanced_tta:
-                    for image_patch, sigmoid_patch in zip(preallocated_batch_tensor, sigmoid_output):
-                        ink_percentage = int((sigmoid_patch.sum() / np.prod(sigmoid_patch.shape)) * 100)
-
-                        if ink_percentage >= 5:
-                            advanced_tta_patch_counter += 1
-                            output_patches = advanced_tta(model=model,
-                                                          tensor=image_patch,
-                                                          rotate=True,
-                                                          flip_vertical=True,
-                                                          flip_horizontal=True)
-
-                            for patch in output_patches:
-                                process_patch(patch, x, y)
-
                 for idx, (x, y) in enumerate(batch_indices):
                     process_patch(sigmoid_output[idx], x, y)  # Function to process each patch
 
@@ -261,9 +189,6 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     # Average the predictions
     out_arr = torch.where(pred_counts > 0, torch.div(out_arr, pred_counts), out_arr)
 
-    if use_advanced_tta:
-        global total_advanced_tta_patches
-        print(f"Advanced TTA Patches for layer start {layer_start}: {total_advanced_tta_patches}")
     return out_arr
 
 
@@ -282,7 +207,7 @@ def find_py_in_dir(path):
 
 
 def get_target_dims(work_dir, frag_id):
-    frag_dir = os.path.join(work_dir, "../data", "fragments", f"fragment{frag_id}")
+    frag_dir = os.path.join(work_dir, "data", "fragments", f"fragment{frag_id}")
     assert os.path.isdir(frag_dir)
 
     target_dims = None
@@ -310,11 +235,10 @@ def normalize_npy_preds(array):
 
 
 def generate_and_save_label_file(cfg: Config, _model_name, array, frag_id, layer_index):
-    binarized_label_dir = AlphaBetaMeta().get_label_target_dir()
+    binarized_label_dir = os.path.join("data", "base_label_binarized_single")
     target_dir = os.path.join(binarized_label_dir, _model_name, frag_id)
 
-    label_filename = f"{frag_id}_inklabels_{layer_index}_{layer_index + cfg.in_chans - 1}.png"
-    label_path = os.path.join(target_dir, label_filename)
+    label_path = os.path.join(target_dir, f"inklabels_{layer_index}.png")
 
     # Check if label PNG file exists -> skip
     if os.path.isfile(label_path):
@@ -368,14 +292,10 @@ def process_image(array, frag_id, dimensions):
     return Image.fromarray(np.array(upscaled_image)[:out_height, :out_width])
 
 
-def parse_args(default_start_idx, default_end_idx):
+def parse_args():
     parser = argparse.ArgumentParser(description='Infer Layered Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
-    parser.add_argument('--start_idx', type=int, default=default_start_idx,
-                        help='Start index (default: {})'.format(default_start_idx))
-    parser.add_argument('--end_idx', type=int, default=default_end_idx,
-                        help='End index (default: {})'.format(default_end_idx))
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
                                                               'for the inference')
@@ -405,7 +325,6 @@ def load_model(cfg: Config, model_path):
 
 
 verbose = None
-total_advanced_tta_patches = None
 start_idx = None
 end_idx = None
 boost_threshold = None
@@ -416,24 +335,23 @@ def main():
     logging.set_verbosity_error()
     Image.MAX_IMAGE_PIXELS = None
 
-    default_start_idx = 0
-    default_end_idx = 60
-
-    args = parse_args(default_start_idx, default_end_idx)
+    args = parse_args()
 
     model_folder_name = args.checkpoint_folder_name
     fragment_id = args.fragment_id
     batch_size = args.batch_size
     save_labels = args.labels
 
+    start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=fragment_id)
+
     global verbose, start_idx, end_idx, boost_threshold
     boost_threshold = args.boost_threshold
     verbose = args.v
-    start_idx = args.start_idx
-    end_idx = args.end_idx
+    start_idx = start_layer_idx
+    end_idx = end_layer_idx
 
     # Determine the path to the configuration based on the checkpoint folder
-    model_folder_path = os.path.join('../checkpoints', model_folder_name)
+    model_folder_path = os.path.join('checkpoints', model_folder_name)
 
     # Find config path
     config_path = find_py_in_dir(model_folder_path)
@@ -450,8 +368,8 @@ def main():
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_name = model_path.split(f"checkpoints{os.sep}")[-1]
     model_name_modified = '-'.join(model_name.split('-')[0:5])
-    root_dir = os.path.join("", "results", f"fragment{fragment_id}")
-    results_dir = os.path.join("", "results", f"fragment{fragment_id}",
+    root_dir = os.path.join("", "single_results", f"fragment{fragment_id}")
+    results_dir = os.path.join("", "single_results", f"fragment{fragment_id}",
                                f"{date_time_string}_{model_name_modified}")
 
     os.makedirs(root_dir, exist_ok=True)
@@ -465,23 +383,18 @@ def main():
     model = load_model(cfg=config, model_path=model_path)
 
     # Calculate valid label indices
-    valid_start_idxs = set()
+    valid_start_idxs = []
     if save_labels:
-        default_range = set(range(default_start_idx, default_end_idx + 1, config.in_chans))
-        selected_range = set(range(start_idx, end_idx + 1))
-        valid_start_idxs = default_range.intersection(selected_range)
+        valid_start_idxs = list(range(start_idx, end_idx + 1))
 
-    global total_advanced_tta_patches
-    total_advanced_tta_patches = 0
-
-    for layer_idx in range(start_idx, end_idx + 1, 1):
-        npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{layer_idx}_{layer_idx + config.in_chans - 1}.npy")
+    for layer_idx in valid_start_idxs:
+        npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{layer_idx}.npy")
 
         # Check if prediction NPY file already exists -> skip infer
         if os.path.isfile(npy_file_path):
             npy_file = np.load(npy_file_path)
 
-            if save_labels and layer_idx in valid_start_idxs:
+            if save_labels:
                 generate_and_save_label_file(config,
                                              _model_name=model_folder_name,
                                              array=npy_file,
