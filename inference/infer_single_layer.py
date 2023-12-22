@@ -275,7 +275,7 @@ def process_image(array, frag_id, dimensions):
     new_height = image.shape[0] * 4  # height
 
     original_height, original_width = dimensions
-    upscaled_image = resize(image, (new_width, new_height),
+    upscaled_image = resize(image, (new_height, new_width),
                             order=0, preserve_range=True, anti_aliasing=False)
 
     assert new_width >= original_width and new_height >= original_height
