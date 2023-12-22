@@ -21,3 +21,6 @@ sudo apt-get install libgl1-mesa-glx
 # Download Fragments
 python ./util/batch_download_frags_single.py
 
+# Download Masks
+python ./util/download_masks.py
+
