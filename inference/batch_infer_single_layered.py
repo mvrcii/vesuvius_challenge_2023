@@ -36,7 +36,7 @@ for fragment_id in FRAGMENT_IDS:
     for checkpoint in CHECKPOINTS:
 
         command = [
-            sys.executable, 'infer_single_layer.py',
+            sys.executable, 'inference/infer_single_layer.py',
             str(checkpoint),
             str(fragment_id),
         ]
