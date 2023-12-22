@@ -12,6 +12,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from fragment import FragmentHandler
+from meta import AlphaBetaMeta
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -348,8 +349,8 @@ if __name__ == '__main__':
 
     LABEL_INFO_LIST = []
 
-    label_dir = os.path.join(cfg.work_dir, "data", "base_label_binarized_single",
-                             "upbeat-tree-741-segformer-b2-231210-210131")
+    label_dir = AlphaBetaMeta().get_current_binarized_label_dir(single=True)
+    label_dir = os.path.join(cfg.work_dir, label_dir)
     fragments = cfg.fragment_ids
 
     clean_all_fragment_label_dirs(config=cfg)
