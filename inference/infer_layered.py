@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
-from PIL.Image import Resampling
+from skimage.transform import resize
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 from transformers.utils import logging
@@ -343,13 +343,14 @@ def process_image(array, frag_id, dimensions):
     # Binarize
     processed = np.where(processed > threshold, 1, 0)
 
-    image = Image.fromarray(np.uint8(processed * 255), 'L')
+    image = np.uint8(processed * 255)
 
-    new_width = image.width * 4
-    new_height = image.height * 4
+    new_width = image.shape[1] * 4  # width
+    new_height = image.shape[0] * 4  # height
 
     original_height, original_width = dimensions
-    upscaled_image = image.resize((new_width, new_height), Resampling.LANCZOS)
+    upscaled_image = resize(image, (new_width, new_height),
+                            order=0, preserve_range=True, anti_aliasing=False)
 
     assert new_width >= original_width and new_height >= original_height
 

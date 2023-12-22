@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
-from PIL.Image import Resampling
+from skimage.transform import resize
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 from transformers.utils import logging
@@ -222,7 +222,8 @@ def get_target_dims(work_dir, frag_id):
             img_path = os.path.join(slice_dir, f"{i:05}.tif")
             if os.path.isfile(img_path):
                 image = cv2.imread(img_path, 0)
-                target_dims = image.shape
+                if image:
+                    target_dims = image.shape
 
     return target_dims
 
@@ -268,13 +269,14 @@ def process_image(array, frag_id, dimensions):
     # Binarize
     processed = np.where(processed > threshold, 1, 0)
 
-    image = Image.fromarray(np.uint8(processed * 255), 'L')
+    image = np.uint8(processed * 255)
 
-    new_width = image.width * 4
-    new_height = image.height * 4
+    new_width = image.shape[1] * 4  # width
+    new_height = image.shape[0] * 4  # height
 
     original_height, original_width = dimensions
-    upscaled_image = image.resize((new_width, new_height), Resampling.LANCZOS)
+    upscaled_image = resize(image, (new_width, new_height),
+                            order=0, preserve_range=True, anti_aliasing=False)
 
     assert new_width >= original_width and new_height >= original_height
 
@@ -396,8 +398,8 @@ def main():
                                              array=npy_file,
                                              frag_id=fragment_id,
                                              layer_index=layer_idx)
-            if verbose:
-                print(f"Skip layer {layer_idx}")
+        if verbose:
+            print(f"Skip inference for layer {layer_idx}")
             continue
 
         sigmoid_logits = infer_full_fragment_layer(model=model,
