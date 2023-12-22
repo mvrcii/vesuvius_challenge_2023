@@ -50,7 +50,7 @@ class AlphaBetaMeta:
 
         if model:
             if single:
-                return os.path.join(LABEL_BINARIZED_SINGLE_PATH, label_type, model)
+                return os.path.join(LABEL_BINARIZED_SINGLE_PATH, model)
             else:
                 return os.path.join(LABEL_BINARIZED_PATH, label_type, model)
         else:
