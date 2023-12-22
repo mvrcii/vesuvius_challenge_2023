@@ -32,13 +32,13 @@ val_interval = 1
 patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
-balance_dataset = False
 ink_ratio = 3
-artefact_threshold = 5
+no_ink_sample_percentage = 1  # 1 (=100%) corresponds to the same amount of non-ink and ink samples
+
 excluded_label_blocks = 0
 excluded_label_layers = in_chans * excluded_label_blocks  # excluded from bottom and top of the stack
-fragment_ids = ['20231005123336']
 
+fragment_ids = ['20231005123336']
 train_split = 0.8
 
 lr = 1e-4

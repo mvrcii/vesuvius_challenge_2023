@@ -8,42 +8,6 @@ from config_handler import Config
 from constants import get_frag_name_from_id
 
 
-def balance_dataset(cfg: Config, data):
-    # Filter for desired fragments
-    data = data[data['frag_id'].isin(cfg.fragment_ids)]
-
-    # Select ink samples
-    ink_samples = data[data['ink_p'] > cfg.ink_ratio]
-
-    # Calculate the number of non-ink samples to select
-    num_ink_samples = len(ink_samples)
-
-    # Split non-ink samples into two groups
-    non_ink_samples_no_artefact = data[(data['ink_p'] <= cfg.ink_ratio) & (data['artefact_p'] == 0)]
-    non_ink_samples_with_artefact = data[
-        (data['ink_p'] <= cfg.ink_ratio) & (data['artefact_p'] >= cfg.artefact_threshold)]
-
-    # Determine the available number of non-ink samples with artefacts
-    available_with_artefact = len(non_ink_samples_with_artefact)
-    desired_with_artefact = int(num_ink_samples * 0.3)
-
-    # Adjust the number of each non-ink group based on availability
-    num_with_artefact_samples = min(desired_with_artefact, available_with_artefact)
-    num_no_artefact_samples = num_ink_samples - num_with_artefact_samples
-
-    # Ensure not to exceed the available non-ink samples with no artefacts
-    num_no_artefact_samples = min(num_no_artefact_samples, len(non_ink_samples_no_artefact))
-
-    # Select samples from each non-ink group
-    selected_no_artefact_samples = non_ink_samples_no_artefact.sample(n=num_no_artefact_samples, random_state=cfg.seed)
-    selected_with_artefact_samples = non_ink_samples_with_artefact.sample(n=num_with_artefact_samples,
-                                                                          random_state=cfg.seed)
-
-    # Combine all selected samples
-    return pd.concat([ink_samples, selected_no_artefact_samples,
-                      selected_with_artefact_samples]), num_ink_samples, num_no_artefact_samples, num_with_artefact_samples
-
-
 def generate_dataset(cfg: Config):
     csv_path = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), 'label_infos.csv')
 
@@ -62,7 +26,8 @@ def generate_dataset(cfg: Config):
     if not cfg.take_full_dataset:
         count_zero = (df['ink_p'] == 0).sum()
         count_greater_than_zero = (df['ink_p'] > 0).sum()
-        print(f"Before balancing: {count_zero} samples with ink_p = 0 and {count_greater_than_zero} samples with ink_p > 0")
+        print(
+            f"Before balancing: {count_zero} samples with ink_p = 0 and {count_greater_than_zero} samples with ink_p > 0")
 
         # BALANCING IS DONE ON CREATION
         # Step 1: Filter out rows where ink_p > ratio
