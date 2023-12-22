@@ -18,7 +18,7 @@ def print_colored(message, color):
 
 FRAGMENT_IDS = [BLUEBIGGER_FRAG_ID, GRIMHUGE_FRAG_ID, SKYBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, TRAILBREAKER_FRAG_ID,
                 JAZZBIGGER_FRAG_ID]
-model = AlphaBetaMeta().get_current_model()
+model = AlphaBetaMeta().get_previous_model()
 
 print("Fragments for inference:\t", ", ".join(FRAGMENT_IDS))
 print("Model for inference:\t", model)
