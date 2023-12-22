@@ -26,7 +26,7 @@ CHECKPOINTS = [model]
 
 labels = False
 boost_threshold = False
-verbose = False
+verbose = True
 
 if labels:
     # Make sure that all fragments TIF files are existent
