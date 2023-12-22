@@ -19,5 +19,5 @@ pip install -r requirements.txt
 sudo apt-get install libgl1-mesa-glx
 
 # Download Fragments
-python ./util/batch_download_frags_multilayer.py
+python ./util/batch_download_frags_single.py
 

@@ -10,24 +10,29 @@ SSH Key Marcel: `DUMMY`
 
 ### Clone Git Repository
 
-```bash
-git clone git@github.com:JakeGonder/kaggle1stReimp.git
-```
-Username: JakeGonder
-Token: `DUMMY`
+- Clone the repository
+    ```bash
+    git clone git@github.com:JakeGonder/kaggle1stReimp.git
+    ```
+    Username: JakeGonder
+    Token: `DUMMY`
 
-Cache credentials:
-```bash
-git config --global credential.helper cache
-```
+- Cache credentials:
+    ```bash
+    git config --global credential.helper cache
+    ```
 
-Set cache timeout to 2 weeks:
-```bash
-git config --global credential.helper 'cache --timeout=1209600'
-```
+- Set cache timeout to 2 weeks:
+    ```bash
+    git config --global credential.helper 'cache --timeout=1209600'
+    ```
+
+- Checkout the `scroll` branch
 
 ### Setup Virtual Environment (Conda)
-Install `requirements.txt`, as well as other required python packages.
+Install `requirements.txt`, as well as other required python packages:
+`pip install opencv-python`
+`sudo apt-get install libgl1-mesa-glx`
 
 ## Setting up the training
 ### Create conf_local.py with correct work_dir
