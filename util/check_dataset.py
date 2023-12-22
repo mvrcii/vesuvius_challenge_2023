@@ -20,6 +20,7 @@ for frag_dir in os.listdir(os.path.join('data', 'datasets', '512')):
                 print("NAN found in labels:", file)
             if len(np.unique(arr)) > 2:
                 unique_error_count += 1
+                print(np.unique(arr))
 
         print("NaN Count:", nan_count)
         print("Unique Error Count:", unique_error_count)
