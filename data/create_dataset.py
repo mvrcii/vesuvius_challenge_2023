@@ -92,6 +92,20 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
         raise ValueError(f"Mask file does not exist for fragment: {frag_id}")
     mask = np.asarray(Image.open(mask_path))
 
+    # load tensors
+    image_tensor_dict = {}
+    label_tensor_dict = {}
+    for start_channel in tqdm(channels[::cfg.in_chans]):
+        end_channel = start_channel + cfg.in_chans - 1
+        read_chans = range(start_channel, end_channel + 1)
+        image_tensor_dict[start_channel] = read_fragment_images_for_channels(root_dir=fragment_dir,
+                                                                             patch_size=config.patch_size,
+                                                                             channels=read_chans,
+                                                                             ch_block_size=config.in_chans)
+        label_tensor_dict[start_channel] = read_fragment_labels_for_channels(root_dir=label_dir,
+                                                                             patch_size=config.patch_size,
+                                                                             channels=read_chans)
+
     total_skipped_cnt = 0
     total_patch_cnt = 0
     total_pruned_cnt = 0
@@ -106,12 +120,8 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
                              f"Channel: {channel_str} in "
                              f"{format_ranges(sorted(list(channels)), '')}")
 
-        read_chans = range(start_channel, end_channel + 1)
-
-        image_tensor = read_fragment_images_for_channels(root_dir=fragment_dir, patch_size=config.patch_size,
-                                                         channels=read_chans, ch_block_size=config.in_chans)
-        label_tensor = read_fragment_labels_for_channels(root_dir=label_dir, patch_size=config.patch_size,
-                                                         channels=read_chans)
+        image_tensor = image_tensor_dict[start_channel]
+        label_tensor = label_tensor_dict[start_channel]
 
         # Only required for TQDM
         if not first_channel_processed:
