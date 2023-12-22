@@ -11,12 +11,12 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
-from fragment import FragmentHandler
-from meta import AlphaBetaMeta
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from fragment import FragmentHandler
+from meta import AlphaBetaMeta
 from config_handler import Config
+
 from constants import get_frag_name_from_id
 from data.data_validation import validate_fragments, format_ranges
 from data.utils import write_to_config
@@ -264,7 +264,8 @@ def balance_dataset(_cfg: Config, patch_df):
     # Step 4: Concatenate the two DataFrames
     df = pd.concat([ink_samples, non_ink_samples])
 
-    print(f"Balanced Dataset: Ink Samples={len(ink_samples)} > {_cfg.ink_ratio} and Non-Ink Samples={non_ink_sample_count}")
+    print(
+        f"Balanced Dataset: Ink Samples={len(ink_samples)} > {_cfg.ink_ratio} and Non-Ink Samples={non_ink_sample_count}")
 
     return df
 
