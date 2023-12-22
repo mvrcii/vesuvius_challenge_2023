@@ -50,8 +50,8 @@ step_lr_factor = 0.98
 weight_decay = 0.001
 
 num_workers = 4
-train_batch_size = 6
-val_batch_size = 6
+train_batch_size = 4
+val_batch_size = 4
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
