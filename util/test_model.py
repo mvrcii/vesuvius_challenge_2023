@@ -9,10 +9,7 @@ model = SegformerForSemanticSegmentation.from_pretrained(
     num_channels=1,
 )
 
-model = model.to('cuda')
-model = model.half()
-
-sample_input = torch.rand((2, 1, 512, 512), device='cuda', dtype=float16)
+sample_input = torch.rand((1, 1, 512, 512), dtype=float16)
 
 output = model(sample_input)
 
