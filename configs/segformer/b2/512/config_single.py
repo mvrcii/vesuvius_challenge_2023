@@ -23,7 +23,7 @@ from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 1
 seed = 123456
 epochs = -1
-losses = [("focal", 1.0), ("dice", 1.0)]
+losses = [("bce", 1.0), ("dice", 1.0)]
 
 # dataset creation parameters
 patch_size = 512
@@ -49,7 +49,7 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-num_workers = 16
+num_workers = 4
 train_batch_size = 6
 val_batch_size = 6
 
