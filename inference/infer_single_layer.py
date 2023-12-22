@@ -379,9 +379,7 @@ def main():
     model = load_model(cfg=config, model_path=model_path)
 
     # Calculate valid label indices
-    valid_start_idxs = []
-    if save_labels:
-        valid_start_idxs = list(range(start_layer_idx, end_layer_idx + 1))
+    valid_start_idxs = list(range(start_layer_idx, end_layer_idx + 1))
 
     print("Starting inference for", valid_start_idxs)
     for layer_idx in valid_start_idxs:
