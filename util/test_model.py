@@ -1,4 +1,5 @@
 import torch
+from torch import float16
 from transformers import SegformerForSemanticSegmentation
 
 model = SegformerForSemanticSegmentation.from_pretrained(
@@ -11,9 +12,8 @@ model = SegformerForSemanticSegmentation.from_pretrained(
 model = model.to('cuda')
 model = model.half()
 
-sample_input = torch.rand((1, 512, 512), device='cuda')
+sample_input = torch.rand((2, 1, 512, 512), device='cuda', dtype=float16)
 
 output = model(sample_input)
 
 print(output)
-print(output.shape)
