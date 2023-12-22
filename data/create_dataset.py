@@ -258,7 +258,7 @@ def balance_dataset(_cfg: Config, patch_df):
 
     # Skip balancing
     if _cfg.ink_ratio == -1:
-        print(f"Balanced Channel: Samples={len(data)}")
+        # print(f"Balanced Channel: Samples={len(data)}")
         return data
 
     # BALANCING IS DONE ON CREATION
@@ -274,8 +274,8 @@ def balance_dataset(_cfg: Config, patch_df):
     # Step 4: Concatenate the two DataFrames
     df = pd.concat([ink_samples, non_ink_samples])
 
-    print(
-        f"Balanced Dataset: Ink Samples={len(ink_samples)} > {_cfg.ink_ratio} and Non-Ink Samples={non_ink_sample_count}")
+    # print(
+    #     f"Balanced Dataset: Ink Samples={len(ink_samples)} > {_cfg.ink_ratio} and Non-Ink Samples={non_ink_sample_count}")
 
     return df
 
@@ -298,11 +298,13 @@ def read_fragment_images_for_channels(root_dir, patch_size, channels, ch_block_s
         pad1 = (patch_size - image.shape[1] % patch_size) % patch_size
         image = np.pad(image, [(0, pad0), (0, pad1)], constant_values=0)
 
+        image = image.astype(np.float16)
+
         images.append(image)
     images = np.stack(images, axis=0)
     assert images.ndim == 3 and images.shape[0] == ch_block_size
 
-    return np.array(images)
+    return np.array(images, dtype=np.float16)
 
 
 def read_fragment_labels_for_channels(root_dir, patch_size, channels):
