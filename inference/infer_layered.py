@@ -296,7 +296,8 @@ def get_target_dims(work_dir, frag_id):
             img_path = os.path.join(slice_dir, f"{i:05}.tif")
             if os.path.isfile(img_path):
                 image = cv2.imread(img_path, 0)
-                target_dims = image.shape
+                if image is not None:
+                    target_dims = image.shape
 
     return target_dims
 

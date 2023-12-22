@@ -222,7 +222,7 @@ def get_target_dims(work_dir, frag_id):
             img_path = os.path.join(slice_dir, f"{i:05}.tif")
             if os.path.isfile(img_path):
                 image = cv2.imread(img_path, 0)
-                if image:
+                if image is not None:
                     target_dims = image.shape
 
     return target_dims
@@ -344,7 +344,6 @@ def main():
     save_labels = args.labels
 
     start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=fragment_id)
-    print(f"Center Layers: {start_layer_idx}-{end_layer_idx}")
 
     global verbose, boost_threshold
     boost_threshold = args.boost_threshold
@@ -384,7 +383,6 @@ def main():
     # Calculate valid label indices
     valid_start_idxs = list(range(start_layer_idx, end_layer_idx + 1))
 
-    print("Starting inference for", valid_start_idxs)
     for layer_idx in valid_start_idxs:
         npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{layer_idx}.npy")
 
