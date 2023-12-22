@@ -98,6 +98,8 @@ def batch_download_frags(frag_list, consider_label_files=True):
         else:
             print(f"Labels = [{start_slice}, {end_slice}] found")
 
+        print(f"Slice range: {start_slice}-{end_slice}")
+        exit()
         missing_slices = check_downloaded_slices(fragment_id, start_slice, end_slice)
         if not missing_slices:
             print("No missing slices found -> Skipping download")
