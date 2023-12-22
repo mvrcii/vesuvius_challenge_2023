@@ -39,7 +39,7 @@ fragment_ids = ['20231005123336', '20231012184422']
 
 # dataset usage parameters
 take_full_dataset = True
-dataset_fraction = 1
+dataset_fraction = 0.3
 train_split = 0.8
 
 # optimizer parameters
