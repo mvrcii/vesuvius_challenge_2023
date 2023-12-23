@@ -22,7 +22,7 @@ model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 1
 seed = 8888
-epochs = -1
+epochs = 100
 losses = [("focal", 10.0), ("dice", 1.0)]
 
 # dataset creation parameters
