@@ -44,6 +44,7 @@ train_split = 0.8
 
 # optimizer parameters
 lr = 1e-4
+eta_min = 1e-5
 val_interval = 1
 step_lr_steps = 1
 step_lr_factor = 0.98
