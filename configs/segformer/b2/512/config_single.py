@@ -21,15 +21,15 @@ architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 1
-seed = 8888
-epochs = 100
-losses = [("focal", 1.0), ("dice", 1.0)]
+seed = 9393
+epochs = -1
+losses = [("focal", 2.0), ("dice", 1.0)]
 
 # dataset creation parameters
 patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
-ink_ratio = 7
+ink_ratio = -1
 no_ink_sample_percentage = 1  # 1 (=100%) corresponds to the same amount of non-ink and ink samples
 excluded_label_blocks = 0
 excluded_label_layers = in_chans * excluded_label_blocks  # excluded from bottom and top of the stack
