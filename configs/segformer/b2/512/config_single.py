@@ -29,7 +29,6 @@ losses = [("focal", 10.0), ("dice", 1.0)]
 patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
-
 ink_ratio = 7
 no_ink_sample_percentage = 1  # 1 (=100%) corresponds to the same amount of non-ink and ink samples
 excluded_label_blocks = 0
