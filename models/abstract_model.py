@@ -1,11 +1,13 @@
 import torch
 from einops import rearrange
 from lightning import LightningModule
+import wandb
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR, LinearLR, SequentialLR
 from torchmetrics import Dice
 from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
                                          BinaryAccuracy, BinaryJaccardIndex as IoU)
+from torchvision.utils import make_grid
 
 from losses.utils import get_loss_functions
 
@@ -13,6 +15,7 @@ from losses.utils import get_loss_functions
 class AbstractVesuvLightningModule(LightningModule):
     def __init__(self, cfg):
         super().__init__()
+        self.train_step = 0
         self.epochs = cfg.epochs
         self.lr = cfg.lr
         self.eta_min = cfg.eta_min
@@ -57,28 +60,35 @@ class AbstractVesuvLightningModule(LightningModule):
         return output
 
     def training_step(self, batch, batch_idx):
-        data, target = batch
-        output = self.forward(data)
+        data, y_true = batch
+        y_pred = self.forward(data)
 
         # Calculate individual losses, store them as (name, weight, value) tuples in list
-        losses = [(name, weight, loss_function(output, target.float())) for (name, weight, loss_function) in
+        losses = [(name, weight, loss_function(y_pred, y_true.float())) for (name, weight, loss_function) in
                   self.loss_functions]
-
-        # Combine individual losses based on their weight
         total_loss = sum([weight * value for (_, weight, value) in losses])
-
-        # Append total loss to list which is being logged
         losses.append(("total", 1.0, total_loss))
+
         self.update_training_metrics(losses=losses)
+        self.train_step += 1
+
+        if batch_idx % 100 == 0 and self.trainer.is_global_zero:
+            with torch.no_grad():
+                probs = torch.sigmoid(y_pred)
+                combined = torch.cat([probs[0], y_true[0]], dim=1)
+                grid = make_grid(combined).detach().cpu()
+                test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
+                wandb.log({"Train Image": test_image})
 
         return total_loss
 
     def validation_step(self, batch, batch_idx):
-        data, target = batch
-        output = self.forward(data)
+        data, y_true = batch
+        y_pred = self.forward(data)
+        probs = torch.sigmoid(y_pred)
 
         # Calculate individual losses, store them as (name, weight, value) tuples in list
-        losses = [(name, weight, loss_function(output, target.float())) for (name, weight, loss_function) in
+        losses = [(name, weight, loss_function(y_pred, y_true.float())) for (name, weight, loss_function) in
                   self.loss_functions]
 
         # Combine individual losses based on their weight
@@ -88,16 +98,16 @@ class AbstractVesuvLightningModule(LightningModule):
         losses.append(("total", 1.0, total_loss))
 
         # Combine the losses
-        self.update_validation_metrics(losses=losses, output_logits=output, target=target)
+        self.update_validation_metrics(losses=losses, output_logits=y_pred, target=y_true)
+
+        if batch_idx == 5 and self.trainer.is_global_zero:
+            with torch.no_grad():
+                combined = torch.cat([probs[0], y_true[0]], dim=1)
+                grid = make_grid(combined).detach().cpu()
+                test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
+                wandb.log({"Validation Image": test_image})
 
     def update_training_metrics(self, losses):
-        """
-        Update and log training metrics.
-
-        This function logs the learning rate and training loss. The metrics are logged at the end of each epoch.
-
-        :param loss: The loss value computed during the training phase.
-        """
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
 
         self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
