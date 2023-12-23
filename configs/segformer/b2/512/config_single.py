@@ -23,7 +23,7 @@ from_pretrained = f"nvidia/mit-{model_type}"
 in_chans = 1
 seed = 8888
 epochs = 100
-losses = [("focal", 10.0), ("dice", 1.0)]
+losses = [("focal", 1.0), ("dice", 1.0), ("entropy", 1.0)]
 
 # dataset creation parameters
 patch_size = 512
@@ -42,8 +42,8 @@ dataset_fraction = 1
 train_split = 0.8
 
 # optimizer parameters
-lr = 2e-4
-eta_min = 1e-5
+lr = 1e-4
+eta_min = 1e-6
 val_interval = 1
 step_lr_steps = 1
 step_lr_factor = 0.98
