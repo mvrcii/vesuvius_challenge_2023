@@ -15,7 +15,7 @@ dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # training parameters
 model_type = "None"
-architecture = 'unet3d'
+architecture = 'vit3d'
 model_name = f"{architecture}-{model_type}"
 
 in_chans = 12
@@ -33,6 +33,7 @@ stride = patch_size // 2
 
 ink_ratio = 50  # everything above this will be classified as 1
 no_ink_sample_percentage = 1
+max_ignore_th = 100
 take_full_dataset = False
 
 fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID]
@@ -46,8 +47,9 @@ eta_min = 1e-7
 step_lr_steps = 1
 step_lr_factor = 0.95
 weight_decay = 0.001
+losses = []
 
-num_workers = 8
+num_workers = 1
 train_batch_size = 16
 val_batch_size = 16
 
