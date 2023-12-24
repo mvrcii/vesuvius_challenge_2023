@@ -4,13 +4,19 @@ import re
 import numpy as np
 import torch
 from torch import float16
+from torch.utils.data import Dataset
 
-from models.datasets.abstract_dataset import AbstractDataset
 
-
-class UNET3D_Dataset(AbstractDataset):
+class UNET3D_Dataset(Dataset):
     def __init__(self, cfg, root_dir, images, transform, labels=None):
-        super().__init__(cfg, root_dir, images, transform, labels)
+        self.cfg = cfg
+        self.images = np.array(images)
+        self.labels = labels
+        self.root_dir = root_dir
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.images)
 
     def __getitem__(self, idx):
         image = np.load(os.path.join(self.root_dir, self.images[idx]))

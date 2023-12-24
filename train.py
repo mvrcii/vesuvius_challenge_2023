@@ -1,5 +1,6 @@
 import argparse
 import os
+import pickle
 import sys
 import types
 import warnings
@@ -21,6 +22,7 @@ from models.lightning_modules.segformer_module import SegformerModule
 from models.lightning_modules.unet3d_module import UNET3D_Module
 from models.lightning_modules.unet3dsf_module import UNET3D_SFModule
 from models.lightning_modules.unetrsf_module import UNETR_SFModule
+from models.lightning_modules.vit3d_module import Vit3D_Module
 from utility.configs import Config
 
 torch.set_float32_matmul_precision('medium')
@@ -56,6 +58,8 @@ def get_model(config: Config):
         return UNET3D_SFModule(cfg=config)
     elif architecture == 'unet3d':
         return UNET3D_Module(cfg=config)
+    elif architecture == 'vit3d':
+        return Vit3D_Module(cfg=config)
     else:
         print("Invalid architecture for model:", architecture)
         sys.exit(1)
@@ -80,7 +84,7 @@ def get_data_module(config: Config):
         return UNETR_SFDataModule(cfg=config)
     elif architecture == "unet3d-sf":
         return UNET3D_SFDataModule(cfg=config)
-    elif architecture == 'unet3d':
+    elif architecture == 'unet3d' or architecture == 'vit3d':
         return UNET3D_DataModule(cfg=config)
     else:
         print("Invalid architecture for data module:", architecture)
@@ -143,7 +147,7 @@ def main():
 
     # Model name related stuff
     timestamp = datetime.now().strftime('%y%m%d-%H%M%S')
-    model_name = config.model_name if hasattr(config, 'model_name') else "default_model"
+    model_name = getattr(config, 'model_name', 'default_model')
     wandb_generated_name = wandb_logger.experiment.name
     model_run_name = f"{wandb_generated_name}-{model_name}-{timestamp}"
     wandb_logger.experiment.name = model_run_name

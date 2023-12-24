@@ -37,8 +37,8 @@ class BinaryClassificationDecoder(nn.Module):
 
 
 class UNET3D(nn.Module):
-    def __init__(self, cfg, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, cfg):
+        super(UNET3D, self).__init__()
         self.encoder = UNet3DEncoder(cfg=cfg)
         self.decoder = BinaryClassificationDecoder()
 

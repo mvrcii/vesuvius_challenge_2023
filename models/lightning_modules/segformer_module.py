@@ -1,6 +1,8 @@
 import torch
 import wandb
 from einops import rearrange
+from segmentation_models_pytorch.utils.metrics import IoU
+from torchmetrics.classification import BinaryF1Score, BinaryAccuracy, BinaryPrecision, BinaryRecall
 from torchvision.utils import make_grid
 from transformers import SegformerForSemanticSegmentation
 
@@ -20,6 +22,13 @@ class SegformerModule(AbstractLightningModule):
 
         self.load_weights()
 
+        # Metrics
+        self.f1 = BinaryF1Score()
+        self.accuracy = BinaryAccuracy()
+        self.precision = BinaryPrecision()
+        self.recall = BinaryRecall()
+        self.iou = IoU()
+
     def forward(self, x):
         output = self.model(x.float())
         output = rearrange(output.logits, 'b 1 h w -> b h w')
@@ -29,13 +38,12 @@ class SegformerModule(AbstractLightningModule):
         data, y_true = batch
         y_pred = self.forward(data)
 
-        # Calculate individual losses, store them as (name, weight, value) tuples in list
-        losses = [(name, weight, loss_function(y_pred, y_true.float())) for (name, weight, loss_function) in
-                  self.loss_functions]
-        total_loss = sum([weight * value for (_, weight, value) in losses])
-        losses.append(("total", 1.0, total_loss))
+        total_loss, losses = self.calculate_weighted_loss(y_pred=y_pred, y_true=y_true)
 
-        self.update_training_metrics(losses=losses)
+        lr = self.trainer.optimizers[0].param_groups[0]['lr']
+        self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log_losses_to_wandb(losses, 'train')
+
         self.train_step += 1
 
         if batch_idx % 100 == 0 and self.trainer.is_global_zero:
@@ -53,18 +61,10 @@ class SegformerModule(AbstractLightningModule):
         y_pred = self.forward(data)
         probs = torch.sigmoid(y_pred)
 
-        # Calculate individual losses, store them as (name, weight, value) tuples in list
-        losses = [(name, weight, loss_function(y_pred, y_true.float())) for (name, weight, loss_function) in
-                  self.loss_functions]
+        _, losses = self.calculate_weighted_loss(y_pred=y_pred, y_true=y_true)
 
-        # Combine individual losses based on their weight
-        total_loss = sum([weight * value for (_, weight, value) in losses])
-
-        # Append total loss to list which is being logged
-        losses.append(("total", 1.0, total_loss))
-
-        # Combine the losses
-        self.update_validation_metrics(losses=losses, output_logits=y_pred, target=y_true)
+        self.log_losses_to_wandb(losses, 'val')
+        self.log_validation_metrics(output_logits=y_pred, target=y_true)
 
         if batch_idx == 5 and self.trainer.is_global_zero:
             with torch.no_grad():
@@ -73,28 +73,10 @@ class SegformerModule(AbstractLightningModule):
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
                 wandb.log({"Validation Image": test_image})
 
-    def update_training_metrics(self, losses):
-        lr = self.trainer.optimizers[0].param_groups[0]['lr']
-
-        self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        for (name, weight, value) in losses:
-            if name == 'total':
-                self.log(f'train_loss', value, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-            else:
-                self.log(f'train_loss_{name}', value * weight, on_step=False, on_epoch=True, prog_bar=False,
-                         sync_dist=True)
-
-    def update_validation_metrics(self, losses, output_logits, target):
+    def log_validation_metrics(self, output_logits, target):
         if target.ndim != output_logits.ndim and target.ndim == 3 and output_logits.ndim == 4:
             target = target.unsqueeze(1)
         target = target.int()
-
-        for (name, weight, value) in losses:
-            if name == 'total':
-                self.log(f'val_loss', value, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-            else:
-                self.log(f'val_loss_{name}', value * weight, on_step=False, on_epoch=True, prog_bar=False,
-                         sync_dist=True)
 
         self.log('val_accuracy', self.accuracy(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_precision', self.precision(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)

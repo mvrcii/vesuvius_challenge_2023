@@ -21,7 +21,7 @@ model_name = f"{architecture}-{model_type}"
 in_chans = 12
 seed = 187
 epochs = 30
-dataset_fraction = 1
+dataset_fraction = 0.3
 unet3d_out_channels = 1
 
 val_interval = 1
@@ -33,6 +33,7 @@ stride = patch_size // 2
 
 ink_ratio = 50  # everything above this will be classified as 1
 no_ink_sample_percentage = 1
+max_ignore_th = 10
 take_full_dataset = False
 
 fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID]
@@ -41,15 +42,16 @@ fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID]
 # validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
-lr = 5e-5  # 1e-4
+lr = 5e-5
 eta_min = 1e-7
 step_lr_steps = 1
 step_lr_factor = 0.95
 weight_decay = 0.001
+losses = [('mse', 1.0)]
 
-num_workers = 8
-train_batch_size = 16
-val_batch_size = 16
+num_workers = 4
+train_batch_size = 4
+val_batch_size = 4
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
