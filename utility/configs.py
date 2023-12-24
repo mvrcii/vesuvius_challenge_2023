@@ -94,8 +94,9 @@ class Config:
         config.update({k: v for k, v in vars(model_config).items() if not k.startswith('__')})
 
         # Check for and apply local configuration overrides
-        local_config_path = '../conf_local.py'
+        local_config_path = 'conf_local.py'
         if os.path.exists(local_config_path):
+            print("Found local config")
             local_config = cls.import_config_from_path(local_config_path)
             config.update({k: v for k, v in vars(local_config).items() if not k.startswith('__')})
 
