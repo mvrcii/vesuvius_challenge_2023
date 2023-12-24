@@ -3,7 +3,7 @@ from torchmetrics import MeanSquaredError
 from torchmetrics.classification import AUROC
 
 from models.architectures.unet3d import UNET3D
-from models.modules.abstract_module import AbstractLightningModule
+from models.lightning_modules.abstract_module import AbstractLightningModule
 
 
 class UNET3D_Module(AbstractLightningModule):

@@ -4,7 +4,7 @@ from einops import rearrange
 from torchvision.utils import make_grid
 from transformers import SegformerForSemanticSegmentation
 
-from models.modules.abstract_module import AbstractLightningModule
+from models.lightning_modules.abstract_module import AbstractLightningModule
 
 
 class SegformerModule(AbstractLightningModule):

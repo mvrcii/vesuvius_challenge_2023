@@ -16,7 +16,7 @@ from transformers.utils import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from models.modules.unet3d import UNET3D
+from models.lightning_modules.unet3d import UNET3D
 from utility.config_handler import Config
 from utility.constants import get_frag_name_from_id, get_ckpt_name_from_id
 from utility.fragment import FragmentHandler

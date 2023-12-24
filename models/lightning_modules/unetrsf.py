@@ -7,7 +7,7 @@ from torchvision.utils import make_grid
 
 from models.architectures.unetr_segformer import UNETR_Segformer
 from models.losses.utils import get_loss_functions
-from models.modules.abstract_module import AbstractLightningModule
+from models.lightning_modules.abstract_module import AbstractLightningModule
 
 
 def dice_loss_with_mask_batch(outputs, labels, mask):
