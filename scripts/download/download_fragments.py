@@ -95,9 +95,9 @@ def batch_download_frags(frag_list, consider_labels=True, single_layer=False):
         if start_slice == 99999 or end_slice == 0:
             print(f"Fragment ID: {fragment_id}\tNo labels found")
             continue
-        print("Start Idx:", start_slice, "End Idx:", end_slice)
+        # print("Start Idx:", start_slice, "End Idx:", end_slice)
         missing_slices = check_downloaded_slices(fragment_id, start_slice, end_slice)
-        print("Missing Slices:", missing_slices)
+        # print("Missing Slices:", missing_slices)
         if not missing_slices:
             print(f"Fragment ID: {fragment_id}\tAll required slices found: [{start_slice}, {end_slice}]")
             continue
