@@ -3,24 +3,20 @@ import gc
 import logging
 import os
 import shutil
-import sys
 
 import cv2
 import numpy as np
 import pandas as pd
 from PIL import Image
+from skimage.transform import resize
 from tqdm import tqdm
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from fragment import FragmentHandler
-from meta import AlphaBetaMeta
-from config_handler import Config
-
-from constants import get_frag_name_from_id
 from data.data_validation import validate_fragments, format_ranges
 from data.utils import write_to_config
-from skimage.transform import resize
+from utility import AlphaBetaMeta
+from utility.config_handler import Config
+from utility.constants import get_frag_name_from_id
+from utility.fragment import FragmentHandler
 
 Image.MAX_IMAGE_PIXELS = None
 

@@ -1,9 +1,8 @@
 import subprocess
 import sys
 
-from constants import *
-from meta import AlphaBetaMeta
-from util.batch_download_frags import batch_download_frags
+from scripts.batch_download_frags import batch_download_frags
+from utility.constants import JETFIRE_FRAG_ID, get_ckpt_name_from_id, get_frag_name_from_id
 
 
 def print_colored(message, color):

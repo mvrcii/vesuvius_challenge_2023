@@ -3,9 +3,9 @@ import sys
 
 import numpy as np
 
-from config_handler import Config
-from fragment import FragmentHandler
-from util.combine_predictions import has_valid_ckpt_dirs
+from utility.config_handler import Config
+from utility.fragment import FragmentHandler
+from scripts.combine_predictions import has_valid_ckpt_dirs
 
 
 def load_and_process_data(directory, frag_id, architecture):

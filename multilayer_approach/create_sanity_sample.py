@@ -11,10 +11,10 @@ from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from constants import JETFIRE_FRAG_ID
+from utility.constants import JETFIRE_FRAG_ID
 
-from config_handler import Config
-from constants import get_frag_name_from_id
+from utility.config_handler import Config
+from utility.constants import get_frag_name_from_id
 from data.data_validation_multilayer import validate_fragments
 from skimage.transform import resize
 

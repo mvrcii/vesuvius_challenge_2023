@@ -1,5 +1,5 @@
-from config_handler import Config
-from data_modules.utils import generate_dataset
+from data_modules.utils_multilayer import generate_dataset
+from utility.config_handler import Config
 
 
 def test_seeding():

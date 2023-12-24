@@ -1,10 +1,9 @@
 import subprocess
 import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from constants import *
-from meta import AlphaBetaMeta
-from util.batch_download_frags import batch_download_frags
+
+from scripts.batch_download_frags import batch_download_frags
+from utility import AlphaBetaMeta
+from utility.constants import JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, get_ckpt_name_from_id, get_frag_name_from_id
 
 
 def print_colored(message, color):

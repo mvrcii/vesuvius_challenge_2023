@@ -3,18 +3,20 @@ import gc
 import logging
 import os
 import shutil
+import sys
 
 import cv2
 import numpy as np
 import pandas as pd
 from PIL import Image
-from skimage.transform import resize
 from tqdm import tqdm
 
-from data.data_validation_multilayer import validate_fragments
-from data.utils import write_to_config
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from utility.config_handler import Config
 from utility.constants import get_frag_name_from_id
+from data.data_validation_multilayer import validate_fragments
+from data.utils import write_to_config
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -34,7 +36,6 @@ def extract_patches(config: Config, frags, label_dir):
 
     write_to_config(os.path.join(root_dir),
                     patch_size=config.patch_size,
-                    label_size=config.label_size,
                     stride=config.stride,
                     in_chans=config.in_chans,
                     fragment_names=[get_frag_name_from_id(frag_id).upper() for frag_id in frag_id_2_channel.keys()],
@@ -132,7 +133,6 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
 # Extracts image/label patches for one label (12 best layers)
 def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tensor, label_arr, ignore_arr,
                           start_channel):
-    # image tensor is (12, height, width)
     x1_list = list(range(0, image_tensor.shape[2] - config.patch_size + 1, config.stride))
     y1_list = list(range(0, image_tensor.shape[1] - config.patch_size + 1, config.stride))
 
@@ -140,7 +140,6 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
 
     mask_skipped = 0
     ignore_skipped = 0
-    label_shape = (config.label_size, config.label_size)
 
     STACK_PATCH_INFOS = []
 
@@ -156,9 +155,7 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             f"Expected tensor with shape ({cfg.in_chans}, height, width), got {image_tensor.shape}")
 
     img_dest_dir = os.path.join(target_dir, "images")
-    label_dest_dir = os.path.join(target_dir, "labels")
     os.makedirs(img_dest_dir, exist_ok=True)
-    os.makedirs(label_dest_dir, exist_ok=True)
 
     for y1 in y1_list:
         for x1 in x1_list:
@@ -184,9 +181,6 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             ignore_patch = ignore_arr[y1:y2, x1:x2]
             image_patch = image_tensor[:, y1:y2, x1:x2]
 
-            # Set label patch to 0 where ignore patch is 1 (to not count ink towards ink_p when it is ignored)
-            label_patch[ignore_patch == 1] = 0
-
             # Create keep_patch by inverting ignore patch
             keep_patch = np.logical_not(ignore_patch)
 
@@ -196,10 +190,6 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             assert label_patch.shape == (
                 config.patch_size, config.patch_size), f"Label patch wrong shape: {label_patch.shape}"
 
-            # scale label and keep_patch patch down to label size
-            label_patch = resize(label_patch, label_shape, order=0, preserve_range=True, anti_aliasing=False)
-            keep_patch = resize(keep_patch, label_shape, order=0, preserve_range=True, anti_aliasing=False)
-
             # assert label patch has > 0 pixels
             label_pixel_count = np.prod(label_patch.shape)
             assert label_pixel_count != 0
@@ -208,24 +198,23 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             ink_percentage = int((label_patch.sum() / label_pixel_count) * 100)
             assert 0 <= ink_percentage <= 100
 
+            # Skip if ink is not 0 or ink_ratio
+            if 0 < ink_percentage < cfg.ink_ratio:
+                continue
+
             # calculate keep percentage of scaled down keep patch
             keep_percent = int((keep_patch.sum() / np.prod(keep_patch.shape)) * 100)
             assert 0 <= keep_percent <= 100
             ignore_percent = 100 - keep_percent
 
             # Discard images with less than 5% keep pixels
-            if keep_percent < 5:
+            if ignore_percent > 0:
                 ignore_skipped += 1
                 continue
 
             # Create file name and save image
-            file_name = f"f{frag_id}_ch{start_channel:02d}_{x1}_{y1}_{x2}_{y2}.npy"
+            file_name = f"f{frag_id}_ch{start_channel:02d}_{x1}_{y1}_{x2}_{y2}_l{ink_percentage}.npy"
             np.save(os.path.join(img_dest_dir, file_name), image_patch)
-
-            # stack label and keep patch => save
-            label_patch = np.stack([label_patch, keep_patch], axis=0)
-            label_patch = np.packbits(label_patch.flatten())
-            np.save(os.path.join(label_dest_dir, file_name), label_patch)
 
             STACK_PATCH_INFOS.append((file_name, frag_id, start_channel, ink_percentage, ignore_percent))
 

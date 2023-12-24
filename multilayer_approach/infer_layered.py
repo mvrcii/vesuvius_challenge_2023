@@ -10,16 +10,13 @@ import numpy as np
 import torch
 from PIL import Image
 from PIL.Image import Resampling
-from torch import float16
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 from transformers.utils import logging
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from config_handler import Config
-from constants import get_frag_name_from_id, get_ckpt_name_from_id
-from fragment import FragmentHandler
-from meta import AlphaBetaMeta
+from utility.config_handler import Config
+from utility.constants import get_frag_name_from_id, get_ckpt_name_from_id
+from utility.fragment import FragmentHandler
+from utility import AlphaBetaMeta
 from models.architectures.unet3d_segformer import UNET3D_Segformer
 from models.architectures.unetr_segformer import UNETR_Segformer
 

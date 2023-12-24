@@ -62,7 +62,7 @@ This mode takes all training fragment ids to generate the train dataset, and all
 
 ```python
 # datasets/k_fold/optimus_bumblebee_512px_64ch.py
-from constants import OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID
+from utility.constants import OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID
 
 k_fold = True
 train_frag_ids = [OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID]
@@ -75,7 +75,7 @@ on the created dataset with a given `train_split`.
 
 ```python
 # datasets/single/optimus_bumblebee_512px_64ch.py
-from constants import OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID
+from utility.constants import OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID
 
 k_fold = False
 train_frag_ids = [OPTIMUS_FRAG_ID, BUMBLEBEE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID]

@@ -31,6 +31,7 @@ class Config:
             dictionary (dict, optional): A dictionary of configuration parameters.
                                          Defaults to None.
         """
+        self.fragment_ids = None
         if dictionary:
             for key, value in dictionary.items():
                 setattr(self, key, value)

@@ -4,8 +4,8 @@ import sys
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from config_handler import Config
-from constants import get_frag_name_from_id
+from utility.config_handler import Config
+from utility.constants import get_frag_name_from_id
 
 
 def balance_dataset(cfg: Config, data):

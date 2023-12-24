@@ -13,13 +13,15 @@ from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
 from lightning_fabric.accelerators import find_usable_cuda_devices
 
-from config_handler import Config
+from utility.config_handler import Config
 from data_modules.segformer.segformer_datamodule import SegFormerDataModule
+from data_modules.unet3d.unet3d_datamodule import UNET3D_DataModule
+from data_modules.unet3dsf.unet3dsf_datamodule import UNET3D_SFDataModule
 from data_modules.unetrsf.unetrsf_datamodule import UNETR_SFDataModule
-from data_modules.unet3d.unet3dsf_datamodule import UNET3D_SFDataModule
 from models.segformer import SegformerModule
-from models.unetrsf import UNETR_SFModule
+from models.unet3d import UNET3D_Module
 from models.unet3dsf import UNET3D_SFModule
+from models.unetrsf import UNETR_SFModule
 
 torch.set_float32_matmul_precision('medium')
 
@@ -52,6 +54,8 @@ def get_model(config: Config):
         return UNETR_SFModule(cfg=config)
     elif architecture == 'unet3d-sf':
         return UNET3D_SFModule(cfg=config)
+    elif architecture == 'unet3d':
+        return UNET3D_Module(cfg=config)
     else:
         print("Invalid architecture for model:", architecture)
         sys.exit(1)
@@ -76,6 +80,8 @@ def get_data_module(config: Config):
         return UNETR_SFDataModule(cfg=config)
     elif architecture == "unet3d-sf":
         return UNET3D_SFDataModule(cfg=config)
+    elif architecture == 'unet3d':
+        return UNET3D_DataModule(cfg=config)
     else:
         print("Invalid architecture for data module:", architecture)
         sys.exit(1)
@@ -124,14 +130,15 @@ def main():
     model_run_dir = os.path.join(config.work_dir, "checkpoints", model_run_name)
 
     model = get_model(config=config)
-
     data_module = get_data_module(config=config)
+
+    monitor_value = "val_auc" if config.architecture == "unet3d" else "val_iou"
 
     checkpoint_callback = ModelCheckpoint(
         dirpath=model_run_dir,
         filename="best-checkpoint-{epoch}-{val_iou:.2f}",
         save_top_k=1,
-        monitor="val_iou",
+        monitor=monitor_value,
         mode="max",
         every_n_epochs=1
     )

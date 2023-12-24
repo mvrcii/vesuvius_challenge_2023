@@ -4,12 +4,11 @@ import torch
 from skimage.transform import resize
 from torch import float16
 
-from config_handler import Config
+from utility.config_handler import Config
 from losses.binary_bce_loss import MaskedBinaryBCELoss
 from losses.binary_dice_loss import MaskedBinaryDiceLoss
 from losses.focal_loss import MaskedFocalLoss
 from models.architectures.unet3d_segformer import UNET3D_Segformer
-from models.architectures.unetr_segformer import UNETR_Segformer
 
 
 def calculate_masked_metrics_batchwise(outputs, labels, mask):

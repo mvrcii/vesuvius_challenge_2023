@@ -9,14 +9,20 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
-from skimage.transform import resize
+from PIL.Image import Resampling
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 from transformers.utils import logging
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from models.unet3d import UNET3D
 from utility.config_handler import Config
 from utility.constants import get_frag_name_from_id, get_ckpt_name_from_id
 from utility.fragment import FragmentHandler
 from utility import AlphaBetaMeta
+from models.architectures.unet3d_segformer import UNET3D_Segformer
+from models.architectures.unetr_segformer import UNETR_Segformer
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -41,10 +47,11 @@ def pad_image_to_be_divisible_by_4(image, patch_size):
 
 
 def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
+    print("Start reading images")
     images = []
 
-    for i in range(layer_start, layer_start + layer_count):
-        img_path = os.path.join(work_dir, "../data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+    for i in tqdm(range(layer_start, layer_start + layer_count)):
+        img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
@@ -57,82 +64,27 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
     return images
 
 
-def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizontal=False):
-    """
-    Apply test-time augmentation to the input tensor and make a batch inference with PyTorch.
-
-    :param tensor: Image tensor with shape (4, 512, 512).
-    :param rotate: Apply rotation if True.
-    :param flip_vertical: Apply vertical flip if True.
-    :param flip_horizontal: Apply horizontal flip if True.
-    :return: Batch of TTA-processed tensors.
-    """
-    tta_batch = []
-
-    # Apply rotation augmentations
-    if rotate:
-        tta_batch.append(torch.rot90(tensor, 1, [1, 2]).clone())  # Rotate left 90 degrees
-        tta_batch.append(torch.rot90(tensor, 2, [1, 2]).clone())  # Rotate 180 degrees
-        tta_batch.append(torch.rot90(tensor, 3, [1, 2]).clone())  # Rotate right 90 degrees
-
-    # Apply flip augmentations
-    if flip_vertical:
-        tta_batch.append(torch.flip(tensor, [1]).clone())  # Vertical flip
-    if flip_horizontal:
-        tta_batch.append(torch.flip(tensor, [2]).clone())  # Horizontal flip
-
-    # Convert list to torch tensor
-    tta_batch = torch.stack(tta_batch).half()  # Assuming the model is in half precision
-
-    # Get the model's predictions for the batch
-    tta_outputs = model(tta_batch).logits
-
-    # Post-process to revert the TTA
-    reverted_outputs = []
-    for i, output in enumerate(tta_outputs):
-        output = output.clone()
-        if rotate:
-            if i == 1:  # Revert rotate left
-                output = torch.rot90(output, 3, [1, 2])
-            elif i == 2:  # Revert rotate 180
-                output = torch.rot90(output, 2, [1, 2])
-            elif i == 3:  # Revert rotate right
-                output = torch.rot90(output, 1, [1, 2])
-        if flip_vertical and i == len(tta_outputs) - 2 + int(flip_horizontal):
-            output = torch.flip(output, [1])
-        if flip_horizontal and i == len(tta_outputs) - 1:
-            output = torch.flip(output, [2])
-        reverted_outputs.append(output.clone().squeeze())
-
-    return torch.stack(reverted_outputs)
-
-
-def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
+def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
+    print("Starting full inference")
     patch_size = config.patch_size
-    expected_patch_shape = (config.in_chans, patch_size, patch_size)
+    expected_patch_shape = (1, config.in_chans, patch_size, patch_size)
 
-    # Loading images
+    # Loading images [12, Height, Width]
     images = read_fragment(patch_size=patch_size, work_dir=config.work_dir, fragment_id=fragment_id,
                            layer_start=layer_start, layer_count=config.in_chans)
 
     # Load mask
-    mask_path = os.path.join(config.work_dir, "../data", "fragments", f"fragment{fragment_id}", "mask.png")
+    mask_path = os.path.join(config.work_dir, "data", "fragments", f"fragment{fragment_id}", "mask.png")
     if not os.path.isfile(mask_path):
         raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
     mask = np.asarray(Image.open(mask_path))
-
     mask = pad_image_to_be_divisible_by_4(mask, patch_size)
 
     assert mask.shape == images[0].shape, "Mask shape does not match image shape"
 
     # Hyperparams
     label_size = config.label_size
-    margin_percent = 0.1
-    stride_factor = 2
-
-    margin = int(margin_percent * label_size)
-    ignore_edge_mask = torch.ones((label_size, label_size), dtype=torch.bool, device='cuda')
-    ignore_edge_mask[margin:-margin, margin:-margin] = False
+    stride_factor = 4
 
     stride = patch_size // stride_factor
     stride_out = label_size // stride_factor
@@ -152,7 +104,7 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
     pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
 
     progress_bar = tqdm(total=x_patches * y_patches,
-                        desc=f"Step {layer_start}/{end_idx}: Infer Fragment {get_frag_name_from_id(fragment_id)} "
+                        desc=f"Step {layer_start}: Infer Fragment {get_frag_name_from_id(fragment_id)} "
                              f"with {get_ckpt_name_from_id(ckpt_name).upper()}: Processing patches"
                              f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
 
@@ -161,13 +113,9 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
 
     batches = []
     batch_indices = []
-    advanced_tta_patch_counter = 0
 
     def process_patch(logits, x, y):
-        # Calculate the margin to ignore (10% of the patch size)
-        # Set the outer 10% of averaged_logits to zero
         logits = logits.clone()
-        logits *= ~ignore_edge_mask
 
         # Determine the location in the stitched_result array
         out_y_start = y * stride_out
@@ -177,11 +125,11 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
 
         # Add the result to the stitched_result array and increment prediction counts
         out_arr[out_y_start:out_y_end, out_x_start:out_x_end] += logits
-        pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
+        pred_counts[out_y_start:out_y_end, out_x_start:out_x_end] += 1
 
     transform = A.Compose(val_image_aug, is_check_shapes=False)
-    use_advanced_tta = False
 
+    batch_counter = 0
     for y in range(y_patches):
         for x in range(x_patches):
             progress_bar.update(1)
@@ -196,7 +144,9 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
             if np.all(mask_patch == 0):
                 continue
 
-            patch = images[:, y_start:y_end, x_start:x_end]
+            patch = images[:, y_start:y_end, x_start:x_end]  # [12, 512, 512]
+
+            patch = np.expand_dims(patch, 0)  # [1, 12, 512, 512]
 
             # If the patch size is smaller than the expected size, skip it
             if patch.shape != expected_patch_shape:
@@ -207,31 +157,16 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
 
             # When batch is full, process it
             if len(batches) == batch_size:
+                batch_counter += 1
                 transformed_images = [transform(image=image)['image'] for image in batches]
 
                 for idx, patch in enumerate(transformed_images):
-                    preallocated_batch_tensor[idx] = torch.from_numpy(patch).float()
+                    preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to('cuda')
 
                 with torch.no_grad():
                     outputs = model(preallocated_batch_tensor[:len(batches)])
 
-                sigmoid_output = torch.sigmoid(outputs.logits).detach().squeeze()
-
-                # Check 'improved' TTA for every image patch
-                if use_advanced_tta:
-                    for image_patch, sigmoid_patch in zip(preallocated_batch_tensor, sigmoid_output):
-                        ink_percentage = int((sigmoid_patch.sum() / np.prod(sigmoid_patch.shape)) * 100)
-
-                        if ink_percentage >= 5:
-                            advanced_tta_patch_counter += 1
-                            output_patches = advanced_tta(model=model,
-                                                          tensor=image_patch,
-                                                          rotate=True,
-                                                          flip_vertical=True,
-                                                          flip_horizontal=True)
-
-                            for patch in output_patches:
-                                process_patch(patch, x, y)
+                sigmoid_output = torch.sigmoid(outputs).detach()
 
                 for idx, (x, y) in enumerate(batch_indices):
                     process_patch(sigmoid_output[idx], x, y)  # Function to process each patch
@@ -244,26 +179,23 @@ def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config:
         transformed_images = [transform(image=image)['image'] for image in batches]
 
         for idx, patch in enumerate(transformed_images):
-            preallocated_batch_tensor[idx] = torch.from_numpy(patch).float()
+            preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to('cuda')
 
         outputs = model(preallocated_batch_tensor[:len(batches)])
-        logits = torch.sigmoid(outputs.logits).detach().squeeze(dim=1)
-
-        if len(batches) == 1:
-            logits.unsqueeze(dim=0)
+        probs = torch.sigmoid(outputs).detach()
 
         for idx, (x, y) in enumerate(batch_indices):
-            process_patch(logits[idx], x, y)
+            process_patch(probs[idx], x, y)
 
     progress_bar.close()
 
     # Average the predictions
     out_arr = torch.where(pred_counts > 0, torch.div(out_arr, pred_counts), out_arr)
 
-    if use_advanced_tta:
-        global total_advanced_tta_patches
-        print(f"Advanced TTA Patches for layer start {layer_start}: {total_advanced_tta_patches}")
-    return out_arr
+    torch.cuda.empty_cache()
+    output = out_arr.cpu().numpy()
+    print("Saving finally")
+    np.save(npy_file_path, output)
 
 
 def find_ckpt_in_dir(path):
@@ -281,7 +213,7 @@ def find_py_in_dir(path):
 
 
 def get_target_dims(work_dir, frag_id):
-    frag_dir = os.path.join(work_dir, "../data", "fragments", f"fragment{frag_id}")
+    frag_dir = os.path.join(work_dir, "data", "fragments", f"fragment{frag_id}")
     assert os.path.isdir(frag_dir)
 
     target_dims = None
@@ -295,8 +227,7 @@ def get_target_dims(work_dir, frag_id):
             img_path = os.path.join(slice_dir, f"{i:05}.tif")
             if os.path.isfile(img_path):
                 image = cv2.imread(img_path, 0)
-                if image is not None:
-                    target_dims = image.shape
+                target_dims = image.shape
 
     return target_dims
 
@@ -343,14 +274,13 @@ def process_image(array, frag_id, dimensions):
     # Binarize
     processed = np.where(processed > threshold, 1, 0)
 
-    image = np.uint8(processed * 255)
+    image = Image.fromarray(np.uint8(processed * 255), 'L')
 
-    new_width = image.shape[1] * 4  # width
-    new_height = image.shape[0] * 4  # height
+    new_width = image.width * 4
+    new_height = image.height * 4
 
     original_height, original_width = dimensions
-    upscaled_image = resize(image, (new_height, new_width),
-                            order=0, preserve_range=True, anti_aliasing=False)
+    upscaled_image = image.resize((new_width, new_height), Resampling.LANCZOS)
 
     assert new_width >= original_width and new_height >= original_height
 
@@ -369,14 +299,10 @@ def process_image(array, frag_id, dimensions):
     return Image.fromarray(np.array(upscaled_image)[:out_height, :out_width])
 
 
-def parse_args(default_start_idx, default_end_idx):
+def parse_args():
     parser = argparse.ArgumentParser(description='Infer Layered Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
-    parser.add_argument('--start_idx', type=int, default=default_start_idx,
-                        help='Start index (default: {})'.format(default_start_idx))
-    parser.add_argument('--end_idx', type=int, default=default_end_idx,
-                        help='End index (default: {})'.format(default_end_idx))
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
                                                               'for the inference')
@@ -393,22 +319,35 @@ def load_model(cfg: Config, model_path):
                                                                  num_labels=1,
                                                                  num_channels=cfg.in_chans,
                                                                  ignore_mismatched_sizes=True)
+        checkpoint = torch.load(model_path)
+        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
+    elif cfg.architecture == 'unet3d-sf':
+        model = UNET3D_Segformer(cfg=cfg)
+        checkpoint = torch.load(model_path)
+        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
+
+    elif cfg.architecture == 'unetr-sf':
+        model = UNETR_Segformer(cfg=cfg)
+        checkpoint = torch.load(model_path)
+        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
+    elif cfg.architecture == 'unet3d':
+        model = UNET3D(cfg=cfg)
+        checkpoint = torch.load(model_path)
+        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+        model.load_state_dict(state_dict)
     else:
-        print("Error")
+        print("Error model type not found:", cfg.architecture)
         sys.exit(1)
 
     model = model.to("cuda")
-    checkpoint = torch.load(model_path)
-    state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-    model.load_state_dict(state_dict)
 
     return model
 
 
 verbose = None
-total_advanced_tta_patches = None
-start_idx = None
-end_idx = None
 boost_threshold = None
 
 
@@ -417,24 +356,20 @@ def main():
     logging.set_verbosity_error()
     Image.MAX_IMAGE_PIXELS = None
 
-    default_start_idx = 0
-    default_end_idx = 60
-
-    args = parse_args(default_start_idx, default_end_idx)
+    args = parse_args()
 
     model_folder_name = args.checkpoint_folder_name
     fragment_id = args.fragment_id
     batch_size = args.batch_size
-    save_labels = args.labels
 
-    global verbose, start_idx, end_idx, boost_threshold
+    global verbose, boost_threshold
     boost_threshold = args.boost_threshold
     verbose = args.v
-    start_idx = args.start_idx
-    end_idx = args.end_idx
+
+    start_layer_idx, end_layer_idx = FragmentHandler().get_best_12_layers(frag_id=fragment_id)
 
     # Determine the path to the configuration based on the checkpoint folder
-    model_folder_path = os.path.join('../checkpoints', model_folder_name)
+    model_folder_path = os.path.join('checkpoints', model_folder_name)
 
     # Find config path
     config_path = find_py_in_dir(model_folder_path)
@@ -451,8 +386,8 @@ def main():
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_name = model_path.split(f"checkpoints{os.sep}")[-1]
     model_name_modified = '-'.join(model_name.split('-')[0:5])
-    root_dir = os.path.join("", "results", f"fragment{fragment_id}")
-    results_dir = os.path.join("", "results", f"fragment{fragment_id}",
+    root_dir = os.path.join("inference", "results", f"fragment{fragment_id}")
+    results_dir = os.path.join("inference", "results", f"fragment{fragment_id}",
                                f"{date_time_string}_{model_name_modified}")
 
     os.makedirs(root_dir, exist_ok=True)
@@ -465,50 +400,16 @@ def main():
 
     model = load_model(cfg=config, model_path=model_path)
 
-    # Calculate valid label indices
-    valid_start_idxs = set()
-    if save_labels:
-        default_range = set(range(default_start_idx, default_end_idx + 1, config.in_chans))
-        selected_range = set(range(start_idx, end_idx + 1))
-        valid_start_idxs = default_range.intersection(selected_range)
+    npy_file_path = os.path.join(results_dir,
+                                 f"sigmoid_logits_{start_layer_idx}_{start_layer_idx + config.in_chans - 1}.npy")
 
-    global total_advanced_tta_patches
-    total_advanced_tta_patches = 0
-
-    for layer_idx in range(start_idx, end_idx + 1, 1):
-        npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{layer_idx}_{layer_idx + config.in_chans - 1}.npy")
-
-        # Check if prediction NPY file already exists -> skip infer
-        if os.path.isfile(npy_file_path):
-            npy_file = np.load(npy_file_path)
-
-            if save_labels and layer_idx in valid_start_idxs:
-                generate_and_save_label_file(config,
-                                             _model_name=model_folder_name,
-                                             array=npy_file,
-                                             frag_id=fragment_id,
-                                             layer_index=layer_idx)
-            if verbose:
-                print(f"Skip layer {layer_idx}")
-            continue
-
-        sigmoid_logits = infer_full_fragment_layer(model=model,
-                                                   ckpt_name=model_folder_name,
-                                                   batch_size=batch_size,
-                                                   fragment_id=fragment_id,
-                                                   config=config,
-                                                   layer_start=layer_idx)
-
-        torch.cuda.empty_cache()
-        output = sigmoid_logits.cpu().numpy()
-        np.save(npy_file_path, output)
-
-        if save_labels and layer_idx in valid_start_idxs:
-            generate_and_save_label_file(config,
-                                         _model_name=model_folder_name,
-                                         array=output,
-                                         frag_id=fragment_id,
-                                         layer_index=layer_idx)
+    infer_full_fragment_layer(model=model,
+                              ckpt_name=model_folder_name,
+                              batch_size=batch_size,
+                              fragment_id=fragment_id,
+                              config=config,
+                              layer_start=start_layer_idx,
+                              npy_file_path=npy_file_path)
 
 
 if __name__ == '__main__':
