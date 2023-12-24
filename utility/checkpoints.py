@@ -13,6 +13,7 @@ CHECKPOINTS = {
     "solar-oath": "solar-oath-401-segformer-b2-231126-043455",
     "deft-yogurt": "deft-yogurt-738-segformer-b2-231209-215717",
     "upbeat-tree": "upbeat-tree-741-segformer-b2-231210-210131",
+    "snowy-firebrand": "snowy-firebrand-929-segformer-b2-231223-010927"  # single layer, focal:dice 2:1, jetfire+grimlarge
 }
 
 UPBEAT_TREE = CHECKPOINTS["upbeat-tree"]

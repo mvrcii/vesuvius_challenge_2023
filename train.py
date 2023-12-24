@@ -105,6 +105,26 @@ def get_device_configuration():
         return 1
 
 
+def get_callbacks(cfg, model_run_dir):
+    # Only save model checkpoint on gpu node
+    if cfg.node:
+        os.makedirs(model_run_dir, exist_ok=True)
+        cfg.save_to_file(model_run_dir)
+
+        checkpoint_callback = ModelCheckpoint(
+            dirpath=model_run_dir,
+            filename="best-checkpoint-{epoch}-{val_iou:.2f}",
+            save_top_k=1,
+            monitor="val_auc" if cfg.architecture == "unet3d" else "val_iou",
+            mode="max",
+            every_n_epochs=1
+        )
+
+        return [checkpoint_callback]
+    else:
+        return []
+
+
 def main():
     args = get_sys_args()
 
@@ -132,35 +152,18 @@ def main():
     model = get_model(config=config)
     data_module = get_data_module(config=config)
 
-    monitor_value = "val_auc" if config.architecture == "unet3d" else "val_iou"
-
-    checkpoint_callback = ModelCheckpoint(
-        dirpath=model_run_dir,
-        filename="best-checkpoint-{epoch}-{val_iou:.2f}",
-        save_top_k=1,
-        monitor=monitor_value,
-        mode="max",
-        every_n_epochs=1
-    )
-
-    devices = get_device_configuration()
-    print("Using Devices:", devices)
-
     trainer = Trainer(
         max_epochs=config.epochs,
         logger=wandb_logger,
-        callbacks=[checkpoint_callback],
+        callbacks=get_callbacks(cfg=config, model_run_dir=model_run_dir),
         accelerator="auto",
-        devices=devices,
+        devices=get_device_configuration(),
         enable_progress_bar=True,
         precision='16-mixed',
         gradient_clip_val=1.0,
         gradient_clip_algorithm="norm",
         check_val_every_n_epoch=config.val_interval
     )
-
-    os.makedirs(model_run_dir, exist_ok=True)
-    config.save_to_file(model_run_dir)
 
     trainer.fit(model, data_module)
 

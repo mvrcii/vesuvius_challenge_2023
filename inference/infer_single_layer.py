@@ -45,6 +45,7 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start):
                             f"{layer_start:05}.tif")
 
     if not os.path.isfile(img_path):
+        print(img_path)
         print(f"{FragmentHandler().get_name(fragment_id)}: Layer File {layer_start:05}.tif not found")
         sys.exit(1)
 
