@@ -6,11 +6,12 @@ import numpy as np
 from termcolor import colored
 from tqdm import tqdm
 
+from utility.fragments import get_frag_name_from_id
+from utility.meta_data import AlphaBetaMeta
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.path.append('../')
 
-from utility.constants import get_frag_name_from_id
-from utility import AlphaBetaMeta
 
 
 def process_image(img_src_dir, img_target_dir):

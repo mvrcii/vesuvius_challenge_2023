@@ -13,9 +13,9 @@ from tqdm import tqdm
 
 from data.data_validation import validate_fragments, format_ranges
 from data.utils import write_to_config
-from utility import AlphaBetaMeta
-from utility.config_handler import Config
-from utility.fragment import FragmentHandler, get_frag_name_from_id
+from utility.configs import Config
+from utility.fragments import get_frag_name_from_id, FragmentHandler
+from utility.meta_data import AlphaBetaMeta
 
 Image.MAX_IMAGE_PIXELS = None
 

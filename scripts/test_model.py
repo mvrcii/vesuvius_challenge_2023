@@ -1,5 +1,4 @@
 import torch
-from torch import float16
 from transformers import SegformerForSemanticSegmentation
 
 model = SegformerForSemanticSegmentation.from_pretrained(

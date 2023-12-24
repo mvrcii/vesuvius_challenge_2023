@@ -7,9 +7,9 @@ from lightning.pytorch import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
-from utility.config_handler import Config
 from models.datasets.abstract_dataset import AbstractDataset
-from utility.fragment import get_frag_name_from_id
+from utility.configs import Config
+from utility.fragments import get_frag_name_from_id
 
 
 class AbstractDataModule(LightningDataModule):

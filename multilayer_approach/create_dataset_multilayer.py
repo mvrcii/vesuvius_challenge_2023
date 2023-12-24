@@ -13,8 +13,8 @@ from tqdm import tqdm
 
 from data.data_validation_multilayer import validate_fragments
 from data.utils import write_to_config
-from utility.config_handler import Config
-from utility.constants import get_frag_name_from_id
+from utility.configs import Config
+from utility.fragments import get_frag_name_from_id
 
 Image.MAX_IMAGE_PIXELS = None
 

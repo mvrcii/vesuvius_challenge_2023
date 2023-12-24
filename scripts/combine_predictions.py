@@ -10,10 +10,10 @@ from PIL import Image, ImageTk
 from PIL.Image import Resampling
 from tqdm import tqdm
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utility.fragment import FragmentHandler
+from utility.configs import Config
+from utility.fragments import FragmentHandler
 
-from utility.config_handler import Config
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 def combine_layers(predictions, max_distance):

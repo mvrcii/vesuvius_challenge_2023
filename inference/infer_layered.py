@@ -13,10 +13,11 @@ from skimage.transform import resize
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 from transformers.utils import logging
-from utility.config_handler import Config
-from utility.constants import get_frag_name_from_id, get_ckpt_name_from_id
-from utility.fragment import FragmentHandler
-from utility import AlphaBetaMeta
+
+from utility.checkpoints import get_ckpt_name_from_id
+from utility.configs import Config
+from utility.fragments import get_frag_name_from_id, FragmentHandler
+from utility.meta_data import AlphaBetaMeta
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT

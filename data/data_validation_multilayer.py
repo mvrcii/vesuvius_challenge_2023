@@ -1,7 +1,7 @@
 import os
 import re
 
-from utility.fragment import FragmentHandler
+from utility.fragments import FragmentHandler
 
 
 def validate_fragments(config, fragments, label_dir):

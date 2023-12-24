@@ -11,10 +11,11 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
+from utility.configs import Config
+from utility.fragments import get_frag_name_from_id
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from utility.config_handler import Config
-from utility.constants import get_frag_name_from_id
 from data.data_validation_multilayer import validate_fragments
 from data.utils import write_to_config
 

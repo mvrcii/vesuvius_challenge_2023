@@ -2,8 +2,7 @@ import albumentations as A
 import torch
 import torch.nn as nn
 from albumentations.pytorch import ToTensorV2
-from transformers import SegformerForSemanticSegmentation, SegformerConfig
-import numpy as np
+from transformers import SegformerForSemanticSegmentation
 
 from models.architectures.unetr import UNETR
 
@@ -145,8 +144,6 @@ class UNETR_Segformer(nn.Module):
         output = output.squeeze(1)
 
         return output
-
-
 
 
 def get_device(model):

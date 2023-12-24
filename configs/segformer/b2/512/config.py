@@ -1,10 +1,8 @@
 import os
-import sys
 
 import albumentations as A
 
-sys.path.append('../')
-from utility import AlphaBetaMeta
+from utility.meta_data import AlphaBetaMeta
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",

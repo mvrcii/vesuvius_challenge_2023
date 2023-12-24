@@ -5,8 +5,6 @@ import cv2
 import numpy as np
 from termcolor import colored
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 
 def process_image(img_src_dir, img_src_name, frag_id):
     try:

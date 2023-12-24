@@ -13,15 +13,15 @@ from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
 from lightning_fabric.accelerators import find_usable_cuda_devices
 
-from utility.config_handler import Config
-from models.data_modules import SegFormerDataModule
-from models.data_modules import UNET3D_DataModule
+from models.data_modules.segformer_datamodule import SegFormerDataModule
+from models.data_modules.unet3d_datamodule import UNET3D_DataModule
 from models.data_modules.unet3dsf_datamodule import UNET3D_SFDataModule
-from models.data_modules import UNETR_SFDataModule
-from models.lightning_modules.segformer import SegformerModule
-from models.lightning_modules.unet3d import UNET3D_Module
-from models.lightning_modules.unet3dsf import UNET3D_SFModule
-from models.lightning_modules.unetrsf import UNETR_SFModule
+from models.data_modules.unetrsf_datamodule import UNETR_SFDataModule
+from models.lightning_modules.segformer_module import SegformerModule
+from models.lightning_modules.unet3d_module import UNET3D_Module
+from models.lightning_modules.unet3dsf_module import UNET3D_SFModule
+from models.lightning_modules.unetrsf_module import UNETR_SFModule
+from utility.configs import Config
 
 torch.set_float32_matmul_precision('medium')
 

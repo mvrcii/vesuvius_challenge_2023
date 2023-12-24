@@ -3,15 +3,11 @@ import re
 import subprocess
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utility.fragments import FragmentHandler, BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, \
+    JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID
+from utility.meta_data import AlphaBetaMeta
 
-from utility.constants import BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, \
-    HOT_ROD_FRAG_ID, JAZZILLA_FRAG_ID
-from utility.fragment import FragmentHandler
-
-from utility import AlphaBetaMeta
-
-download_script = "./util/download.sh"
+download_script = "./scripts/download/download_fragment.sh"
 
 
 def determine_slice_range(fragment_id):
@@ -116,6 +112,7 @@ def batch_download_frags(frag_list, consider_label_files=False):
 
 
 if __name__ == '__main__':
+
     fragment_list = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
                      JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID]
 
