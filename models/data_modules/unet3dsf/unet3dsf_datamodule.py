@@ -2,8 +2,8 @@ import os
 
 from torch.utils.data import DataLoader
 
-from data_modules.abstract.abstract_datamodule import AbstractDataModule
-from data_modules.unet3dsf.unet3dsf_dataset import UNET3D_SFDataset
+from models.data_modules.abstract.abstract_datamodule import AbstractDataModule
+from models.data_modules.unet3dsf.unet3dsf_dataset import UNET3D_SFDataset
 
 
 class UNET3D_SFDataModule(AbstractDataModule):

@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from skimage.transform import resize
 
-from data_modules.abstract.abstract_dataset import AbstractDataset
+from models.data_modules.abstract.abstract_dataset import AbstractDataset
 
 
 class UNET3D_SFDataset(AbstractDataset):

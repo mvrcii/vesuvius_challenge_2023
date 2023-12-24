@@ -8,8 +8,8 @@ from torch.nn import BCEWithLogitsLoss
 from transformers import SegformerForSemanticSegmentation
 
 from utility.config_handler import Config
-from data_modules.segformer.segformer_datamodule import SegFormerDataModule
-from losses.losses import BinaryDiceLoss
+from models.data_modules import SegFormerDataModule
+from models.losses import BinaryDiceLoss
 
 val_image_aug = [
     A.Normalize(mean=[0], std=[1]),

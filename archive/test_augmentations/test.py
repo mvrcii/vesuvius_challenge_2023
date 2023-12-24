@@ -1,4 +1,4 @@
-from data_modules.segformer.segformer_datamodule import SegFormerDataModule
+from models.data_modules import SegFormerDataModule
 from utility.config_handler import Config
 
 

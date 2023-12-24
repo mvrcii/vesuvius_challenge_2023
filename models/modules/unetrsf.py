@@ -1,14 +1,13 @@
-import os
-import sys
-
-import numpy as np
 import torch
 import wandb
-from torch import float16
+from segmentation_models_pytorch.utils.metrics import IoU
+from torchmetrics import Dice
+from torchmetrics.classification import BinaryF1Score, BinaryAccuracy, BinaryPrecision, BinaryRecall
 from torchvision.utils import make_grid
 
-from models.abstract_model import AbstractVesuvLightningModule
 from models.architectures.unetr_segformer import UNETR_Segformer
+from models.losses.utils import get_loss_functions
+from models.modules.abstract_module import AbstractLightningModule
 
 
 def dice_loss_with_mask_batch(outputs, labels, mask):
@@ -52,64 +51,13 @@ def calculate_masked_metrics_batchwise(outputs, labels, mask):
     return iou.mean(), precision.mean(), recall.mean(), f1.mean()
 
 
-# def load_test_image(cfg):
-#     path = os.path.join("multilayer_approach/datasets/sanity/JETFIRE")
-#     image = np.load(os.path.join(path, 'images', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
-#     label = np.load(os.path.join(path, 'labels', 'f20231005123336_ch30_17134_2873_17646_3385.npy'))
-#     label = np.unpackbits(label).reshape((2, cfg.label_size, cfg.label_size))  # 2, 128, 128
-#
-#     # Measure RAM usage of numpy arrays
-#     image_size_bytes = sys.getsizeof(image)
-#     label_size_bytes = sys.getsizeof(label)
-#     print(f"Image size in RAM: {image_size_bytes} bytes")
-#     print(f"Label size in RAM: {label_size_bytes} bytes")
-#
-#     label = label[0]  # 128, 128 now
-#
-#     label = torch.from_numpy(label).to(dtype=float16, device='cuda')
-#     image = torch.from_numpy(image).to(dtype=float16, device='cuda')
-#
-#     image = image.unsqueeze(0)
-#     print("Image Shape", image.shape)
-#
-#     pad_array = torch.zeros(1, 16 - image.shape[1], cfg.patch_size, cfg.patch_size).to(dtype=float16, device='cuda')
-#     print("Pad Shape", pad_array.shape)
-#
-#     image = torch.cat([image, pad_array], dim=1)
-#
-#     # Measure VRAM usage
-#     vram_usage_bytes = torch.cuda.memory_allocated()
-#     print(f"VRAM used for image and label: {vram_usage_bytes} bytes")
-#
-#     return image, label
-
-
-class UNETR_SFModule(AbstractVesuvLightningModule):
+class UNETR_SFModule(AbstractLightningModule):
     def __init__(self, cfg):
         super().__init__(cfg=cfg)
-        self.cfg = cfg
-        self.train_step = 0
 
         self.model = UNETR_Segformer(cfg=cfg)
 
-        from_checkpoint = getattr(cfg, 'from_checkpoint', None)
-        if from_checkpoint:
-            checkpoint_root_path = os.path.join("checkpoints", cfg.from_checkpoint)
-            checkpoint_files = [file for file in os.listdir(checkpoint_root_path) if file.startswith('best-checkpoint')]
-            checkpoint_path = os.path.join(checkpoint_root_path, checkpoint_files[-1])
-
-            checkpoint = torch.load(checkpoint_path)
-            assert checkpoint
-
-            state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-            self.model.load_state_dict(state_dict)
-            print("Loaded model from checkpoint:", cfg.from_checkpoint)
-        else:
-            print("Loaded blank unetr and segformer from pretrained:", cfg.segformer_from_pretrained)
-
-    def forward(self, x):
-        output = self.model(x)
-        return output
+        self.load_weights()
 
     def training_step(self, batch, batch_idx):
         self.train_step += 1

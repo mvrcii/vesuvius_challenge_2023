@@ -1,8 +1,8 @@
 from torch.nn import BCEWithLogitsLoss
 
-from losses.binary_dice_loss import BinaryDiceLoss
-from losses.entropy_loss import EntropyLoss
-from losses.focal_loss import FocalLoss
+from models.losses.binary_dice_loss import BinaryDiceLoss
+from models.losses.entropy_loss import EntropyLoss
+from models.losses.focal_loss import FocalLoss
 
 
 def get_loss_functions(cfg):

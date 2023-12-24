@@ -2,8 +2,8 @@ import os
 
 from torch.utils.data import DataLoader
 
-from data_modules.abstract.abstract_datamodule import AbstractDataModule
-from data_modules.unetrsf.unetrsf_dataset import UNETR_SFDataset
+from models.data_modules.abstract.abstract_datamodule import AbstractDataModule
+from models.data_modules.unetrsf.unetrsf_dataset import UNETR_SFDataset
 
 
 class UNETR_SFDataModule(AbstractDataModule):

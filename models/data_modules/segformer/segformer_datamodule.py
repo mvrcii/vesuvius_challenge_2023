@@ -2,8 +2,8 @@ import os
 
 from torch.utils.data import DataLoader
 
-from data_modules.abstract.abstract_datamodule import AbstractDataModule
-from data_modules.segformer.segformer_dataset import SegFormerDataset
+from models.data_modules.abstract.abstract_datamodule import AbstractDataModule
+from models.data_modules.segformer.segformer_dataset import SegFormerDataset
 
 
 class SegFormerDataModule(AbstractDataModule):

@@ -1,62 +1,28 @@
 import torch
-from einops import rearrange
-from lightning import LightningModule
 import wandb
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR, LinearLR, SequentialLR
-from torchmetrics import Dice
-from torchmetrics.classification import (BinaryF1Score, BinaryPrecision, BinaryRecall,
-                                         BinaryAccuracy, BinaryJaccardIndex as IoU)
+from einops import rearrange
 from torchvision.utils import make_grid
+from transformers import SegformerForSemanticSegmentation
 
-from losses.utils import get_loss_functions
+from models.modules.abstract_module import AbstractLightningModule
 
 
-class AbstractVesuvLightningModule(LightningModule):
+class SegformerModule(AbstractLightningModule):
     def __init__(self, cfg):
-        super().__init__()
-        self.train_step = 0
-        self.epochs = cfg.epochs
-        self.lr = cfg.lr
-        self.eta_min = cfg.eta_min
-        self.weight_decay = cfg.weight_decay
-        self.optimizer = cfg.optimizer
-        self.step_lr_steps = cfg.step_lr_steps
-        self.step_lr_factor = cfg.step_lr_factor
+        super().__init__(cfg=cfg)
 
-        self.loss_functions = get_loss_functions(cfg)
+        self.model = SegformerForSemanticSegmentation.from_pretrained(
+            pretrained_model_name_or_path=cfg.from_pretrained,
+            ignore_mismatched_sizes=True,
+            num_labels=1,
+            num_channels=cfg.in_chans,
+        )
 
-        self.f1 = BinaryF1Score()
-        self.accuracy = BinaryAccuracy()
-        self.precision = BinaryPrecision()
-        self.recall = BinaryRecall()
-        self.iou = IoU()
-        self.dice_coefficient = Dice(multiclass=False, threshold=0.5)
-
-    def configure_optimizers(self):
-        if self.optimizer == 'adamw':
-            optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-        else:
-            raise NotImplementedError()
-
-        if self.epochs == -1:
-            scheduler = StepLR(
-                optimizer,
-                step_size=self.step_lr_steps,
-                gamma=self.step_lr_factor
-            )
-        else:
-            scheduler = CosineAnnealingLR(
-                optimizer,
-                T_max=self.epochs,
-                eta_min=self.eta_min
-            )
-        return {"optimizer": optimizer, "lr_scheduler": scheduler}
+        self.load_weights()
 
     def forward(self, x):
         output = self.model(x.float())
         output = rearrange(output.logits, 'b 1 h w -> b h w')
-
         return output
 
     def training_step(self, batch, batch_idx):
@@ -115,19 +81,10 @@ class AbstractVesuvLightningModule(LightningModule):
             if name == 'total':
                 self.log(f'train_loss', value, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
             else:
-                self.log(f'train_loss_{name}', value * weight, on_step=False, on_epoch=True, prog_bar=False, sync_dist=True)
+                self.log(f'train_loss_{name}', value * weight, on_step=False, on_epoch=True, prog_bar=False,
+                         sync_dist=True)
 
     def update_validation_metrics(self, losses, output_logits, target):
-        """
-        Update and log validation metrics.
-
-        This function logs validation loss and calculates metrics such as accuracy, precision, recall, F1 score, and
-        IOU. These metrics are logged at the end of each epoch.
-
-        :param loss:            The loss value computed during the validation phase.
-        :param output_logits:   Tensor of shape (N, C, H, W).
-        :param target:          Tensor of shape (N, H, W) or (N, C, H, W).
-        """
         if target.ndim != output_logits.ndim and target.ndim == 3 and output_logits.ndim == 4:
             target = target.unsqueeze(1)
         target = target.int()
@@ -136,7 +93,8 @@ class AbstractVesuvLightningModule(LightningModule):
             if name == 'total':
                 self.log(f'val_loss', value, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
             else:
-                self.log(f'val_loss_{name}', value * weight, on_step=False, on_epoch=True, prog_bar=False, sync_dist=True)
+                self.log(f'val_loss_{name}', value * weight, on_step=False, on_epoch=True, prog_bar=False,
+                         sync_dist=True)
 
         self.log('val_accuracy', self.accuracy(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)
         self.log('val_precision', self.precision(output_logits, target), on_step=False, on_epoch=True, prog_bar=False)

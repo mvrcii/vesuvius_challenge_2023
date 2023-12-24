@@ -1,41 +1,22 @@
 import os
 import sys
 
-import albumentations as A
 import pandas as pd
-from lightning.pytorch import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
 from utility.config_handler import Config
 from utility.constants import get_frag_name_from_id
-from data_modules.abstract.abstract_dataset import AbstractDataset
+from models.data_modules.abstract.abstract_datamodule import AbstractDataModule
+from models.data_modules.unet3d.unet3d_dataset import UNET3D_Dataset
 
 
-class AbstractDataModule(LightningDataModule):
+class UNET3D_DataModule(AbstractDataModule):
     def __init__(self, cfg):
-        super().__init__()
-        self.cfg = cfg
-        self.t_img_paths, self.t_label_paths, self.v_img_paths, self.v_label_paths = self.generate_dataset(cfg=cfg)
-        self.dataset = self.get_dataset_class()
+        super().__init__(cfg=cfg)
 
-    @staticmethod
-    def get_dataset_class():
-        return AbstractDataset
-
-    def train_dataloader(self):
-        return self.build_dataloader(dataset_type='train')
-
-    def val_dataloader(self):
-        return self.build_dataloader(dataset_type='val')
-
-    def get_transforms(self, dataset_type):
-        if dataset_type == 'train':
-            transforms = self.cfg.train_aug
-            return A.Compose(transforms=transforms, is_check_shapes=False)
-        elif dataset_type == 'val':
-            transforms = self.cfg.val_aug
-            return A.Compose(transforms=transforms, is_check_shapes=False)
+    def get_dataset_class(self):
+        return UNET3D_Dataset
 
     def build_dataloader(self, dataset_type):
         if dataset_type == 'train':
@@ -50,7 +31,6 @@ class AbstractDataModule(LightningDataModule):
         dataset = self.dataset(root_dir=root_dir,
                                images=images_list,
                                labels=label_list,
-                               label_size=self.cfg.label_size,
                                patch_size=self.cfg.patch_size,
                                transform=transform)
 
@@ -78,11 +58,6 @@ class AbstractDataModule(LightningDataModule):
         if cfg.seed == -1:
             cfg.seed = None  # Set random seed if -1 is given
 
-        if "ignore_p" in df.columns:
-            print("Before ignoring: ", len(df.index))
-            df = df[df["ignore_p"] < cfg.max_ignore_th]
-            print(f"After ignoring patches with ignore_p > {cfg.max_ignore_th}: ", len(df.index))
-
         if not cfg.take_full_dataset:
             count_zero = (df['ink_p'] == 0).sum()
             count_greater_than_zero = (df['ink_p'] > 0).sum()
@@ -91,16 +66,16 @@ class AbstractDataModule(LightningDataModule):
 
             # BALANCING IS DONE ON CREATION
             # Step 1: Filter out rows where ink_p > ratio
-            df_ink_p_greater_than_ink_ratio = df[df['ink_p'] > cfg.ink_ratio]
+            df_inks = df[df['ink_p'] > 0]
 
             # Step 2: Decide how many no-ink samples
-            no_ink_sample_count = int(len(df_ink_p_greater_than_ink_ratio) * cfg.no_ink_sample_percentage)
+            no_ink_sample_count = int(len(df_inks) * cfg.no_ink_sample_percentage)
 
             # Step 3: Filter out rows where ink_p <= 0 and limit the number of rows
             df_good_no_inks = df[df['ink_p'] == 0].head(no_ink_sample_count)
 
             # # Step 4: Concatenate the two DataFrames
-            df = pd.concat([df_ink_p_greater_than_ink_ratio, df_good_no_inks])
+            df = pd.concat([df_inks, df_good_no_inks])
 
         count_zero = (df['ink_p'] == 0).sum()
         count_greater_than_zero = (df['ink_p'] > 0).sum()
@@ -122,10 +97,7 @@ class AbstractDataModule(LightningDataModule):
         train_image_paths = train_df['file_path'].tolist()
         val_image_paths = valid_df['file_path'].tolist()
 
-        train_label_paths = [path.replace('images', 'labels') for path in train_image_paths]
-        val_label_paths = [path.replace('images', 'labels') for path in val_image_paths]
-
         print(f"Total train samples: {len(train_image_paths)}")
         print(f"Total validation samples: {len(val_image_paths)}")
 
-        return train_image_paths, train_label_paths, val_image_paths, val_label_paths
+        return train_image_paths, None, val_image_paths, None

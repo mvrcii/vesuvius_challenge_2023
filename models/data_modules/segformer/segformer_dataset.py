@@ -1,7 +1,4 @@
-import numpy as np
-from skimage.transform import resize
-
-from data_modules.abstract.abstract_dataset import AbstractDataset
+from models.data_modules.abstract.abstract_dataset import AbstractDataset
 
 
 class SegFormerDataset(AbstractDataset):

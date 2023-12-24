@@ -1,4 +1,4 @@
-from data_modules.utils_multilayer import generate_dataset
+from models.data_modules.utils_multilayer import generate_dataset
 from utility.config_handler import Config
 
 
