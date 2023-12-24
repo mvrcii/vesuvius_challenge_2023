@@ -2,13 +2,9 @@ import albumentations as A
 import torch
 import torch.nn as nn
 from albumentations.pytorch import ToTensorV2
-from transformers import SegformerForSemanticSegmentation, SegformerConfig
-import numpy as np
+from transformers import SegformerForSemanticSegmentation
 
-from models.architectures.unetr_segformer import UNETR_Segformer
-from pytorch3dunet.unet3d.model import get_model
-
-from models.architectures.unetr import UNETR
+from models.architectures.pytorch3dunet.unet3d.model import get_model
 
 
 class CFG:

@@ -4,8 +4,6 @@ import sys
 import albumentations as A
 import cv2
 
-sys.path.append('../')
-
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
 ]

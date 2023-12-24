@@ -14,10 +14,9 @@ from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 from transformers.utils import logging
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from config_handler import Config
-from constants import get_frag_name_from_id, get_ckpt_name_from_id
-from fragment import FragmentHandler
+from utility.checkpoints import get_ckpt_name_from_id
+from utility.configs import Config
+from utility.fragments import FragmentHandler, get_frag_name_from_id
 
 '''
         SET WORKING DIRECTORY TO PROJECT ROOT
@@ -45,14 +44,22 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start):
     img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices",
                             f"{layer_start:05}.tif")
 
+    if not os.path.isfile(img_path):
+        print(img_path)
+        print(f"{FragmentHandler().get_name(fragment_id)}: Layer File {layer_start:05}.tif not found")
+        sys.exit(1)
+
     image = cv2.imread(img_path, 0)
+
+    if image is None:
+        print(f"{FragmentHandler().get_name(fragment_id)}: Layer File {layer_start:05}.tif could not be read successfully")
+        sys.exit(1)
+
     assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(layer_start)
 
     image = pad_image_to_be_divisible_by_4(image, patch_size)
 
-    images = np.stack([image for _ in range(4)], axis=0)
-
-    return images
+    return np.expand_dims(image, 0)
 
 
 def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
@@ -343,7 +350,7 @@ def main():
     batch_size = args.batch_size
     save_labels = args.labels
 
-    start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=fragment_id)
+    start_layer_idx, end_layer_idx = FragmentHandler().get_best_12_layers(frag_id=fragment_id)
 
     global verbose, boost_threshold
     boost_threshold = args.boost_threshold
@@ -396,9 +403,9 @@ def main():
                                              array=npy_file,
                                              frag_id=fragment_id,
                                              layer_index=layer_idx)
-        if verbose:
-            print(f"Skip inference for layer {layer_idx}")
-            continue
+            if verbose:
+                print(f"Skip inference for layer {layer_idx}")
+                continue
 
         sigmoid_logits = infer_full_fragment_layer(model=model,
                                                    ckpt_name=model_folder_name,

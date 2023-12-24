@@ -3,8 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
-
-from mmseg.apis import init_model, inference_model, show_result_pyplot
+from mmseg.apis import inference_model
 from mmseg.apis import init_model
 
 '''
@@ -26,11 +25,9 @@ img_path = os.path.join('data', 'fragments', 'fragment2', 'slices', '00032.tif')
 large_img = Image.open(img_path)
 width, height = large_img.size
 
-
 config_file = 'mmseg_test/work_dirs/segformer_VesuvDataset/segformer_mit-b5_512x512_160k_ade20k.py'
 checkpoint_file = 'mmseg_test/work_dirs/segformer_VesuvDataset/best_aAcc_epoch_11.pth'
 model = init_model(config_file, checkpoint_file, device='cuda:0')
-
 
 large_img = (np.asarray(large_img) / 65535.0).astype(np.float16)
 large_img = (large_img * 255).round().clip(0, 255).astype(np.uint8)  # Ensure values are within 0-255
@@ -50,7 +47,7 @@ stitched_result = np.zeros((y_patches * patch_size, x_patches * patch_size), dty
 vote_count = np.zeros((height, width), dtype=np.int_)
 
 # Process each patch
-for y in range(0, height-patch_size + 1, stride):
+for y in range(0, height - patch_size + 1, stride):
     for x in range(0, width - patch_size + 1, stride):
         print(f"{done}/{total}")
         patch = large_img[y:y + patch_size, x:x + patch_size]

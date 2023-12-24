@@ -9,9 +9,9 @@ from torch import float16
 from torch.autograd import Variable
 from tqdm import tqdm
 
-from config_handler import Config
+from scripts.test.testloss import dice_loss_with_mask, binary_cross_entropy_with_mask
 from models.architectures.unetr_segformer import UNETR_Segformer
-from models.unetrsf import binary_cross_entropy_with_mask, dice_loss_with_mask
+from utility.configs import Config
 
 
 class FocalLoss(nn.Module):

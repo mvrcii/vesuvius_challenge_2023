@@ -1,7 +1,7 @@
 import os
 import re
 
-from constants import get_frag_name_from_id
+from utility.fragments import get_frag_name_from_id
 
 
 def validate_fragments(config, fragments, label_dir):

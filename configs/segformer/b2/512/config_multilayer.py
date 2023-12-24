@@ -3,10 +3,8 @@ import sys
 
 import albumentations as A
 
-from constants import JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID, \
-    BLASTER_FRAG_ID, IRONHIDE_FRAG_ID
-
-sys.path.append('../')
+from utility.fragments import JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID, \
+    HOT_ROD_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",

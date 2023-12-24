@@ -2,9 +2,9 @@ import os
 
 import albumentations as A
 
-from constants import (ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, IRONHIDE_FRAG_ID, MEGATRON_FRAG_ID,
-                       BUMBLEBEE_FRAG_ID, SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID, JAZZ_FRAG_ID,
-                       DEVASTATOR_FRAG_ID, SUNSTREAKER_FRAG_ID)
+from utility.constants import (ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, IRONHIDE_FRAG_ID, MEGATRON_FRAG_ID,
+                               SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID, JAZZ_FRAG_ID,
+                               DEVASTATOR_FRAG_ID, SUNSTREAKER_FRAG_ID)
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",

@@ -3,23 +3,18 @@ import gc
 import logging
 import os
 import shutil
-import sys
 
 import cv2
 import numpy as np
 import pandas as pd
 from PIL import Image
+from skimage.transform import resize
 from tqdm import tqdm
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from constants import GRIMLARGE_FRAG_ID
-
-from config_handler import Config
-from constants import get_frag_name_from_id
 from data.data_validation_multilayer import validate_fragments
 from data.utils import write_to_config
-from skimage.transform import resize
+from utility.configs import Config
+from utility.fragments import get_frag_name_from_id
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -114,8 +109,9 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     print("Label Shape:", label_arr.shape)
     print("Mask Shape:", mask.shape)
 
-    assert label_arr.shape == mask.shape == image_tensor[0].shape, (f"Shape mismatch for Fragment {frag_id}: Img={image_tensor[0].shape} "
-                                                                    f"Mask={mask.shape} Label={label_arr.shape}")
+    assert label_arr.shape == mask.shape == image_tensor[0].shape, (
+        f"Shape mismatch for Fragment {frag_id}: Img={image_tensor[0].shape} "
+        f"Mask={mask.shape} Label={label_arr.shape}")
 
     patch_cnt, skipped_cnt, ignore_skipped_count = process_channel_stack(config=config,
                                                                          target_dir=target_dir,

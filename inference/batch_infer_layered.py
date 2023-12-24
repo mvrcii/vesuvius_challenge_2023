@@ -1,9 +1,9 @@
 import subprocess
 import sys
 
-from constants import *
-from meta import AlphaBetaMeta
-from util.batch_download_frags import batch_download_frags
+from scripts.download.download_fragments import batch_download_frags
+from utility.checkpoints import get_ckpt_name_from_id
+from utility.fragments import JETFIRE_FRAG_ID, get_frag_name_from_id
 
 
 def print_colored(message, color):
@@ -42,10 +42,6 @@ batch_size = 4
 labels = False
 boost_threshold = False
 verbose = False
-
-if labels:
-    # Make sure that all fragments TIF files are existent
-    batch_download_frags(FRAGMENT_IDS, consider_label_files=False)
 
 for fragment_id in FRAGMENT_IDS:
     for checkpoint in CHECKPOINTS:

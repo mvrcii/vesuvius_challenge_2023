@@ -9,12 +9,11 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
+from utility.configs import Config
+from utility.fragments import get_frag_name_from_id
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from constants import JETFIRE_FRAG_ID
-
-from config_handler import Config
-from constants import get_frag_name_from_id
 from data.data_validation_multilayer import validate_fragments
 from skimage.transform import resize
 

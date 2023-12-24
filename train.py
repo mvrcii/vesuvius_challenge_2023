@@ -1,5 +1,6 @@
 import argparse
 import os
+import pickle
 import sys
 import types
 import warnings
@@ -13,13 +14,16 @@ from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
 from lightning_fabric.accelerators import find_usable_cuda_devices
 
-from config_handler import Config
-from data_modules.segformer.segformer_datamodule import SegFormerDataModule
-from data_modules.unetrsf.unetrsf_datamodule import UNETR_SFDataModule
-from data_modules.unet3d.unet3dsf_datamodule import UNET3D_SFDataModule
-from models.segformer import SegformerModule
-from models.unetrsf import UNETR_SFModule
-from models.unet3dsf import UNET3D_SFModule
+from models.data_modules.segformer_datamodule import SegFormerDataModule
+from models.data_modules.unet3d_datamodule import UNET3D_DataModule
+from models.data_modules.unet3dsf_datamodule import UNET3D_SFDataModule
+from models.data_modules.unetrsf_datamodule import UNETR_SFDataModule
+from models.lightning_modules.segformer_module import SegformerModule
+from models.lightning_modules.unet3d_module import UNET3D_Module
+from models.lightning_modules.unet3dsf_module import UNET3D_SFModule
+from models.lightning_modules.unetrsf_module import UNETR_SFModule
+from models.lightning_modules.vit3d_module import Vit3D_Module
+from utility.configs import Config
 
 torch.set_float32_matmul_precision('medium')
 
@@ -52,6 +56,10 @@ def get_model(config: Config):
         return UNETR_SFModule(cfg=config)
     elif architecture == 'unet3d-sf':
         return UNET3D_SFModule(cfg=config)
+    elif architecture == 'unet3d':
+        return UNET3D_Module(cfg=config)
+    elif architecture == 'vit3d':
+        return Vit3D_Module(cfg=config)
     else:
         print("Invalid architecture for model:", architecture)
         sys.exit(1)
@@ -76,6 +84,8 @@ def get_data_module(config: Config):
         return UNETR_SFDataModule(cfg=config)
     elif architecture == "unet3d-sf":
         return UNET3D_SFDataModule(cfg=config)
+    elif architecture == 'unet3d' or architecture == 'vit3d':
+        return UNET3D_DataModule(cfg=config)
     else:
         print("Invalid architecture for data module:", architecture)
         sys.exit(1)
@@ -99,6 +109,26 @@ def get_device_configuration():
         return 1
 
 
+def get_callbacks(cfg, model_run_dir):
+    # Only save model checkpoint on gpu node
+    if cfg.node:
+        os.makedirs(model_run_dir, exist_ok=True)
+        cfg.save_to_file(model_run_dir)
+
+        checkpoint_callback = ModelCheckpoint(
+            dirpath=model_run_dir,
+            filename="best-checkpoint-{epoch}-{val_iou:.2f}",
+            save_top_k=1,
+            monitor="val_auc" if cfg.architecture == "unet3d" else "val_iou",
+            mode="max",
+            every_n_epochs=1
+        )
+
+        return [checkpoint_callback]
+    else:
+        return []
+
+
 def main():
     args = get_sys_args()
 
@@ -117,43 +147,27 @@ def main():
 
     # Model name related stuff
     timestamp = datetime.now().strftime('%y%m%d-%H%M%S')
-    model_name = config.model_name if hasattr(config, 'model_name') else "default_model"
+    model_name = getattr(config, 'model_name', 'default_model')
     wandb_generated_name = wandb_logger.experiment.name
     model_run_name = f"{wandb_generated_name}-{model_name}-{timestamp}"
     wandb_logger.experiment.name = model_run_name
     model_run_dir = os.path.join(config.work_dir, "checkpoints", model_run_name)
 
     model = get_model(config=config)
-
     data_module = get_data_module(config=config)
-
-    checkpoint_callback = ModelCheckpoint(
-        dirpath=model_run_dir,
-        filename="best-checkpoint-{epoch}-{val_iou:.2f}",
-        save_top_k=1,
-        monitor="val_iou",
-        mode="max",
-        every_n_epochs=1
-    )
-
-    devices = get_device_configuration()
-    print("Using Devices:", devices)
 
     trainer = Trainer(
         max_epochs=config.epochs,
         logger=wandb_logger,
-        callbacks=[checkpoint_callback],
+        callbacks=get_callbacks(cfg=config, model_run_dir=model_run_dir),
         accelerator="auto",
-        devices=devices,
+        devices=get_device_configuration(),
         enable_progress_bar=True,
         precision='16-mixed',
         gradient_clip_val=1.0,
         gradient_clip_algorithm="norm",
         check_val_every_n_epoch=config.val_interval
     )
-
-    os.makedirs(model_run_dir, exist_ok=True)
-    config.save_to_file(model_run_dir)
 
     trainer.fit(model, data_module)
 

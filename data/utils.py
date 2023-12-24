@@ -1,8 +1,6 @@
 import json
 import os
 
-from constants import get_frag_name_from_id
-
 
 def write_to_config(path, **kwargs):
     os.makedirs(path, exist_ok=True)

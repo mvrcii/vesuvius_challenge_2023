@@ -1,11 +1,10 @@
-from config_handler import Config
-from data_modules.segformer import SegFormerDataModule
+from models.data_modules import SegFormerDataModule
+from utility.config_handler import Config
 
 
 def main():
     config_path = "data/test_augmentations/config.py"
     config = Config.load_from_file(config_path)
-    print(config.dataset_fra)
     data_module = SegFormerDataModule(cfg=config)
     train_loader = data_module.train_dataloader()
 

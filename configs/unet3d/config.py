@@ -1,12 +1,9 @@
 import os
-import sys
 
 import albumentations as A
 
-from constants import JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID, \
-    BLASTER_FRAG_ID, IRONHIDE_FRAG_ID
-
-sys.path.append('../')
+from utility.fragments import IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JAZZILLA_FRAG_ID, BLASTER_FRAG_ID, \
+    THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -27,7 +24,6 @@ model_name = f"{architecture}-{model_type}"
 in_chans = 12
 seed = 770
 epochs = -1
-losses = []
 dataset_fraction = 0.5
 unet3d_out_channels = 16
 
@@ -48,8 +44,12 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
+losses = [('focal', 2.0), ('dice', 1.0)]
+focal_gamma = 5.0
+focal_alpha = 0.75
+
 num_workers = 1
-train_batch_size = 2 # 5
+train_batch_size = 2
 val_batch_size = train_batch_size
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER

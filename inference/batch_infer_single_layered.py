@@ -1,10 +1,9 @@
 import subprocess
 import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from constants import *
-from meta import AlphaBetaMeta
-from util.batch_download_frags import batch_download_frags
+
+from utility.checkpoints import get_ckpt_name_from_id
+from utility.fragments import JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, get_frag_name_from_id
+from utility.meta_data import AlphaBetaMeta
 
 
 def print_colored(message, color):
@@ -27,10 +26,6 @@ CHECKPOINTS = [model]
 labels = True
 boost_threshold = False
 verbose = True
-
-if labels:
-    # Make sure that all fragments TIF files are existent
-    batch_download_frags(FRAGMENT_IDS, consider_label_files=False)
 
 for fragment_id in FRAGMENT_IDS:
     for checkpoint in CHECKPOINTS:
