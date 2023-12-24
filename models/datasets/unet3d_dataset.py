@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torch import float16
 
-from models.data_modules.abstract.abstract_dataset import AbstractDataset
+from models.datasets.abstract_dataset import AbstractDataset
 
 
 class UNET3D_Dataset(AbstractDataset):

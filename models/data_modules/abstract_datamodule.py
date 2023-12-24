@@ -8,8 +8,8 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
 from utility.config_handler import Config
-from utility.constants import get_frag_name_from_id
-from models.data_modules.abstract.abstract_dataset import AbstractDataset
+from models.datasets.abstract_dataset import AbstractDataset
+from utility.fragment import get_frag_name_from_id
 
 
 class AbstractDataModule(LightningDataModule):

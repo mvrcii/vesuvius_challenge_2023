@@ -16,7 +16,7 @@ from lightning_fabric.accelerators import find_usable_cuda_devices
 from utility.config_handler import Config
 from models.data_modules import SegFormerDataModule
 from models.data_modules import UNET3D_DataModule
-from models.data_modules.unet3dsf.unet3dsf_datamodule import UNET3D_SFDataModule
+from models.data_modules.unet3dsf_datamodule import UNET3D_SFDataModule
 from models.data_modules import UNETR_SFDataModule
 from models.modules.segformer import SegformerModule
 from models.modules.unet3d import UNET3D_Module

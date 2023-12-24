@@ -1,4 +1,5 @@
 import numpy as np
+from torch import nn
 from wandb.wandb_torch import torch
 
 

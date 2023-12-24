@@ -2,17 +2,17 @@ import os
 
 from torch.utils.data import DataLoader
 
-from models.data_modules.abstract.abstract_datamodule import AbstractDataModule
-from models.data_modules.segformer.segformer_dataset import SegFormerDataset
+from models.data_modules.abstract_datamodule import AbstractDataModule
+from models.datasets.unet3dsf_dataset import UNET3D_SFDataset
 
 
-class SegFormerDataModule(AbstractDataModule):
+class UNET3D_SFDataModule(AbstractDataModule):
     def __init__(self, cfg):
         super().__init__(cfg=cfg)
         self.label_size = cfg.label_size
 
     def get_dataset_class(self):
-        return SegFormerDataset
+        return UNET3D_SFDataset
 
     def build_dataloader(self, dataset_type):
         if dataset_type == 'train':
@@ -27,7 +27,6 @@ class SegFormerDataModule(AbstractDataModule):
         dataset = self.dataset(root_dir=root_dir,
                                images=images_list,
                                labels=label_list,
-                               label_size=self.label_size,
                                patch_size=self.cfg.patch_size,
                                transform=transform)
 

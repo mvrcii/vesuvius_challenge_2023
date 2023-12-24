@@ -6,9 +6,9 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
 from utility.config_handler import Config
-from utility.constants import get_frag_name_from_id
-from models.data_modules.abstract.abstract_datamodule import AbstractDataModule
-from models.data_modules.unet3d.unet3d_dataset import UNET3D_Dataset
+from models.data_modules.abstract_datamodule import AbstractDataModule
+from models.datasets.unet3d_dataset import UNET3D_Dataset
+from utility.fragment import get_frag_name_from_id
 
 
 class UNET3D_DataModule(AbstractDataModule):

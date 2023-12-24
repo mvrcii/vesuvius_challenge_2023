@@ -1,4 +1,4 @@
-from models.data_modules.abstract.abstract_dataset import AbstractDataset
+from models.datasets.abstract_dataset import AbstractDataset
 
 
 class SegFormerDataset(AbstractDataset):
