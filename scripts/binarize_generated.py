@@ -9,8 +9,8 @@ from tqdm import tqdm
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.path.append('../')
 
-from constants import get_frag_name_from_id
-from meta import AlphaBetaMeta
+from utility.constants import get_frag_name_from_id
+from utility import AlphaBetaMeta
 
 
 def process_image(img_src_dir, img_target_dir):

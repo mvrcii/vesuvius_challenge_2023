@@ -1,6 +1,6 @@
 import os
 
-from fragment import FragmentHandler
+from .fragment import FragmentHandler
 
 fragments = FragmentHandler()
 
@@ -58,9 +58,9 @@ SOLAR_OATH = CHECKPOINTS["solar-oath"]
 # LABEL TYPES
 HANDMADE_LABELS = "handmade"
 GENERATED_LABELS = "model_generated"
-LABEL_BASE_PATH = os.path.join("data", "base_label_files")
-LABEL_BINARIZED_PATH = os.path.join("data", "base_label_binarized")
-LABEL_BINARIZED_SINGLE_PATH = os.path.join("data", "base_label_binarized_single")
+LABEL_BASE_PATH = os.path.join("../data", "base_label_files")
+LABEL_BINARIZED_PATH = os.path.join("../data", "base_label_binarized")
+LABEL_BINARIZED_SINGLE_PATH = os.path.join("../data", "base_label_binarized_single")
 
 # ITERATION PHASE
 ALPHA = "Alpha"

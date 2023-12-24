@@ -4,9 +4,15 @@ import subprocess
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from meta import AlphaBetaMeta
+
+from utility.constants import BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, \
+    HOT_ROD_FRAG_ID, JAZZILLA_FRAG_ID
+from utility.fragment import FragmentHandler
+
+from utility import AlphaBetaMeta
 
 download_script = "./util/download.sh"
+
 
 def determine_slice_range(fragment_id):
     file_pattern = re.compile(r'_([0-9]+)_([0-9]+)\.png')
@@ -52,7 +58,8 @@ def check_downloaded_slices(fragment_id, start_slice, end_slice):
 
     for slice in existing_slices:
         if slice_sizes[slice] != first_slice_size:
-            print(f"File size mismatch in slice file: {fragment_dir}/{slice:05d}.tif - {slice_sizes[slice]}", file=sys.stderr)
+            print(f"File size mismatch in slice file: {fragment_dir}/{slice:05d}.tif - {slice_sizes[slice]}",
+                  file=sys.stderr)
 
     if not missing_slices:
         return None
@@ -79,12 +86,12 @@ def get_consecutive_ranges(missing_slices):
     return ranges
 
 
-def batch_download_frags(frag_list, consider_label_files=True):
+def batch_download_frags(frag_list, consider_label_files=False):
     for fragment_id in frag_list:
         print(f"\nFragment ID: {fragment_id}")
 
-        start_slice = 0
-        end_slice = 63
+        start_slice, end_slice = FragmentHandler().get_best_12_layers(frag_id=fragment_id)
+
         if consider_label_files:
             start_slice, end_slice = determine_slice_range(fragment_id)
 
@@ -109,6 +116,7 @@ def batch_download_frags(frag_list, consider_label_files=True):
 
 
 if __name__ == '__main__':
-    fragment_list = AlphaBetaMeta().get_current_train_fragments()
+    fragment_list = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
+                     JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID]
 
     batch_download_frags(fragment_list)

@@ -3,13 +3,8 @@ import re
 import subprocess
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from constants import BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, \
-    HOT_ROD_FRAG_ID, JAZZILLA_FRAG_ID
-from fragment import FragmentHandler
-
-from meta import AlphaBetaMeta
+from utility import FragmentHandler
+from utility import AlphaBetaMeta
 
 download_script = "./util/download.sh"
 
@@ -86,12 +81,12 @@ def get_consecutive_ranges(missing_slices):
     return ranges
 
 
-def batch_download_frags(frag_list, consider_label_files=False):
+def batch_download_frags(frag_list, consider_label_files=True):
     for fragment_id in frag_list:
         print(f"\nFragment ID: {fragment_id}")
 
-        start_slice, end_slice = FragmentHandler().get_best_12_layers(frag_id=fragment_id)
-
+        start_slice = 0
+        end_slice = 63
         if consider_label_files:
             start_slice, end_slice = determine_slice_range(fragment_id)
 
@@ -116,7 +111,6 @@ def batch_download_frags(frag_list, consider_label_files=False):
 
 
 if __name__ == '__main__':
-    fragment_list = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
-                     JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID]
+    fragment_list = FragmentHandler().get_ids()
 
     batch_download_frags(fragment_list)

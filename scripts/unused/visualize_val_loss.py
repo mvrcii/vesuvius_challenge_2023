@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from torch.nn import BCEWithLogitsLoss
 from transformers import SegformerForSemanticSegmentation
 
-from config_handler import Config
+from utility.config_handler import Config
 from data_modules.segformer.segformer_datamodule import SegFormerDataModule
 from losses.losses import BinaryDiceLoss
 

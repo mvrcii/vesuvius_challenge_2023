@@ -11,9 +11,9 @@ from PIL.Image import Resampling
 from tqdm import tqdm
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from fragment import FragmentHandler
+from utility.fragment import FragmentHandler
 
-from config_handler import Config
+from utility.config_handler import Config
 
 
 def combine_layers(predictions, max_distance):
@@ -596,16 +596,20 @@ class Visualization:
         if save_img:
             max_size = self.target_dims
 
-        start_layer = self.start_layer_var.get()  # inclusive
-        end_layer = self.end_layer_var.get()  # inclusive
+        start_layer = self.start_layer_var.get()  # inclusive  38
+        end_layer = self.end_layer_var.get()  # inclusive  40
+
+        offset = self.model_layer_idcs[0]
+        rel_start_idx = start_layer - offset
+        rel_end_idx = end_layer - offset
 
         mode = self.modes[self.mode_var.get()].lower()
         processed = None
 
         if mode == "sum":
-            processed = np.sum(self.model_layer_values[0:end_layer - start_layer + 1], axis=0)
+            processed = np.sum(self.model_layer_values[rel_start_idx:rel_end_idx + 1], axis=0)
         elif mode == "max":
-            processed = np.maximum.reduce(self.model_layer_values[0:end_layer - start_layer + 1])
+            processed = np.maximum.reduce(self.model_layer_values[rel_start_idx:rel_end_idx + 1])
         elif mode == "layers":
             layer = self.curr_layer_val
             processed = self.model_layer_values.copy()[int(layer)]

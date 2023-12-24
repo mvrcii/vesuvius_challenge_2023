@@ -6,8 +6,8 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from fragment import FragmentHandler
-from meta import AlphaBetaMeta
+from utility.fragment import FragmentHandler
+from utility import AlphaBetaMeta
 
 download_script = "./util/download.sh"
 

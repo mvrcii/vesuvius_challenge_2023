@@ -1,4 +1,5 @@
 import json
+import os
 
 DEFAULT_START_CENTER_LAYER = 20
 DEFAULT_END_CENTER_LAYER = 50
@@ -37,7 +38,7 @@ class SingletonMeta(type):
 
 
 class FragmentHandler(metaclass=SingletonMeta):
-    def __init__(self, file_path="fragments.json"):
+    def __init__(self, file_path=os.path.join("utility", "fragments.json")):
         if not hasattr(self, 'initialized'):  # This check ensures __init__ is only run once
             self.initialized = True
             self.fragments = Fragment.load_from_json(file_path) if file_path else []
