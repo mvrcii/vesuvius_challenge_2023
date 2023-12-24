@@ -45,7 +45,7 @@ class Config:
         config = {}
 
         # Check for and apply local configuration overrides
-        local_config_path = '../conf_local.py'
+        local_config_path = 'conf_local.py'
         if os.path.exists(local_config_path):
             local_config = cls.import_config_from_path(local_config_path)
             config.update({k: v for k, v in vars(local_config).items() if not k.startswith('__')})
@@ -74,6 +74,7 @@ class Config:
             prepend_info = ''.join(line for line in file if line.startswith('import'))
             prepend_info += ''.join(line for line in file if line.startswith('from'))
             prepend_info += ''.join(line for line in file if line.startswith('sys.path'))
+            prepend_info += ''.join(line for line in file if line.startswith('sys'))
 
         with open(config_path, 'r') as file:
             content = file.read()

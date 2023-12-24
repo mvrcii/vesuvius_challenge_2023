@@ -6,7 +6,7 @@ import sys
 from utility.fragments import FragmentHandler
 from utility.meta_data import AlphaBetaMeta
 
-download_script = "scripts/download/download_slices.sh"
+download_script = "./scripts/download/download_slices.sh"
 
 
 def determine_slice_range(fragment_id, single_layer):
@@ -84,6 +84,15 @@ def get_consecutive_ranges(missing_slices):
     return ranges
 
 
+def download_range(fragment_id, download_script, missing_slices):
+    ranges = get_consecutive_ranges(missing_slices)
+    str_args = ",".join(ranges)
+    command = ['bash', download_script, fragment_id, str_args]
+    print(os.getcwd())
+    print(" ".join(command))
+    subprocess.run(command)
+
+
 def batch_download_frags(frag_list, consider_labels=True, single_layer=False):
     for fragment_id in frag_list:
         start_slice, end_slice = FragmentHandler().get_center_layers(frag_id=fragment_id)
@@ -100,8 +109,5 @@ def batch_download_frags(frag_list, consider_labels=True, single_layer=False):
             print(f"Fragment ID: {fragment_id}\tAll required slices found: [{start_slice}, {end_slice}]")
             continue
         else:
-            ranges = get_consecutive_ranges(missing_slices)
             print(f"Fragment ID: {fragment_id}\tDownloading Slices = [{start_slice}, {end_slice}]")
-            str_args = ",".join(ranges)
-            command = ['bash', download_script, fragment_id, str_args]
-            subprocess.run(command)
+            download_range(fragment_id, missing_slices)

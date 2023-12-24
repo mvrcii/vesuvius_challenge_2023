@@ -350,7 +350,7 @@ def main():
     batch_size = args.batch_size
     save_labels = args.labels
 
-    start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=fragment_id)
+    start_layer_idx, end_layer_idx = FragmentHandler().get_best_12_layers(frag_id=fragment_id)
 
     global verbose, boost_threshold
     boost_threshold = args.boost_threshold

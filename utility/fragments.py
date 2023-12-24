@@ -58,7 +58,7 @@ class FragmentHandler(metaclass=SingletonMeta):
             if fragment.id == frag_id:
                 assert len(fragment.best_12_layers) != 0
                 return fragment.best_12_layers
-        raise Exception("No such fragment id when trying to get best 12 layers")
+        return get_frag_name_from_id(frag_id)
 
     def get_boost_threshold(self, frag_id):
         for fragment in self.fragments:

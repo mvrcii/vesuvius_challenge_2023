@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import os
+import subprocess
 import sys
 from tkinter import Tk, Scale, HORIZONTAL, Label, Button, Frame, IntVar, Radiobutton, Entry, StringVar
 
@@ -10,6 +11,8 @@ from PIL import Image, ImageTk
 from PIL.Image import Resampling
 from tqdm import tqdm
 
+from scripts.download.download_fragments import batch_download_frags, download_range
+from scripts.download.entrypoint_download_fragments import download_fragments
 from utility.configs import Config
 from utility.fragments import FragmentHandler
 
@@ -119,7 +122,6 @@ def has_valid_ckpt_dirs(frag_root, frag_id):
 
 def get_target_dims(work_dir, frag_id):
     frag_dir = os.path.join(work_dir, "data", "fragments", f"fragment{frag_id}")
-    assert os.path.isdir(frag_dir)
 
     target_dims = None
 
@@ -133,6 +135,8 @@ def get_target_dims(work_dir, frag_id):
             if os.path.isfile(img_path):
                 image = cv2.imread(img_path, 0)
                 target_dims = image.shape
+
+    assert target_dims, "Target dimensions are none!"
 
     return target_dims
 
@@ -169,18 +173,24 @@ def main():
     args = parse_args()
 
     config = Config().load_local_cfg()
-    frag_infos = FragmentHandler().get_name_2_id()
 
     single_layer = args.single_layer
     results_dir = 'single_results' if single_layer else 'results'
     frag_root = os.path.join(config.work_dir, 'inference', results_dir)
 
+    all_frag_dirs = [frag_id.split('fragment')[1] for frag_id in os.listdir(frag_root)]
+
     # Filter valid fragments only
-    valid_frags = [(name, frag_id) for (name, frag_id) in frag_infos if has_valid_ckpt_dirs(frag_root, frag_id)]
+    valid_frags = []
+    for frag_id in all_frag_dirs:
+        if not has_valid_ckpt_dirs(frag_root, frag_id):
+            continue
+        frag_name = FragmentHandler().get_name(frag_id=frag_id)
+        valid_frags.append((frag_name, frag_id))
 
     print("Available Fragments:")
     for i, (name, frag_id) in enumerate(valid_frags, start=1):
-        print(f"\033[92m{i:2}. {name:15} {frag_id}\033[0m")  # Display only valid fragments in green
+        print(f"\033[92m{i:2}. {name:20} {frag_id}\033[0m")  # Display only valid fragments in green
 
     user_input = input("Fragment Number: ")
 
@@ -399,26 +409,6 @@ class Visualization:
         except ValueError:
             print("Please enter a valid int number")
 
-    # def update_layer_range(self, _=None):
-    #     start_layer = int(self.start_layer_var.get())
-    #     end_layer = int(self.end_layer_var.get())
-    #
-    #     # Recalculate layers and update image
-    #     selected_layers = get_selected_layer_range(start_layer, end_layer)
-    #     valid_layers = get_common_layers(self.model_dir, selected_layers=selected_layers)
-    #     valid_layers = sorted(list(valid_layers))
-    #
-    #     array = self.model_layer_values[valid_layers[0]:valid_layers[-1]]
-    #
-    #
-    #     image = self.process_image()
-    #     imgtk = ImageTk.PhotoImage(image=image)
-    #     self.label.imgtk = imgtk
-    #     self.label.config(image=imgtk)
-    #
-    #     # ... [Add logic to recalculate the model predictions based on the new layer range]
-    #     self.update_image()
-
     @staticmethod
     def calc_weighted_arr(array, weight, _max=False):
         array_cp = array.copy()
@@ -562,11 +552,6 @@ class Visualization:
         print("Selected Mode", self.modes[mode])
 
         if mode in [0, 1]:
-            # if mode == 0:
-            #     self.array = self.array_sums
-            # else:  # mode == 1
-            #     self.array = self.array_maxs
-
             self.layer_label.pack_forget()
 
         elif mode == 2:

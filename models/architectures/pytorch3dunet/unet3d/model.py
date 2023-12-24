@@ -220,6 +220,6 @@ class UNet2D(AbstractUNet):
 
 def get_model(model_config):
     model_class = get_class(model_config['name'], modules=[
-        'pytorch3dunet.unet3d.model'
+        'models.architectures.pytorch3dunet.unet3d.model'
     ])
     return model_class(**model_config)
