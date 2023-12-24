@@ -1,4 +1,3 @@
-import argparse
 import os
 import re
 import subprocess
@@ -7,11 +6,10 @@ import sys
 from utility import AlphaBetaMeta
 from utility import FragmentHandler
 
-download_script = "./util/download.sh"
+download_script = "scripts/download/download_slices.sh"
 
 
 def determine_slice_range(fragment_id, single_layer):
-
     file_pattern = re.compile(r'_([0-9]+)\.png') if single_layer else re.compile(r'_([0-9]+)_([0-9]+)\.png')
     min_slice = 99999
     max_slice = 0
@@ -66,8 +64,6 @@ def check_downloaded_slices(fragment_id, start_slice, end_slice):
     if not missing_slices:
         return None
     else:
-        print(f"Missing slices for {fragment_id}: {' '.join(map(str, missing_slices))}", file=sys.stderr)
-        print(f"Existing slices for {fragment_id}: {' '.join(map(str, existing_slices))}", file=sys.stderr)
         return missing_slices
 
 
@@ -88,6 +84,8 @@ def get_consecutive_ranges(missing_slices):
     return ranges
 
 
+
+
 def batch_download_frags(frag_list, consider_labels=True, single_layer=False):
     for fragment_id in frag_list:
         start_slice, end_slice = FragmentHandler().get_center_layers(frag_id=fragment_id)
@@ -96,31 +94,16 @@ def batch_download_frags(frag_list, consider_labels=True, single_layer=False):
             start_slice, end_slice = determine_slice_range(fragment_id, single_layer=single_layer)
 
         if start_slice == 99999 or end_slice == 0:
-            print(f"Fragment ID: {fragment_id}\tNo labels found -> Skip")
+            print(f"Fragment ID: {fragment_id}\tNo labels found")
             continue
-        else:
-            print(f"Fragment ID: {fragment_id}\tLabels = [{start_slice}, {end_slice}] found")
 
         missing_slices = check_downloaded_slices(fragment_id, start_slice, end_slice)
         if not missing_slices:
-            print("Fragment ID: {fragment_id}\tAll layer files found -> Skip")
+            print(f"Fragment ID: {fragment_id}\tAll required slices found: [{start_slice}, {end_slice}]")
             continue
         else:
             ranges = get_consecutive_ranges(missing_slices)
-            print(f"Fragment ID: {fragment_id}\tDownloading Slices = {missing_slices}")
+            print(f"Fragment ID: {fragment_id}\tDownloading Slices = [{start_slice}, {end_slice}]")
             str_args = ",".join(ranges)
             command = ['bash', download_script, fragment_id, str_args]
             subprocess.run(command)
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Download missing fragment slices.")
-    parser.add_argument('--no_label_files', dest='consider_labels', action='store_false',
-                        help='Do not consider label files when determining slice range')
-    parser.add_argument('--single_layer', action='store_false',
-                        help='Do not consider label files when determining slice range')
-    parser.set_defaults(consider_label_files=True)
-    args = parser.parse_args()
-
-    fragment_list = FragmentHandler().get_inference_fragments()
-    batch_download_frags(fragment_list, consider_labels=args.consider_labels, single_layer=args.single_layer)

@@ -15,8 +15,7 @@ from data.data_validation import validate_fragments, format_ranges
 from data.utils import write_to_config
 from utility import AlphaBetaMeta
 from utility.config_handler import Config
-from utility.constants import get_frag_name_from_id
-from utility.fragment import FragmentHandler
+from utility.fragment import FragmentHandler, get_frag_name_from_id
 
 Image.MAX_IMAGE_PIXELS = None
 
