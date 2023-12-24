@@ -14,7 +14,7 @@
     ]
   },
   {
-    "id": "20231012184422",
+    "id": "20231012184423",
     "name": "GRIMLARGE",
     "rotation": 0,
     "boost_threshold": 1,
@@ -49,7 +49,7 @@
     "rotation": 0
   },
   {
-    "id": "20231016151001",
+    "id": "20231016151002",
     "name": "JAZZILLA",
     "center_layers_start_indices": [
       28,
@@ -77,21 +77,18 @@
     "rotation": 0
   },
   {
-    "id": "20231007101615",
+    "id": "20231007101616",
     "name": "SKYWARP",
-    "boost_threshold": 0.00001,
-    "rotation": -1,
-    "flip": 1
+    "boost_threshold": 0.00001
   },
   {
-    "id": "20231022170900",
+    "id": "20231022170901",
     "name": "DEVASTATOR",
     "boost_threshold": 0.00001,
     "center_layers_start_indices": [
       24,
       30
-    ],
-    "rotation": -1
+    ]
   },
   {
     "id": "20231106155351",
@@ -136,7 +133,7 @@
     "rotation": -1
   },
   {
-    "id": "20231210121320",
+    "id": "20231210121321",
     "name": "BLUESTREAK",
     "boost_threshold": 1,
     "center_layers_start_indices": [
@@ -145,70 +142,15 @@
     ]
   },
   {
-    "id": "20231210121321",
-    "name": "BLUEBIGGER",
-    "boost_threshold": 1,
-    "center_layers_start_indices": [
-      29,
-      39
-    ]
-  },
-  {
-    "id": "20231012184423",
-    "name": "GRIMHUGE",
-    "rotation": 0,
-    "boost_threshold": 1,
-    "center_layers_start_indices": [
-      28,
-      41
-    ],
-    "best_12_inclusive_layers": [
-      30,
-      41
-    ]
-  },
-  {
-    "id": "20231007101616",
-    "name": "SKYBIGGER",
-    "center_layers_start_indices": [
-      25,
-      40
-    ],
-    "boost_threshold": 0.0001
-  },
-  {
-    "id": "20231022170901",
-    "name": "DEVASBIGGER",
-    "boost_threshold": 0.00001,
-    "center_layers_start_indices": [
-      24,
-      30
-    ]
-  },
-  {
     "id": "20231221180250",
     "name": "TRAILBREAKER",
     "boost_threshold": 1
   },
   {
-    "id": "20231016151002",
-    "name": "JAZZBIGGER",
-    "center_layers_start_indices": [
-      28,
-      42
-    ],
-    "best_12_inclusive_layers": [
-      31,
-      42
-    ],
-    "boost_threshold": 0.00005,
-    "rotation": 0
-  },
-    {
     "id": "20231205141500",
     "name": "TITLE1"
   },
-    {
+  {
     "id": "20231206155550",
     "name": "TITLE2"
   }

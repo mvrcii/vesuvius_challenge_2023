@@ -17,13 +17,7 @@ SKYWARP_FRAG_ID = fragments.get_id("SKYWARP")
 THUNDERCRACKER_FRAG_ID = fragments.get_id("THUNDERCRACKER")
 SUNSTREAKER_FRAG_ID = fragments.get_id("SUNSTREAKER")
 
-BLUEBIGGER_FRAG_ID = fragments.get_id("BLUEBIGGER")
-GRIMHUGE_FRAG_ID = fragments.get_id("GRIMHUGE")
-SKYBIGGER_FRAG_ID = fragments.get_id("SKYBIGGER")
-DEVASBIGGER_FRAG_ID = fragments.get_id("DEVASBIGGER")
 TRAILBREAKER_FRAG_ID = fragments.get_id("TRAILBREAKER")
-JAZZBIGGER_FRAG_ID = fragments.get_id("JAZZBIGGER")
-
 TITLE1_FRAG_ID = fragments.get_id("TITLE1")
 TITLE2_FRAG_ID = fragments.get_id("TITLE2")
 
