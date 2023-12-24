@@ -47,11 +47,10 @@ class AbstractDataModule(LightningDataModule):
 
         transform = self.get_transforms(dataset_type=dataset_type)
         root_dir = os.path.join(self.cfg.dataset_target_dir, str(self.cfg.patch_size))
-        dataset = self.dataset(root_dir=root_dir,
+        dataset = self.dataset(cfg=self.cfg,
+                               root_dir=root_dir,
                                images=images_list,
                                labels=label_list,
-                               label_size=self.cfg.label_size,
-                               patch_size=self.cfg.patch_size,
                                transform=transform)
 
         batch_size = self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size
