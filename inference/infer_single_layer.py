@@ -50,9 +50,7 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start):
 
     image = pad_image_to_be_divisible_by_4(image, patch_size)
 
-    images = np.stack([image for _ in range(4)], axis=0)
-
-    return images
+    return np.expand_dims(image, 0)
 
 
 def infer_full_fragment_layer(model, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
@@ -396,9 +394,9 @@ def main():
                                              array=npy_file,
                                              frag_id=fragment_id,
                                              layer_index=layer_idx)
-        if verbose:
-            print(f"Skip inference for layer {layer_idx}")
-            continue
+            if verbose:
+                print(f"Skip inference for layer {layer_idx}")
+                continue
 
         sigmoid_logits = infer_full_fragment_layer(model=model,
                                                    ckpt_name=model_folder_name,
