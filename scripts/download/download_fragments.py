@@ -15,7 +15,7 @@ def determine_slice_range(fragment_id, single_layer):
     max_slice = 0
 
     label_dir = AlphaBetaMeta().get_current_binarized_label_dir(single=single_layer)
-    print(label_dir)
+    # print(label_dir)
 
     try:
         files = os.listdir(f"{label_dir}/{fragment_id}")
