@@ -31,7 +31,6 @@ class Config:
             dictionary (dict, optional): A dictionary of configuration parameters.
                                          Defaults to None.
         """
-        self.fragment_ids = None
         if dictionary:
             for key, value in dictionary.items():
                 setattr(self, key, value)
@@ -54,19 +53,20 @@ class Config:
 
     @classmethod
     def load_from_file(cls, config_path):
-        """
-        Load configuration from a Python file and return a Config object.
+        ignore_keys = ['sys', 'A', 'os']
+        model_config = cls.import_config_from_path(config_path)
+        config = {}
 
-        This class method dynamically imports the specified Python file as a module,
-        then reads its configuration parameters, including those from base
-        configuration files specified in the '_base_' attribute of the imported module.
+        def filter_keys(items):
+            return {k: v for k, v in items if not k.startswith('__') and k not in ignore_keys}
 
-        Args:
-            config_path (str): The file path of the configuration file to load.
+        # Update config with base and model configurations
+        if hasattr(model_config, '_base_'):
+            for base_path in model_config._base_:
+                base_config = cls.import_config_from_path(base_path)
+                config.update(filter_keys(vars(base_config).items()))
 
-        Returns:
-            Config: A Config object initialized with the loaded configuration parameters.
-        """
+        config.update(filter_keys(vars(model_config).items()))
 
         append_info = ""
         # Read the source file
@@ -75,31 +75,15 @@ class Config:
             prepend_info += ''.join(line for line in file if line.startswith('from'))
             prepend_info += ''.join(line for line in file if line.startswith('sys.path'))
             prepend_info += ''.join(line for line in file if line.startswith('sys'))
-
-        with open(config_path, 'r') as file:
-            content = file.read()
-            start_index = content.find("train_aug")
-            if start_index != -1:
-                append_info = content[start_index:]
-            else:
-                print("Warning! No train_aug found in ", config_path)
-
-        model_config = cls.import_config_from_path(config_path)
-        config = {}
-        # todo is this the right way to handle this? was necessary to add since my dataset configs don't have base
-        if hasattr(model_config, '_base_'):
-            for base_path in model_config._base_:
-                base_config = cls.import_config_from_path(base_path)
-                config.update({k: v for k, v in vars(base_config).items() if not k.startswith('__')})
-
-        config.update({k: v for k, v in vars(model_config).items() if not k.startswith('__')})
+            prepend_info += ''.join(line for line in file if line.startswith('os'))
+            prepend_info += ''.join(line for line in file if line.startswith('module'))
 
         # Check for and apply local configuration overrides
         local_config_path = 'conf_local.py'
         if os.path.exists(local_config_path):
             print("Found local config")
             local_config = cls.import_config_from_path(local_config_path)
-            config.update({k: v for k, v in vars(local_config).items() if not k.startswith('__')})
+            config.update(filter_keys(vars(local_config).items()))
 
         if config_path.__contains__('/'):
             config_file_name = config_path.split('/')[-1]
