@@ -2,7 +2,7 @@ import os
 
 from utility.checkpoints import ITERATION, LABEL_TYPE, ALPHA, BETA, LABEL_BASE_PATH, LABEL_BINARIZED_PATH, \
     LABEL_BINARIZED_SINGLE_PATH, IT_2_MODEL
-from utility.fragment import FRAGMENTS_BETA, FRAGMENTS_ALPHA
+from utility.fragments import FRAGMENTS_ALPHA, FRAGMENTS_BETA
 
 
 class AlphaBetaMeta:

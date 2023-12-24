@@ -1,5 +1,5 @@
-from scripts.download.batch_download_fragments import batch_download_frags
-from utility import FragmentHandler
+from scripts.download.download_fragments import batch_download_frags
+from utility.fragments import FragmentHandler
 
 
 def get_user_input(prompt, options):
@@ -17,6 +17,19 @@ def get_user_input(prompt, options):
     return int(choice)
 
 
+def get_user_string_input(prompt):
+    """Prompt the user for a string input and validate the response."""
+    print(f"\n\033[97m{prompt}\033[0m")  # White color for prompt
+    user_input = input("\033[97mEnter your input: \033[0m").strip()
+
+    # Ensure the input is not empty
+    while not user_input:
+        user_input = input(
+            "\033[91mInvalid input, please enter a non-empty string: \033[0m").strip()  # Red color for invalid input
+
+    return user_input
+
+
 def download_fragments():
     options = ["Yes", "No"]
     consider_labels_choice = get_user_input("Consider label files when downloading fragments?", options)
@@ -30,7 +43,7 @@ def download_fragments():
 
     fragment_list = FragmentHandler().get_inference_fragments()
 
-    print(f"\033[92mDownloading process initiated!\033[0m")  # Green color for the final message
+    print(f"\n\033[92mDownload process initiated!\033[0m\n")
     batch_download_frags(fragment_list, consider_labels=consider_labels, single_layer=single_layer)
 
 

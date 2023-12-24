@@ -3,8 +3,9 @@ import os
 import subprocess
 import sys
 
+from utility.fragments import get_frag_name_from_id
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utility.constants import get_frag_name_from_id
 
 
 def validate_folder(local_path, model_run_dir):

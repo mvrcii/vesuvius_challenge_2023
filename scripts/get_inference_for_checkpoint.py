@@ -1,15 +1,6 @@
-import os
-import sys
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from utility.constants import JAZZBIGGER_FRAG_ID, GRIMHUGE_FRAG_ID, BLUEBIGGER_FRAG_ID, SKYBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, \
-    TRAILBREAKER_FRAG_ID, TITLE1_FRAG_ID, TITLE2_FRAG_ID
 from get_inference import get_inference_folder
-
-sys.path.append('../')
-
-from utility import AlphaBetaMeta
+from utility.fragments import FragmentHandler
+from utility.meta_data import AlphaBetaMeta
 
 
 def get_inference_for_checkpoint(frag_ids, checkpoint_path, host):
@@ -20,8 +11,7 @@ def get_inference_for_checkpoint(frag_ids, checkpoint_path, host):
 if __name__ == '__main__':
     meta = AlphaBetaMeta()
 
-    fragments = [BLUEBIGGER_FRAG_ID, GRIMHUGE_FRAG_ID, SKYBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, TRAILBREAKER_FRAG_ID,
-                 JAZZBIGGER_FRAG_ID, TITLE1_FRAG_ID, TITLE2_FRAG_ID]
+    fragments = FragmentHandler().get_inference_fragments()
     checkpoint = meta.get_previous_model()
 
     get_inference_for_checkpoint(frag_ids=fragments, checkpoint_path=checkpoint, host="vast")

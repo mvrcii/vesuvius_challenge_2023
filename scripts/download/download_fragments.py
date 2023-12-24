@@ -3,8 +3,8 @@ import re
 import subprocess
 import sys
 
-from utility import AlphaBetaMeta
-from utility import FragmentHandler
+from utility.fragments import FragmentHandler
+from utility.meta_data import AlphaBetaMeta
 
 download_script = "scripts/download/download_slices.sh"
 
@@ -82,8 +82,6 @@ def get_consecutive_ranges(missing_slices):
     ranges.append(f"{start:05d} {end:05d}")
 
     return ranges
-
-
 
 
 def batch_download_frags(frag_list, consider_labels=True, single_layer=False):
