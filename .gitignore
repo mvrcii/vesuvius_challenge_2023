@@ -12,4 +12,6 @@ __pycache__
 slurm*.out
 checkpoints
 data/datasets/**
-inference/**
+inference/results/**
+inference/archived_results/**
+inference/single_results/**
