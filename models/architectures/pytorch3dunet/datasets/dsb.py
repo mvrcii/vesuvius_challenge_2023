@@ -5,9 +5,9 @@ import imageio
 import numpy as np
 import torch
 
-from pytorch3dunet.augment import transforms
-from pytorch3dunet.datasets.utils import ConfigDataset, calculate_stats
-from pytorch3dunet.unet3d.utils import get_logger
+from models.architectures.pytorch3dunet.augment import transforms
+from models.architectures.pytorch3dunet.datasets.utils import ConfigDataset, calculate_stats
+from models.architectures.pytorch3dunet.unet3d.utils import get_logger
 
 logger = get_logger('DSB2018Dataset')
 

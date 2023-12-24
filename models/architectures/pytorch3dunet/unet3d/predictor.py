@@ -9,10 +9,10 @@ from skimage import measure
 from torch import nn
 from tqdm import tqdm
 
-from pytorch3dunet.datasets.hdf5 import AbstractHDF5Dataset
-from pytorch3dunet.datasets.utils import SliceBuilder
-from pytorch3dunet.unet3d.model import UNet2D
-from pytorch3dunet.unet3d.utils import get_logger
+from models.architectures.pytorch3dunet.datasets.hdf5 import AbstractHDF5Dataset
+from models.architectures.pytorch3dunet.datasets.utils import SliceBuilder
+from models.architectures.pytorch3dunet.unet3d.model import UNet2D
+from models.architectures.pytorch3dunet.unet3d.utils import get_logger
 
 logger = get_logger('UNetPredictor')
 

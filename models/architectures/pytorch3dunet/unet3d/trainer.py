@@ -5,11 +5,11 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 
-from pytorch3dunet.datasets.utils import get_train_loaders
-from pytorch3dunet.unet3d.losses import get_loss_criterion
-from pytorch3dunet.unet3d.metrics import get_evaluation_metric
-from pytorch3dunet.unet3d.model import get_model, UNet2D
-from pytorch3dunet.unet3d.utils import get_logger, get_tensorboard_formatter, create_optimizer, \
+from models.architectures.pytorch3dunet.datasets.utils import get_train_loaders
+from models.architectures.pytorch3dunet.unet3d.losses import get_loss_criterion
+from models.architectures.pytorch3dunet.unet3d.metrics import get_evaluation_metric
+from models.architectures.pytorch3dunet.unet3d.model import get_model, UNet2D
+from models.architectures.pytorch3dunet.unet3d.utils import get_logger, get_tensorboard_formatter, create_optimizer, \
     create_lr_scheduler, get_number_of_learnable_parameters
 from . import utils
 

@@ -4,10 +4,10 @@ import os
 import torch
 import torch.nn as nn
 
-from pytorch3dunet.datasets.utils import get_test_loaders
-from pytorch3dunet.unet3d import utils
-from pytorch3dunet.unet3d.config import load_config
-from pytorch3dunet.unet3d.model import get_model
+from models.architectures.pytorch3dunet.datasets.utils import get_test_loaders
+from models.architectures.pytorch3dunet.unet3d import utils
+from models.architectures.pytorch3dunet.unet3d.config import load_config
+from models.architectures.pytorch3dunet.unet3d.model import get_model
 
 logger = utils.get_logger('UNet3DPredict')
 
