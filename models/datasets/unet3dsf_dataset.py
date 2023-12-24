@@ -8,17 +8,11 @@ from models.datasets.abstract_dataset import AbstractDataset
 
 
 class UNET3D_SFDataset(AbstractDataset):
-    def __init__(self, root_dir, images, label_size, patch_size, transform, labels=None):
-        super().__init__(root_dir=root_dir,
-                         images=images,
-                         transform=transform,
-                         labels=labels,
-                         label_size=label_size,
-                         patch_size=patch_size)
-        # label[0] is ink, label[1] is ignore
-        self.label_shape = (2, label_size, label_size)
-        self.label_shape_upscaled = (2, patch_size, patch_size)
-        self.patch_size = patch_size
+    def __init__(self, root_dir, images, transform, cfg, labels=None):
+        super().__init__(cfg, root_dir, images, transform, labels)
+        self.label_shape = (2, cfg.label_size, cfg.label_size)
+        self.label_shape_upscaled = (2, cfg.patch_size, cfg.patch_size)
+        self.patch_size = cfg.patch_size
 
     def __getitem__(self, idx):
         image = np.load(os.path.join(self.root_dir, self.images[idx]))

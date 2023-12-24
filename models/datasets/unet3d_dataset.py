@@ -9,14 +9,8 @@ from models.datasets.abstract_dataset import AbstractDataset
 
 
 class UNET3D_Dataset(AbstractDataset):
-    def __init__(self, root_dir, images, patch_size, transform, labels=None):
-        super().__init__(root_dir=root_dir,
-                         images=images,
-                         transform=transform,
-                         labels=labels,
-                         label_size=None,
-                         patch_size=patch_size)
-        self.patch_size = patch_size
+    def __init__(self, cfg, root_dir, images, transform, labels=None):
+        super().__init__(cfg, root_dir, images, transform, labels)
 
     def __getitem__(self, idx):
         image = np.load(os.path.join(self.root_dir, self.images[idx]))
@@ -25,8 +19,7 @@ class UNET3D_Dataset(AbstractDataset):
         if match:
             number = int(match.group(1)) / 100.0
         else:
-            # Handle cases where no number is found
-            number = 0.0  # or some default value
+            number = 0.0
         label = torch.tensor(number, dtype=torch.float16)
 
         # Rearrange image from (channels, height, width) to (height, width, channels) to work with albumentations
