@@ -1,32 +1,5 @@
 import os
 
-from .fragment import FragmentHandler
-
-fragments = FragmentHandler()
-
-# TRAIN SET ALPHA
-ULTRA_MAGNUS_FRAG_ID = fragments.get_id("ULTRA_MAGNUS")
-IRONHIDE_FRAG_ID = fragments.get_id("IRONHIDE")
-JAZZILLA_FRAG_ID = fragments.get_id("JAZZILLA")
-JETFIRE_FRAG_ID = fragments.get_id("JETFIRE")
-BLASTER_FRAG_ID = fragments.get_id("BLASTER")
-HOT_ROD_FRAG_ID = fragments.get_id("HOT_ROD")
-GRIMLARGE_FRAG_ID = fragments.get_id("GRIMLARGE")
-DEVASTATOR_FRAG_ID = fragments.get_id("DEVASTATOR")
-SKYWARP_FRAG_ID = fragments.get_id("SKYWARP")
-THUNDERCRACKER_FRAG_ID = fragments.get_id("THUNDERCRACKER")
-SUNSTREAKER_FRAG_ID = fragments.get_id("SUNSTREAKER")
-
-TRAILBREAKER_FRAG_ID = fragments.get_id("TRAILBREAKER")
-TITLE1_FRAG_ID = fragments.get_id("TITLE1")
-TITLE2_FRAG_ID = fragments.get_id("TITLE2")
-
-FRAGMENTS_ALPHA = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID]
-
-FRAGMENTS_BETA = [BLASTER_FRAG_ID, HOT_ROD_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,
-                  DEVASTATOR_FRAG_ID, SKYWARP_FRAG_ID, IRONHIDE_FRAG_ID]
-
-# CHECKPOINTS
 CHECKPOINTS = {
     "playful-firefly": "playful-firefly-737-segformer-b2-231209-143850",
     "chocolate-fog": "chocolate-fog-716-segformer-b2-231207-182217",
@@ -88,10 +61,6 @@ IT_2_MODEL = {
 
 ITERATION = 1
 LABEL_TYPE = GENERATED_LABELS
-
-def get_frag_name_from_id(frag_id):
-    output = FragmentHandler().get_name(frag_id)
-    return output
 
 
 def get_ckpt_name_from_id(checkpoint_name):

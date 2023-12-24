@@ -15,7 +15,8 @@ class Fragment:
         self.rotation = data.get('rotation', DEFAULT_ROTATION)
         self.flip = data.get('flip', DEFAULT_FLIP)
         self.boost_threshold = data.get('boost_threshold', DEFAULT_BOOST_THRESHOLD)
-        self.center_layers = tuple(data.get('center_layers_start_indices', (DEFAULT_START_CENTER_LAYER, DEFAULT_END_CENTER_LAYER)))
+        self.center_layers = tuple(
+            data.get('center_layers_start_indices', (DEFAULT_START_CENTER_LAYER, DEFAULT_END_CENTER_LAYER)))
         self.best_12_layers = tuple(data.get('best_12_inclusive_layers', []))
 
     @classmethod
@@ -97,3 +98,35 @@ class FragmentHandler(metaclass=SingletonMeta):
 
     def get_ids(self):
         return list(self.FRAGMENTS.values())
+
+    def get_inference_fragments(self):
+        return sorted(list(set(self.FRAGMENTS.values()) - set(FRAGMENTS_IGNORE)))
+
+
+# TRAIN SET ALPHA
+ULTRA_MAGNUS_FRAG_ID = FragmentHandler().get_id("ULTRA_MAGNUS")
+IRONHIDE_FRAG_ID = FragmentHandler().get_id("IRONHIDE")
+JAZZILLA_FRAG_ID = FragmentHandler().get_id("JAZZILLA")
+JETFIRE_FRAG_ID = FragmentHandler().get_id("JETFIRE")
+BLASTER_FRAG_ID = FragmentHandler().get_id("BLASTER")
+HOT_ROD_FRAG_ID = FragmentHandler().get_id("HOT_ROD")
+GRIMLARGE_FRAG_ID = FragmentHandler().get_id("GRIMLARGE")
+DEVASTATOR_FRAG_ID = FragmentHandler().get_id("DEVASTATOR")
+SKYWARP_FRAG_ID = FragmentHandler().get_id("SKYWARP")
+THUNDERCRACKER_FRAG_ID = FragmentHandler().get_id("THUNDERCRACKER")
+SUNSTREAKER_FRAG_ID = FragmentHandler().get_id("SUNSTREAKER")
+
+TRAILBREAKER_FRAG_ID = FragmentHandler().get_id("TRAILBREAKER")
+TITLE1_FRAG_ID = FragmentHandler().get_id("TITLE1")
+TITLE2_FRAG_ID = FragmentHandler().get_id("TITLE2")
+
+FRAGMENTS_ALPHA = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID]
+
+FRAGMENTS_BETA = [BLASTER_FRAG_ID, HOT_ROD_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,
+                  DEVASTATOR_FRAG_ID, SKYWARP_FRAG_ID, IRONHIDE_FRAG_ID]
+
+FRAGMENTS_IGNORE = [TITLE1_FRAG_ID, TITLE2_FRAG_ID, SKYWARP_FRAG_ID, IRONHIDE_FRAG_ID]
+
+
+def get_frag_name_from_id(frag_id):
+    return FragmentHandler().get_name(frag_id)

@@ -1,29 +1,36 @@
+import argparse
 import os
 import re
 import subprocess
 import sys
 
-from utility import FragmentHandler
 from utility import AlphaBetaMeta
+from utility import FragmentHandler
 
 download_script = "./util/download.sh"
 
 
-def determine_slice_range(fragment_id):
-    file_pattern = re.compile(r'_([0-9]+)_([0-9]+)\.png')
+def determine_slice_range(fragment_id, single_layer):
+
+    file_pattern = re.compile(r'_([0-9]+)\.png') if single_layer else re.compile(r'_([0-9]+)_([0-9]+)\.png')
     min_slice = 99999
     max_slice = 0
 
-    label_dir = AlphaBetaMeta().get_current_binarized_label_dir()
+    label_dir = AlphaBetaMeta().get_current_binarized_label_dir(single=single_layer)
 
     try:
         files = os.listdir(f"{label_dir}/{fragment_id}")
         for file in files:
             match = file_pattern.search(file)
             if match:
-                start, end = map(int, match.groups())
-                min_slice = min(min_slice, start)
-                max_slice = max(max_slice, end)
+                if single_layer:
+                    slice_num = int(match.group(1))
+                    min_slice = min(min_slice, slice_num)
+                    max_slice = max(max_slice, slice_num)
+                else:
+                    start, end = map(int, match.groups())
+                    min_slice = min(min_slice, start)
+                    max_slice = max(max_slice, end)
     except FileNotFoundError:
         pass
 
@@ -81,36 +88,39 @@ def get_consecutive_ranges(missing_slices):
     return ranges
 
 
-def batch_download_frags(frag_list, consider_label_files=True):
+def batch_download_frags(frag_list, consider_labels=True, single_layer=False):
     for fragment_id in frag_list:
-        print(f"\nFragment ID: {fragment_id}")
+        start_slice, end_slice = FragmentHandler().get_center_layers(frag_id=fragment_id)
 
-        start_slice = 0
-        end_slice = 63
-        if consider_label_files:
-            start_slice, end_slice = determine_slice_range(fragment_id)
+        if consider_labels:
+            start_slice, end_slice = determine_slice_range(fragment_id, single_layer=single_layer)
 
         if start_slice == 99999 or end_slice == 0:
-            print("No label files found -> Skipping download")
+            print(f"Fragment ID: {fragment_id}\tNo labels found -> Skip")
             continue
         else:
-            print(f"Labels = [{start_slice}, {end_slice}] found")
+            print(f"Fragment ID: {fragment_id}\tLabels = [{start_slice}, {end_slice}] found")
 
         missing_slices = check_downloaded_slices(fragment_id, start_slice, end_slice)
         if not missing_slices:
-            print("No missing slices found -> Skipping download")
+            print("Fragment ID: {fragment_id}\tAll layer files found -> Skip")
             continue
         else:
             ranges = get_consecutive_ranges(missing_slices)
-            print(f"Downloading missing Slices = {missing_slices}")
+            print(f"Fragment ID: {fragment_id}\tDownloading Slices = {missing_slices}")
             str_args = ",".join(ranges)
             command = ['bash', download_script, fragment_id, str_args]
             subprocess.run(command)
 
-    print("Batch download script execution completed.")
-
 
 if __name__ == '__main__':
-    fragment_list = FragmentHandler().get_ids()
+    parser = argparse.ArgumentParser(description="Download missing fragment slices.")
+    parser.add_argument('--no_label_files', dest='consider_labels', action='store_false',
+                        help='Do not consider label files when determining slice range')
+    parser.add_argument('--single_layer', action='store_false',
+                        help='Do not consider label files when determining slice range')
+    parser.set_defaults(consider_label_files=True)
+    args = parser.parse_args()
 
-    batch_download_frags(fragment_list)
+    fragment_list = FragmentHandler().get_inference_fragments()
+    batch_download_frags(fragment_list, consider_labels=args.consider_labels, single_layer=args.single_layer)
