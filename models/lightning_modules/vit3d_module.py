@@ -1,5 +1,4 @@
 import torch
-from torchmetrics import MeanSquaredError
 from torchmetrics.classification import AUROC
 
 from models.architectures.vit3d import ViT3D
@@ -44,10 +43,8 @@ class Vit3D_Module(AbstractLightningModule):
             emb_dropout=emb_dropout
         )
 
-
         self.load_weights()
 
-        self.mse = MeanSquaredError()
         self.auc = AUROC(task='binary')
 
     def training_step(self, batch, batch_idx):
@@ -55,22 +52,21 @@ class Vit3D_Module(AbstractLightningModule):
         logits = self.forward(data)
         y_pred = torch.sigmoid(logits)
 
-        mse_loss = self.mse(y_pred, y_true)
+        total_loss, losses = self.calculate_weighted_loss(y_pred=y_pred.squeeze(1), y_true=y_true)
 
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
         self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log(f'train_loss', mse_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log_losses_to_wandb(losses, 'train')
 
-        return mse_loss
+        return total_loss
 
     def validation_step(self, batch, batch_idx):
         data, y_true = batch
         logits = self.forward(data)
         y_pred = torch.sigmoid(logits)
 
-        mse_loss = self.mse(y_pred, y_true)
+        _, losses = self.calculate_weighted_loss(y_pred=y_pred.squeeze(1), y_true=y_true)
+        self.log_losses_to_wandb(losses, 'val')
 
         auc = self.auc(torch.sigmoid(logits), y_true)
-
-        self.log(f'val_loss', mse_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log(f'val_auc', auc, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log('val_auc', auc, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)

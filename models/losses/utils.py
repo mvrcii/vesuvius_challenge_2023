@@ -8,6 +8,8 @@ from models.losses.focal_loss import FocalLoss
 
 
 def get_loss_functions(cfg):
+    assert len(cfg.losses) > 0, "You must specify a loss type in your config!!!"
+
     focal_gamma = getattr(cfg, 'focal_gamma', 2)
     focal_alpha = getattr(cfg, 'focal_alpha', 0.25)
 
