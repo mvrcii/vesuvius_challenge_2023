@@ -43,7 +43,7 @@ fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRA
 # fragment_ids = [GRIMLARGE_FRAG_ID]
 validation_fragments = [GRIMLARGE_FRAG_ID]
 train_split = 0.8
-lr = 5e-5
+lr = 5e-4
 eta_min = 1e-5
 step_lr_steps = 3
 step_lr_factor = 0.99
@@ -51,8 +51,8 @@ weight_decay = 0.001
 losses = [('mse', 1.0)]
 
 num_workers = 16
-train_batch_size = 4096
-val_batch_size = 4096
+train_batch_size = 256
+val_batch_size = 256
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
