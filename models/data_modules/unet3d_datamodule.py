@@ -115,7 +115,7 @@ class UNET3D_DataModule(LightningDataModule):
 
         validation_fragments = []
         for x in validation_fragments_int:
-            validation_fragments.append(str(x))
+            validation_fragments.append(int(x))
 
         if validation_fragments is None or len(validation_fragments) == 0:
             raise Exception("Validation fragments not specified or empty!")
