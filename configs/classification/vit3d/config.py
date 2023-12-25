@@ -17,7 +17,7 @@ dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # DATASET CREATION
 in_chans = 12
-patch_size = 16
+patch_size = 48
 stride = patch_size // 1
 
 # if used with create_dataset_classification all samples with ink_ratio == 0 and > ink_ratio will be saved

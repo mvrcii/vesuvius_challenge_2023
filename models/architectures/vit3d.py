@@ -109,7 +109,7 @@ def createViT3D():
     image_patch_size = (4, 4)  # Smaller patches for high resolution
     frame_patch_size = 2  # High temporal resolution
     dim = 1024  # Very large embedding dimension
-    depth = 1024  # Many layers for deep feature extraction
+    depth = 1024  # Many layers for deep feature extraction (24)
     heads = 256  # Many attention heads
     mlp_dim = 4096  # Very large feedforward network
     dim_head = 128  # Balancing head dimension with total dimension
