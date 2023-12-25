@@ -1,7 +1,6 @@
 import argparse
 import datetime
 import os
-import subprocess
 import sys
 from tkinter import Tk, Scale, HORIZONTAL, Label, Button, Frame, IntVar, Radiobutton, Entry, StringVar
 
@@ -11,8 +10,6 @@ from PIL import Image, ImageTk
 from PIL.Image import Resampling
 from tqdm import tqdm
 
-from scripts.download.download_fragments import batch_download_frags, download_range
-from scripts.download.entrypoint_download_fragments import download_fragments
 from utility.configs import Config
 from utility.fragments import FragmentHandler
 
@@ -232,7 +229,7 @@ class Visualization:
         frag_handler = FragmentHandler()
         self.rotate_num = frag_handler.get_rotation(frag_id=frag_id)
         self.flip_num = frag_handler.get_flip(frag_id=frag_id)
-        self.center_layers = frag_handler.get_center_layers(frag_id=frag_id)
+        self.center_layers = frag_handler.get_best_layers(frag_id=frag_id)
 
         # start layer idx = start index for a label/numpy file
         # start and end layer idx are both inclusive!
@@ -246,11 +243,11 @@ class Visualization:
                                                                           single_layer=single_layer)
         multilayer = True
         if multilayer:
-            start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=frag_id)
+            start_layer_idx, end_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)
             # end_layer_idx = 0
             # start_layer_idx = 0
         else:
-            start_layer_idx, end_layer_idx = FragmentHandler().get_center_layers(frag_id=frag_id)  # inclusive
+            start_layer_idx, end_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)  # inclusive
 
         self.model_name = model_name
         self.model_dir = model_dir

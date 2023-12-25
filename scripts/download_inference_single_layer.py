@@ -1,11 +1,8 @@
 import argparse
 import os
 import subprocess
-import sys
 
 from utility.fragments import get_frag_name_from_id
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 def validate_folder(local_path, model_run_dir):
@@ -47,13 +44,11 @@ def find_directory_on_remote(server_path, fragment_id, model_run_dir):
     return os.path.join(full_server_path, f"*{model_run_dir}*"), model_run_dir
 
 
-def get_inference_folder(fragment_id, full_model_run_dir, hostname, single):
-
+def get_inference_result(fragment_id, full_model_run_dir, hostname, single):
     result_dir = "single_results" if single else "results"
 
     server_paths = {
         "vast": f"~/kaggle1stReimp/inference/{result_dir}",
-        "vast2": f"~/kaggle1stReimp/inference/{result_dir}",
     }
 
     if hostname not in server_paths:
@@ -107,11 +102,10 @@ def get_inference_folder(fragment_id, full_model_run_dir, hostname, single):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Copy folder from server script")
+    parser = argparse.ArgumentParser(description="Download inference result from a node")
     parser.add_argument("fragment_id", type=str, help="Fragment ID")
     parser.add_argument("checkpoint_folder_name", type=str, help="Checkpoint folder name")
     parser.add_argument("hostname", type=str, help="Hostname")
-    parser.add_argument('--single', action='store_true', help='Get single inference results')
     args = parser.parse_args()
 
-    get_inference_folder(args.fragment_id, args.checkpoint_folder_name, args.hostname, args.single)
+    get_inference_result(args.fragment_id, args.checkpoint_folder_name, args.hostname, single=True)

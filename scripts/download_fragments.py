@@ -8,7 +8,7 @@ from utility.configs import Config
 from utility.fragments import FragmentHandler, SUPERSEDED_FRAGMENTS
 from utility.meta_data import AlphaBetaMeta
 
-download_script = "./scripts/download/download_fragment.sh"
+download_script = "./scripts/utils/download_fragment.sh"
 
 
 def determine_slice_range(fragment_id, single_layer):

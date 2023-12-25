@@ -1,7 +1,6 @@
 import subprocess
 import sys
 
-from scripts.download.download_fragments import batch_download_frags
 from utility.checkpoints import get_ckpt_name_from_id
 from utility.fragments import JETFIRE_FRAG_ID, get_frag_name_from_id
 
