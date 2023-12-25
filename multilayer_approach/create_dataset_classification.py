@@ -285,7 +285,9 @@ if __name__ == '__main__':
     label_dir = os.path.join(cfg.work_dir, relative_label_dir)
     print("Using label dir:", label_dir)
 
-    fragments = cfg.fragment_ids
+    train_fragments = cfg.fragment_ids
+    val_fragments = cfg.validation_fragments
+    fragments = train_fragments + val_fragments
     clear_dataset(config=cfg)
 
     extract_patches(cfg, fragments, label_dir)

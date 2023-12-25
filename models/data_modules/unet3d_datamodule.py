@@ -103,9 +103,21 @@ class UNET3D_DataModule(LightningDataModule):
         count_greater_than_zero = (df['ink_p'] > 0).sum()
         print(f"Final Count: {count_zero} samples with ink_p = 0 and {count_greater_than_zero} samples with ink_p > 0")
 
+        # Preprocessing to correct file paths
         df['file_path'] = df.apply(self.generate_file_path, axis=1)
 
-        train_df, valid_df = train_test_split(df, train_size=cfg.train_split, random_state=cfg.seed)
+        validation_fragments = getattr(cfg, 'validation_fragments', None)
+        if validation_fragments is None or len(validation_fragments) == 0:
+            raise Exception("Validation fragments not specified or empty!")
+
+        train_df = df[~df['frag_id'].isin(validation_fragments)]
+        valid_df = df[df['frag_id'].isin(validation_fragments)]
+
+        if train_df.shape[0] == 0:
+            raise Exception("Training DataFrame is empty. No entries found for the given validation IDs.")
+
+        if valid_df.shape[0] == 0:
+            raise Exception("Validation DataFrame is empty. No entries found for the given validation IDs.")
 
         if cfg.dataset_fraction != 1.0 or cfg.dataset_fraction != 1:
             train_df, _ = train_test_split(train_df,

@@ -121,4 +121,5 @@ if __name__ == '__main__':
 
     config = Config.load_from_file(args.config_path)
 
-    download_frags(config.fragment_ids)
+    fragments_2_download = config.fragment_ids + config.validation_fragments
+    download_frags(fragments_2_download)

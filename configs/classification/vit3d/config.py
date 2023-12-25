@@ -1,7 +1,7 @@
 import os
 import albumentations as A
 from utility.fragments import JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, \
-    THUNDERCRACKER_FRAG_ID
+    THUNDERCRACKER_FRAG_ID, GRIMLARGE_FRAG_ID
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -37,11 +37,11 @@ architecture = 'vit3d'
 model_name = f"{architecture}-{model_type}"
 seed = 1337
 epochs = -1
-dataset_fraction = 1
+dataset_fraction = 0.01
 val_interval = 1
 fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID]
 # fragment_ids = [GRIMLARGE_FRAG_ID]
-# validation_fragments = [HOT_ROD_FRAG_ID]
+validation_fragments = [GRIMLARGE_FRAG_ID]
 train_split = 0.8
 lr = 5e-5
 eta_min = 1e-5
@@ -50,9 +50,9 @@ step_lr_factor = 0.95
 weight_decay = 0.001
 losses = [('mse', 1.0)]
 
-num_workers = 16
-train_batch_size = 64
-val_batch_size = 64
+num_workers = 4
+train_batch_size = 2
+val_batch_size = 2
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
