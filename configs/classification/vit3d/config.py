@@ -16,9 +16,18 @@ dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 in_chans = 12
 patch_size = 48
 stride = patch_size // 2
-ink_ratio = 50  # everything above this will be classified as 1
+
+# if used with create_dataset_classification all samples with ink_ratio == 0 and > ink_ratio will be saved
+# E.g. ink_ratio == 50 => discard samples with ink_ratio 1-49. Label for a sample will be its ink ratio
+ink_ratio = 50
+
+
 no_ink_sample_percentage = 1
+# if label_infos.csv contains 'ignore_p', all samples with > max_ignore_th will be removed
+# (however the current create_dataset_classification currently already removes a sample if it has ignore_p > 0)
 max_ignore_th = 50
+
+
 take_full_dataset = False
 
 # training parameters
