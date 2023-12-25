@@ -84,15 +84,15 @@ def createViT3D():
     channels = 1
 
     # working example
-    image_patch_size = (8, 8)  # Size of patches each frame is divided into (height, width)
-    frame_patch_size = 3  # Number of frames grouped into a single temporal patch
-    dim = 512  # Dimensionality of token embeddings in the transformer
-    depth = 6  # Number of layers (blocks) in the transformer
-    heads = 8  # Number of attention heads in each transformer layer
-    mlp_dim = 1024  # Dimensionality of the feedforward network in each transformer layer
-    dim_head = 64  # Dimensionality of each attention head
-    dropout = 0.1  # Dropout rate used in attention and feedforward networks
-    emb_dropout = 0.1  # Dropout rate for token
+    # image_patch_size = (8, 8)  # Size of patches each frame is divided into (height, width)
+    # frame_patch_size = 3  # Number of frames grouped into a single temporal patch
+    # dim = 512  # Dimensionality of token embeddings in the transformer
+    # depth = 6  # Number of layers (blocks) in the transformer
+    # heads = 8  # Number of attention heads in each transformer layer
+    # mlp_dim = 1024  # Dimensionality of the feedforward network in each transformer layer
+    # dim_head = 64  # Dimensionality of each attention head
+    # dropout = 0.1  # Dropout rate used in attention and feedforward networks
+    # emb_dropout = 0.1  # Dropout rate for token
 
     # big
     # image_patch_size = (4, 4)  # Smaller patches for finer details
@@ -105,17 +105,17 @@ def createViT3D():
     # dropout = 0.2  # Standard dropout
     # emb_dropout = 0.2  # Standard embedding dropout
 
-    # huge
-    # image_patch_size = (4, 4)  # Smaller patches for high resolution
-    # frame_patch_size = 2  # High temporal resolution
-    # dim = 1024  # Very large embedding dimension
-    # depth = 24  # Many layers for deep feature extraction
-    # heads = 16  # Many attention heads
-    # mlp_dim = 4096  # Very large feedforward network
-    # channels = 3  # Standard for RGB video frames
-    # dim_head = 64  # Balancing head dimension with total dimension
-    # dropout = 0.3  # Higher dropout to counteract overfitting
-    # emb_dropout = 0.3  # Higher embedding dropout for same reas
+    huge
+    image_patch_size = (4, 4)  # Smaller patches for high resolution
+    frame_patch_size = 2  # High temporal resolution
+    dim = 1024  # Very large embedding dimension
+    depth = 24  # Many layers for deep feature extraction
+    heads = 16  # Many attention heads
+    mlp_dim = 4096  # Very large feedforward network
+    channels = 3  # Standard for RGB video frames
+    dim_head = 64  # Balancing head dimension with total dimension
+    dropout = 0.3  # Higher dropout to counteract overfitting
+    emb_dropout = 0.3  # Higher embedding dropout for same reas
 
     return ViT3D(
         image_size=image_size,
