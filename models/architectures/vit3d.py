@@ -105,7 +105,7 @@ def createViT3D():
     # dropout = 0.2  # Standard dropout
     # emb_dropout = 0.2  # Standard embedding dropout
 
-    huge
+    # huge
     image_patch_size = (4, 4)  # Smaller patches for high resolution
     frame_patch_size = 2  # High temporal resolution
     dim = 1024  # Very large embedding dimension
