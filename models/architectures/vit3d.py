@@ -77,6 +77,41 @@ class Transformer(nn.Module):
         return x
 
 
+def createViT3D():
+    image_size = (48, 48)
+    layers = 12
+    num_classes = 1
+    channels = 1
+
+    # working example
+    image_patch_size = (8, 8)  # Size of patches each frame is divided into (height, width)
+    frame_patch_size = 3  # Number of frames grouped into a single temporal patch
+    dim = 512  # Dimensionality of token embeddings in the transformer
+    depth = 6  # Number of layers (blocks) in the transformer
+    heads = 8  # Number of attention heads in each transformer layer
+    mlp_dim = 1024  # Dimensionality of the feedforward network in each transformer layer
+    dim_head = 64  # Dimensionality of each attention head
+    dropout = 0.1  # Dropout rate used in attention and feedforward networks
+    emb_dropout = 0.1  # Dropout rate for token
+
+    return ViT3D(
+        image_size=image_size,
+        image_patch_size=image_patch_size,
+        frames=layers,
+        frame_patch_size=frame_patch_size,
+        num_classes=num_classes,
+        dim=dim,
+        depth=depth,
+        heads=heads,
+        mlp_dim=mlp_dim,
+        pool='cls',  # Pooling method ('cls' for class token, 'mean' for mean pooling)
+        channels=channels,
+        dim_head=dim_head,
+        dropout=dropout,
+        emb_dropout=emb_dropout
+    )
+
+
 class ViT3D(nn.Module):
     def __init__(self, *, image_size, image_patch_size, frames, frame_patch_size, num_classes, dim, depth, heads,
                  mlp_dim, pool='cls', channels=3, dim_head=64, dropout=0., emb_dropout=0.):

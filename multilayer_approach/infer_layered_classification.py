@@ -15,6 +15,7 @@ from transformers import SegformerForSemanticSegmentation
 from transformers.utils import logging
 
 from models.architectures.unet3d import UNET3D
+from models.architectures.vit3d import ViT3D, createViT3D
 from utility.checkpoints import get_ckpt_name_from_id
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id, FragmentHandler
@@ -320,28 +321,21 @@ def load_model(cfg: Config, model_path):
                                                                  num_labels=1,
                                                                  num_channels=cfg.in_chans,
                                                                  ignore_mismatched_sizes=True)
-        checkpoint = torch.load(model_path)
-        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict)
     elif cfg.architecture == 'unet3d-sf':
         model = UNET3D_Segformer(cfg=cfg)
-        checkpoint = torch.load(model_path)
-        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict)
-
     elif cfg.architecture == 'unetr-sf':
         model = UNETR_Segformer(cfg=cfg)
-        checkpoint = torch.load(model_path)
-        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict)
     elif cfg.architecture == 'unet3d':
         model = UNET3D(cfg=cfg)
-        checkpoint = torch.load(model_path)
-        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict)
+    elif cfg.architecture == 'vit3d':
+        model = createViT3D()
     else:
         print("Error model type not found:", cfg.architecture)
         sys.exit(1)
+
+    checkpoint = torch.load(model_path)
+    state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
 
     model = model.to("cuda")
 
