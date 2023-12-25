@@ -88,7 +88,7 @@ class UNET3D_DataModule(LightningDataModule):
 
             # BALANCING IS DONE ON CREATION
             # Step 1: Filter out rows where ink_p > ratio
-            df_ink_p_greater_than_ink_ratio = df[df['ink_p'] > cfg.ink_ratio]
+            df_ink_p_greater_than_ink_ratio = df[df['ink_p'] >= cfg.ink_ratio]
 
             # Step 2: Decide how many no-ink samples
             no_ink_sample_count = int(len(df_ink_p_greater_than_ink_ratio) * cfg.no_ink_sample_percentage)
