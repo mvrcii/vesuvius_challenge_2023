@@ -1,33 +1,19 @@
 import os
-
 import albumentations as A
-
 from utility.meta_data import AlphaBetaMeta
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
 ]
 
+# PATHS
 work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
 base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")
 
-# training parameters
-model_type = "b2"
-architecture = 'segformer'
-model_name = f"{architecture}-{model_type}"
-from_pretrained = f"nvidia/mit-{model_type}"
-# from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
+# DATASET CREATION
 in_chans = 4
-seed = 3445774
-epochs = -1
-losses = [("bce", 1.0), ("dice", 1.0)]
-dataset_fraction = 1
-
-val_interval = 2
-
-# dataset creation parameters
 patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
@@ -38,11 +24,21 @@ excluded_label_blocks = 3
 excluded_label_layers = in_chans * excluded_label_blocks  # excluded from bottom and top of the stack
 train_split = 0.8
 
+# TRAINING
+model_type = "b2"
+architecture = 'segformer'
+model_name = f"{architecture}-{model_type}"
+from_pretrained = f"nvidia/mit-{model_type}"
+# from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
+seed = 3445774
+epochs = -1
+losses = [("bce", 1.0), ("dice", 1.0)]
+dataset_fraction = 1
+val_interval = 2
 lr = 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
-
 num_workers = 16
 train_batch_size = 24
 val_batch_size = 24
@@ -69,7 +65,6 @@ train_aug = [
                             ratio=(0.75, 1.51),
                             interpolation=0)
     ], p=0.5),
-    # A.ChannelDropout(p=0.05, channel_drop_range=(1, 1), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
