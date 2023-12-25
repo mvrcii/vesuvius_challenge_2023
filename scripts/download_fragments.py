@@ -1,12 +1,14 @@
+import argparse
 import os
 import re
 import subprocess
 import sys
 
-from utility.fragments import FragmentHandler
+from utility.configs import Config
+from utility.fragments import FragmentHandler, SUPERSEDED_FRAGMENTS
 from utility.meta_data import AlphaBetaMeta
 
-download_script = "./scripts/download/download_slices.sh"
+download_script = "./scripts/download/download_fragment.sh"
 
 
 def determine_slice_range(fragment_id, single_layer):
@@ -15,7 +17,6 @@ def determine_slice_range(fragment_id, single_layer):
     max_slice = 0
 
     label_dir = AlphaBetaMeta().get_current_binarized_label_dir(single=single_layer)
-    # print(label_dir)
 
     try:
         files = os.listdir(f"{label_dir}/{fragment_id}")
@@ -37,7 +38,7 @@ def determine_slice_range(fragment_id, single_layer):
 
 
 def check_downloaded_slices(fragment_id, start_slice, end_slice):
-    fragment_dir = f"./data/fragments/fragment{fragment_id}/slices"
+    fragment_dir = f"data/fragments/fragment{fragment_id}/slices"
     missing_slices = []
     existing_slices = []
     slice_sizes = {}
@@ -85,19 +86,12 @@ def get_consecutive_ranges(missing_slices):
     return ranges
 
 
-def batch_download_frags(frag_list, consider_labels=True, single_layer=False):
+def download_frags(frag_list):
     for fragment_id in frag_list:
-        start_slice, end_slice = FragmentHandler().get_center_layers(frag_id=fragment_id)
+        start_slice, end_slice = FragmentHandler().get_best_12_layers(frag_id=fragment_id)
 
-        if consider_labels:
-            start_slice, end_slice = determine_slice_range(fragment_id, single_layer=single_layer)
-
-        if start_slice == 99999 or end_slice == 0:
-            print(f"Fragment ID: {fragment_id}\tNo labels found")
-            continue
-        # print("Start Idx:", start_slice, "End Idx:", end_slice)
         missing_slices = check_downloaded_slices(fragment_id, start_slice, end_slice)
-        # print("Missing Slices:", missing_slices)
+
         if not missing_slices:
             print(f"Fragment ID: {fragment_id}\tAll required slices found: [{start_slice}, {end_slice}]")
             continue
@@ -105,5 +99,26 @@ def batch_download_frags(frag_list, consider_labels=True, single_layer=False):
             ranges = get_consecutive_ranges(missing_slices)
             print(f"Fragment ID: {fragment_id}\tDownloading Slices = [{start_slice}, {end_slice}]")
             str_args = ",".join(ranges)
+
+            if fragment_id in SUPERSEDED_FRAGMENTS:
+                print("Warning: Fragment superseded, added suffix for download!")
+                fragment_id += "_superseded"
+
             command = ['bash', download_script, fragment_id, str_args]
             subprocess.run(command)
+
+
+def get_sys_args():
+    parser = argparse.ArgumentParser(description='Download Fragments')
+    parser.add_argument('config_path', type=str, help='Path to the configuration file')
+    args = parser.parse_args()
+
+    return args
+
+
+if __name__ == '__main__':
+    args = get_sys_args()
+
+    config = Config.load_from_file(args.config_path)
+
+    download_frags(config.fragment_ids)

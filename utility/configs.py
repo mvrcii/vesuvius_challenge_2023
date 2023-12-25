@@ -81,9 +81,10 @@ class Config:
         # Check for and apply local configuration overrides
         local_config_path = 'conf_local.py'
         if os.path.exists(local_config_path):
-            print("Found local config")
             local_config = cls.import_config_from_path(local_config_path)
             config.update(filter_keys(vars(local_config).items()))
+        else:
+            print("Local config not found!")
 
         if config_path.__contains__('/'):
             config_file_name = config_path.split('/')[-1]
