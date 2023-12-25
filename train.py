@@ -110,8 +110,10 @@ def get_device_configuration():
 
 
 def get_callbacks(cfg, model_run_dir):
+    node = getattr(cfg, 'node', True)  # defaults to true
+
     # Only save model checkpoint on gpu node
-    if cfg.node:
+    if node:
         os.makedirs(model_run_dir, exist_ok=True)
         cfg.save_to_file(model_run_dir)
 
