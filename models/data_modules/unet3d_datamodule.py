@@ -75,6 +75,11 @@ class UNET3D_DataModule(LightningDataModule):
         if cfg.seed == -1:
             cfg.seed = None  # Set random seed if -1 is given
 
+        # debug
+        # print("before pruning etc")
+        # print(df["frag_id"].unique())
+        # print(len(df[df["frag_id"]==20231012184422]))
+
         if "ignore_p" in df.columns:
             print("Before ignoring: ", len(df.index))
             df = df[df["ignore_p"] < cfg.max_ignore_th]
@@ -106,7 +111,12 @@ class UNET3D_DataModule(LightningDataModule):
         # Preprocessing to correct file paths
         df['file_path'] = df.apply(self.generate_file_path, axis=1)
 
-        validation_fragments = getattr(cfg, 'validation_fragments', None)
+        validation_fragments_int = getattr(cfg, 'validation_fragments', None)
+
+        validation_fragments = []
+        for x in validation_fragments_int:
+            validation_fragments.append(str(x))
+
         if validation_fragments is None or len(validation_fragments) == 0:
             raise Exception("Validation fragments not specified or empty!")
 
