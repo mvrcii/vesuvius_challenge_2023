@@ -6,6 +6,7 @@ _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
 ]
 
+segmentation = True
 # PATHS
 work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
 base_label_dir = os.path.join("data", "base_label_files")

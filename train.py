@@ -118,13 +118,8 @@ def get_callbacks(cfg, model_run_dir):
         cfg.save_to_file(model_run_dir)
 
         monitor_metric = "val_auc"
-        if cfg.architecture == "unet3d" or cfg.architecture == "vit3d":
+        if cfg.segmentation:
             monitor_metric = "val_iou"
-        print("using metric:")
-        print(monitor_metric)
-        print("architecture")
-        print(cfg.architecture)
-        exit()
 
         checkpoint_callback = ModelCheckpoint(
             dirpath=model_run_dir,

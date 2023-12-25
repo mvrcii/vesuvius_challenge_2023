@@ -8,6 +8,7 @@ from utility.fragments import JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER
 
 sys.path.append('../')
 
+segmentation = True
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
 ]
