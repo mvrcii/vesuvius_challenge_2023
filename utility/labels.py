@@ -5,11 +5,11 @@ CLEANED = "cleaned"
 PROCESSED = "processed"
 BINARIZED = "binarized"
 
-SINGLE_LAYER_LABEL_DIR = os.path.join("data", "single_layer")
-FOUR_LAYER_LABEL_DIR = os.path.join("data", "four_layer")
-TWELVE_LAYER_LABEL_DIR = os.path.join("data", "twelve_layer")
+SINGLE_LAYER_LABEL_DIR = os.path.join("data", "labels", "single_layer")
+FOUR_LAYER_LABEL_DIR = os.path.join("data", "labels", "four_layer")
+TWELVE_LAYER_LABEL_DIR = os.path.join("data", "labels", "twelve_layer")
 
-FOUR_LAYER_HANDMADE_LABEL_DIR = os.path.join("data", "four_layer_handmade")
+FOUR_LAYER_HANDMADE_LABEL_DIR = os.path.join("data", "labels", "four_layer_handmade")
 
 
 def get_label_dir(layer_count: int, manual=False):

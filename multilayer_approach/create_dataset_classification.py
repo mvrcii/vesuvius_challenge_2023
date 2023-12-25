@@ -22,7 +22,7 @@ Image.MAX_IMAGE_PIXELS = None
 def extract_patches(config: Config, frags, _label_dir):
     frag_id_2_channel = validate_fragments(config, frags, _label_dir)
 
-    logging.info(f"Starting to extract image and label patches..")
+    print(f"Starting to extract image and label patches..")
 
     for fragment_id, channels in frag_id_2_channel.items():
         process_fragment(label_dir=_label_dir, config=config, fragment_id=fragment_id, channels=channels)
@@ -54,13 +54,13 @@ def process_fragment(config: Config, fragment_id, channels, label_dir):
 
 
 def clear_dataset(config: Config):
-    print("clearing with patch size ", config.patch_size)
+    print("Clearing Datasets with Patch Size", config.patch_size)
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
     if os.path.isdir(root_dir):
         shutil.rmtree(root_dir)
         print("Deleted dataset directory:", root_dir)
     else:
-        print("Dataset directory does not exist yet, nothing delete:", root_dir)
+        print("Dataset directory did not exist yet, nothing to delete at:", root_dir)
 
 
 def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
@@ -70,6 +70,7 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     if not os.path.isdir(fragment_dir):
         raise ValueError(f"Fragment directory does not exist: {fragment_dir}")
 
+    # Load label
     label_dir = os.path.join(label_dir, frag_id)
     if not os.path.isdir(label_dir):
         raise ValueError(f"Label directory does not exist: {fragment_dir}")
@@ -80,7 +81,6 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     mask_path = os.path.join(fragment_dir, f"mask.png")
     if not os.path.isfile(mask_path):
         raise ValueError(f"Mask file does not exist for fragment: {frag_id}")
-    # mask = np.asarray(Image.open(mask_path))
 
     mask = read_label(label_path=mask_path, patch_size=config.patch_size)
 
@@ -104,9 +104,9 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     assert label_arr.sum() > 0, "Label array is empty"
     assert ignore_arr.sum() > 0, "Ignore array is empty"
 
-    print("Image Shape:", image_tensor.shape)
-    print("Label Shape:", label_arr.shape)
-    print("Mask Shape:", mask.shape)
+    # print("Image Shape:", image_tensor.shape)
+    # print("Label Shape:", label_arr.shape)
+    # print("Mask Shape:", mask.shape)
 
     assert label_arr.shape == mask.shape == image_tensor[0].shape, (
         f"Shape mismatch for Fragment {frag_id}: Img={image_tensor[0].shape} "
