@@ -1,6 +1,5 @@
 import argparse
 import gc
-import logging
 import os
 import shutil
 
@@ -112,20 +111,21 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
         f"Shape mismatch for Fragment {frag_id}: Img={image_tensor[0].shape} "
         f"Mask={mask.shape} Label={label_arr.shape}")
 
-    patch_cnt, skipped_cnt, ignore_skipped_count = process_channel_stack(config=config,
-                                                                         target_dir=target_dir,
-                                                                         frag_id=frag_id,
-                                                                         mask=mask,
-                                                                         image_tensor=image_tensor,
-                                                                         label_arr=label_arr,
-                                                                         ignore_arr=ignore_arr,
-                                                                         start_channel=start_channel)
+    patch_cnt, skipped_cnt, ignore_skipped_count = process_channel_stack(
+        target_dir=target_dir,
+        frag_id=frag_id,
+        mask=mask,
+        image_tensor=image_tensor,
+        label_arr=label_arr,
+        ignore_arr=ignore_arr,
+        start_channel=start_channel)
 
     del image_tensor, label_arr, ignore_arr
     gc.collect()
 
     total_patches = patch_cnt + skipped_cnt + ignore_skipped_count
-    print(f"Patch Breakdown:\tTotal={total_patches} | Patches={patch_cnt} | Skipped={skipped_cnt} | Ignored = {ignore_skipped_count}")
+    print(
+        f"Patch Breakdown:\tTotal={total_patches} | Patches={patch_cnt} | Skipped={skipped_cnt} | Ignored = {ignore_skipped_count}")
 
 
 # Extracts image/label patches for one label (12 best layers)
