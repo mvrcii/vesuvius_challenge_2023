@@ -4,7 +4,7 @@
     "name": "JETFIRE",
     "rotation": 0,
     "boost_threshold": 1,
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       30,
       39
     ],
@@ -18,7 +18,7 @@
     "name": "GRIMLARGE",
     "rotation": 0,
     "boost_threshold": 1,
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       28,
       41
     ],
@@ -30,7 +30,7 @@
   {
     "id": "20231012173610",
     "name": "THUNDERCRACKER",
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       25,
       35
     ],
@@ -51,7 +51,7 @@
   {
     "id": "20231016151001",
     "name": "JAZZILLA",
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       28,
       42
     ],
@@ -65,7 +65,7 @@
   {
     "id": "20230929220926",
     "name": "HOT_ROD",
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       30,
       38
     ],
@@ -87,7 +87,7 @@
     "id": "20231022170900",
     "name": "DEVASTATOR",
     "boost_threshold": 0.00001,
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       24,
       30
     ],
@@ -96,7 +96,7 @@
   {
     "id": "20231106155351",
     "name": "ULTRA_MAGNUS",
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       28,
       42
     ],
@@ -110,7 +110,7 @@
   {
     "id": "20230702185753",
     "name": "BLASTER",
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       32,
       44
     ],
@@ -124,7 +124,7 @@
   {
     "id": "20230905134255",
     "name": "IRONHIDE",
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       25,
       42
     ],
@@ -139,7 +139,7 @@
     "id": "20231210121320",
     "name": "BLUESTREAK",
     "boost_threshold": 1,
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       29,
       39
     ]
@@ -148,7 +148,7 @@
     "id": "20231210121321",
     "name": "BLUEBIGGER",
     "boost_threshold": 1,
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       29,
       39
     ]
@@ -158,7 +158,7 @@
     "name": "GRIMHUGE",
     "rotation": 0,
     "boost_threshold": 1,
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       28,
       41
     ],
@@ -170,7 +170,7 @@
   {
     "id": "20231007101616",
     "name": "SKYBIGGER",
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       25,
       40
     ],
@@ -180,7 +180,7 @@
     "id": "20231022170901",
     "name": "DEVASBIGGER",
     "boost_threshold": 0.00001,
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       24,
       30
     ]
@@ -193,7 +193,7 @@
   {
     "id": "20231016151002",
     "name": "JAZZBIGGER",
-    "center_layers_start_indices": [
+    "best_layers_start_indices": [
       28,
       42
     ],

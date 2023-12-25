@@ -15,8 +15,8 @@ class Fragment:
         self.rotation = data.get('rotation', DEFAULT_ROTATION)
         self.flip = data.get('flip', DEFAULT_FLIP)
         self.boost_threshold = data.get('boost_threshold', DEFAULT_BOOST_THRESHOLD)
-        self.center_layers = tuple(
-            data.get('center_layers_start_indices', (DEFAULT_START_CENTER_LAYER, DEFAULT_END_CENTER_LAYER)))
+        self.best_layers = tuple(
+            data.get('best_layers_start_indices', (DEFAULT_START_CENTER_LAYER, DEFAULT_END_CENTER_LAYER)))
         self.best_12_layers = tuple(data.get('best_12_inclusive_layers', []))
 
     @classmethod
@@ -47,10 +47,10 @@ class FragmentHandler(metaclass=SingletonMeta):
 
             self.FRAGMENTS = {fragment.name: fragment.id for fragment in self.fragments}
 
-    def get_center_layers(self, frag_id):
+    def get_best_layers(self, frag_id):
         for fragment in self.fragments:
             if fragment.id == frag_id:
-                return fragment.center_layers
+                return fragment.best_layers
         return DEFAULT_START_CENTER_LAYER, DEFAULT_END_CENTER_LAYER
 
     def get_best_12_layers(self, frag_id):
@@ -58,7 +58,7 @@ class FragmentHandler(metaclass=SingletonMeta):
             if fragment.id == frag_id:
                 assert len(fragment.best_12_layers) != 0
                 return fragment.best_12_layers
-        return get_frag_name_from_id(frag_id)
+        return self.get_best_layers(frag_id)
 
     def get_boost_threshold(self, frag_id):
         for fragment in self.fragments:
@@ -115,6 +115,7 @@ DEVASTATOR_FRAG_ID = FragmentHandler().get_id("DEVASTATOR")
 SKYWARP_FRAG_ID = FragmentHandler().get_id("SKYWARP")
 THUNDERCRACKER_FRAG_ID = FragmentHandler().get_id("THUNDERCRACKER")
 SUNSTREAKER_FRAG_ID = FragmentHandler().get_id("SUNSTREAKER")
+BLUESTREAK_FRAG_ID = FragmentHandler().get_id("BLUESTREAK")
 
 TRAILBREAKER_FRAG_ID = FragmentHandler().get_id("TRAILBREAKER")
 TITLE1_FRAG_ID = FragmentHandler().get_id("TITLE1")
@@ -126,6 +127,9 @@ FRAGMENTS_BETA = [BLASTER_FRAG_ID, HOT_ROD_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,
                   DEVASTATOR_FRAG_ID, SKYWARP_FRAG_ID, IRONHIDE_FRAG_ID]
 
 FRAGMENTS_IGNORE = [TITLE1_FRAG_ID, TITLE2_FRAG_ID, SKYWARP_FRAG_ID, IRONHIDE_FRAG_ID]
+
+SUPERSEDED_FRAGMENTS = [GRIMLARGE_FRAG_ID, JAZZILLA_FRAG_ID, DEVASTATOR_FRAG_ID,
+                        SKYWARP_FRAG_ID, BLUESTREAK_FRAG_ID]
 
 
 def get_frag_name_from_id(frag_id):

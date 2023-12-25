@@ -16,19 +16,20 @@ fragmentID="$1"
 string_argument="$2"
 
 IFS=',' read -r -a ranges <<< "$string_argument"
-
-#read -r start end <<< "$string_argument"
-# How to use this script:
-# 1. Go to bash with "bash"
-# 2. Go to root dir
-# 3. "./util/download.sh FRAG_ID "00000 00063"
 echo $ranges
 
+# Check if fragmentID ends with "_superseded"
+if [[ $fragmentID == *"_superseded" ]]; then
+    # Remove "_superseded" suffix for outputFolder
+    outputFragmentID=${fragmentID%"_superseded"}
+else
+    outputFragmentID=$fragmentID
+fi
+
+
 # Configuration based on option
-#outputFolder="/scratch/medfm/vesuv/kaggle1stReimp/data/fragments/fragment${fragmentID}/slices"
-outputFolder="data/fragments/fragment${fragmentID}/slices"
+outputFolder="data/fragments/fragment${outputFragmentID}/slices"
 baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/${fragmentID}/layers/"
-#baseUrl="http://dl.ash2txt.org/fragments/PHerc1667Cr01Fr03.volpkg/working/${fragmentID}Cr01Fr03_70keV_3.24um/registered/surface_volume/"
 
 # Use the provided or default slice range
 overwriteExistingFiles=false
