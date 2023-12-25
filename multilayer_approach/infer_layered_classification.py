@@ -85,7 +85,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
     assert mask.shape == images[0].shape, "Mask shape does not match image shape"
 
     # Hyperparams
-    label_size = config.label_size
+    label_size = config.patch_size // 4
     stride_factor = 4
 
     stride = patch_size // stride_factor
