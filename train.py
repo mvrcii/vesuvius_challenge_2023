@@ -122,6 +122,8 @@ def get_callbacks(cfg, model_run_dir):
             monitor_metric = "val_iou"
         print("using metric:")
         print(monitor_metric)
+        print("architecture")
+        print(cfg.architecture)
         exit()
 
         checkpoint_callback = ModelCheckpoint(
