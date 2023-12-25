@@ -11,7 +11,7 @@ Image.MAX_IMAGE_PIXELS = None
 
 # Load the image
 # path to current directory
-base_path = "base_labels"
+base_path = "../base_labels"
 source_path = os.path.join(base_path, '0_raw')
 target_Path = os.path.join(base_path, '1_cleaned')
 for file in tqdm(os.listdir(source_path)):

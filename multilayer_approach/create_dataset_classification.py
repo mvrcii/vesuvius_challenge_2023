@@ -10,22 +10,22 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
+from data.utils import write_to_config
+from multilayer_approach.data_validation import validate_fragments
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id
-
-from multilayer_approach.data_validation_multilayer import validate_fragments
-from data.utils import write_to_config
+from utility.labels import build_label_dir, BINARIZED
 
 Image.MAX_IMAGE_PIXELS = None
 
 
-def extract_patches(config: Config, frags, label_dir):
-    frag_id_2_channel = validate_fragments(config, frags, label_dir)
+def extract_patches(config: Config, frags, _label_dir):
+    frag_id_2_channel = validate_fragments(config, frags, _label_dir)
 
     logging.info(f"Starting to extract image and label patches..")
 
     for fragment_id, channels in frag_id_2_channel.items():
-        process_fragment(label_dir=label_dir, config=config, fragment_id=fragment_id, channels=channels)
+        process_fragment(label_dir=_label_dir, config=config, fragment_id=fragment_id, channels=channels)
 
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
     df = pd.DataFrame(LABEL_INFO_LIST, columns=['filename', 'frag_id', 'channels', 'ink_p', 'ignore_p'])
@@ -66,7 +66,7 @@ def clear_dataset(config: Config):
 def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     os.makedirs(target_dir, exist_ok=True)
 
-    fragment_dir = os.path.join(config.data_root_dir, "../data/fragments", f"fragment{frag_id}")
+    fragment_dir = os.path.join(config.data_root_dir, "fragments", f"fragment{frag_id}")
     if not os.path.isdir(fragment_dir):
         raise ValueError(f"Fragment directory does not exist: {fragment_dir}")
 
@@ -283,9 +283,11 @@ if __name__ == '__main__':
 
     LABEL_INFO_LIST = []
 
-    label_dir = os.path.join(cfg.work_dir, "multilayer_approach", "base_labels", "3_binarized")
+    relative_label_dir = build_label_dir(layer_count=cfg.in_chans, _type=BINARIZED)
+    label_dir = os.path.join(cfg.work_dir, relative_label_dir)
     print("Using label dir:", label_dir)
 
     fragments = cfg.fragment_ids
     clear_dataset(config=cfg)
+
     extract_patches(cfg, fragments, label_dir)

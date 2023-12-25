@@ -50,7 +50,7 @@ def clear_dataset(config: Config):
 def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     os.makedirs(target_dir, exist_ok=True)
 
-    fragment_dir = os.path.join(config.data_root_dir, "../data/fragments", f"fragment{frag_id}")
+    fragment_dir = os.path.join(config.data_root_dir, "../../data/fragments", f"fragment{frag_id}")
     if not os.path.isdir(fragment_dir):
         raise ValueError(f"Fragment directory does not exist: {fragment_dir}")
 
@@ -258,7 +258,7 @@ if __name__ == '__main__':
 
     LABEL_INFO_LIST = []
 
-    label_dir = os.path.join(cfg.work_dir, "multilayer_approach", "base_labels", "3_binarized")
+    label_dir = os.path.join(cfg.work_dir, "multilayer_approach", "../base_labels", "3_binarized")
     print("Using label dir:", label_dir)
 
     fragments = [JETFIRE_FRAG_ID]

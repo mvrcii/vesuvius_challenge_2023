@@ -14,7 +14,7 @@
     ]
   },
   {
-    "id": "20231012184422_superseded",
+    "id": "20231012184422",
     "name": "GRIMLARGE",
     "rotation": 0,
     "boost_threshold": 1,
@@ -49,7 +49,7 @@
     "rotation": 0
   },
   {
-    "id": "20231016151001_superseded",
+    "id": "20231016151001",
     "name": "JAZZILLA",
     "center_layers_start_indices": [
       28,
@@ -77,14 +77,14 @@
     "rotation": 0
   },
   {
-    "id": "20231007101615_superseded",
+    "id": "20231007101615",
     "name": "SKYWARP",
     "boost_threshold": 0.00001,
     "rotation": -1,
     "flip": 1
   },
   {
-    "id": "20231022170900_superseded",
+    "id": "20231022170900",
     "name": "DEVASTATOR",
     "boost_threshold": 0.00001,
     "center_layers_start_indices": [
@@ -136,7 +136,7 @@
     "rotation": -1
   },
   {
-    "id": "20231210121320_superseded",
+    "id": "20231210121320",
     "name": "BLUESTREAK",
     "boost_threshold": 1,
     "center_layers_start_indices": [
