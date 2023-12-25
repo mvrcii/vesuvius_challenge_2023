@@ -129,10 +129,10 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
 
 
 # Extracts image/label patches for one label (12 best layers)
-def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tensor, label_arr, ignore_arr,
+def process_channel_stack(target_dir, frag_id, mask, image_tensor, label_arr, ignore_arr,
                           start_channel):
-    x1_list = list(range(0, image_tensor.shape[2] - config.patch_size + 1, config.stride))
-    y1_list = list(range(0, image_tensor.shape[1] - config.patch_size + 1, config.stride))
+    x1_list = list(range(0, image_tensor.shape[2] - cfg.patch_size + 1, cfg.stride))
+    y1_list = list(range(0, image_tensor.shape[1] - cfg.patch_size + 1, cfg.stride))
 
     pbar = tqdm(total=len(x1_list) * len(y1_list), desc=f"Processing: Fragment: {get_frag_name_from_id(frag_id)}")
 
@@ -155,13 +155,16 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
     img_dest_dir = os.path.join(target_dir, "images")
     os.makedirs(img_dest_dir, exist_ok=True)
 
+    image_patch_shape = (cfg.in_chans, cfg.patch_size, cfg.patch_size)
+    label_patch_shape = (cfg.patch_size, cfg.patch_size)
+
     for y1 in y1_list:
         for x1 in x1_list:
             pbar.update(1)
-            y2 = y1 + config.patch_size
-            x2 = x1 + config.patch_size
+            y2 = y1 + cfg.patch_size
+            x2 = x1 + cfg.patch_size
 
-            # Gte mask patch
+            # Get mask patch
             mask_patch = mask[y1:y2, x1:x2]
 
             # Check if patch is fully in mask => discard
@@ -169,8 +172,8 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
                 mask_skipped += 1
                 continue
 
-            # Check if mask patch shape is valid
-            if mask_patch.shape != (config.patch_size, config.patch_size):
+            # Check if patch shape is invalid => discard
+            if mask_patch.shape != (cfg.patch_size, cfg.patch_size):
                 mask_skipped += 1
                 continue
 
@@ -183,20 +186,15 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             keep_patch = np.logical_not(ignore_patch)
 
             # Check shapes
-            assert image_patch.shape == (
-                cfg.in_chans, config.patch_size, config.patch_size), f"Image patch wrong shape: {image_patch.shape}"
-            assert label_patch.shape == (
-                config.patch_size, config.patch_size), f"Label patch wrong shape: {label_patch.shape}"
+            assert image_patch.shape == image_patch_shape, f"Image patch wrong shape: {image_patch.shape}"
+            assert label_patch.shape == label_patch_shape, f"Label patch wrong shape: {label_patch.shape}"
 
-            # assert label patch has > 0 pixels
+            # calculate ink percentage of label patch
             label_pixel_count = np.prod(label_patch.shape)
-            assert label_pixel_count != 0
-
-            # calculate ink percentage of scaled down label patch
             ink_percentage = int((label_patch.sum() / label_pixel_count) * 100)
             assert 0 <= ink_percentage <= 100
 
-            # Skip if ink is not 0 or ink_ratio
+            # Skip if ink is > 0 but < ink_ratio, e.g. ink_ratio == 50 => skip if ink_percentage is 1-49
             if 0 < ink_percentage < cfg.ink_ratio:
                 continue
 
@@ -205,7 +203,7 @@ def process_channel_stack(config: Config, target_dir, frag_id, mask, image_tenso
             assert 0 <= keep_percent <= 100
             ignore_percent = 100 - keep_percent
 
-            # Discard images with less than 5% keep pixels
+            # Discard images that have any ignore area
             if ignore_percent > 0:
                 ignore_skipped += 1
                 continue
