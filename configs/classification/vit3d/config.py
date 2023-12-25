@@ -51,8 +51,8 @@ weight_decay = 0.001
 losses = [('mse', 1.0)]
 
 num_workers = 16
-train_batch_size = 512
-val_batch_size = 512
+train_batch_size = 4096
+val_batch_size = 4096
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
