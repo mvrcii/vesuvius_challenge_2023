@@ -3,25 +3,26 @@ import os
 import requests
 from requests.auth import HTTPBasicAuth
 
+from utility.fragments import SUPERSEDED_FRAGMENTS
+
+GREEN = "\033[92m"
+RED = "\033[91m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+
 
 def download_masks():
-    # ANSI Color Codes
-    GREEN = "\033[92m"
-    RED = "\033[91m"
-    BLUE = "\033[94m"
-    RESET = "\033[0m"
-
     # Add your authentication details here
     username = 'registeredusers'
     password = 'only'
 
-    # Directory containing the fragment folders
     base_dir = 'data/fragments'
 
-    print(os.listdir(base_dir))
-    # Iterate through each folder in base_dir
+    if not os.path.exists(base_dir):
+        print(f"{RED}Base directory does not exist: {base_dir}{RESET}")
+        return
+
     for folder in os.listdir(base_dir):
-        # Check if the folder name starts with 'fragment'
         if folder.startswith('fragment'):
             print(BLUE + f"Processing folder: {folder}" + RESET)
             fragment_id = folder.replace('fragment', '')
@@ -29,10 +30,13 @@ def download_masks():
 
             # Check if mask.png does not exist in the folder
             if not os.path.exists(mask_path):
-                mask_id = fragment_id
-                if mask_id.__contains__("_"):
-                    mask_id = mask_id.split("_")[0]
-                url = f'http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/{fragment_id}/{mask_id}_mask.png'
+                mask_id = fragment_id.split("_")[0]
+
+                url_frag_id = fragment_id
+                if fragment_id in SUPERSEDED_FRAGMENTS:
+                    print("Warning: Added suffix superseded to fragment id!")
+                    url_frag_id += "_superseded"
+                url = f'http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/{url_frag_id}/{mask_id}_mask.png'
 
                 try:
                     response = requests.get(url, auth=HTTPBasicAuth(username, password))
