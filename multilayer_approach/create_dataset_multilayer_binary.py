@@ -3,7 +3,6 @@ import gc
 import logging
 import os
 import shutil
-import sys
 
 import cv2
 import numpy as np
@@ -14,9 +13,7 @@ from tqdm import tqdm
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from data.data_validation_multilayer import validate_fragments
+from multilayer_approach.data_validation_multilayer import validate_fragments
 from data.utils import write_to_config
 
 Image.MAX_IMAGE_PIXELS = None
