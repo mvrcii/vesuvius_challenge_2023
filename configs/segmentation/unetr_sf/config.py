@@ -3,7 +3,7 @@ import sys
 
 import albumentations as A
 
-from utility.constants import JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID, \
+from utility.fragments import JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID, \
     BLASTER_FRAG_ID, IRONHIDE_FRAG_ID
 
 sys.path.append('../')
@@ -18,18 +18,18 @@ data_root_dir = "data"
 dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # training parameters
-model_type = "b2"
+model_type = "b3"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
 # from_pretrained = "playful-glade-812-unetr-sf-b3-231216-041654"
-architecture = 'unet3d-sf'
+architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
 in_chans = 12
-seed = 12424
-epochs = 200
+seed = 770
+epochs = -1
 losses = []
 dataset_fraction = 1
-unet3d_out_channels = 16
+unetr_out_channels = 32
 
 val_interval = 1
 
@@ -37,25 +37,22 @@ val_interval = 1
 patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
+ink_ratio = 8
 fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
                 JAZZILLA_FRAG_ID]
 validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
 
-take_full_dataset = True  # If set to true, takes full dataset and ignores thresholds below
-ink_ratio = 3
-no_ink_sample_percentage = 0.5  # Given the count of N ink samples, take this percentage of the count as no ink
-max_ignore_th = 75  # For all samples, how much ignore is maximum allowed
-
-lr = 5e-5
-eta_min = 1e-6
-
+lr = 1e-3  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
+take_full_dataset = False
+no_ink_sample_percentage = 0.2  # Given the count of N ink samples, take this percentage of the count as no ink
+max_ignore_th = 75  # For no ink samples, how much ignore percentage (%) is allowed maximum
 
 num_workers = 16
-train_batch_size = 5
+train_batch_size = 1
 val_batch_size = train_batch_size
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER

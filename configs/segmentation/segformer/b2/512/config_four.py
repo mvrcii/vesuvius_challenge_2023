@@ -2,9 +2,7 @@ import os
 
 import albumentations as A
 
-from utility.constants import (ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, IRONHIDE_FRAG_ID, MEGATRON_FRAG_ID,
-                               SOUNDWAVE_FRAG_ID, STARSCREAM_FRAG_ID, RATCHET_FRAG_ID, JAZZ_FRAG_ID,
-                               DEVASTATOR_FRAG_ID, SUNSTREAKER_FRAG_ID)
+from utility.meta_data import AlphaBetaMeta
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -15,37 +13,39 @@ base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")
 
-# dataset creation parameters
-patch_size = 256
-label_size = patch_size // 4
-stride = patch_size // 2
-ink_ratio = 3
-artefact_threshold = 5
-fragment_ids = [ULTRA_MAGNUS_FRAG_ID, OPTIMUS_FRAG_ID, MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID, SUNSTREAKER_FRAG_ID,
-                SOUNDWAVE_FRAG_ID, IRONHIDE_FRAG_ID, RATCHET_FRAG_ID, JAZZ_FRAG_ID, DEVASTATOR_FRAG_ID]
-train_split = 0.8
-
 # training parameters
 model_type = "b2"
 architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
-# from_checkpoint = "fine-wildflower-497-segformer-b2-231128-164424"
+# from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
 in_chans = 4
-seed = 7777
+seed = 3445774
 epochs = -1
 losses = [("bce", 1.0), ("dice", 1.0)]
 dataset_fraction = 1
 
-val_interval = 1
-lr = 2e-4
-step_lr_steps = 2
-step_lr_factor = 0.97
-weight_decay = 0.01
+val_interval = 2
+
+# dataset creation parameters
+patch_size = 512
+label_size = patch_size // 4
+stride = patch_size // 2
+ink_ratio = 3
+artefact_threshold = 5
+fragment_ids = AlphaBetaMeta().get_current_train_fragments()
+excluded_label_blocks = 3
+excluded_label_layers = in_chans * excluded_label_blocks  # excluded from bottom and top of the stack
+train_split = 0.8
+
+lr = 1e-4
+step_lr_steps = 1
+step_lr_factor = 0.98
+weight_decay = 0.001
 
 num_workers = 16
-train_batch_size = 48
-val_batch_size = 48
+train_batch_size = 24
+val_batch_size = 24
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
@@ -64,7 +64,7 @@ train_aug = [
         A.GridDistortion(always_apply=True, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
                          border_mode=0,
                          value=(0, 0, 0), mask_value=None, normalized=False),
-        # A.ImageCompression(always_apply=True, quality_lower=62, quality_upper=91, compression_type=1),
+        A.ImageCompression(always_apply=True, quality_lower=62, quality_upper=91, compression_type=1),
         A.RandomResizedCrop(always_apply=True, height=patch_size, width=patch_size, scale=(0.78, 1.0),
                             ratio=(0.75, 1.51),
                             interpolation=0)
