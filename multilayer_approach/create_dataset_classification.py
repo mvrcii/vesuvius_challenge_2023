@@ -125,7 +125,7 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     gc.collect()
 
     total_patches = patch_cnt + skipped_cnt + ignore_skipped_count
-    print(f"- Total={total_patches} | Patches={patch_cnt} | Skipped={skipped_cnt} | Ignored = {ignore_skipped_count}")
+    print(f"Patch Breakdown:\tTotal={total_patches} | Patches={patch_cnt} | Skipped={skipped_cnt} | Ignored = {ignore_skipped_count}")
 
 
 # Extracts image/label patches for one label (12 best layers)
