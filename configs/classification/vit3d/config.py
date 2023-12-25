@@ -50,9 +50,9 @@ step_lr_factor = 0.98
 weight_decay = 0.001
 losses = [('mse', 1.0)]
 
-num_workers = 8
-train_batch_size = 8
-val_batch_size = 8
+num_workers = 16
+train_batch_size = 16
+val_batch_size = 16
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
