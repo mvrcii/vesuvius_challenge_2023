@@ -15,8 +15,8 @@ dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # DATASET CREATION
 in_chans = 12
-patch_size = 48
-stride = patch_size // 2
+patch_size = 16
+stride = patch_size // 1
 
 # if used with create_dataset_classification all samples with ink_ratio == 0 and > ink_ratio will be saved
 # E.g. ink_ratio == 50 => discard samples with ink_ratio 1-49. Label for a sample will be its ink ratio
@@ -37,7 +37,7 @@ architecture = 'vit3d'
 model_name = f"{architecture}-{model_type}"
 seed = 1337
 epochs = -1
-dataset_fraction = 0.01
+dataset_fraction = 1
 val_interval = 1
 fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID]
 # fragment_ids = [GRIMLARGE_FRAG_ID]
@@ -50,9 +50,9 @@ step_lr_factor = 0.95
 weight_decay = 0.001
 losses = [('mse', 1.0)]
 
-num_workers = 4
-train_batch_size = 2
-val_batch_size = 2
+num_workers = 16
+train_batch_size = 64
+val_batch_size = 64
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
