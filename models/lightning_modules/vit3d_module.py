@@ -70,3 +70,10 @@ class Vit3D_Module(AbstractLightningModule):
 
         auc = self.auc(torch.sigmoid(logits), y_true)
         self.log('val_auc', auc, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+
+        # Calculate and log accuracy
+        # Convert predictions and labels to binary using 0.5 threshold
+        preds_binary = (y_pred > 0.5).float()
+        labels_binary = (y_true > 0.5).float()
+        accuracy = torch.mean((preds_binary == labels_binary).float())
+        self.log('val_accuracy', accuracy, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
