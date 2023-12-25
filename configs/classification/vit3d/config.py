@@ -1,6 +1,7 @@
 import os
 import albumentations as A
-from utility.fragments import JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID
+from utility.fragments import JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, \
+    THUNDERCRACKER_FRAG_ID
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -19,7 +20,7 @@ stride = patch_size // 2
 
 # if used with create_dataset_classification all samples with ink_ratio == 0 and > ink_ratio will be saved
 # E.g. ink_ratio == 50 => discard samples with ink_ratio 1-49. Label for a sample will be its ink ratio
-ink_ratio = 50
+ink_ratio = 25
 
 
 no_ink_sample_percentage = 1
@@ -34,25 +35,24 @@ take_full_dataset = False
 model_type = "regular"
 architecture = 'vit3d'
 model_name = f"{architecture}-{model_type}"
-seed = 97074
+seed = 1337
 epochs = -1
-dataset_fraction = 0.5
+dataset_fraction = 1
 val_interval = 1
-fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID]
-# fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
-#                 JAZZILLA_FRAG_ID]
+fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID]
+# fragment_ids = [GRIMLARGE_FRAG_ID]
 # validation_fragments = [HOT_ROD_FRAG_ID]
 train_split = 0.8
-lr = 1e-4
+lr = 5e-5
 eta_min = 1e-5
 step_lr_steps = 1
-step_lr_factor = 0.98
+step_lr_factor = 0.95
 weight_decay = 0.001
 losses = [('mse', 1.0)]
 
 num_workers = 16
-train_batch_size = 16
-val_batch_size = 16
+train_batch_size = 64
+val_batch_size = 64
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
