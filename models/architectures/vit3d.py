@@ -110,10 +110,9 @@ def createViT3D():
     frame_patch_size = 2  # High temporal resolution
     dim = 1024  # Very large embedding dimension
     depth = 24  # Many layers for deep feature extraction
-    heads = 16  # Many attention heads
+    heads = 256  # Many attention heads
     mlp_dim = 4096  # Very large feedforward network
-    channels = 3  # Standard for RGB video frames
-    dim_head = 64  # Balancing head dimension with total dimension
+    dim_head = 128  # Balancing head dimension with total dimension
     dropout = 0.3  # Higher dropout to counteract overfitting
     emb_dropout = 0.3  # Higher embedding dropout for same reas
 
