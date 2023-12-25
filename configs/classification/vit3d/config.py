@@ -45,8 +45,8 @@ validation_fragments = [GRIMLARGE_FRAG_ID]
 train_split = 0.8
 lr = 5e-5
 eta_min = 1e-5
-step_lr_steps = 1
-step_lr_factor = 0.95
+step_lr_steps = 3
+step_lr_factor = 0.99
 weight_decay = 0.001
 losses = [('mse', 1.0)]
 
