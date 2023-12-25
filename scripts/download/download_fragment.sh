@@ -16,7 +16,6 @@ fragmentID="$1"
 string_argument="$2"
 
 IFS=',' read -r -a ranges <<< "$string_argument"
-echo $ranges
 
 # Check if fragmentID ends with "_superseded"
 if [[ $fragmentID == *"_superseded" ]]; then
