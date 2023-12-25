@@ -8,7 +8,9 @@ source ~/.bashrc
 
 # Create local config file
 touch conf_local.py
-echo -e 'import os\nwork_dir = os.path.join("")' > conf_local.py
+echo -e 'import os
+work_dir = os.path.join(os.path.expanduser("~/kaggle1stReimp"))
+node = True' > conf_local.py
 
 # Git
 git config --global credential.helper cache
