@@ -117,11 +117,15 @@ def get_callbacks(cfg, model_run_dir):
         os.makedirs(model_run_dir, exist_ok=True)
         cfg.save_to_file(model_run_dir)
 
+        monitor_metric = "val_auc"
+        if cfg.architecture == "unet3d":
+            monitor_metric = "val_iou"
+
         checkpoint_callback = ModelCheckpoint(
             dirpath=model_run_dir,
             filename="best-checkpoint-{epoch}-{val_iou:.2f}",
             save_top_k=1,
-            monitor="val_auc" if cfg.architecture == "unet3d" else "val_iou",
+            monitor=monitor_metric,
             mode="max",
             every_n_epochs=1
         )
