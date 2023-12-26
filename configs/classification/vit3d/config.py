@@ -52,7 +52,7 @@ step_lr_factor = 0.99
 weight_decay = 0.001
 losses = [('mse', 1.0)]
 
-num_workers = 16
+num_workers = 1
 train_batch_size = 256
 val_batch_size = 256
 
