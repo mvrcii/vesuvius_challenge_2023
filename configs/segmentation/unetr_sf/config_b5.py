@@ -19,7 +19,6 @@ label_size = patch_size // 4
 stride = patch_size // 2
 
 fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID]
-# fragment_ids = [GRIMLARGE_FRAG_ID]
 validation_fragments = [GRIMLARGE_FRAG_ID]
 
 # Training parameters
@@ -29,7 +28,7 @@ architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
 dataset_fraction = 0.5
-take_full_dataset = False
+take_full_dataset = True
 # Only relevant if take_full_dataset == False
 ink_ratio = 10
 no_ink_sample_percentage = 1
@@ -40,7 +39,7 @@ unetr_out_channels = 32
 
 val_interval = 1
 
-lr = 4e-4  # 1e-4
+lr = 2e-4  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.97
 weight_decay = 0.001
