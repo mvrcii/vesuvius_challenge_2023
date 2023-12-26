@@ -14,7 +14,7 @@ def main():
 
     slurm_cmd = f'sbatch \
     --wrap="{cmd_str}" \
-    -o "slurm_logs/slurm-%j.out"'
+    -o "logs/slurm-%j.out"'
 
     subprocess.run(slurm_cmd, shell=True)
 
