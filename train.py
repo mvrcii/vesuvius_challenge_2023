@@ -32,8 +32,7 @@ warnings.filterwarnings("ignore",
                         message="You should probably TRAIN this model on a down-stream task")
 
 warnings.simplefilter("ignore", category=Warning)
-# os.environ["TORCH_CPP_LOG_LEVEL"]="INFO"
-# os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
+
 
 def get_sys_args():
     parser = argparse.ArgumentParser(description='Train configuration.')
@@ -170,7 +169,6 @@ def main():
         logger=wandb_logger,
         callbacks=get_callbacks(cfg=config, model_run_dir=model_run_dir),
         accelerator="auto",
-        # strategy="ddp",
         devices=get_device_configuration(),
         enable_progress_bar=True,
         precision='16-mixed',
