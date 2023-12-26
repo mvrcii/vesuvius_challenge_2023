@@ -64,17 +64,6 @@ def get_model(config: Config):
         print("Invalid architecture for model:", architecture)
         sys.exit(1)
 
-
-def log_wandb_hyperparams(config, wandb_logger):
-    config_dict = vars(config)  # Convert config object to a dictionary
-
-    # Remove non-serializable items
-    cleaned_config = {k: v for k, v in config_dict.items() if not isinstance(v, types.ModuleType)}
-
-    # Log the cleaned hyperparameters
-    wandb_logger.log_hyperparams(cleaned_config)
-
-
 def get_data_module(config: Config):
     architecture = config.architecture
 
@@ -89,6 +78,17 @@ def get_data_module(config: Config):
     else:
         print("Invalid architecture for data module:", architecture)
         sys.exit(1)
+
+def log_wandb_hyperparams(config, wandb_logger):
+    config_dict = vars(config)  # Convert config object to a dictionary
+
+    # Remove non-serializable items
+    cleaned_config = {k: v for k, v in config_dict.items() if not isinstance(v, types.ModuleType)}
+
+    # Log the cleaned hyperparameters
+    wandb_logger.log_hyperparams(cleaned_config)
+
+
 
 
 def get_device_configuration():
