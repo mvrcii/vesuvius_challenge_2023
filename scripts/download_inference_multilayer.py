@@ -49,6 +49,7 @@ def get_inference_result(fragment_id, full_model_run_dir, hostname, single):
 
     server_paths = {
         "vast": f"~/kaggle1stReimp/inference/{result_dir}",
+        "andro": f"~/kaggle1stReimp/inference/{result_dir}"
     }
 
     if hostname not in server_paths:
