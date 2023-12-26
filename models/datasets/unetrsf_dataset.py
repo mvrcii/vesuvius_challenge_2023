@@ -8,7 +8,7 @@ class UNETR_SFDataset(UNET3D_SFDataset):
         super().__init__(cfg=cfg, root_dir=root_dir, images=images, transform=transform, labels=labels)
 
     def __getitem__(self, idx):
-        image, label = self.__getitem__(idx)
+        image, label = super().__getitem__(idx)
 
         # pad image to have 16 layers
         image = torch.cat([image, torch.zeros(1, 16 - image.shape[1], self.patch_size, self.patch_size)], dim=1)
