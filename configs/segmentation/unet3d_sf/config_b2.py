@@ -47,7 +47,7 @@ focal_gamma = 3.0
 focal_alpha = 0.85
 
 num_workers = 16
-train_batch_size = 64
+train_batch_size = 4
 val_batch_size = train_batch_size
 
 # PATHS
