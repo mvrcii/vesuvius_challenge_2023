@@ -23,7 +23,7 @@ fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRA
 validation_fragments = [GRIMLARGE_FRAG_ID]
 
 # training parameters
-model_type = "b2"
+model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
 # from_pretrained = "playful-glade-812-unetr-sf-b3-231216-041654"
 architecture = 'unet3d-sf'
@@ -33,7 +33,7 @@ no_ink_sample_percentage = 1
 dataset_fraction = 1
 seed = 97074
 epochs = -1
-unet3d_out_channels = 16
+unet3d_out_channels = 64
 
 val_interval = 1
 
@@ -46,8 +46,8 @@ losses = [('focal', 2.0), ('dice', 1.0)]
 focal_gamma = 5.0
 focal_alpha = 0.75
 
-num_workers = 1
-train_batch_size = 2
+num_workers = 16
+train_batch_size = 8
 val_batch_size = train_batch_size
 
 # PATHS
