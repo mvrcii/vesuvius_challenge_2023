@@ -1,13 +1,11 @@
-import os
-
 import torch
 import wandb
 from torchvision.utils import make_grid
 
-from models.losses.binary_dice_loss import MaskedBinaryDiceLoss
-from models.losses.focal_loss import MaskedFocalLoss
 from models.architectures.unet3d_segformer import UNET3D_Segformer
 from models.lightning_modules.abstract_module import AbstractLightningModule
+from models.losses.binary_dice_loss import MaskedBinaryDiceLoss
+from models.losses.focal_loss import MaskedFocalLoss
 
 
 def calculate_masked_metrics_batchwise(outputs, labels, mask):
@@ -39,39 +37,26 @@ class UNET3D_SFModule(AbstractLightningModule):
         super().__init__(cfg=cfg)
 
         self.model = UNET3D_Segformer(cfg=cfg)
-
-        self.focal_loss_fn = MaskedFocalLoss(gamma=2.0, alpha=0.25)
-        self.dice_loss_fn = MaskedBinaryDiceLoss(from_logits=True)
-        # self.bce_loss_fn = MaskedBinaryBCELoss(from_logits=True)
-
         self.load_weights()
 
     def training_step(self, batch, batch_idx):
         data, label = batch
         y_true = label[:, 0]
         y_mask = label[:, 1]
+        logits = self.forward(data)
+        y_pred = torch.sigmoid(logits)
 
-        y_pred = self.forward(data)
-
-        dice_loss = self.dice_loss_fn(y_pred, y_true, y_mask)
-        focal_loss = self.focal_loss_fn(y_pred, y_true, y_mask)
-        # bce_loss = self.bce_loss_fn(y_pred, y_true, y_mask)
-
-        self.log(f'train_dice_loss', dice_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log(f'train_focal_loss', focal_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        # self.log(f'train_bce_loss', bce_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-
-        total_loss = dice_loss + focal_loss
+        total_loss, losses = self.calculate_masked_weighted_loss(logits, y_true, y_mask)
+        self.log_losses_to_wandb(losses, 'train')
 
         self.update_unetr_training_metrics(total_loss)
         self.train_step += 1
 
         if batch_idx % 100 == 0 and self.trainer.is_global_zero:
             with torch.no_grad():
-                probs = torch.sigmoid(y_pred)
-                combined = torch.cat([probs[0], y_true[0], y_mask[0]], dim=1)
+                combined = torch.cat([y_pred[0], y_true[0], y_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
-                test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
+                test_image = wandb.Image(grid, caption="Step {}".format(self.train_step))
                 wandb.log({"Train Image": test_image})
 
         return total_loss
@@ -80,29 +65,29 @@ class UNET3D_SFModule(AbstractLightningModule):
         data, label = batch
         y_true = label[:, 0]
         y_mask = label[:, 1]
+        logits = self.forward(data)
+        y_pred = torch.sigmoid(logits)
 
-        y_pred = self.forward(data)
-        probs = torch.sigmoid(y_pred)
+        total_loss, losses = self.calculate_masked_weighted_loss(logits, y_true, y_mask)
+        self.log_losses_to_wandb(losses, 'val')
 
-        dice_loss = self.dice_loss_fn(y_pred, y_true, y_mask)
-        focal_loss = self.focal_loss_fn(y_pred, y_true, y_mask)
-        # bce_loss = self.bce_loss_fn(y_pred, y_true, y_mask)
-
-        self.log(f'val_dice_loss', dice_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log(f'val_focal_loss', focal_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        # self.log(f'val_bce_loss', bce_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-
-        total_loss = dice_loss + focal_loss
-
-        iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probs, y_true, y_mask)
+        iou, precision, recall, f1 = calculate_masked_metrics_batchwise(y_pred, y_true, y_mask)
         self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
 
         if batch_idx == 5 and self.trainer.is_global_zero:
             with torch.no_grad():
-                combined = torch.cat([probs[0], y_true[0], y_mask[0]], dim=1)
+                combined = torch.cat([y_pred[0], y_true[0], y_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
                 wandb.log({"Validation Image": test_image})
+
+    def calculate_masked_weighted_loss(self, y_pred, y_true, y_mask):
+        losses = [(name, weight, loss_function(y_pred, y_true.float(), y_mask)) for (name, weight, loss_function) in
+                  self.loss_functions]
+        total_loss = sum([weight * value for (_, weight, value) in losses])
+        losses.append(("total", 1.0, total_loss))
+
+        return total_loss, losses
 
     def update_unetr_validation_metrics(self, loss, iou, precision, recall, f1):
         self.log(f'val_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
@@ -114,5 +99,4 @@ class UNET3D_SFModule(AbstractLightningModule):
     def update_unetr_training_metrics(self, loss):
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
         self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log(f'train_loss_step', loss, on_step=True, on_epoch=False, prog_bar=True, sync_dist=True)
         self.log(f'train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
