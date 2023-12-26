@@ -171,12 +171,12 @@ def main():
         max_epochs=config.epochs,
         logger=wandb_logger,
         callbacks=get_callbacks(cfg=config, model_run_dir=model_run_dir),
-        accelerator="auto",
-        devices=get_device_configuration(),
+        accelerator="gpu",
+        strategy="ddp",
+        devices=8,
         enable_progress_bar=True,
         precision='16-mixed',
         gradient_clip_val=1.0,
-        strategy='ddp_find_unused_parameters_true',
         gradient_clip_algorithm="norm",
         check_val_every_n_epoch=config.val_interval
     )
