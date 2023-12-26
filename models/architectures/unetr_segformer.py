@@ -95,7 +95,7 @@ def get_device(model):
 
 
 if __name__ == "__main__":
-    # Assuming UNETR_Segformer and CFG are defined elsewhere
+    # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 256, 256))
     model = UNETR_Segformer(CFG)
 
     if torch.cuda.is_available():
@@ -103,23 +103,23 @@ if __name__ == "__main__":
     else:
         print("CUDA is not available. The model will remain on the CPU.")
 
-    # Define an optimizer
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    # Input
+    # x = torch.from_numpy(x).float()
+    # x = torch.zeros(1, 1, 12, 128, 128)
+    x = torch.empty((1, 1, 12, 128, 128)).fill_(float('inf'))
 
-    # Artificial loss tensor with NaN values
-    loss = torch.tensor(float('nan'), requires_grad=True).to(get_device(model))
-    print("Artificial loss:", loss)
+    if torch.isnan(x).any():
+        print("Warning: Data is nan:", x)
 
-    # Perform a backward step on the artificial loss
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
+    # pad to have depth 16 instead of 12
+    x = torch.cat([x, torch.zeros(1, 1, 4, 128, 128)], dim=2)
+    print(x.shape)
 
-    # Create a proper input tensor
-    proper_input = torch.randn(1, 1, 16, 128, 128).to(get_device(model))
+    print(torch.unique(x))
 
-    # Check if the model gives proper output
-    with torch.no_grad():
-        proper_output = model(proper_input)
-        print("Output shape:", proper_output.shape)
-        print("Output unique values:", torch.unique(proper_output))
+    # # move x to cuda
+    x = x.to(get_device(model))
+    output = model(x)
+
+    print(output.shape)
+    print(torch.unique(output))
