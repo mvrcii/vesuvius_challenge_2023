@@ -11,7 +11,7 @@ unet3dsf_datamodule.py:
 
 1. Skips patches with ``ignore_p > cfg.max_ignore_threshold`` (if config has this attr, otherwise skips nothing here)
 2. If ```cfg.take_full_dataset == True``` => doesn't do any ink balancing
-3. If ```cfg.take_full_dataset == False``` => 
-- Takes all the ``ink_p >=  cfg.ink_ratio`` samples => counts them
-- Takes ```cfg.no_ink_sample_percentage * ink_count``` number of ``ink_p==0`` samples
+3. If ```cfg.take_full_dataset == False```:
+   - Takes all the ``ink_p >=  cfg.ink_ratio`` samples (ink patches) => counts them to variable `ink_count`
+   - Takes ```cfg.no_ink_sample_percentage * ink_count``` number of ``ink_p==0`` samples (full black patches)
 
