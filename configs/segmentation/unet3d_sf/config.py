@@ -23,9 +23,9 @@ architecture = 'unet3d-sf'
 model_name = f"{architecture}-{model_type}"
 
 in_chans = 12
-seed = 770
+seed = 97074
 epochs = -1
-dataset_fraction = 0.5
+dataset_fraction = 1
 unet3d_out_channels = 16
 
 val_interval = 1
