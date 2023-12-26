@@ -8,6 +8,7 @@ from datetime import datetime
 import numpy as np
 import torch
 from lightning import seed_everything
+from lightning.fabric.strategies import DDPStrategy
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
@@ -173,7 +174,7 @@ def main():
         enable_progress_bar=True,
         precision='16-mixed',
         gradient_clip_val=1.0,
-        strategy='ddp_find_unused_parameters_true',
+        strategy=DDPStrategy(find_unused_parameters=True),
         gradient_clip_algorithm="norm",
         check_val_every_n_epoch=config.val_interval
     )
