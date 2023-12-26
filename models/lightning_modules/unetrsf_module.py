@@ -42,7 +42,7 @@ class UNETR_SFModule(AbstractLightningModule):
         y_true = label[:, 0]
         y_mask = label[:, 1]
 
-        if torch.isnan(data).any():
+        if torch.isnan(data).any() or torch.isinf(data).any():
             print("Warning: Input Data is nan:", data)
 
         if torch.isnan(y_true).any():

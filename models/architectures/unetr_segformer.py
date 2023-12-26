@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from albumentations.pytorch import ToTensorV2
+from torch import optim
 from transformers import SegformerForSemanticSegmentation
 
 from models.architectures.unetr import UNETR
@@ -70,8 +71,20 @@ class UNETR_Segformer(nn.Module):
 
     def forward(self, image):
         output = self.encoder(image).max(axis=2)[0]
+
+        if torch.isnan(output).any():
+            print("Warning: UNETR output is nan:", output)
+
         output = self.dropout(output)
+
+        if torch.isnan(output).any():
+            print("Warning: Dropout output is nan:", output)
+
         output = self.encoder_2d(output).logits
+
+        if torch.isnan(output).any():
+            print("Warning: Segformer logits output is nan:", output)
+
         output = output.squeeze(1)
 
         return output
@@ -82,7 +95,7 @@ def get_device(model):
 
 
 if __name__ == "__main__":
-    # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 256, 256))
+    # Assuming UNETR_Segformer and CFG are defined elsewhere
     model = UNETR_Segformer(CFG)
 
     if torch.cuda.is_available():
@@ -90,23 +103,23 @@ if __name__ == "__main__":
     else:
         print("CUDA is not available. The model will remain on the CPU.")
 
-    # Input
-    # x = torch.from_numpy(x).float()
-    # x = torch.zeros(1, 1, 12, 128, 128)
-    x = torch.empty((1, 1, 12, 128, 128)).fill_(float('nan'))
+    # Define an optimizer
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    if torch.isnan(x).any():
-        print("Warning: Data is nan:", x)
+    # Artificial loss tensor with NaN values
+    loss = torch.tensor(float('nan'), requires_grad=True).to(get_device(model))
+    print("Artificial loss:", loss)
 
-    exit()
-    # pad to have depth 16 instead of 12
-    x = torch.cat([x, torch.zeros(1, 1, 4, 128, 128)], dim=2)
-    print(x.shape)
+    # Perform a backward step on the artificial loss
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
 
-    print(torch.unique(x))
+    # Create a proper input tensor
+    proper_input = torch.randn(1, 1, 16, 128, 128).to(get_device(model))
 
-    # # move x to cuda
-    x = x.to(get_device(model))
-    output = model(x)
-    print(output.shape)
-    print(torch.unique(output))
+    # Check if the model gives proper output
+    with torch.no_grad():
+        proper_output = model(proper_input)
+        print("Output shape:", proper_output.shape)
+        print("Output unique values:", torch.unique(proper_output))
