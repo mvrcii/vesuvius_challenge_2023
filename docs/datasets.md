@@ -1,9 +1,9 @@
 All scripts skip a patch if it has an invalid shape or is fully masked.
 
-| Script                            | Ignore                   | Ink                                                    |
-|-----------------------------------|--------------------------|--------------------------------------------------------|
-| 1: create_dataset_segmentation.py | Skip if ``> 95`` ignored | Creates all patches independent of ink                 |
-| 2: create_dataset_segmentation.py | Skip if ``> 0`` ignored  | Create all ``ink_p==0`` and ``ink_p >= cfg.ink_ratio`` |
+| Script                              | Ignore                   | Ink                                                    |
+|-------------------------------------|--------------------------|--------------------------------------------------------|
+| 1: create_dataset_segmentation.py   | Skip if ``> 95`` ignored | Creates all patches independent of ink                 |
+| 2: create_dataset_classification.py | Skip if ``> 0`` ignored  | Create all ``ink_p==0`` and ``ink_p >= cfg.ink_ratio`` |
 
 
 ## Scripts building on 1: create_dataset_segmentation.py
