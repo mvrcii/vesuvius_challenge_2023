@@ -72,8 +72,13 @@ class UNET3D_SFDataModule(AbstractDataModule):
         if validation_fragments is None or len(validation_fragments) == 0:
             raise Exception("Validation fragments not specified or empty!")
 
+        print(validation_fragments)
+        print(df["frag_id"].unique())
+        print(len(df[df["frag_id"]==20231012184422]))
         train_df = df[~df['frag_id'].isin(validation_fragments)]
         valid_df = df[df['frag_id'].isin(validation_fragments)]
+        print(len(valid_df))
+        exit()
 
         if train_df.shape[0] == 0:
             raise Exception("Training DataFrame is empty. No entries found for the given validation IDs.")
