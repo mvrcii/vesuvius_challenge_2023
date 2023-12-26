@@ -363,7 +363,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Infer Layered Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
-    parser.add_argument('--batch_size', type=int, default=128, help='Batch size (default: 128)')
+    parser.add_argument('--batch_size', type=int, default=32, help='Batch size (default: 32)')
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
                                                               'for the inference')
     parser.add_argument('--boost_threshold', action='store_true', help='Use a boosted threshold for saved label images')
