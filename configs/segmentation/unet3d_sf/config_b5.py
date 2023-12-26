@@ -42,7 +42,7 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-losses = [('focal', 5.0), ('dice', 1.0)]
+losses = [('masked-focal', 5.0), ('masked-dice', 1.0)]
 focal_gamma = 5.0
 focal_alpha = 0.75
 
