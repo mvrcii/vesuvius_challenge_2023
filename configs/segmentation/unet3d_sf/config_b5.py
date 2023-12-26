@@ -33,17 +33,17 @@ no_ink_sample_percentage = 1
 dataset_fraction = 1
 seed = 42
 epochs = -1
-unet3d_out_channels = 16
+unet3d_out_channels = 64
 
 val_interval = 1
 
 lr = 1e-4  # 1e-4
 step_lr_steps = 1
-step_lr_factor = 0.98
+step_lr_factor = 0.95
 weight_decay = 0.001
 
-losses = [('masked-focal', 1.0), ('masked-dice', 1.0)]
-focal_gamma = 1.0
+losses = [('masked-focal', 2.0), ('masked-dice', 1.0)]
+focal_gamma = 2.0
 focal_alpha = 0.25
 
 num_workers = 16
