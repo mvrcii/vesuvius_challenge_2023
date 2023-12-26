@@ -28,10 +28,6 @@ class UNET3D_SFDataModule(AbstractDataModule):
         if cfg.seed == -1:
             cfg.seed = None  # Set random seed if -1 is given
 
-        # debug
-        print("before pruning etc")
-        print(df["frag_id"].unique())
-        print(len(df[df["frag_id"]==20231012184422]))
 
         if "ignore_p" in df.columns:
             print("Before ignoring: ", len(df.index))
