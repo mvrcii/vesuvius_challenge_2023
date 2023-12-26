@@ -133,25 +133,25 @@ def get_device(model):
     return next(model.parameters()).device
 
 
-if __name__ == "__main__":
-    # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 256, 256))
-    model = UNETR_Segformer(CFG)
-    #
-    if torch.cuda.is_available():
-        model.to('cuda')
-    else:
-        print("CUDA is not available. The model will remain on the CPU.")
-    #
-    # print(get_device(model))
-    #
-    # x = np.random.rand(1, 1, 16, 512, 512)
-    # x = torch.from_numpy(x).float()
-    x = torch.randn(1, 1, 12, 256, 256)
-    print(x.shape)
-    # pad to have depth 16 instead of 12
-    x = torch.cat([x, torch.zeros(1, 1, 4, 256, 256)], dim=2)
-    print(x.shape)
-    # # move x to cuda
-    x = x.to(get_device(model))
-    output = model(x)
-    print(output.shape)
+# if __name__ == "__main__":
+#     # model = UNETR(input_dim=1, output_dim=32, img_shape=(16, 256, 256))
+#     model = UNETR_Segformer(CFG)
+#     #
+#     if torch.cuda.is_available():
+#         model.to('cuda')
+#     else:
+#         print("CUDA is not available. The model will remain on the CPU.")
+#     #
+#     # print(get_device(model))
+#     #
+#     # x = np.random.rand(1, 1, 16, 512, 512)
+#     # x = torch.from_numpy(x).float()
+#     x = torch.randn(1, 1, 12, 256, 256)
+#     print(x.shape)
+#     # pad to have depth 16 instead of 12
+#     x = torch.cat([x, torch.zeros(1, 1, 4, 256, 256)], dim=2)
+#     print(x.shape)
+#     # # move x to cuda
+#     x = x.to(get_device(model))
+#     output = model(x)
+#     print(output.shape)
