@@ -8,7 +8,7 @@ from datetime import datetime
 import numpy as np
 import torch
 from lightning import seed_everything
-from lightning.fabric.strategies import DDPStrategy
+from lightning.pytorch.strategies.strategy import Strategy
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
@@ -34,6 +34,8 @@ warnings.filterwarnings("ignore",
 
 warnings.simplefilter("ignore", category=Warning)
 
+os.environ["TORCH_CPP_LOG_LEVEL"]="INFO"
+os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
 
 def get_sys_args():
     parser = argparse.ArgumentParser(description='Train configuration.')
@@ -174,7 +176,7 @@ def main():
         enable_progress_bar=True,
         precision='16-mixed',
         gradient_clip_val=1.0,
-        strategy=DDPStrategy(find_unused_parameters=True),
+        strategy='ddp_find_unused_parameters_true',
         gradient_clip_algorithm="norm",
         check_val_every_n_epoch=config.val_interval
     )
