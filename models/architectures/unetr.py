@@ -193,7 +193,7 @@ class Transformer(nn.Module):
 
 class UNETR(nn.Module):
     def __init__(self, img_shape=(128, 128, 128), input_dim=4, output_dim=3, embed_dim=768, patch_size=16, num_heads=12, dropout=0.1):
-        super(UNETR, self).__init__()
+        super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.embed_dim = embed_dim

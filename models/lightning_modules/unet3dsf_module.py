@@ -42,6 +42,7 @@ class UNET3D_SFModule(AbstractLightningModule):
 
         self.focal_loss_fn = MaskedFocalLoss(gamma=2.0, alpha=0.25)
         self.dice_loss_fn = MaskedBinaryDiceLoss(from_logits=True)
+        # self.bce_loss_fn = MaskedBinaryBCELoss(from_logits=True)
 
         self.load_weights()
 
@@ -54,9 +55,11 @@ class UNET3D_SFModule(AbstractLightningModule):
 
         dice_loss = self.dice_loss_fn(y_pred, y_true, y_mask)
         focal_loss = self.focal_loss_fn(y_pred, y_true, y_mask)
+        # bce_loss = self.bce_loss_fn(y_pred, y_true, y_mask)
 
         self.log(f'train_dice_loss', dice_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
         self.log(f'train_focal_loss', focal_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        # self.log(f'train_bce_loss', bce_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
         total_loss = dice_loss + focal_loss
 
@@ -83,9 +86,11 @@ class UNET3D_SFModule(AbstractLightningModule):
 
         dice_loss = self.dice_loss_fn(y_pred, y_true, y_mask)
         focal_loss = self.focal_loss_fn(y_pred, y_true, y_mask)
+        # bce_loss = self.bce_loss_fn(y_pred, y_true, y_mask)
 
         self.log(f'val_dice_loss', dice_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
         self.log(f'val_focal_loss', focal_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        # self.log(f'val_bce_loss', bce_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
         total_loss = dice_loss + focal_loss
 
@@ -109,4 +114,5 @@ class UNET3D_SFModule(AbstractLightningModule):
     def update_unetr_training_metrics(self, loss):
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
         self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+        self.log(f'train_loss_step', loss, on_step=True, on_epoch=False, prog_bar=True, sync_dist=True)
         self.log(f'train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)

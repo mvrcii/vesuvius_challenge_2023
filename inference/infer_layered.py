@@ -431,7 +431,6 @@ def main():
     global verbose, start_idx, end_idx, boost_threshold
     boost_threshold = args.boost_threshold
     verbose = args.v
-
     start_idx = args.start_idx
     end_idx = args.end_idx
 
