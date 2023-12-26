@@ -37,10 +37,10 @@ unet3d_out_channels = 64
 
 val_interval = 1
 
-lr = 1e-5  # 1e-4
+lr = 1e-4  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
-weight_decay = 0.005
+weight_decay = 0.001
 
 losses = [('focal', 10.0), ('dice', 1.0)]
 focal_gamma = 3.0
