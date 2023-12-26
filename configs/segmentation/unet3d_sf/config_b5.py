@@ -17,20 +17,23 @@ in_chans = 12
 patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
-ink_ratio = 15
+
 fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID]
 # fragment_ids = [GRIMLARGE_FRAG_ID]
 validation_fragments = [GRIMLARGE_FRAG_ID]
 
-# training parameters
+# Training parameters
 model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
-# from_pretrained = "playful-glade-812-unetr-sf-b3-231216-041654"
 architecture = 'unet3d-sf'
 model_name = f"{architecture}-{model_type}"
 
-no_ink_sample_percentage = 1
 dataset_fraction = 1
+take_full_dataset = True
+# Only relevant if take_full_dataset == False
+ink_ratio = 15
+no_ink_sample_percentage = 1
+
 seed = 42
 epochs = -1
 unet3d_out_channels = 64
