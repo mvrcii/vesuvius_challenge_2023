@@ -2,9 +2,9 @@ import torch
 from torch.nn import BCEWithLogitsLoss
 from torchmetrics import MeanSquaredError
 
-from models.losses.binary_dice_loss import BinaryDiceLoss, MaskedBinaryDiceLoss
+from models.losses.binary_dice_loss import BinaryDiceLoss
 from models.losses.entropy_loss import EntropyLoss
-from models.losses.focal_loss import FocalLoss, MaskedFocalLoss
+from models.losses.focal_loss import FocalLoss
 
 
 def get_loss_functions(cfg):
@@ -17,9 +17,7 @@ def get_loss_functions(cfg):
                         "bce": BCEWithLogitsLoss(),
                         "focal": FocalLoss(gamma=focal_gamma, alpha=focal_alpha),
                         "entropy": EntropyLoss(),
-                        "mse": MeanSquaredError(),
-                        "masked-focal": MaskedFocalLoss(gamma=focal_gamma, alpha=focal_alpha),
-                        "masked-dice": MaskedBinaryDiceLoss(from_logits=True)}
+                        "mse": MeanSquaredError()}
 
     if torch.cuda.is_available():
         available_losses = {k: v.to('cuda') for k, v in available_losses.items()}

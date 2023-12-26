@@ -42,12 +42,12 @@ val_interval = 1
 
 lr = 1e-4  # 1e-4
 step_lr_steps = 1
-step_lr_factor = 0.95
+step_lr_factor = 0.98
 weight_decay = 0.001
 
-losses = [('masked-focal', 2.0), ('masked-dice', 1.0)]
-focal_gamma = 2.0
-focal_alpha = 0.25
+losses = [('focal', 2.0), ('dice', 1.0)]
+focal_gamma = 5.0
+focal_alpha = 0.75
 
 num_workers = 16
 train_batch_size = 8

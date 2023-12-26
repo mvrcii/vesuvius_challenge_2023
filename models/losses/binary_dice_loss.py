@@ -84,7 +84,8 @@ class MaskedBinaryDiceLoss(nn.Module):
              - **y_mask** - torch.Tensor of shape (N, H, W)
         """
 
-    def forward(self, y_pred_unmasked, y_true_unmasked, y_mask) -> torch.Tensor:
+    def forward(self, y_pred_unmasked: torch.Tensor, y_true_unmasked: torch.Tensor,
+                y_mask: torch.Tensor) -> torch.Tensor:
         assert y_true_unmasked.size(0) == y_pred_unmasked.size(0) == y_mask.size(0)
 
         # Mask prediction and ground truth
