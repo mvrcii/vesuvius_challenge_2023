@@ -1,60 +1,63 @@
 import os
-import sys
 
 import albumentations as A
 
-from utility.fragments import JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZILLA_FRAG_ID, HOT_ROD_FRAG_ID, \
-    BLASTER_FRAG_ID, IRONHIDE_FRAG_ID
+from utility.fragments import IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JAZZILLA_FRAG_ID, BLASTER_FRAG_ID, \
+    THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID
 
-sys.path.append('../')
-
-segmentation = True
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
 ]
 
-work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
-base_label_dir = os.path.join("data", "base_label_files")
-data_root_dir = "data"
-dataset_target_dir = os.path.join("multilayer_approach", "datasets")
+# MODEL TYPE
+segmentation = True
 
-# training parameters
-model_type = "b3"
+# DATASET CREATION
+in_chans = 12
+patch_size = 512
+label_size = patch_size // 4
+stride = patch_size // 2
+
+fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID]
+# fragment_ids = [GRIMLARGE_FRAG_ID]
+validation_fragments = [GRIMLARGE_FRAG_ID]
+
+# Training parameters
+model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
-# from_pretrained = "playful-glade-812-unetr-sf-b3-231216-041654"
 architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
-in_chans = 12
-seed = 770
-epochs = -1
-losses = []
 dataset_fraction = 1
+take_full_dataset = True
+# Only relevant if take_full_dataset == False
+ink_ratio = 15
+no_ink_sample_percentage = 1
+
+seed = 42
+epochs = -1
 unetr_out_channels = 32
 
 val_interval = 1
 
-# dataset creation parameters
-patch_size = 512
-label_size = patch_size // 4
-stride = patch_size // 2
-ink_ratio = 8
-fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID,
-                JAZZILLA_FRAG_ID]
-validation_fragments = [HOT_ROD_FRAG_ID]
-train_split = 0.8
-
-lr = 1e-3  # 1e-4
+lr = 1e-4  # 1e-4
 step_lr_steps = 1
-step_lr_factor = 0.98
+step_lr_factor = 0.95
 weight_decay = 0.001
-take_full_dataset = False
-no_ink_sample_percentage = 0.2  # Given the count of N ink samples, take this percentage of the count as no ink
-max_ignore_th = 75  # For no ink samples, how much ignore percentage (%) is allowed maximum
+
+losses = [('masked-focal', 2.0), ('masked-dice', 1.0)]
+focal_gamma = 2.0
+focal_alpha = 0.25
 
 num_workers = 16
 train_batch_size = 1
 val_batch_size = train_batch_size
+
+# PATHS
+work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
+base_label_dir = os.path.join("data", "base_label_files")
+data_root_dir = "data"
+dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
