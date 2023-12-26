@@ -1,12 +1,13 @@
+import os
 import sys
 
 import pandas as pd
-
 from sklearn.model_selection import train_test_split
+
 from models.data_modules.abstract_datamodule import AbstractDataModule
-import os
 from models.datasets.unet3dsf_dataset import UNET3D_SFDataset
 from utility.configs import Config
+from utility.fragments import get_frag_name_from_id
 
 
 class UNET3D_SFDataModule(AbstractDataModule):
@@ -15,6 +16,9 @@ class UNET3D_SFDataModule(AbstractDataModule):
 
     def get_dataset_class(self):
         return UNET3D_SFDataset
+
+    def generate_file_path(self, row, frag_id_column='frag_id', filename_column='filename'):
+        return os.path.join(get_frag_name_from_id(row[frag_id_column]), 'images', row[filename_column])
 
     def generate_dataset(self, cfg: Config):
         csv_path = os.path.join(cfg.dataset_target_dir, str(cfg.patch_size), 'label_infos.csv')
