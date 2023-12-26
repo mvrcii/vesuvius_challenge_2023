@@ -1,13 +1,11 @@
-import os
-
 import torch
 import wandb
 from torchvision.utils import make_grid
 
-from models.losses.binary_dice_loss import MaskedBinaryDiceLoss
-from models.losses.focal_loss import MaskedFocalLoss
 from models.architectures.unet3d_segformer import UNET3D_Segformer
 from models.lightning_modules.abstract_module import AbstractLightningModule
+from models.losses.binary_dice_loss import MaskedBinaryDiceLoss
+from models.losses.focal_loss import MaskedFocalLoss
 
 
 def calculate_masked_metrics_batchwise(outputs, labels, mask):
@@ -39,12 +37,13 @@ class UNET3D_SFModule(AbstractLightningModule):
         super().__init__(cfg=cfg)
 
         self.model = UNET3D_Segformer(cfg=cfg)
-
-        self.focal_loss_fn = MaskedFocalLoss(gamma=2.0, alpha=0.25)
-        self.dice_loss_fn = MaskedBinaryDiceLoss(from_logits=True)
-        # self.bce_loss_fn = MaskedBinaryBCELoss(from_logits=True)
-
         self.load_weights()
+
+        focal_gamma = getattr(cfg, 'focal_gamma', 2)
+        focal_alpha = getattr(cfg, 'focal_alpha', 0.25)
+
+        self.masked_focal_loss_fn = MaskedFocalLoss(gamma=focal_gamma, alpha=focal_alpha)
+        self.masked_dice_loss_fn = MaskedBinaryDiceLoss(from_logits=True)
 
     def training_step(self, batch, batch_idx):
         data, label = batch
@@ -53,15 +52,18 @@ class UNET3D_SFModule(AbstractLightningModule):
 
         y_pred = self.forward(data)
 
-        dice_loss = self.dice_loss_fn(y_pred, y_true, y_mask)
-        focal_loss = self.focal_loss_fn(y_pred, y_true, y_mask)
-        # bce_loss = self.bce_loss_fn(y_pred, y_true, y_mask)
-
-        self.log(f'train_dice_loss', dice_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log(f'train_focal_loss', focal_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        # self.log(f'train_bce_loss', bce_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-
-        total_loss = dice_loss + focal_loss
+        total_loss = 0
+        for name, weight in self.losses:
+            if name == "masked-focal":
+                focal_loss = self.masked_focal_loss_fn(y_pred, y_true, y_mask)
+                total_loss += focal_loss
+                self.log(f'train_focal_loss', focal_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+            elif name == "masked-dice":
+                dice_loss = self.masked_dice_loss_fn(y_pred, y_true, y_mask)
+                total_loss += dice_loss
+                self.log(f'train_dice_loss', dice_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+            else:
+                pass
 
         self.update_unetr_training_metrics(total_loss)
         self.train_step += 1
@@ -84,15 +86,18 @@ class UNET3D_SFModule(AbstractLightningModule):
         y_pred = self.forward(data)
         probs = torch.sigmoid(y_pred)
 
-        dice_loss = self.dice_loss_fn(y_pred, y_true, y_mask)
-        focal_loss = self.focal_loss_fn(y_pred, y_true, y_mask)
-        # bce_loss = self.bce_loss_fn(y_pred, y_true, y_mask)
-
-        self.log(f'val_dice_loss', dice_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log(f'val_focal_loss', focal_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        # self.log(f'val_bce_loss', bce_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-
-        total_loss = dice_loss + focal_loss
+        total_loss = 0
+        for name, weight in self.losses:
+            if name == "masked-focal":
+                focal_loss = self.masked_focal_loss_fn(y_pred, y_true, y_mask)
+                total_loss += focal_loss
+                self.log(f'val_focal_loss', focal_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+            elif name == "masked-dice":
+                dice_loss = self.masked_dice_loss_fn(y_pred, y_true, y_mask)
+                total_loss += dice_loss
+                self.log(f'val_dice_loss', dice_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
+            else:
+                pass
 
         iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probs, y_true, y_mask)
         self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)

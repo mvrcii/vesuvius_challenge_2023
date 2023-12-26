@@ -2,9 +2,9 @@ import torch
 from torch.nn import BCEWithLogitsLoss
 from torchmetrics import MeanSquaredError
 
-from models.losses.binary_dice_loss import BinaryDiceLoss
+from models.losses.binary_dice_loss import BinaryDiceLoss, MaskedBinaryDiceLoss
 from models.losses.entropy_loss import EntropyLoss
-from models.losses.focal_loss import FocalLoss
+from models.losses.focal_loss import FocalLoss, MaskedFocalLoss
 
 
 def get_loss_functions(cfg):
