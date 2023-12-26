@@ -35,7 +35,6 @@ class UNETR_SFModule(AbstractLightningModule):
         super().__init__(cfg=cfg)
 
         self.model = UNETR_Segformer(cfg=cfg)
-
         self.load_weights()
 
     def training_step(self, batch, batch_idx):
@@ -45,7 +44,7 @@ class UNETR_SFModule(AbstractLightningModule):
         logits = self.forward(data)
         y_pred = torch.sigmoid(logits)
 
-        total_loss, losses = self.calculate_masked_weighted_loss(y_pred, y_true, y_mask)
+        total_loss, losses = self.calculate_masked_weighted_loss(logits, y_true, y_mask)
         self.log_losses_to_wandb(losses, 'train')
 
         self.update_unetr_training_metrics(total_loss)
@@ -67,7 +66,7 @@ class UNETR_SFModule(AbstractLightningModule):
         logits = self.forward(data)
         y_pred = torch.sigmoid(logits)
 
-        total_loss, losses = self.calculate_masked_weighted_loss(y_pred, y_true, y_mask)
+        total_loss, losses = self.calculate_masked_weighted_loss(logits, y_true, y_mask)
         self.log_losses_to_wandb(losses, 'val')
 
         iou, precision, recall, f1 = calculate_masked_metrics_batchwise(y_pred, y_true, y_mask)
