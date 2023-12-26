@@ -184,8 +184,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
 
     transform = A.Compose(val_image_aug, is_check_shapes=False)
     use_advanced_tta = False
-    print(x_patches)
-    print(y_patches)
 
     batch_counter = 0
     for y in range(y_patches):
@@ -365,10 +363,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Infer Layered Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
-    parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
+    parser.add_argument('--batch_size', type=int, default=32, help='Batch size (default: 32)')
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
                                                               'for the inference')
-    parser.add_argument('--boost_threshold', action='store_true', help='Use a boosted threshold for saved images')
+    parser.add_argument('--boost_threshold', action='store_true', help='Use a boosted threshold for saved label images')
     parser.add_argument('--v', action='store_false', help='Print stuff (default True)')
     args = parser.parse_args()
 
@@ -461,11 +459,11 @@ def main():
                                  f"sigmoid_logits_{start_layer_idx}_{start_layer_idx + config.in_chans - 1}.npy")
 
     # Check if prediction NPY file already exists -> skip infer
-    # if os.path.isfile(npy_file_path):
-    #     if verbose:
-    #         print(f"Skip layer {start_layer_idx}")
-    #
-    #     return
+    if os.path.isfile(npy_file_path):
+        if verbose:
+            print(f"Skip layer {start_layer_idx}")
+
+        return
 
     infer_full_fragment_layer(model=model,
                               ckpt_name=model_folder_name,
