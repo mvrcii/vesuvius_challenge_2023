@@ -296,7 +296,8 @@ if __name__ == '__main__':
 
     LABEL_INFO_LIST = []
 
-    label_dir = os.path.join(cfg.work_dir, "multilayer_approach", "base_labels", "3_binarized")
+    # todo fix path
+    label_dir = os.path.join(cfg.work_dir, "data", "labels", "twelve_layer", "binarized")
     print("Using label dir:", label_dir)
 
     fragments = cfg.fragment_ids
