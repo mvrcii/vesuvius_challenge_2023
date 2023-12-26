@@ -461,11 +461,11 @@ def main():
                                  f"sigmoid_logits_{start_layer_idx}_{start_layer_idx + config.in_chans - 1}.npy")
 
     # Check if prediction NPY file already exists -> skip infer
-    # if os.path.isfile(npy_file_path):
-    #     if verbose:
-    #         print(f"Skip layer {start_layer_idx}")
-    #
-    #     return
+    if os.path.isfile(npy_file_path):
+        if verbose:
+            print(f"Skip layer {start_layer_idx}")
+
+        return
 
     infer_full_fragment_layer(model=model,
                               ckpt_name=model_folder_name,
