@@ -82,7 +82,7 @@ class AbstractDataModule(LightningDataModule):
             df = df[df["ignore_p"] < cfg.max_ignore_th]
             print(f"After ignoring patches with ignore_p > {cfg.max_ignore_th}: ", len(df.index))
 
-        if not cfg.take_full_dataset:
+        if not getattr(cfg, "take_full_dataset", False):
             count_zero = (df['ink_p'] == 0).sum()
             count_greater_than_zero = (df['ink_p'] > 0).sum()
             print(
