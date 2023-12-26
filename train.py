@@ -173,6 +173,7 @@ def main():
         callbacks=get_callbacks(cfg=config, model_run_dir=model_run_dir),
         accelerator="auto",
         devices=get_device_configuration(),
+        gpus=8,
         enable_progress_bar=True,
         precision='16-mixed',
         gradient_clip_val=1.0,
