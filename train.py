@@ -1,6 +1,5 @@
 import argparse
 import os
-import pickle
 import sys
 import types
 import warnings
@@ -64,6 +63,7 @@ def get_model(config: Config):
         print("Invalid architecture for model:", architecture)
         sys.exit(1)
 
+
 def get_data_module(config: Config):
     architecture = config.architecture
 
@@ -79,6 +79,7 @@ def get_data_module(config: Config):
         print("Invalid architecture for data module:", architecture)
         sys.exit(1)
 
+
 def log_wandb_hyperparams(config, wandb_logger):
     config_dict = vars(config)  # Convert config object to a dictionary
 
@@ -87,8 +88,6 @@ def log_wandb_hyperparams(config, wandb_logger):
 
     # Log the cleaned hyperparameters
     wandb_logger.log_hyperparams(cleaned_config)
-
-
 
 
 def get_device_configuration():
