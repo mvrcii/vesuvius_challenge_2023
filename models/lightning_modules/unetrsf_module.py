@@ -41,11 +41,27 @@ class UNETR_SFModule(AbstractLightningModule):
         data, label = batch
         y_true = label[:, 0]
         y_mask = label[:, 1]
+
+        if torch.isnan(data).any():
+            print("Warning: Input Data is nan:", data)
+
+        if torch.isnan(y_true).any():
+            print("Warning: Label is nan:", y_true)
+
+        if torch.isnan(y_mask).any():
+            print("Warning: Ignore Mask is nan:", y_mask)
+
         logits = self.forward(data)
         y_pred = torch.sigmoid(logits)
 
+        if torch.isnan(logits).any():
+            print("Warning: Logits are nan:", logits)
+
         total_loss, losses = self.calculate_masked_weighted_loss(logits, y_true, y_mask)
         self.log_losses_to_wandb(losses, 'train')
+
+        if torch.isnan(total_loss).any():
+            print("Warning: Total train loss is nan:", total_loss)
 
         self.update_unetr_training_metrics(total_loss)
         self.train_step += 1
@@ -63,6 +79,7 @@ class UNETR_SFModule(AbstractLightningModule):
         data, label = batch
         y_true = label[:, 0]
         y_mask = label[:, 1]
+
         logits = self.forward(data)
         y_pred = torch.sigmoid(logits)
 

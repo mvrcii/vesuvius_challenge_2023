@@ -27,21 +27,21 @@ segformer_from_pretrained = f"nvidia/mit-{model_type}"
 architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
-dataset_fraction = 0.5
+dataset_fraction = 0.05
 take_full_dataset = True
 # Only relevant if take_full_dataset == False
-ink_ratio = 10
+ink_ratio = 15
 no_ink_sample_percentage = 1
 
-seed = 42
+seed = 12
 epochs = -1
 unetr_out_channels = 32
 
 val_interval = 1
 
-lr = 2e-4  # 1e-4
+lr = 1e-3  # 1e-4
 step_lr_steps = 1
-step_lr_factor = 0.97
+step_lr_factor = 0.98
 weight_decay = 0.001
 
 losses = [('masked-focal', 2.0), ('masked-dice', 1.0)]
@@ -78,7 +78,7 @@ train_aug = [
         A.RandomResizedCrop(always_apply=True, height=patch_size, width=patch_size, scale=(0.78, 1.0),
                             ratio=(0.75, 1.51),
                             interpolation=0)
-    ], p=0.1),
+    ], p=0.8),
     # A.ChannelDropout(p=0.05, channel_drop_range=(1, 1), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
