@@ -171,7 +171,7 @@ def main():
         max_epochs=config.epochs,
         logger=wandb_logger,
         callbacks=get_callbacks(cfg=config, model_run_dir=model_run_dir),
-        accelerator="auto",
+        accelerator="ddp",
         devices=get_device_configuration(),
         enable_progress_bar=True,
         precision='16-mixed',
