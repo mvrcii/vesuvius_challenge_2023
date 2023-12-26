@@ -30,6 +30,7 @@ architecture = 'unet3d-sf'
 model_name = f"{architecture}-{model_type}"
 
 no_ink_sample_percentage = 1
+take_full_dataset = False
 dataset_fraction = 1
 seed = 97074
 epochs = -1
@@ -42,9 +43,9 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-losses = [('focal', 2.0), ('dice', 1.0)]
-focal_gamma = 5.0
-focal_alpha = 0.75
+losses = [('masked-focal', 2.0), ('masked-dice', 1.0)]
+focal_gamma = 2.0
+focal_alpha = 0.25
 
 num_workers = 16
 train_batch_size = 8
