@@ -37,14 +37,15 @@ unet3d_out_channels = 64
 
 val_interval = 1
 
-lr = 1e-4  # 1e-4
+lr = 2e-4  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-losses = [('focal', 1.0), ('dice', 1.0)]
-focal_gamma = 1.0
-focal_alpha = 0.75
+# losses = [('focal', 1.0), ('dice', 1.0)]
+losses = [('dice', 1.0)]
+# focal_gamma = 1.0
+# focal_alpha = 0.75
 
 num_workers = 16
 train_batch_size = 4
@@ -66,7 +67,7 @@ train_aug = [
         A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
         A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
                        rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
-        A.ChannelDropout(always_apply=True, channel_drop_range=(1, 3), fill_value=0),
+        A.ChannelDropout(always_apply=True, channel_drop_range=(1, 2), fill_value=0),
         A.CoarseDropout(always_apply=True, max_holes=6, max_height=56, max_width=56, min_holes=2, min_height=38,
                         min_width=38, fill_value=0, mask_fill_value=None),
         A.Downscale(always_apply=True, scale_min=0.55, scale_max=0.99),
@@ -77,7 +78,7 @@ train_aug = [
                             ratio=(0.75, 1.51),
                             interpolation=0)
     ], p=0.1),
-    A.ChannelDropout(p=0.05, channel_drop_range=(1, 2), fill_value=0),
+    # A.ChannelDropout(p=0.05, channel_drop_range=(1, 2), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
