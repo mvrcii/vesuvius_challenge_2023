@@ -103,7 +103,7 @@ class CFG:
 
 class UNETR_Segformer(nn.Module):
     def __init__(self, cfg, dropout=.2):
-        super().__init__()
+        super(UNETR_Segformer, self).__init__()
         self.cfg = cfg
         self.dropout = nn.Dropout2d(dropout)
 
