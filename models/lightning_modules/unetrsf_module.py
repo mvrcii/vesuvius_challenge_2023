@@ -1,30 +1,9 @@
 import torch
 import wandb
-from segmentation_models_pytorch.utils.metrics import IoU
-from torchmetrics import Dice
-from torchmetrics.classification import BinaryF1Score, BinaryAccuracy, BinaryPrecision, BinaryRecall
 from torchvision.utils import make_grid
 
 from models.architectures.unetr_segformer import UNETR_Segformer
-from models.losses.utils import get_loss_functions
 from models.lightning_modules.abstract_module import AbstractLightningModule
-
-
-def dice_loss_with_mask_batch(outputs, labels, mask):
-    # all 3 input variables should be shape (batch_size, label_size, label_size)
-    # outputs should be sigmoided (0-1)
-    # labels should be binary
-    # mask should be binary
-    outputs_masked = outputs * mask
-    labels_masked = labels * mask
-
-    # Calculate intersection and union with masking
-    intersection = (outputs_masked * labels_masked).sum(axis=(1, 2))
-    union = (outputs_masked + labels_masked).sum(axis=(1, 2))
-
-    # Compute dice loss per batch and average
-    dice_loss = 1 - (2. * intersection) / union
-    return dice_loss.mean()
 
 
 def calculate_masked_metrics_batchwise(outputs, labels, mask):
@@ -60,50 +39,54 @@ class UNETR_SFModule(AbstractLightningModule):
         self.load_weights()
 
     def training_step(self, batch, batch_idx):
-        self.train_step += 1
         data, label = batch
+        y_true = label[:, 0]
+        y_mask = label[:, 1]
+        logits = self.forward(data)
+        y_pred = torch.sigmoid(logits)
 
-        probabilities = torch.sigmoid(self.forward(data))
+        total_loss, losses = self.calculate_masked_weighted_loss(y_pred, y_true, y_mask)
+        self.log_losses_to_wandb(losses, 'train')
 
-        target = label[:, 0]
-        keep_mask = label[:, 1]
+        self.update_unetr_training_metrics(total_loss)
+        self.train_step += 1
 
-        dice_loss = dice_loss_with_mask_batch(probabilities, target, keep_mask)
-
-        self.update_unetr_training_metrics(dice_loss)
-
-        if batch_idx == 5 or batch_idx == 10:
+        if (batch_idx == 5 or batch_idx == 10) and self.trainer.is_global_zero:
             with torch.no_grad():
-                combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
+                combined = torch.cat([y_pred[0], y_true[0], y_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
-
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
-
                 wandb.log({"Train Image": test_image})
 
-        return dice_loss
+        return total_loss
 
     def validation_step(self, batch, batch_idx):
         data, label = batch
-        probabilities = torch.sigmoid(self.forward(data))
+        y_true = label[:, 0]
+        y_mask = label[:, 1]
+        logits = self.forward(data)
+        y_pred = torch.sigmoid(logits)
 
-        target = label[:, 0]
-        keep_mask = label[:, 1]
+        total_loss, losses = self.calculate_masked_weighted_loss(y_pred, y_true, y_mask)
+        self.log_losses_to_wandb(losses, 'val')
 
-        dice_loss = dice_loss_with_mask_batch(probabilities, target, keep_mask)
+        iou, precision, recall, f1 = calculate_masked_metrics_batchwise(y_pred, y_true, y_mask)
+        self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
 
-        iou, precision, recall, f1 = calculate_masked_metrics_batchwise(probabilities, target, keep_mask)
-
-        self.update_unetr_validation_metrics(dice_loss, iou, precision, recall, f1)
-
-        if batch_idx == 5 or batch_idx == 10:
+        if (batch_idx == 5 or batch_idx == 10) and self.trainer.is_global_zero:
             with torch.no_grad():
-                combined = torch.cat([probabilities[0], target[0], keep_mask[0]], dim=1)
+                combined = torch.cat([y_pred[0], y_true[0], y_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
-
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
-
                 wandb.log({"Validation Image": test_image})
+
+    def calculate_masked_weighted_loss(self, y_pred, y_true, y_mask):
+        losses = [(name, weight, loss_function(y_pred, y_true.float(), y_mask)) for (name, weight, loss_function) in
+                  self.loss_functions]
+        total_loss = sum([weight * value for (_, weight, value) in losses])
+        losses.append(("total", 1.0, total_loss))
+
+        return total_loss, losses
 
     def update_unetr_validation_metrics(self, loss, iou, precision, recall, f1):
         self.log(f'val_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)

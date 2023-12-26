@@ -54,7 +54,7 @@ class UNET3D_SFModule(AbstractLightningModule):
             with torch.no_grad():
                 combined = torch.cat([y_pred[0], y_true[0], y_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
-                test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
+                test_image = wandb.Image(grid, caption="Step {}".format(self.train_step))
                 wandb.log({"Train Image": test_image})
 
         return total_loss
@@ -72,11 +72,11 @@ class UNET3D_SFModule(AbstractLightningModule):
         iou, precision, recall, f1 = calculate_masked_metrics_batchwise(y_pred, y_true, y_mask)
         self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
 
-        if batch_idx == 5 and self.trainer.is_global_zero:
+        if batch_idx % 25 == 0 and self.trainer.is_global_zero:
             with torch.no_grad():
                 combined = torch.cat([y_pred[0], y_true[0], y_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
-                test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
+                test_image = wandb.Image(grid, caption="Step {}".format(self.train_step))
                 wandb.log({"Validation Image": test_image})
 
     def calculate_masked_weighted_loss(self, y_pred, y_true, y_mask):
