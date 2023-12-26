@@ -33,7 +33,7 @@ no_ink_sample_percentage = 1
 dataset_fraction = 1
 seed = 42
 epochs = -1
-unet3d_out_channels = 64
+unet3d_out_channels = 48
 
 val_interval = 1
 
