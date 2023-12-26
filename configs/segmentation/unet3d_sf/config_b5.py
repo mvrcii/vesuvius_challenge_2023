@@ -37,17 +37,17 @@ unet3d_out_channels = 64
 
 val_interval = 1
 
-lr = 5e-5  # 1e-4
+lr = 1e-4  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-losses = [('masked-focal', 5.0), ('masked-dice', 1.0)]
-focal_gamma = 5.0
-focal_alpha = 0.75
+losses = [('masked-focal', 1.0), ('masked-dice', 1.0)]
+focal_gamma = 1.0
+focal_alpha = 0.25
 
 num_workers = 16
-train_batch_size = 4
+train_batch_size = 8
 val_batch_size = train_batch_size
 
 # PATHS
