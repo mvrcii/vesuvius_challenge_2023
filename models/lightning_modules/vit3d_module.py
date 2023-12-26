@@ -3,11 +3,14 @@ from torchmetrics.classification import AUROC
 
 from models.architectures.vit3d import ViT3D
 from models.lightning_modules.abstract_module import AbstractLightningModule
+from torchmetrics import MeanSquaredError
 
 
 class Vit3D_Module(AbstractLightningModule):
     def __init__(self, cfg):
         super().__init__(cfg)
+
+        self.loss_function = MeanSquaredError()
 
         image_size = (48, 48)
         layers = 12
@@ -52,27 +55,27 @@ class Vit3D_Module(AbstractLightningModule):
         logits = self.forward(data)
         y_pred = torch.sigmoid(logits)
 
-        total_loss, losses = self.calculate_weighted_loss(y_pred=y_pred.squeeze(1), y_true=y_true)
+        loss_function = MeanSquaredError().to(batch.device)
+        loss = loss_function(y_pred.squeeze(1), y_true)
 
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
         self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
-        self.log_losses_to_wandb(losses, 'train')
+        self.log(f'train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
-        return total_loss
+        return loss
 
     def validation_step(self, batch, batch_idx):
         data, y_true = batch
         logits = self.forward(data)
         y_pred = torch.sigmoid(logits)
 
-        _, losses = self.calculate_weighted_loss(y_pred=y_pred.squeeze(1), y_true=y_true)
-        self.log_losses_to_wandb(losses, 'val')
+        loss_function = MeanSquaredError().to(batch.device)
+        loss = loss_function(y_pred.squeeze(1), y_true)
+        self.log(f'train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
         auc = self.auc(torch.sigmoid(logits), y_true)
         self.log('val_auc', auc, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
-        # Calculate and log accuracy
-        # Convert predictions and labels to binary using 0.5 threshold
         preds_binary = (y_pred > 0.5).float()
         labels_binary = (y_true > 0.5).float()
         accuracy = torch.mean((preds_binary == labels_binary).float())
