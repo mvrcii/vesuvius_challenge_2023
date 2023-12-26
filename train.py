@@ -173,6 +173,7 @@ def main():
         enable_progress_bar=True,
         precision='16-mixed',
         gradient_clip_val=1.0,
+        strategy='ddp_find_unused_parameters_true',
         gradient_clip_algorithm="norm",
         check_val_every_n_epoch=config.val_interval
     )
