@@ -28,10 +28,10 @@ segformer_from_pretrained = f"nvidia/mit-{model_type}"
 architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
-dataset_fraction = 1
-take_full_dataset = True
+dataset_fraction = 0.5
+take_full_dataset = False
 # Only relevant if take_full_dataset == False
-ink_ratio = 15
+ink_ratio = 10
 no_ink_sample_percentage = 1
 
 seed = 42
@@ -40,14 +40,14 @@ unetr_out_channels = 32
 
 val_interval = 1
 
-lr = 1e-4  # 1e-4
-step_lr_steps = 2
-step_lr_factor = 0.98
+lr = 4e-4  # 1e-4
+step_lr_steps = 1
+step_lr_factor = 0.97
 weight_decay = 0.001
 
-losses = [('masked-dice', 1.0)]
-focal_gamma = 2.0
-focal_alpha = 0.25
+losses = [('masked-focal', 2.0), ('masked-dice', 1.0)]
+focal_gamma = 2.5
+focal_alpha = 0.75
 
 num_workers = 16
 train_batch_size = 5
