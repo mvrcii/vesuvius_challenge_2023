@@ -36,9 +36,9 @@ class SegformerModule(AbstractLightningModule):
 
     def training_step(self, batch, batch_idx):
         data, y_true = batch
-        y_pred = self.forward(data)
+        logits = self.forward(data)
 
-        total_loss, losses = self.calculate_weighted_loss(y_pred=y_pred, y_true=y_true)
+        total_loss, losses = self.calculate_weighted_loss(y_pred=logits, y_true=y_true)
 
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
         self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
@@ -48,8 +48,8 @@ class SegformerModule(AbstractLightningModule):
 
         if batch_idx % 100 == 0 and self.trainer.is_global_zero:
             with torch.no_grad():
-                probs = torch.sigmoid(y_pred)
-                combined = torch.cat([probs[0], y_true[0]], dim=1)
+                y_pred = torch.sigmoid(logits)
+                combined = torch.cat([y_pred[0], y_true[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
                 wandb.log({"Train Image": test_image})
@@ -58,17 +58,17 @@ class SegformerModule(AbstractLightningModule):
 
     def validation_step(self, batch, batch_idx):
         data, y_true = batch
-        y_pred = self.forward(data)
-        probs = torch.sigmoid(y_pred)
+        logits = self.forward(data)
+        y_pred = torch.sigmoid(logits)
 
-        _, losses = self.calculate_weighted_loss(y_pred=y_pred, y_true=y_true)
+        _, losses = self.calculate_weighted_loss(y_pred=logits, y_true=y_true)
 
         self.log_losses_to_wandb(losses, 'val')
-        self.log_validation_metrics(output_logits=y_pred, target=y_true)
+        self.log_validation_metrics(output_logits=logits, target=y_true)
 
         if batch_idx == 5 and self.trainer.is_global_zero:
             with torch.no_grad():
-                combined = torch.cat([probs[0], y_true[0]], dim=1)
+                combined = torch.cat([y_pred[0], y_true[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
                 wandb.log({"Validation Image": test_image})

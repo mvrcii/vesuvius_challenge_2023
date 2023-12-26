@@ -1,5 +1,8 @@
 import os
 import albumentations as A
+
+from utility.fragments import JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, \
+    THUNDERCRACKER_FRAG_ID, GRIMLARGE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, SUNSTREAKER_FRAG_ID, HOT_ROD_FRAG_ID
 from utility.meta_data import AlphaBetaMeta
 
 _base_ = [
@@ -7,6 +10,7 @@ _base_ = [
 ]
 
 segmentation = True
+
 # PATHS
 work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
 base_label_dir = os.path.join("data", "base_label_files")
@@ -18,31 +22,40 @@ in_chans = 4
 patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
-ink_ratio = 3
-artefact_threshold = 5
-fragment_ids = AlphaBetaMeta().get_current_train_fragments()
-excluded_label_blocks = 3
+excluded_label_blocks = 0
 excluded_label_layers = in_chans * excluded_label_blocks  # excluded from bottom and top of the stack
-train_split = 0.8
+fragment_ids = [JETFIRE_FRAG_ID, JAZZILLA_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID,
+                ULTRA_MAGNUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, SUNSTREAKER_FRAG_ID, HOT_ROD_FRAG_ID]
+validation_fragments = [GRIMLARGE_FRAG_ID]
 
-# TRAINING
+# MODEL
 model_type = "b2"
 architecture = 'segformer'
 model_name = f"{architecture}-{model_type}"
 from_pretrained = f"nvidia/mit-{model_type}"
-# from_checkpoint = "kind-donkey-583-segformer-b2-231204-001337"
-seed = 3445774
+seed = 42
 epochs = -1
-losses = [("bce", 1.0), ("dice", 1.0)]
-dataset_fraction = 1
-val_interval = 2
+
+# Optimizer
 lr = 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
+
+# Loss
+losses = [("bce", 1.0), ("dice", 1.0)]
+
+# Dataset RUNTIME
+dataset_fraction = 1
+take_full_dataset = False
+# Only relevant if take_full_dataset == False
+ink_ratio = -1
+no_ink_sample_percentage = 1
+
+val_interval = 1
 num_workers = 16
 train_batch_size = 24
-val_batch_size = 24
+val_batch_size = train_batch_size
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [

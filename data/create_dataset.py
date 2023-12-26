@@ -15,7 +15,7 @@ from data.data_validation import validate_fragments, format_ranges
 from data.utils import write_to_config
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id, FragmentHandler
-from utility.meta_data import AlphaBetaMeta
+from utility.labels import BINARIZED, build_label_dir
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -345,9 +345,9 @@ if __name__ == '__main__':
 
     LABEL_INFO_LIST = []
 
-    label_dir = AlphaBetaMeta().get_current_binarized_label_dir(single=True)
-    label_dir = os.path.join(cfg.work_dir, label_dir)
-    fragments = cfg.fragment_ids
+    label_dir = build_label_dir(layer_count=4, _type=BINARIZED)
+    label_dir = os.path.join(cfg.work_dir, label_dir, "handpicked_for_segformer_b5-231226-211200")
+    fragments = cfg.fragment_ids + cfg.validation_fragments
 
     clean_all_fragment_label_dirs(config=cfg)
     extract_patches(cfg, fragments, label_dir)
