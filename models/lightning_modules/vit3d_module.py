@@ -69,7 +69,7 @@ class Vit3D_Module(AbstractLightningModule):
         logits = self.forward(data)
         y_pred = torch.sigmoid(logits)
 
-        loss_function = MeanSquaredError().to(batch.device)
+        loss_function = MeanSquaredError().to(data.device)
         loss = loss_function(y_pred.squeeze(1), y_true)
         self.log(f'train_loss', loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
