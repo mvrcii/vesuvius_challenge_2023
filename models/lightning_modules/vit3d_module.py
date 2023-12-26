@@ -55,7 +55,7 @@ class Vit3D_Module(AbstractLightningModule):
         logits = self.forward(data)
         y_pred = torch.sigmoid(logits)
 
-        loss_function = MeanSquaredError().to(batch.device)
+        loss_function = MeanSquaredError().to(data.device)
         loss = loss_function(y_pred.squeeze(1), y_true)
 
         lr = self.trainer.optimizers[0].param_groups[0]['lr']
