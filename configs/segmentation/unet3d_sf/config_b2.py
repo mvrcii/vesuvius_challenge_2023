@@ -42,12 +42,12 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-losses = [('focal', 10.0), ('dice', 1.0)]
-focal_gamma = 3.0
-focal_alpha = 0.85
+losses = [('focal', 1.0), ('dice', 1.0)]
+focal_gamma = 1.0
+focal_alpha = 0.75
 
 num_workers = 16
-train_batch_size = 8
+train_batch_size = 4
 val_batch_size = train_batch_size
 
 # PATHS
