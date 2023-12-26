@@ -31,7 +31,7 @@ model_name = f"{architecture}-{model_type}"
 
 no_ink_sample_percentage = 1
 dataset_fraction = 1
-seed = 97074
+seed = 42
 epochs = -1
 unet3d_out_channels = 64
 
@@ -42,7 +42,7 @@ step_lr_steps = 1
 step_lr_factor = 0.98
 weight_decay = 0.001
 
-losses = [('focal', 2.0), ('dice', 1.0)]
+losses = [('focal', 5.0), ('dice', 1.0)]
 focal_gamma = 5.0
 focal_alpha = 0.75
 
