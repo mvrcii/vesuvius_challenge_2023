@@ -22,9 +22,7 @@ fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRA
 # fragment_ids = [GRIMLARGE_FRAG_ID]
 validation_fragments = [GRIMLARGE_FRAG_ID]
 
-
 # training parameters
-validation_fragments = [HOT_ROD_FRAG_ID]
 model_type = "b2"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
 # from_pretrained = "playful-glade-812-unetr-sf-b3-231216-041654"
