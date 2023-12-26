@@ -53,7 +53,7 @@ class UNET3D_SFModule(AbstractLightningModule):
         y_pred = self.forward(data)
 
         total_loss = 0
-        for name, weight in self.losses:
+        for name, weight in self.loss_functions:
             if name == "masked-focal":
                 focal_loss = self.masked_focal_loss_fn(y_pred, y_true, y_mask)
                 total_loss += focal_loss
@@ -87,7 +87,7 @@ class UNET3D_SFModule(AbstractLightningModule):
         probs = torch.sigmoid(y_pred)
 
         total_loss = 0
-        for name, weight in self.losses:
+        for name, weight in self.loss_functions:
             if name == "masked-focal":
                 focal_loss = self.masked_focal_loss_fn(y_pred, y_true, y_mask)
                 total_loss += focal_loss
