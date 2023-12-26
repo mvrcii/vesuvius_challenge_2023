@@ -8,7 +8,6 @@ from datetime import datetime
 import numpy as np
 import torch
 from lightning import seed_everything
-from lightning.pytorch.strategies.strategy import Strategy
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer import Trainer
@@ -33,9 +32,8 @@ warnings.filterwarnings("ignore",
                         message="You should probably TRAIN this model on a down-stream task")
 
 warnings.simplefilter("ignore", category=Warning)
-
-os.environ["TORCH_CPP_LOG_LEVEL"]="INFO"
-os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
+# os.environ["TORCH_CPP_LOG_LEVEL"]="INFO"
+# os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
 
 def get_sys_args():
     parser = argparse.ArgumentParser(description='Train configuration.')
