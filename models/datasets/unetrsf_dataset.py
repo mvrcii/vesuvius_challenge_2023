@@ -5,7 +5,7 @@ from models.datasets.unet3dsf_dataset import UNET3D_SFDataset
 
 class UNETR_SFDataset(UNET3D_SFDataset):
     def __init__(self, root_dir, images, transform, cfg, labels=None):
-        super().__init__(cfg, root_dir, images, transform, labels)
+        super().__init__(cfg=cfg, root_dir=root_dir, images=images, transform=transform, labels=labels)
 
     def __getitem__(self, idx):
         image, label = self.__getitem__(idx)
