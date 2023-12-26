@@ -13,6 +13,7 @@ from PIL.Image import Resampling
 from tqdm import tqdm
 from transformers import SegformerForSemanticSegmentation
 from transformers.utils import logging
+
 from models.architectures.unet3d_segformer import UNET3D_Segformer
 from models.architectures.unetr_segformer import UNETR_Segformer
 from utility.checkpoints import get_ckpt_name_from_id
@@ -235,10 +236,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
 
                 batches = []
                 batch_indices = []
-
-            if batch_counter % 500 == 0:
-                print("Saving")
-                np.save(npy_file_path, out_arr.cpu().numpy())
 
     # Process any remaining patches
     if batches:
