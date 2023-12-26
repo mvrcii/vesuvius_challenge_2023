@@ -366,7 +366,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=128, help='Batch size (default: 128)')
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
                                                               'for the inference')
-    parser.add_argument('--boost_threshold', action='store_true', help='Use a boosted threshold for saved images')
+    parser.add_argument('--boost_threshold', action='store_true', help='Use a boosted threshold for saved label images')
     parser.add_argument('--v', action='store_false', help='Print stuff (default True)')
     args = parser.parse_args()
 
