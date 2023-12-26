@@ -11,7 +11,7 @@ from PIL import Image
 from skimage.transform import resize
 from tqdm import tqdm
 
-from multilayer_approach.data_validation_multilayer import validate_fragments
+from multilayer_approach.data_validation import validate_fragments
 from data.utils import write_to_config
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id
