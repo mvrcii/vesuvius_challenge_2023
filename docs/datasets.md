@@ -7,7 +7,7 @@ All scripts skip a patch if it has an invalid shape or is fully masked.
 
 
 ## Scripts building on 1: create_dataset_segmentation.py
-unet3dsf_datamodule.py:
+unet3dsf_datamodule.py // unetrsf_datamodule.py:
 
 1. Skips patches with ``ignore_p > cfg.max_ignore_threshold`` (if config has this attr, otherwise skips nothing here)
 2. If ```cfg.take_full_dataset == True``` => doesn't do any ink balancing
