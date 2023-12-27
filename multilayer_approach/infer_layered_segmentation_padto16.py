@@ -57,9 +57,9 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
                 print("Warning: Fragment superseded, added suffix for download!")
                 fragment_id += "_superseded"
             download_script = "./scripts/utils/download_fragment.sh"
-            command = ['bash', download_script, fragment_id, f'"{i:05} {i:05}"']
+            command = ['bash', download_script, fragment_id, f'{i:05} {i:05}']
             print(command)
-            subprocess.run(command)
+            subprocess.run(command, check=True)
 
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
