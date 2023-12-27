@@ -460,6 +460,7 @@ def main():
 
         # Check if this is the last possible N-layer range within the given range
         if end_idx > end_best_layer_idx:
+            print("break", end_idx, end_best_layer_idx)
             break
 
         npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{start_idx}_{end_idx}.npy")
