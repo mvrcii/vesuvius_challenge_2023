@@ -455,12 +455,13 @@ def main():
     start_best_layer_idx, end_best_layer_idx = get_inference_range(frag_id=fragment_id)
     stride_factor = 2
 
+    print(range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1)))
+
     for start_idx in range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1)):
         end_idx = start_idx + (config.in_chans - 1)
 
         # Check if this is the last possible N-layer range within the given range
         if end_idx > end_best_layer_idx:
-            print("break", end_idx, end_best_layer_idx)
             break
 
         npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{start_idx}_{end_idx}.npy")
