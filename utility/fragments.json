@@ -185,8 +185,8 @@
     "name": "DEVASBIGGER",
     "boost_threshold": 0.00001,
     "best_layers_start_indices": [
-      24,
-      30
+      23,
+      36
     ]
   },
   {
