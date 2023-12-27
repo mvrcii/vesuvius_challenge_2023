@@ -99,6 +99,7 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
 
     # Convert list to torch tensor
     tta_batch = torch.stack(tta_batch).half()  # Assuming the model is in half precision
+    tta_batch= tta_batch.unsqueeze(1)
     print("Batch Shape before model forward:", tta_batch.shape)
 
     # Get the model's predictions for the batch
