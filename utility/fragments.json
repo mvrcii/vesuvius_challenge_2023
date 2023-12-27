@@ -214,6 +214,10 @@
   },
   {
     "id": "RICHI",
-    "name": "RICHI"
+    "name": "RICHI",
+    "best_layers_start_indices": [
+      25,
+      45
+    ]
   }
 ]
