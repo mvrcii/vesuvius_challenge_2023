@@ -242,7 +242,8 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
 
                 with torch.no_grad():
                     for image in preallocated_batch_tensor[:len(batches)]:
-                        sigmoid_tta_output = advanced_tta(model=model, tensor=image, rotate=True)
+                        sigmoid_tta_output = advanced_tta(model=model, tensor=image,
+                                                          rotate=True, flip_vertical=True, flip_horizontal=True)
                         process_patch(sigmoid_tta_output, x, y)
 
                 batches = []
@@ -479,7 +480,8 @@ def main():
         if end_idx > end_best_layer_idx:
             break
 
-        npy_file_path = os.path.join(results_dir, f"stride-{stride_factor}-sigmoid_logits_{start_idx}_{end_idx}.npy")
+        npy_file_path = os.path.join(results_dir,
+                                     f"tta_stride-{stride_factor}-sigmoid_logits_{start_idx}_{end_idx}.npy")
 
         # Check if prediction NPY file already exists
         if os.path.isfile(npy_file_path):
