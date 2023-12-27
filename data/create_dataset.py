@@ -346,7 +346,7 @@ if __name__ == '__main__':
     LABEL_INFO_LIST = []
 
     label_dir = build_label_dir(layer_count=4, _type=BINARIZED)
-    label_dir = os.path.join(cfg.work_dir, label_dir, "handpicked_for_segformer_b5-231226-211200")
+    label_dir = os.path.join(cfg.work_dir, label_dir, "handpicked_for_segformer_b5-231226-211200", "raw")
     fragments = cfg.fragment_ids + cfg.validation_fragments
 
     clean_all_fragment_label_dirs(config=cfg)

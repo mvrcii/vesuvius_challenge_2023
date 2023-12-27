@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 from utility.fragments import get_frag_name_from_id
 
@@ -41,6 +42,10 @@ def validate_fragments(config, fragments, label_dir):
 
     for excluded in excluded_fragments:
         print_checks(excluded, [])
+
+    if len(all_errors) > 0:
+        print(f"\033[91mAborting:\t\tNot all fragment lables & slices complete.\033[0m")
+        sys.exit(1)
 
     return frag_id_2_channels
 
@@ -108,10 +113,11 @@ def validate_labels(cfg, frag_dir, label_dir):
     # If no errors yet, continue
     if len(errors) == 0:
         existing_label_channels = set(extract_indices(label_dir, pattern=f'inklabels{pattern}.png'))
-        print("Warning: No existing label files found for fragment:", frag_dir)
+        if len(existing_label_channels) == 0:
+            print("Warning: No existing label files found for fragment in:", label_dir)
         existing_channels = find_consecutive_ch_blocks_of_size(list(existing_label_channels), cfg.in_chans)
 
-        # Exclude some channel blocks (channels) as given from the config
+        # Exclude some channel blocks (channels) as given from the configs
         default_channels = set(range(64))
         exclude_count = cfg.excluded_label_layers
         exclude_count = min(exclude_count, len(default_channels) // 2)
@@ -145,8 +151,8 @@ def validate_masks(frag_dir):
 
 def extract_indices(directory, pattern):
     indices = []
-
     for filename in os.listdir(directory):
+
         match = re.match(pattern, filename)
         if match:
             groups = match.groups()
