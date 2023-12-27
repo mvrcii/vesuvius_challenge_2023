@@ -271,16 +271,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     print("Saving finally")
     np.save(npy_file_path, output)
 
-
-def find_ckpt_in_dir(config, path):
-    for file in os.listdir(path):
-        if file.endswith('.ckpt'):
-            model_path = os.path.join(path, file)
-            return load_model(cfg=config, model_path=model_path)
-    print("No valid model checkpoint file found")
-    sys.exit(1)
-
-
 def find_py_in_dir(path):
     for file in os.listdir(path):
         if file.endswith('.py'):
@@ -415,7 +405,7 @@ def load_model(cfg: Config, model_path):
 
     model = model.to("cuda")
 
-    return model
+    return model, full_model_path
 
 
 def get_inference_range(frag_id):
@@ -435,8 +425,7 @@ def main():
     config_path = find_py_in_dir(os.path.join('checkpoints', model_folder_name))
     config = Config.load_from_file(config_path)
 
-    model_path = find_ckpt_in_dir(os.path.join('checkpoints', model_folder_name))
-    model = load_model(cfg=config, model_path=model_folder_name)
+    model, model_path = load_model(cfg=config, model_path=model_folder_name)
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_name = model_path.split(f"checkpoints{os.sep}")[-1]
