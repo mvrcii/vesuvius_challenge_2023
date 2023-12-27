@@ -81,7 +81,7 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     :return: Batch of TTA-processed tensors.
     """
     tta_batch = []
-
+    tensor = tensor.squeeze()
     tta_batch.append(tensor.clone())
 
     # Apply rotation augmentations
