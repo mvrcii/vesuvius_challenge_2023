@@ -56,7 +56,6 @@ class FragmentHandler(metaclass=SingletonMeta):
     def get_best_12_layers(self, frag_id):
         for fragment in self.fragments:
             if fragment.id == frag_id:
-                assert len(fragment.best_12_layers) != 0
                 return fragment.best_12_layers
         return self.get_best_layers(frag_id)
 
