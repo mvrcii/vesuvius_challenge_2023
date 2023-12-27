@@ -89,7 +89,7 @@ class UNETR_SFModule(AbstractLightningModule):
         iou, precision, recall, f1 = calculate_masked_metrics_batchwise(y_pred, y_true, y_mask)
         self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
 
-        if batch_idx == 5 and self.trainer.is_global_zero:
+        if batch_idx % 25 == 0 and self.trainer.is_global_zero:
             with torch.no_grad():
                 combined = torch.cat([y_pred[0], y_true[0], y_mask[0]], dim=1)
                 grid = make_grid(combined).detach().cpu()

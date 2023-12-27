@@ -100,6 +100,7 @@ def get_inference_result(fragment_id, full_model_run_dir, hostname, single):
         print_colored("ERROR:\tError in downloading inference", "red")
         print_colored("ERROR:\tMake sure the checkpoint is correct", "red")
         print_colored("ERROR:\tMake sure that your inference is not single layer", "red")
+        print_colored("ERROR:\tMake sure that your port-forwarding is activated", "red")
 
     print_colored(
         f"END:\tInference download for {short_model_run_dir.upper()} and {frag_name} '{fragment_id}'\n",

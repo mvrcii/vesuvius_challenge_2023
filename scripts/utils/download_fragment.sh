@@ -28,7 +28,8 @@ fi
 
 # Configuration based on option
 outputFolder="data/fragments/fragment${outputFragmentID}/slices"
-baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/${fragmentID}/layers/"
+#baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/${fragmentID}/layers/"
+baseUrl="http://dl.ash2txt.org/richi-uploads/ThaumatoAnakalyptor/scroll1/working_first_letter/layers/"
 
 # Use the provided or default slice range
 overwriteExistingFiles=false

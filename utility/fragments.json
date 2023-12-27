@@ -46,7 +46,11 @@
     "id": "20231031143852",
     "name": "SUNSTREAKER",
     "boost_threshold": 0.00001,
-    "rotation": 0
+    "rotation": 0,
+    "best_layers_start_indices": [
+      28,
+      41
+    ]
   },
   {
     "id": "20231016151001",
@@ -67,7 +71,7 @@
     "name": "HOT_ROD",
     "best_layers_start_indices": [
       30,
-      38
+      41
     ],
     "best_12_inclusive_layers": [
       30,
@@ -204,12 +208,20 @@
     "boost_threshold": 0.00005,
     "rotation": 0
   },
-    {
+  {
     "id": "20231205141500",
     "name": "TITLE1"
   },
-    {
+  {
     "id": "20231206155550",
     "name": "TITLE2"
+  },
+  {
+    "id": "RICHI",
+    "name": "RICHI",
+    "best_layers_start_indices": [
+      25,
+      45
+    ]
   }
 ]

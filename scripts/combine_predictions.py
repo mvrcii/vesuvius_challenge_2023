@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import os
+import subprocess
 import sys
 from tkinter import Tk, Scale, HORIZONTAL, Label, Button, Frame, IntVar, Radiobutton, Entry, StringVar
 
@@ -129,9 +130,14 @@ def get_target_dims(work_dir, frag_id):
                 return target_dims
 
             img_path = os.path.join(slice_dir, f"{i:05}.tif")
-            if os.path.isfile(img_path):
-                image = cv2.imread(img_path, 0)
-                target_dims = image.shape
+
+            if not os.path.isfile(img_path):
+                print(f"Downloading Slice file for dimensions: {os.path.join(frag_id, 'slices', f'{i:05}.tif')}")
+                command = ['bash', "./scripts/utils/download_fragment.sh", frag_id, f'{i:05} {i:05}']
+                subprocess.run(command, check=True)
+
+            image = cv2.imread(img_path, 0)
+            target_dims = image.shape
 
     assert target_dims, "Target dimensions are none!"
 
@@ -238,9 +244,9 @@ class Visualization:
         valid_layers = get_common_layers(model_dir=model_dir, selected_layers=selected_layers,
                                          single_layer=single_layer)
 
-        self.model_layer_idcs, self.model_layer_values = load_predictions(root_dir=model_dir,
-                                                                          layer_indices=valid_layers,
-                                                                          single_layer=single_layer)
+        self.model_layer_idcs, self.model_layer_values, self.file_names = load_predictions(root_dir=model_dir,
+                                                                                           layer_indices=valid_layers,
+                                                                                           single_layer=single_layer)
         multilayer = True
         if multilayer:
             start_layer_idx, end_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)
@@ -328,9 +334,9 @@ class Visualization:
         self.end_layer_label = Label(control_frame, text="End Layer:")
         self.end_layer_label.pack(side='left')
 
-        self.clear_focus_button = Button(self.root, text="Clear Focus", command=self.root.focus_set)
-        self.clear_focus_button.pack()
-        self.root.bind("<KeyPress>", self.on_key_press)
+        # self.clear_focus_button = Button(self.root, text="Clear Focus", command=self.root.focus_set)
+        # self.clear_focus_button.pack()
+        # self.root.bind("<KeyPress>", self.on_key_press)
 
         # Added: Slider for start and end layer index
         # self.layer_range_frame = Frame(self.root)
@@ -566,7 +572,7 @@ class Visualization:
         if self.mode_var.get() == 2:
             layer = self.curr_layer_val
             print("Selected layer", layer)
-            self.layer_label.config(text=f"Current Layer: {self.model_layer_idcs[int(layer)]}")
+            self.layer_label.config(text=f"Current Layer: {self.file_names[int(layer)]}")
 
         image = self.process_image()
         imgtk = ImageTk.PhotoImage(image=image)
@@ -687,6 +693,7 @@ class Visualization:
 def load_predictions(root_dir, single_layer, layer_indices=None):
     layer_idcs = list()
     layer_values = []
+    file_names = list()
 
     file_paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
     file_paths.sort(key=lambda x: get_start_layer_idx(x, single_layer))
@@ -703,8 +710,9 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
 
         layer_idcs.append(layer_start_idx)
         layer_values.append(array)
+        file_names.append(filename)
 
-    return layer_idcs, layer_values
+    return layer_idcs, layer_values, file_names
 
 
 if __name__ == "__main__":
