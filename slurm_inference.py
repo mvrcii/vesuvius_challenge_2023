@@ -28,10 +28,15 @@ def main():
         print(f"Waiting for {delay_seconds} seconds before tailing the log file...")
         time.sleep(delay_seconds)
 
-        # Tail the Slurm job's log file
-        tail_cmd = f"tail -f logs/slurm-{job_id}.out"
-        print(f"Executing   : {tail_cmd}")
-        subprocess.run(tail_cmd, shell=True)
+        # Ask user if they want to tail the log file
+        user_response = input("Do you want to tail the log file? (y/n): ").strip().lower()
+        if user_response == 'y':
+            # Tail the Slurm job's log file
+            tail_cmd = f"tail -f logs/slurm-{job_id}.out"
+            print(f"Executing: {tail_cmd}")
+            subprocess.run(tail_cmd, shell=True)
+        else:
+            print("Skipping tailing the log file.")
     else:
         print("Failed to submit job to Slurm or parse job ID.")
 
