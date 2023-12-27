@@ -153,8 +153,8 @@
     "name": "BLUEBIGGER",
     "boost_threshold": 1,
     "best_layers_start_indices": [
-      29,
-      39
+      28,
+      41
     ]
   },
   {
