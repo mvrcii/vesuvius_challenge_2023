@@ -458,7 +458,11 @@ def main():
     for start_idx in range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1)):
         end_idx = start_idx + (config.in_chans - 1)
 
-        npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{start_idx}_{end_idx + config.in_chans - 1}.npy")
+        # Check if this is the last possible N-layer range within the given range
+        if end_idx > end_best_layer_idx:
+            break
+
+        npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{start_idx}_{end_idx}.npy")
 
         # Check if prediction NPY file already exists
         if os.path.isfile(npy_file_path):
@@ -466,18 +470,14 @@ def main():
             continue
 
         # Process each N-layer range
-        infer_full_fragment_layer(model=model,
-                                  ckpt_name=model_folder_name,
-                                  batch_size=batch_size,
-                                  stride_factor=stride_factor,
-                                  fragment_id=fragment_id,
-                                  config=config,
-                                  layer_start=start_idx,
-                                  npy_file_path=npy_file_path)
-
-        # Check if this is the last possible N-layer range within the given range
-        if end_idx >= end_best_layer_idx:
-            break
+        # infer_full_fragment_layer(model=model,
+        #                           ckpt_name=model_folder_name,
+        #                           batch_size=batch_size,
+        #                           stride_factor=stride_factor,
+        #                           fragment_id=fragment_id,
+        #                           config=config,
+        #                           layer_start=start_idx,
+        #                           npy_file_path=npy_file_path)
 
 
 if __name__ == '__main__':
