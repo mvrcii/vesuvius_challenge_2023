@@ -52,13 +52,11 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
         img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
         if not os.path.isfile(img_path):
-            print("Slice file not found:", img_path)
+            print(f"Downloading missing Slice file: {os.path.join(fragment_id, 'slices', f'{i:05}.tif')}")
             if fragment_id in SUPERSEDED_FRAGMENTS:
                 print("Warning: Fragment superseded, added suffix for download!")
                 fragment_id += "_superseded"
-            download_script = "./scripts/utils/download_fragment.sh"
-            command = ['bash', download_script, fragment_id, f'{i:05} {i:05}']
-            print(command)
+            command = ['bash', "./scripts/utils/download_fragment.sh", fragment_id, f'{i:05} {i:05}']
             subprocess.run(command, check=True)
 
         image = cv2.imread(img_path, 0)
@@ -201,11 +199,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     batch_counter = 0
     for y in range(y_patches):
         for x in range(x_patches):
-            if batch_counter % 250 == 0:
-                output = out_arr.cpu().numpy()
-                print("Saving intermediate result")
-                np.save(npy_file_path, output)
-
             progress_bar.update(1)
 
             x_start = x * stride
@@ -253,6 +246,10 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
 
                 batches = []
                 batch_indices = []
+
+            if batch_counter % 1000 == 0:
+                print("Saving")
+                np.save(npy_file_path, out_arr.cpu().numpy())
 
     # Process any remaining patches
     if batches:
