@@ -51,7 +51,7 @@ class FragmentHandler(metaclass=SingletonMeta):
         for fragment in self.fragments:
             if fragment.id == frag_id:
                 return fragment.best_layers
-        return DEFAULT_START_CENTER_LAYER, DEFAULT_END_CENTER_LAYER
+        return None, None
 
     def get_best_12_layers(self, frag_id):
         for fragment in self.fragments:
