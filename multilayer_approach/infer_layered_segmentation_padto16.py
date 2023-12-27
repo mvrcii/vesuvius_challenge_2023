@@ -74,7 +74,7 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     """
     Apply test-time augmentation to the input tensor and make a batch inference with PyTorch.
 
-    :param tensor: Image tensor with shape (12, 512, 512).
+    :param tensor: Image tensor with shape (16, 512, 512).
     :param rotate: Apply rotation if True.
     :param flip_vertical: Apply vertical flip if True.
     :param flip_horizontal: Apply horizontal flip if True.
@@ -86,10 +86,12 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
 
     # Apply rotation augmentations
     if rotate:
-        for k in range(1, 4):
+        for k in [1, 2, 3]:
             rotated = torch.rot90(tensor, k, [1, 2]).clone()  # 16, 512, 512
             print(rotated.shape)
             tta_batch.append(rotated)
+
+    print(len(tta_batch))
 
     # Apply flip augmentations
     if flip_vertical:
@@ -98,30 +100,30 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
         tta_batch.append(torch.flip(tensor, [2]).clone())  # Horizontal flip
 
     # Convert list to torch tensor
-    tta_batch = torch.stack(tta_batch).half()  # Assuming the model is in half precision
-    tta_batch= tta_batch.unsqueeze(1)
+    tta_batch = torch.stack(tta_batch).half()  # [6, 16, 512, 512]
+    tta_batch = tta_batch.unsqueeze(1)  # [6, 1, 16, 512, 512]
     print("Batch Shape before model forward:", tta_batch.shape)
 
     # Get the model's predictions for the batch
-    tta_outputs = model(tta_batch).logits  # (B, 1, 16, 512, 512)
-
+    tta_outputs = model(tta_batch)  # (6, 128, 128)
     print("Batch Shape after model forward:", tta_outputs.shape)
 
     # Post-process to revert the TTA
     reverted_outputs = []
     for i, output in enumerate(tta_outputs):
         output = output.clone()
+        print(output.shape)
         if rotate:
             if i == 1:  # Revert rotate left
-                output = torch.rot90(output, 3, [1, 2])
+                output = torch.rot90(output, 3, [0, 1])
             elif i == 2:  # Revert rotate 180
-                output = torch.rot90(output, 2, [1, 2])
+                output = torch.rot90(output, 2, [0, 1])
             elif i == 3:  # Revert rotate right
-                output = torch.rot90(output, 1, [1, 2])
+                output = torch.rot90(output, 1, [0, 1])
         if flip_vertical and i == len(tta_outputs) - 2 + int(flip_horizontal):
-            output = torch.flip(output, [1])
+            output = torch.flip(output, [0])
         if flip_horizontal and i == len(tta_outputs) - 1:
-            output = torch.flip(output, [2])
+            output = torch.flip(output, [1])
         reverted_outputs.append(output.clone().squeeze())
 
     stacked_outputs = torch.stack(reverted_outputs)
