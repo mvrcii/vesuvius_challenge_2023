@@ -461,7 +461,7 @@ def main():
         if end_idx > end_best_layer_idx:
             break
 
-        npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{start_idx}_{end_idx}.npy")
+        npy_file_path = os.path.join(results_dir, f"stride-{stride_factor}-sigmoid_logits_{start_idx}_{end_idx}.npy")
 
         # Check if prediction NPY file already exists
         if os.path.isfile(npy_file_path):
