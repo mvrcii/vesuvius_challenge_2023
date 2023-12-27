@@ -457,6 +457,8 @@ def main():
 
     for start_idx in range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1)):
         end_idx = start_idx + config.in_chans
+
+        print(end_idx)
         npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{start_idx}_{end_idx + config.in_chans - 1}.npy")
 
         # Check if prediction NPY file already exists
