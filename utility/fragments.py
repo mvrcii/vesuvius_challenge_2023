@@ -57,7 +57,7 @@ class FragmentHandler(metaclass=SingletonMeta):
         for fragment in self.fragments:
             if fragment.id == frag_id:
                 return fragment.best_12_layers
-        return self.get_best_layers(frag_id)
+        return None, None
 
     def get_boost_threshold(self, frag_id):
         for fragment in self.fragments:
