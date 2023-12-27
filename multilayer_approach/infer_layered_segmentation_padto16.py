@@ -423,12 +423,13 @@ def get_inference_range(frag_id):
     start_best_layer_idx, end_best_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)
 
     assert start_best_layer_idx is not None and end_best_layer_idx is not None, f"No best layers found for {frag_id}"
-    assert end_best_layer_idx - start_best_layer_idx >= 11, f"Not enough best layers found for 12 layer inference {frag_id}"
 
     start_best, end_best = FragmentHandler().get_best_12_layers(frag_id=frag_id)
     if start_best and end_best:
         start_best_layer_idx = min(start_best_layer_idx, start_best)
         end_best_layer_idx = max(end_best_layer_idx, end_best)
+
+    assert end_best_layer_idx - start_best_layer_idx >= 11, f"Not enough best layers found for 12 layer inference {frag_id}"
 
     return start_best_layer_idx, end_best_layer_idx
 
