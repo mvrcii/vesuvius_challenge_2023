@@ -144,7 +144,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     margin_percent = 0.2
 
     margin = int(margin_percent * label_size)
-    ignore_edge_mask = torch.ones((label_size, label_size), dtype=torch.bool, device='cuda')
+    ignore_edge_mask = torch.ones((label_size, label_size), dtype=torch.bool, device=f'cuda:{gpu}')
     ignore_edge_mask[margin:-margin, margin:-margin] = False
 
     stride = patch_size // stride_factor
@@ -161,15 +161,15 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     out_height = height // 4
     out_width = width // 4
 
-    out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device='cuda')
-    pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device='cuda')
+    out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device=f'cuda:{gpu}')
+    pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device=f'cuda:{gpu}')
 
     progress_bar = tqdm(total=x_patches * y_patches,
                         desc=f"Layer {layer_start}: Infer Fragment {get_frag_name_from_id(fragment_id)} "
                              f"with {get_ckpt_name_from_id(ckpt_name).upper()}: Processing patches"
                              f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
 
-    preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device='cuda')
+    preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device=f'cuda:{gpu}')
     model = model.half()
 
     batches = []
@@ -232,6 +232,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
                 transformed_images = [transform(image=image)['image'] for image in batches]
 
                 for idx, patch in enumerate(transformed_images):
+                    print(f"Move batch to cuda:{gpu}")
                     preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to(f'cuda:{gpu}')
 
                 with torch.no_grad():
@@ -412,6 +413,7 @@ def load_model(cfg: Config, model_path, gpu):
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
 
+    print(f"Move model to cuda:{gpu}")
     model = model.to(f"cuda:{gpu}")
 
     return model, full_model_path
