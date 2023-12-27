@@ -298,9 +298,14 @@ def get_target_dims(work_dir, frag_id):
                 return target_dims
 
             img_path = os.path.join(slice_dir, f"{i:05}.tif")
-            if os.path.isfile(img_path):
-                image = cv2.imread(img_path, 0)
-                target_dims = image.shape
+
+            if not os.path.isfile(img_path):
+                print(f"Downloading Slice file for dimensions: {os.path.join(frag_id, 'slices', f'{i:05}.tif')}")
+                command = ['bash', "./scripts/utils/download_fragment.sh", frag_id, f'{i:05} {i:05}']
+                subprocess.run(command, check=True)
+
+            image = cv2.imread(img_path, 0)
+            target_dims = image.shape
 
     return target_dims
 
