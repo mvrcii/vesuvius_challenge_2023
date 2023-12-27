@@ -470,14 +470,14 @@ def main():
             continue
 
         # Process each N-layer range
-        # infer_full_fragment_layer(model=model,
-        #                           ckpt_name=model_folder_name,
-        #                           batch_size=batch_size,
-        #                           stride_factor=stride_factor,
-        #                           fragment_id=fragment_id,
-        #                           config=config,
-        #                           layer_start=start_idx,
-        #                           npy_file_path=npy_file_path)
+        infer_full_fragment_layer(model=model,
+                                  ckpt_name=model_folder_name,
+                                  batch_size=batch_size,
+                                  stride_factor=stride_factor,
+                                  fragment_id=fragment_id,
+                                  config=config,
+                                  layer_start=start_idx,
+                                  npy_file_path=npy_file_path)
 
 
 
