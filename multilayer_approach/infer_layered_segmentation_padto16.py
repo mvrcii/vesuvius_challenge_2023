@@ -377,6 +377,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
                                                               'for the inference')
+    parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
     args = parser.parse_args()
 
     return args
@@ -428,6 +429,7 @@ def main():
     model_folder_name = args.checkpoint_folder_name
     fragment_id = args.fragment_id
     batch_size = args.batch_size
+    stride_factor = args.stride
 
     config_path = find_py_in_dir(os.path.join('checkpoints', model_folder_name))
     config = Config.load_from_file(config_path)
@@ -451,7 +453,6 @@ def main():
     os.makedirs(results_dir, exist_ok=True)
 
     start_best_layer_idx, end_best_layer_idx = get_inference_range(frag_id=fragment_id)
-    stride_factor = 2
 
     for start_idx in range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1) + 1):
         end_idx = start_idx + (config.in_chans - 1)
