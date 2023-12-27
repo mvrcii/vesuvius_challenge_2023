@@ -132,7 +132,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
     # Hyperparams
     label_size = config.label_size
     margin_percent = 0.2
-    stride_factor = 4
+    stride_factor = 2
 
     margin = int(margin_percent * label_size)
     ignore_edge_mask = torch.ones((label_size, label_size), dtype=torch.bool, device='cuda')
@@ -190,6 +190,11 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
     batch_counter = 0
     for y in range(y_patches):
         for x in range(x_patches):
+            if batch_counter % 250 == 0:
+                output = out_arr.cpu().numpy()
+                print("Saving intermediate result")
+                np.save(npy_file_path, output)
+
             progress_bar.update(1)
 
             x_start = x * stride
@@ -245,7 +250,8 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
         for idx, patch in enumerate(transformed_images):
             preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to('cuda')
 
-        outputs = model(preallocated_batch_tensor[:len(batches)])
+        with torch.no_grad():
+            outputs = model(preallocated_batch_tensor[:len(batches)])
         probs = torch.sigmoid(outputs).detach()
 
         for idx, (x, y) in enumerate(batch_indices):
