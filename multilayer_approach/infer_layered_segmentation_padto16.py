@@ -137,7 +137,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     mask = np.asarray(Image.open(mask_path))
     mask = pad_image_to_be_divisible_by_4(mask, patch_size)
 
-    assert mask.shape == images[0].shape, "Mask shape does not match image shape"
+    assert mask.shape == images[0].shape, f"Mask shape {mask.shape} does not match image shape {images[0].shape}"
 
     # Hyperparams
     label_size = config.label_size
