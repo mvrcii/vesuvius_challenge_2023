@@ -248,7 +248,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
                 batch_indices = []
 
             if batch_counter % 1000 == 0:
-                print("Saving")
+                # print("Saving")
                 np.save(npy_file_path, out_arr.cpu().numpy())
 
     # Process any remaining patches
