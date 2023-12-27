@@ -192,7 +192,11 @@
   {
     "id": "20231221180250",
     "name": "TRAILBREAKER",
-    "boost_threshold": 1
+    "boost_threshold": 1,
+    "best_layers_start_indices": [
+      28,
+      42
+    ]
   },
   {
     "id": "20231016151002",
