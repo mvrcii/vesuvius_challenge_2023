@@ -421,8 +421,14 @@ def load_model(cfg: Config, model_path, gpu):
 
 def get_inference_range(frag_id):
     start_best_layer_idx, end_best_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)
+
+    start_best, end_best = FragmentHandler().get_best_12_layers(frag_id=frag_id)
+    start_best_layer_idx = min(start_best_layer_idx, start_best)
+    end_best_layer_idx = max(end_best_layer_idx, end_best)
+
     assert start_best_layer_idx is not None and end_best_layer_idx is not None, f"No best layers found for {frag_id}"
     assert end_best_layer_idx - start_best_layer_idx >= 11, f"Not enough best layers found for 12 layer inference {frag_id}"
+
     return start_best_layer_idx, end_best_layer_idx
 
 
@@ -457,6 +463,7 @@ def main():
     os.makedirs(results_dir, exist_ok=True)
 
     start_best_layer_idx, end_best_layer_idx = get_inference_range(frag_id=fragment_id)
+
 
     for start_idx in range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1) + 1):
         end_idx = start_idx + (config.in_chans - 1)
