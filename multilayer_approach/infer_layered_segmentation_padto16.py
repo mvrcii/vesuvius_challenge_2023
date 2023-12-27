@@ -81,13 +81,13 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     :return: Batch of TTA-processed tensors.
     """
     tta_batch = []
-    tensor = tensor.squeeze()
+    tensor = tensor.squeeze()  # 16, 512, 512
     tta_batch.append(tensor.clone())
 
     # Apply rotation augmentations
     if rotate:
         for k in range(1, 4):
-            rotated = torch.rot90(tensor, k, [1, 2]).clone()
+            rotated = torch.rot90(tensor, k, [1, 2]).clone()  # 16, 512, 512
             print(rotated.shape)
             tta_batch.append(rotated)
 
@@ -102,7 +102,7 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     print("Batch Shape before model forward:", tta_batch.shape)
 
     # Get the model's predictions for the batch
-    tta_outputs = model(tta_batch).logits
+    tta_outputs = model(tta_batch).logits  # (B, 1, 16, 512, 512)
 
     print("Batch Shape after model forward:", tta_outputs.shape)
 
