@@ -28,19 +28,12 @@ def main():
         job_id = match.group(1)
         print(f"Slurm job ID: {job_id}")
 
-        delay_seconds = 5  # Adjust this value as needed
+        delay_seconds = 2  # Adjust this value as needed
         print(f"Waiting for {delay_seconds} seconds before tailing the log file...")
         time.sleep(delay_seconds)
 
-        # Ask user if they want to tail the log file
-        user_response = input("Do you want to tail the log file? (y/n): ").strip().lower()
-        if user_response == 'y':
-            # Tail the Slurm job's log file
-            tail_cmd = f"tail -f logs/slurm-{job_id}.out"
-            print(f"Executing: {tail_cmd}")
-            subprocess.run(tail_cmd, shell=True)
-        else:
-            print("Skipping tailing the log file.")
+        tail_cmd = f"tail -f logs/slurm-{job_id}.out"
+        subprocess.run(tail_cmd, shell=True)
     else:
         print("Failed to submit job to Slurm or parse job ID.")
 
