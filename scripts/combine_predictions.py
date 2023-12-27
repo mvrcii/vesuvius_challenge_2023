@@ -9,10 +9,11 @@ import cv2
 import numpy as np
 from PIL import Image, ImageTk
 from PIL.Image import Resampling
+from skimage.transform import resize
 from tqdm import tqdm
 
 from utility.configs import Config
-from utility.fragments import FragmentHandler
+from utility.fragments import FragmentHandler, SUPERSEDED_FRAGMENTS
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -124,14 +125,18 @@ def get_target_dims(work_dir, frag_id):
     target_dims = None
 
     slice_dir = os.path.join(frag_dir, "slices")
+    os.makedirs(slice_dir, exist_ok=True)
+
     if os.path.isdir(slice_dir):
         for i in range(0, 63):
             if target_dims:
                 return target_dims
 
             img_path = os.path.join(slice_dir, f"{i:05}.tif")
-
             if not os.path.isfile(img_path):
+                if frag_id in SUPERSEDED_FRAGMENTS:
+                    print("Warning: Fragment superseded, added suffix for download!")
+                    frag_id += "_superseded"
                 print(f"Downloading Slice file for dimensions: {os.path.join(frag_id, 'slices', f'{i:05}.tif')}")
                 command = ['bash', "./scripts/utils/download_fragment.sh", frag_id, f'{i:05} {i:05}']
                 subprocess.run(command, check=True)
@@ -558,6 +563,9 @@ class Visualization:
 
         if mode in [0, 1]:
             self.layer_label.pack_forget()
+            self.left_button.pack_forget()
+            self.right_button.pack_forget()
+            self.slider.pack_forget()
 
         elif mode == 2:
             self.layer_label.pack(side='right')
@@ -635,16 +643,17 @@ class Visualization:
         if self.inverted:
             processed = 1 - processed
 
-        image = Image.fromarray(np.uint8(processed * 255), 'L')
-        aspect_ratio = image.width / image.height
+        image = np.uint8(processed * 255)
+        aspect_ratio = image.shape[1] / image.shape[0]
 
-        new_width = image.width * 4
-        new_height = image.height * 4
+        new_width = image.shape[1] * 4  # width
+        new_height = image.shape[0] * 4  # height
 
         # Save image
         if save_img:
             original_height, original_width = max_size
-            upscaled_image = image.resize((new_width, new_height), Resampling.LANCZOS)
+            upscaled_image = resize(image, (new_height, new_width),
+                                    order=0, preserve_range=True, anti_aliasing=False)
 
             assert new_width >= original_width and new_height >= original_height
 
@@ -664,13 +673,14 @@ class Visualization:
 
         # Determine new dimensions
         if aspect_ratio > 1:
-            new_width = min(max_size[0], image.width * 4)
+            new_width = min(max_size[0], new_width)
             new_height = int(new_width / aspect_ratio)
         else:
-            new_height = min(max_size[1], image.height * 4)
+            new_height = min(max_size[1], new_height)
             new_width = int(new_height * aspect_ratio)
 
         # Resize with high-quality resampling
+        image = Image.fromarray(np.uint8(processed * 255), 'L')
         return image.resize((new_width, new_height), Resampling.LANCZOS)
 
     def decrease_slider(self):
@@ -706,7 +716,8 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
     layer_values = []
     file_names = list()
 
-    file_paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
+    file_paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')
+                  and not x.startswith('stride-2')]
     file_paths.sort(key=lambda x: get_start_layer_idx(x, single_layer))
 
     for filename in file_paths:

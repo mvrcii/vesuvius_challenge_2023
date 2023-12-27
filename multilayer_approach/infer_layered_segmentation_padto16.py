@@ -74,13 +74,15 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     """
     Apply test-time augmentation to the input tensor and make a batch inference with PyTorch.
 
-    :param tensor: Image tensor with shape (4, 512, 512).
+    :param tensor: Image tensor with shape (12, 512, 512).
     :param rotate: Apply rotation if True.
     :param flip_vertical: Apply vertical flip if True.
     :param flip_horizontal: Apply horizontal flip if True.
     :return: Batch of TTA-processed tensors.
     """
     tta_batch = []
+
+    tta_batch.append(tensor.clone())
 
     # Apply rotation augmentations
     if rotate:
@@ -117,7 +119,10 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
             output = torch.flip(output, [2])
         reverted_outputs.append(output.clone().squeeze())
 
-    return torch.stack(reverted_outputs)
+    stacked_outputs = torch.stack(reverted_outputs)
+    sigmoided_outputs = torch.sigmoid(stacked_outputs).detach()
+
+    return sigmoided_outputs.mean(dim=0)
 
 
 def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, stride_factor, fragment_id, config: Config,
@@ -169,7 +174,8 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
                              f"with {get_ckpt_name_from_id(ckpt_name).upper()}: Processing patches"
                              f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
 
-    preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16, device=f'cuda:{gpu}')
+    preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16,
+                                            device=f'cuda:{gpu}')
     model = model.half()
 
     batches = []
@@ -235,18 +241,14 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
                     preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to(f'cuda:{gpu}')
 
                 with torch.no_grad():
-                    outputs = model(preallocated_batch_tensor[:len(batches)])
-
-                sigmoid_output = torch.sigmoid(outputs).detach()
-
-                for idx, (x, y) in enumerate(batch_indices):
-                    process_patch(sigmoid_output[idx], x, y)  # Function to process each patch
+                    for image in preallocated_batch_tensor[:len(batches)]:
+                        sigmoid_tta_output = advanced_tta(model=model, tensor=image, rotate=True)
+                        process_patch(sigmoid_tta_output, x, y)
 
                 batches = []
                 batch_indices = []
 
             if batch_counter % 1000 == 0:
-                # print("Saving")
                 np.save(npy_file_path, out_arr.cpu().numpy())
 
     # Process any remaining patches
@@ -276,6 +278,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     output = out_arr.cpu().numpy()
     print("Saving finally")
     np.save(npy_file_path, output)
+
 
 def find_py_in_dir(path):
     for file in os.listdir(path):
@@ -469,7 +472,6 @@ def main():
 
     start_best_layer_idx, end_best_layer_idx = get_inference_range(frag_id=fragment_id)
 
-
     for start_idx in range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1) + 1):
         end_idx = start_idx + (config.in_chans - 1)
 
@@ -494,7 +496,6 @@ def main():
                                   gpu=gpu,
                                   layer_start=start_idx,
                                   npy_file_path=npy_file_path)
-
 
 
 if __name__ == '__main__':
