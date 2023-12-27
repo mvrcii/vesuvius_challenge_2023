@@ -70,7 +70,7 @@ train_aug = [
         A.ChannelDropout(always_apply=True, channel_drop_range=(1, 1), fill_value=0),
         A.CoarseDropout(always_apply=True, max_holes=6, max_height=56, max_width=56, min_holes=2, min_height=38,
                         min_width=38, fill_value=0, mask_fill_value=None),
-        A.Downscale(always_apply=True, scale_min=0.55, scale_max=0.99),
+        A.Downscale(always_apply=True, scale_min=0.55, scale_max=0.99, interpolation=0),
         A.GridDistortion(always_apply=True, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
                          border_mode=0,
                          value=(0, 0, 0), mask_value=None, normalized=False),
