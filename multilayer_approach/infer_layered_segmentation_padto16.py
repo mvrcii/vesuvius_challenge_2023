@@ -204,6 +204,10 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
 
             patch = images[:, y_start:y_end, x_start:x_end]  # [12, 512, 512]
 
+            if patch.shape != (12, 512, 512):
+                # patch is at the edge => skip it
+                continue
+
             patch = np.expand_dims(patch, 0)  # [1, 12, 512, 512]
             zero_padding = np.zeros((1, 16 - patch.shape[1], patch_size, patch_size))  # [1, 4, 512, 512]
             patch = np.concatenate([patch, zero_padding], axis=1)  # [1, 16, 512, 512]
