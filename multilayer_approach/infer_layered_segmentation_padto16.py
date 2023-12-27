@@ -1,5 +1,6 @@
 import argparse
 import os
+import subprocess
 import sys
 import warnings
 from datetime import datetime
@@ -18,7 +19,7 @@ from models.architectures.unet3d_segformer import UNET3D_Segformer
 from models.architectures.unetr_segformer import UNETR_Segformer
 from utility.checkpoints import get_ckpt_name_from_id
 from utility.configs import Config
-from utility.fragments import get_frag_name_from_id, FragmentHandler
+from utility.fragments import get_frag_name_from_id, FragmentHandler, SUPERSEDED_FRAGMENTS
 from utility.meta_data import AlphaBetaMeta
 
 '''
@@ -52,6 +53,13 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
 
         if not os.path.isfile(img_path):
             print("Slice file not found:", img_path)
+            if fragment_id in SUPERSEDED_FRAGMENTS:
+                print("Warning: Fragment superseded, added suffix for download!")
+                fragment_id += "_superseded"
+            download_script = "./scripts/utils/download_fragment.sh"
+            command = ['bash', download_script, fragment_id, f'"{i:05} {i:05}"']
+            print(command)
+            subprocess.run(command)
 
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
