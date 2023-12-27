@@ -99,9 +99,12 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
 
     # Convert list to torch tensor
     tta_batch = torch.stack(tta_batch).half()  # Assuming the model is in half precision
+    print("Batch Shape before model forward:", tta_batch.shape)
 
     # Get the model's predictions for the batch
     tta_outputs = model(tta_batch).logits
+
+    print("Batch Shape after model forward:", tta_outputs.shape)
 
     # Post-process to revert the TTA
     reverted_outputs = []
