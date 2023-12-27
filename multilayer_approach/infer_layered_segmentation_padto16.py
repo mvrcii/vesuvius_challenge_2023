@@ -121,7 +121,7 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
 
 
 def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, stride_factor, fragment_id, config: Config,
-                              layer_start):
+                              layer_start, gpu):
     print("Starting full inference")
     patch_size = config.patch_size
     expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
@@ -232,7 +232,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
                 transformed_images = [transform(image=image)['image'] for image in batches]
 
                 for idx, patch in enumerate(transformed_images):
-                    preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to('cuda')
+                    preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to(f'cuda:{gpu}')
 
                 with torch.no_grad():
                     outputs = model(preallocated_batch_tensor[:len(batches)])
@@ -254,7 +254,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
         transformed_images = [transform(image=image)['image'] for image in batches]
 
         for idx, patch in enumerate(transformed_images):
-            preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to('cuda')
+            preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to(f'cuda:{gpu}')
 
         with torch.no_grad():
             outputs = model(preallocated_batch_tensor[:len(batches)])
@@ -378,12 +378,13 @@ def parse_args():
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
                                                               'for the inference')
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
+    parser.add_argument('--gpu', type=int, default=0, help='Cuda GPU (default: 0)')
     args = parser.parse_args()
 
     return args
 
 
-def load_model(cfg: Config, model_path):
+def load_model(cfg: Config, model_path, gpu):
     model_path = os.path.join('checkpoints', model_path)
     full_model_path = None
     for file in os.listdir(model_path):
@@ -411,7 +412,7 @@ def load_model(cfg: Config, model_path):
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
 
-    model = model.to("cuda")
+    model = model.to(f"cuda:{gpu}")
 
     return model, full_model_path
 
@@ -430,11 +431,12 @@ def main():
     fragment_id = args.fragment_id
     batch_size = args.batch_size
     stride_factor = args.stride
+    gpu = args.gpu
 
     config_path = find_py_in_dir(os.path.join('checkpoints', model_folder_name))
     config = Config.load_from_file(config_path)
 
-    model, model_path = load_model(cfg=config, model_path=model_folder_name)
+    model, model_path = load_model(cfg=config, model_path=model_folder_name, gpu=gpu)
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_name = model_path.split(f"checkpoints{os.sep}")[-1]
@@ -475,6 +477,7 @@ def main():
                                   stride_factor=stride_factor,
                                   fragment_id=fragment_id,
                                   config=config,
+                                  gpu=gpu,
                                   layer_start=start_idx,
                                   npy_file_path=npy_file_path)
 
