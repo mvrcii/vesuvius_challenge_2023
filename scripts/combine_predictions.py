@@ -266,6 +266,7 @@ class Visualization:
 
         # Variable to hold the selected mode
         self.inverted = False
+        self.min_max_mode = 'max'
 
         self.max_ensemble = max_ensemble
         self.transparent = transparent
@@ -334,8 +335,8 @@ class Visualization:
         self.end_layer_label = Label(control_frame, text="End Layer:")
         self.end_layer_label.pack(side='left')
 
-        # self.clear_focus_button = Button(self.root, text="Clear Focus", command=self.root.focus_set)
-        # self.clear_focus_button.pack()
+        self.clear_focus_button = Button(self.root, text="Toggle Min-Max", command=self.toggle_min_max)
+        self.clear_focus_button.pack()
         # self.root.bind("<KeyPress>", self.on_key_press)
 
         # Added: Slider for start and end layer index
@@ -361,6 +362,16 @@ class Visualization:
 
         # Start the application
         self.root.mainloop()
+
+    def toggle_min_max(self):
+        if self.min_max_mode == 'min':
+            print("Toggled to Max Mode")
+            self.min_max_mode = 'max'
+        else:
+            print("Toggled to Min Mode")
+            self.min_max_mode = 'min'
+
+        self.update_image()
 
     def on_key_press(self, event):
         if event.keysym == "Left":
@@ -411,15 +422,6 @@ class Visualization:
             print(f"Entered value: {end_layer}")
         except ValueError:
             print("Please enter a valid int number")
-
-    @staticmethod
-    def calc_weighted_arr(array, weight, _max=False):
-        array_cp = array.copy()
-        assert len(array) == 2
-        if _max:
-            return np.maximum.reduce(array_cp)
-        else:
-            return array_cp[0] * weight + array_cp[1] * (1 - weight)
 
     def get_threshold(self):
         mode = self.mode_var.get()
@@ -597,7 +599,10 @@ class Visualization:
         if mode == "sum":
             processed = np.sum(self.model_layer_values[rel_start_idx:rel_end_idx + 1], axis=0)
         elif mode == "max":
-            processed = np.maximum.reduce(self.model_layer_values[rel_start_idx:rel_end_idx + 1])
+            if self.min_max_mode == 'min':
+                processed = np.minimum.reduce(self.model_layer_values[rel_start_idx:rel_end_idx + 1])
+            else:
+                processed = np.maximum.reduce(self.model_layer_values[rel_start_idx:rel_end_idx + 1])
         elif mode == "layers":
             layer = self.curr_layer_val
             processed = self.model_layer_values.copy()[int(layer)]
@@ -619,7 +624,9 @@ class Visualization:
         else:
             processed = processed * (threshold * -1)
             processed[processed > 1] = 1
-        print(np.unique(processed))
+
+            # OUTLINE BOOSTING
+            processed[processed < 1] = 0
 
         # Apply threshold
         # processed[processed >= float(threshold)] = 1  # clamp all values that are not 0 (or threshold) to 1
@@ -675,7 +682,10 @@ class Visualization:
 
             self.set_threshold(new_threshold)
             self.slider.set(new_threshold)
-            self.layer_label.config(text=f"Value: {self.model_layer_idcs[int(new_threshold)]}")
+
+            # layer = self.curr_layer_val
+            print("Selected layer", new_threshold)
+            self.layer_label.config(text=f"Current Layer: {self.file_names[int(new_threshold)]}")
 
     def increase_slider(self):
         mode = self.mode_var.get()
@@ -687,7 +697,8 @@ class Visualization:
 
             self.set_threshold(new_layer)
             self.slider.set(new_layer)
-            self.layer_label.config(text=f"Value: {self.model_layer_idcs[int(new_layer)]}")
+            print("Selected layer", new_layer)
+            self.layer_label.config(text=f"Current Layer: {self.file_names[int(new_layer)]}")
 
 
 def load_predictions(root_dir, single_layer, layer_indices=None):
