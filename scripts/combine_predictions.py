@@ -238,9 +238,9 @@ class Visualization:
         valid_layers = get_common_layers(model_dir=model_dir, selected_layers=selected_layers,
                                          single_layer=single_layer)
 
-        self.model_layer_idcs, self.model_layer_values = load_predictions(root_dir=model_dir,
-                                                                          layer_indices=valid_layers,
-                                                                          single_layer=single_layer)
+        self.model_layer_idcs, self.model_layer_values, self.file_names = load_predictions(root_dir=model_dir,
+                                                                                           layer_indices=valid_layers,
+                                                                                           single_layer=single_layer)
         multilayer = True
         if multilayer:
             start_layer_idx, end_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)
@@ -566,7 +566,7 @@ class Visualization:
         if self.mode_var.get() == 2:
             layer = self.curr_layer_val
             print("Selected layer", layer)
-            self.layer_label.config(text=f"Current Layer: {self.model_layer_idcs[int(layer)]}")
+            self.layer_label.config(text=f"Current Layer: {self.file_names[int(layer)]}")
 
         image = self.process_image()
         imgtk = ImageTk.PhotoImage(image=image)
@@ -687,6 +687,7 @@ class Visualization:
 def load_predictions(root_dir, single_layer, layer_indices=None):
     layer_idcs = list()
     layer_values = []
+    file_names = list()
 
     file_paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
     file_paths.sort(key=lambda x: get_start_layer_idx(x, single_layer))
@@ -703,8 +704,9 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
 
         layer_idcs.append(layer_start_idx)
         layer_values.append(array)
+        file_names.append(filename)
 
-    return layer_idcs, layer_values
+    return layer_idcs, layer_values, file_names
 
 
 if __name__ == "__main__":

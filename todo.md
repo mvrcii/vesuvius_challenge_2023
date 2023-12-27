@@ -5,3 +5,4 @@
    - Train
 2. Add (slightly) more validation visualization (DONE)
 3. Potentially TIFF pre-processing (`convert/preprocess_images.py`)
+4. Inference 12-layer fine-donkey on SUNSTREAKER (potentially other fragments too)
