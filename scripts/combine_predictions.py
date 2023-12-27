@@ -328,9 +328,9 @@ class Visualization:
         self.end_layer_label = Label(control_frame, text="End Layer:")
         self.end_layer_label.pack(side='left')
 
-        self.clear_focus_button = Button(self.root, text="Clear Focus", command=self.root.focus_set)
-        self.clear_focus_button.pack()
-        self.root.bind("<KeyPress>", self.on_key_press)
+        # self.clear_focus_button = Button(self.root, text="Clear Focus", command=self.root.focus_set)
+        # self.clear_focus_button.pack()
+        # self.root.bind("<KeyPress>", self.on_key_press)
 
         # Added: Slider for start and end layer index
         # self.layer_range_frame = Frame(self.root)
