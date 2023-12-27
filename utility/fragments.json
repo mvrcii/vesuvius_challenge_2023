@@ -163,7 +163,7 @@
     "rotation": 0,
     "boost_threshold": 1,
     "best_layers_start_indices": [
-      28,
+      30,
       41
     ],
     "best_12_inclusive_layers": [
