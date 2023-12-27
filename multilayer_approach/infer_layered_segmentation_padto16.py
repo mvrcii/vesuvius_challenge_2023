@@ -377,6 +377,7 @@ def parse_args():
 
 
 def load_model(cfg: Config, model_path):
+    model_path = os.path.join('checkpoints', model_path)
     full_model_path = None
     for file in os.listdir(model_path):
         if file.endswith('.ckpt'):
