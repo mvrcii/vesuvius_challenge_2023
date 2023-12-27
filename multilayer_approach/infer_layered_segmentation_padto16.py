@@ -50,6 +50,9 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
     for i in tqdm(range(layer_start, layer_start + layer_count)):
         img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
+        if not os.path.isfile(img_path):
+            print("Slice file not found:", img_path)
+
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
 
