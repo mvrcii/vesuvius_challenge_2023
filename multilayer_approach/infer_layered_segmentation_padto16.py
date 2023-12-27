@@ -193,8 +193,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
 
     transform = A.Compose(val_image_aug, is_check_shapes=False)
     use_advanced_tta = False
-    print(x_patches)
-    print(y_patches)
 
     batch_counter = 0
     for y in range(y_patches):
