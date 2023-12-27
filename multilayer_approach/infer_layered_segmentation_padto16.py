@@ -132,7 +132,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
     # Hyperparams
     label_size = config.label_size
     margin_percent = 0.2
-    stride_factor = 2
+    stride_factor = 4
 
     margin = int(margin_percent * label_size)
     ignore_edge_mask = torch.ones((label_size, label_size), dtype=torch.bool, device='cuda')
