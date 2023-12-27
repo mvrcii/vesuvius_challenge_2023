@@ -111,7 +111,8 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
     return torch.stack(reverted_outputs)
 
 
-def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragment_id, config: Config, layer_start):
+def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, stride_factor, fragment_id, config: Config,
+                              layer_start):
     print("Starting full inference")
     patch_size = config.patch_size
     expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
@@ -132,7 +133,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
     # Hyperparams
     label_size = config.label_size
     margin_percent = 0.2
-    stride_factor = 2
 
     margin = int(margin_percent * label_size)
     ignore_edge_mask = torch.ones((label_size, label_size), dtype=torch.bool, device='cuda')
@@ -272,11 +272,13 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
     np.save(npy_file_path, output)
 
 
-def find_ckpt_in_dir(path):
+def find_ckpt_in_dir(config, path):
     for file in os.listdir(path):
         if file.endswith('.ckpt'):
-            return os.path.join(path, file)
-    return None
+            model_path = os.path.join(path, file)
+            return load_model(cfg=config, model_path=model_path)
+    print("No valid model checkpoint file found")
+    sys.exit(1)
 
 
 def find_py_in_dir(path):
@@ -332,18 +334,13 @@ def generate_and_save_label_file(cfg: Config, _model_name, array, frag_id, layer
     image = process_image(array=array, frag_id=frag_id, dimensions=target_dims)
     image.save(label_path)
 
-    if verbose:
-        print("Saved label file to:", label_path)
+    print("Saved label file to:", label_path)
 
 
 def process_image(array, frag_id, dimensions):
     processed = normalize_npy_preds(array)  # Normalize
 
     threshold = 0.5
-
-    global boost_threshold
-    if boost_threshold:
-        threshold = FragmentHandler().get_boost_threshold(frag_id=frag_id)
 
     # Binarize
     processed = np.where(processed > threshold, 1, 0)
@@ -374,83 +371,72 @@ def process_image(array, frag_id, dimensions):
 
 
 def parse_args():
+    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
+    logging.set_verbosity_error()
+    Image.MAX_IMAGE_PIXELS = None
+
     parser = argparse.ArgumentParser(description='Infer Layered Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
     parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
                                                               'for the inference')
-    parser.add_argument('--boost_threshold', action='store_true', help='Use a boosted threshold for saved images')
-    parser.add_argument('--v', action='store_false', help='Print stuff (default True)')
     args = parser.parse_args()
 
     return args
 
 
 def load_model(cfg: Config, model_path):
+    full_model_path = None
+    for file in os.listdir(model_path):
+        if file.endswith('.ckpt'):
+            full_model_path = os.path.join(model_path, file)
+
+    if full_model_path is None:
+        print("No valid model checkpoint file found")
+        sys.exit(1)
+
     if cfg.architecture == 'segformer':
         model = SegformerForSemanticSegmentation.from_pretrained(cfg.from_pretrained,
                                                                  num_labels=1,
                                                                  num_channels=cfg.in_chans,
                                                                  ignore_mismatched_sizes=True)
-        checkpoint = torch.load(model_path)
-        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict)
     elif cfg.architecture == 'unet3d-sf':
         model = UNET3D_Segformer(cfg=cfg)
-        checkpoint = torch.load(model_path)
-        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict)
-
     elif cfg.architecture == 'unetr-sf':
         model = UNETR_Segformer(cfg=cfg)
-        checkpoint = torch.load(model_path)
-        state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
-        model.load_state_dict(state_dict)
     else:
         print("Error model type not found:", cfg.architecture)
         sys.exit(1)
+
+    checkpoint = torch.load(full_model_path)
+    state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
+    model.load_state_dict(state_dict)
 
     model = model.to("cuda")
 
     return model
 
 
-verbose = None
-boost_threshold = None
+def get_inference_range(frag_id):
+    start_best_layer_idx, end_best_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)
+    assert start_best_layer_idx is not None and end_best_layer_idx is not None, f"No best layers found for {frag_id}"
+    assert end_best_layer_idx - start_best_layer_idx >= 11, f"Not enough best layers found for 12 layer inference {frag_id}"
+    return start_best_layer_idx, end_best_layer_idx
 
 
 def main():
-    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
-    logging.set_verbosity_error()
-    Image.MAX_IMAGE_PIXELS = None
-
     args = parse_args()
 
     model_folder_name = args.checkpoint_folder_name
     fragment_id = args.fragment_id
     batch_size = args.batch_size
 
-    global verbose, boost_threshold
-    boost_threshold = args.boost_threshold
-    verbose = args.v
-
-    start_layer_idx, end_layer_idx = FragmentHandler().get_best_12_layers(frag_id=fragment_id)
-
-    # Determine the path to the configuration based on the checkpoint folder
-    model_folder_path = os.path.join('checkpoints', model_folder_name)
-
-    # Find config path
-    config_path = find_py_in_dir(model_folder_path)
-
-    # Find the checkpoint path
-    model_path = find_ckpt_in_dir(model_folder_path)
-
-    if model_path is None:
-        print("No valid model checkpoint file found")
-        sys.exit(1)
-
+    config_path = find_py_in_dir(os.path.join('checkpoints', model_folder_name))
     config = Config.load_from_file(config_path)
+
+    model_path = find_ckpt_in_dir(os.path.join('checkpoints', model_folder_name))
+    model = load_model(cfg=config, model_path=model_folder_name)
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_name = model_path.split(f"checkpoints{os.sep}")[-1]
@@ -461,31 +447,38 @@ def main():
 
     os.makedirs(root_dir, exist_ok=True)
 
+    # If inference dir already exists, use that directory
     dirs = [x for x in os.listdir(root_dir) if x.endswith(model_name_modified)]
     if len(dirs) == 1:
         results_dir = os.path.join(root_dir, dirs[0])
 
     os.makedirs(results_dir, exist_ok=True)
 
-    model = load_model(cfg=config, model_path=model_path)
+    start_best_layer_idx, end_best_layer_idx = get_inference_range(frag_id=fragment_id)
+    stride_factor = 2
 
-    npy_file_path = os.path.join(results_dir,
-                                 f"sigmoid_logits_{start_layer_idx}_{start_layer_idx + config.in_chans - 1}.npy")
+    for start_idx in range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1)):
+        end_idx = start_idx + config.in_chans
+        npy_file_path = os.path.join(results_dir, f"sigmoid_logits_{start_idx}_{end_idx + config.in_chans - 1}.npy")
 
-    # Check if prediction NPY file already exists -> skip infer
-    # if os.path.isfile(npy_file_path):
-    #     if verbose:
-    #         print(f"Skip layer {start_layer_idx}")
-    #
-    #     return
+        # Check if prediction NPY file already exists
+        if os.path.isfile(npy_file_path):
+            print(f"Inference already exists. Skip layer {start_idx}")
+            continue
 
-    infer_full_fragment_layer(model=model,
-                              ckpt_name=model_folder_name,
-                              batch_size=batch_size,
-                              fragment_id=fragment_id,
-                              config=config,
-                              layer_start=start_layer_idx,
-                              npy_file_path=npy_file_path)
+        # Process each N-layer range
+        infer_full_fragment_layer(model=model,
+                                  ckpt_name=model_folder_name,
+                                  batch_size=batch_size,
+                                  stride_factor=stride_factor,
+                                  fragment_id=fragment_id,
+                                  config=config,
+                                  layer_start=start_idx,
+                                  npy_file_path=npy_file_path)
+
+        # Check if this is the last possible N-layer range within the given range
+        if end_idx >= end_best_layer_idx:
+            break
 
 
 if __name__ == '__main__':
