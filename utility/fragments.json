@@ -46,7 +46,11 @@
     "id": "20231031143852",
     "name": "SUNSTREAKER",
     "boost_threshold": 0.00001,
-    "rotation": 0
+    "rotation": 0,
+    "best_layers_start_indices": [
+      28,
+      41
+    ]
   },
   {
     "id": "20231016151001",
