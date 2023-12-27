@@ -232,7 +232,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
                 transformed_images = [transform(image=image)['image'] for image in batches]
 
                 for idx, patch in enumerate(transformed_images):
-                    print(f"Move batch to cuda:{gpu}")
                     preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to(f'cuda:{gpu}')
 
                 with torch.no_grad():
@@ -418,7 +417,6 @@ def load_model(cfg: Config, model_path, gpu):
     state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
     model.load_state_dict(state_dict)
 
-    print(f"Move model to cuda:{gpu}")
     model = model.to(f"cuda:{gpu}")
 
     return model, full_model_path
