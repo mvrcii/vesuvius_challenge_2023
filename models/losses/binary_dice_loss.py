@@ -11,7 +11,7 @@ class BinaryDiceLoss(nn.Module):
             from_logits: bool = True,
             log_loss: bool = False,
             smooth: float = 0.0,
-            eps: float = 1e-7,
+            eps: float = 1e-3,
     ):
         """Implementation of Dice loss for binary image segmentation tasks
 
@@ -66,7 +66,7 @@ class BinaryDiceLoss(nn.Module):
 
 
 class MaskedBinaryDiceLoss(nn.Module):
-    def __init__(self, from_logits: bool = True, smooth: float = 0.0, eps: float = 1e-7):
+    def __init__(self, from_logits: bool = True, smooth: float = 0.0, eps: float = 1e-3):
         super().__init__()
         self.from_logits = from_logits
         self.smooth = smooth

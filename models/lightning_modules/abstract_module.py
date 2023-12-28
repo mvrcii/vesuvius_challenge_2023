@@ -16,6 +16,7 @@ class AbstractLightningModule(LightningModule):
         # Unpack config parameters since self.cfg = cfg leads to pickle issues
         self.epochs = getattr(cfg, 'epochs', -1)
         self.lr = getattr(cfg, 'lr', 1e-4)
+        self.epsilon = cfg.epsilon
         self.eta_min = getattr(cfg, 'eta_min', 1e-7)
         self.weight_decay = getattr(cfg, 'weight_decay', 0.001)
         self.optimizer = getattr(cfg, 'optimizer', 'adamw')
@@ -42,7 +43,7 @@ class AbstractLightningModule(LightningModule):
 
     def configure_optimizers(self):
         if self.optimizer == 'adamw':
-            optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+            optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay, eps=self.epsilon)
         else:
             raise NotImplementedError()
 

@@ -6,7 +6,7 @@ from models.architectures.unetr_segformer import UNETR_Segformer
 from models.lightning_modules.abstract_module import AbstractLightningModule
 
 
-def calculate_masked_metrics_batchwise(outputs, labels, mask):
+def calculate_masked_metrics_batchwise(epsilon, outputs, labels, mask):
     # Ensure batch dimension is maintained during operations
     outputs = (outputs > 0.5).float()
     batch_size = outputs.size(0)
@@ -22,10 +22,10 @@ def calculate_masked_metrics_batchwise(outputs, labels, mask):
 
     # Calculate metrics for each batch
     iou = true_positives / (
-            true_positives + false_positives + false_negatives + 1e-6)  # Added epsilon for numerical stability
-    precision = true_positives / (true_positives + false_positives + 1e-6)
-    recall = true_positives / (true_positives + false_negatives + 1e-6)
-    f1 = 2 * (precision * recall) / (precision + recall + 1e-6)  # Added epsilon for F1 calculation
+            true_positives + false_positives + false_negatives + epsilon)  # Added epsilon for numerical stability
+    precision = true_positives / (true_positives + false_positives + epsilon)
+    recall = true_positives / (true_positives + false_negatives + epsilon)
+    f1 = 2 * (precision * recall) / (precision + recall + epsilon)  # Added epsilon for F1 calculation
 
     return iou.mean(), precision.mean(), recall.mean(), f1.mean()
 
@@ -33,6 +33,7 @@ def calculate_masked_metrics_batchwise(outputs, labels, mask):
 class UNETR_SFModule(AbstractLightningModule):
     def __init__(self, cfg):
         super().__init__(cfg=cfg)
+        self.epsilon = cfg.epsilon
 
         self.model = UNETR_Segformer(cfg=cfg)
         self.load_weights()
@@ -86,7 +87,7 @@ class UNETR_SFModule(AbstractLightningModule):
         total_loss, losses = self.calculate_masked_weighted_loss(logits, y_true, y_mask)
         self.log_losses_to_wandb(losses, 'val')
 
-        iou, precision, recall, f1 = calculate_masked_metrics_batchwise(y_pred, y_true, y_mask)
+        iou, precision, recall, f1 = calculate_masked_metrics_batchwise(self.epsilon, y_pred, y_true, y_mask)
         self.update_unetr_validation_metrics(total_loss, iou, precision, recall, f1)
 
         if batch_idx % 20 == 0 and self.trainer.is_global_zero:

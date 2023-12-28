@@ -1,8 +1,9 @@
 import copy
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 
 
 class SingleDeconv3DBlock(nn.Module):
@@ -84,18 +85,19 @@ class SelfAttention(nn.Module):
         key_layer = self.transpose_for_scores(mixed_key_layer)
         value_layer = self.transpose_for_scores(mixed_value_layer)
 
-        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
-        attention_scores = attention_scores / math.sqrt(self.attention_head_size)
-        attention_probs = self.softmax(attention_scores)
-        weights = attention_probs if self.vis else None
-        attention_probs = self.attn_dropout(attention_probs)
+        with torch.cuda.amp.autocast_mode.autocast(enabled=False):
+            attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+            attention_scores = attention_scores / math.sqrt(self.attention_head_size)
+            attention_probs = self.softmax(attention_scores)
+            weights = attention_probs if self.vis else None
+            attention_probs = self.attn_dropout(attention_probs)
 
-        context_layer = torch.matmul(attention_probs, value_layer)
-        context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
-        context_layer = context_layer.view(*new_context_layer_shape)
-        attention_output = self.out(context_layer)
-        attention_output = self.proj_dropout(attention_output)
+            context_layer = torch.matmul(attention_probs, value_layer)
+            context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
+            new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
+            context_layer = context_layer.view(*new_context_layer_shape)
+            attention_output = self.out(context_layer)
+            attention_output = self.proj_dropout(attention_output)
         return attention_output, weights
 
 
@@ -146,10 +148,10 @@ class Embeddings(nn.Module):
 
 
 class TransformerBlock(nn.Module):
-    def __init__(self, embed_dim, num_heads, dropout, cube_size, patch_size):
+    def __init__(self, epsilon, embed_dim, num_heads, dropout, cube_size, patch_size):
         super().__init__()
-        self.attention_norm = nn.LayerNorm(embed_dim, eps=1e-6)
-        self.mlp_norm = nn.LayerNorm(embed_dim, eps=1e-6)
+        self.attention_norm = nn.LayerNorm(embed_dim, eps=epsilon)
+        self.mlp_norm = nn.LayerNorm(embed_dim, eps=epsilon)
         self.mlp_dim = int((cube_size[0] * cube_size[1] * cube_size[2]) / (patch_size * patch_size * patch_size))
         self.mlp = PositionwiseFeedForward(embed_dim, 2048)
         self.attn = SelfAttention(num_heads, embed_dim, dropout)
@@ -169,14 +171,15 @@ class TransformerBlock(nn.Module):
 
 
 class Transformer(nn.Module):
-    def __init__(self, input_dim, embed_dim, cube_size, patch_size, num_heads, num_layers, dropout, extract_layers):
+    def __init__(self, epsilon, input_dim, embed_dim, cube_size, patch_size, num_heads, num_layers, dropout,
+                 extract_layers):
         super().__init__()
         self.embeddings = Embeddings(input_dim, embed_dim, cube_size, patch_size, dropout)
         self.layer = nn.ModuleList()
-        self.encoder_norm = nn.LayerNorm(embed_dim, eps=1e-6)
+        self.encoder_norm = nn.LayerNorm(embed_dim, eps=epsilon)
         self.extract_layers = extract_layers
         for _ in range(num_layers):
-            layer = TransformerBlock(embed_dim, num_heads, dropout, cube_size, patch_size)
+            layer = TransformerBlock(epsilon, embed_dim, num_heads, dropout, cube_size, patch_size)
             self.layer.append(copy.deepcopy(layer))
 
     def forward(self, x):
@@ -192,7 +195,9 @@ class Transformer(nn.Module):
 
 
 class UNETR(nn.Module):
-    def __init__(self, img_shape=(128, 128, 128), input_dim=4, output_dim=3, embed_dim=768, patch_size=16, num_heads=12, dropout=0.1):
+    def __init__(self, epsilon=1e-6, img_shape=(128, 128, 128), input_dim=4, output_dim=3, embed_dim=768, patch_size=16,
+                 num_heads=12,
+                 dropout=0.1):
         super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -209,6 +214,7 @@ class UNETR(nn.Module):
         # Transformer Encoder
         self.transformer = \
             Transformer(
+                epsilon,
                 input_dim,
                 embed_dim,
                 img_shape,

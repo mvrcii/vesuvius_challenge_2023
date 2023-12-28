@@ -175,7 +175,7 @@ def main():
         accelerator="auto",
         devices=get_device_configuration(gpu=args.gpu),
         enable_progress_bar=True,
-        # precision='16-mixed',
+        precision='16-mixed',
         strategy='ddp_find_unused_parameters_true',
         gradient_clip_val=1.0,
         gradient_clip_algorithm="norm",

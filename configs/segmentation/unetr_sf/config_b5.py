@@ -55,13 +55,14 @@ lr = 5e-5  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.96
 weight_decay = 0.001
+epsilon = 1e-3
 
 losses = [('masked-dice', 1.0)]
 focal_gamma = 2.0
 focal_alpha = 0.75
 
 num_workers = 16
-train_batch_size = 3
+train_batch_size = 5
 val_batch_size = train_batch_size
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
