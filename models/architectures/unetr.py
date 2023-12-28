@@ -88,9 +88,9 @@ class SelfAttention(nn.Module):
         mixed_key_layer = self.key(hidden_states)
         mixed_value_layer = self.value(hidden_states)
 
-        print(hidden_states.dtype)
-        print(mixed_query_layer.weight.dtype)
-        print(mixed_query_layer.bias.dtype)
+        # print(hidden_states.dtype)
+        # print(mixed_query_layer.weight.dtype)
+        # print(mixed_query_layer.bias.dtype)
 
         # hidden_states = hidden_states.to(dtype=torch.float32)
 
