@@ -21,7 +21,7 @@ def main():
 
     slurm_cmd = f'sbatch --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
 
-    print(slurm_cmd)
+    print(cmd_str)
     exit()
 
     # Run the sbatch command and capture its output
