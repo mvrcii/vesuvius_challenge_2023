@@ -11,21 +11,21 @@ def main():
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
     parser.add_argument('--gpu', type=int, default=0, help='GPU (default: 0)')
     parser.add_argument('--tta', action='store_true', help='Perform advanced TTA')
+    parser.add_argument('--node2', action='store_true', help='Perform advanced TTA')
     args = parser.parse_args()
 
     tta_str = "_tta" if args.tta else ""
+
+    node_name = "tenant-ac-nowak-h100-reserved-237-02" if args.node2 else "tenant-ac-nowak-h100-reserved-164-01"
 
     cmd_str = (f"python3 "
                f"multilayer_approach/infer_layered_segmentation_padto16{tta_str}.py "
                f"{args.config_path} {args.fragment_id} --stride {args.stride} --gpu {args.gpu}")
 
-    slurm_cmd = f'sbatch --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
-
-    print(cmd_str)
-    exit()
+    slurm_cmd = f'sbatch --nodelist={node_name} --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
 
     # Run the sbatch command and capture its output
-    #result = subprocess.run(slurm_cmd, shell=True, capture_output=True, text=True)
+    result = subprocess.run(slurm_cmd, shell=True, capture_output=True, text=True)
 
     # Extract job ID from the output
     match = re.search(r"Submitted batch job (\d+)", result.stdout)
