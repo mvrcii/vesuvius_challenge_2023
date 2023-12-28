@@ -488,7 +488,7 @@ def main():
             break
 
         npy_file_path = os.path.join(results_dir,
-                                     f"tta_stride-{stride_factor}-sigmoid_logits_{start_idx}_{end_idx}.npy")
+                                     f"tta-stride-{stride_factor}-sigmoid_logits_{start_idx}_{end_idx}.npy")
 
         # Check if prediction NPY file already exists
         if os.path.isfile(npy_file_path):
