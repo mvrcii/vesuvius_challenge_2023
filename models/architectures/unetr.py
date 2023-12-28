@@ -85,6 +85,8 @@ class SelfAttention(nn.Module):
         mixed_key_layer = self.key(hidden_states)
         mixed_value_layer = self.value(hidden_states)
 
+        # Perform attention mat mul calculations with fp32
+        # https://github.com/pytorch/pytorch/issues/40497
         with torch.cuda.amp.autocast_mode.autocast(enabled=False):
             query_layer = self.transpose_for_scores(mixed_query_layer)
             key_layer = self.transpose_for_scores(mixed_key_layer)
@@ -158,6 +160,8 @@ class Embeddings(nn.Module):
 class TransformerBlock(nn.Module):
     def __init__(self, epsilon, embed_dim, num_heads, dropout, cube_size, patch_size):
         super().__init__()
+        # https://github.com/pytorch/pytorch/issues/40497
+        # Smaller epsilon is probably better? 1e-3
         self.attention_norm = nn.LayerNorm(embed_dim, eps=epsilon)
         self.mlp_norm = nn.LayerNorm(embed_dim, eps=epsilon)
         self.mlp_dim = int((cube_size[0] * cube_size[1] * cube_size[2]) / (patch_size * patch_size * patch_size))
@@ -184,6 +188,8 @@ class Transformer(nn.Module):
         super().__init__()
         self.embeddings = Embeddings(input_dim, embed_dim, cube_size, patch_size, dropout)
         self.layer = nn.ModuleList()
+        # https://github.com/pytorch/pytorch/issues/40497
+        # Smaller epsilon is probably better? 1e-3
         self.encoder_norm = nn.LayerNorm(embed_dim, eps=epsilon)
         self.extract_layers = extract_layers
         for _ in range(num_layers):
