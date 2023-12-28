@@ -12,6 +12,7 @@ def get_loss_functions(cfg):
 
     focal_gamma = getattr(cfg, 'focal_gamma', 2)
     focal_alpha = getattr(cfg, 'focal_alpha', 0.25)
+    dice_smoothing = getattr(cfg, 'dice_smoothing', 0.05)
 
     available_losses = {"dice": BinaryDiceLoss(from_logits=True),
                         "bce": BCEWithLogitsLoss(),
@@ -19,7 +20,7 @@ def get_loss_functions(cfg):
                         "entropy": EntropyLoss(),
                         "mse": MeanSquaredError(),
                         "masked-focal": MaskedFocalLoss(alpha=focal_alpha, gamma=focal_gamma),
-                        "masked-dice": MaskedBinaryDiceLoss(from_logits=True)}
+                        "masked-dice": MaskedBinaryDiceLoss(from_logits=True, smoothing=dice_smoothing)}
 
     if torch.cuda.is_available():
         available_losses = {k: v.to('cuda') for k, v in available_losses.items()}
