@@ -25,8 +25,8 @@ def validate_fragment_files(frag_id, cfg, label_dir):
     frag_dir = os.path.join(cfg.work_dir, "data", "fragments", f"fragment{frag_id}")
     frag_label_dir = os.path.join(label_dir, f"{frag_id}")
     frag_slice_dir = os.path.join(frag_dir, 'slices')
-    inklabel_path = os.path.join(frag_label_dir, f"{frag_id}_inklabels.png")
-    ignore_path = os.path.join(frag_label_dir, f"{frag_id}_ignore.png")
+    inklabel_path = os.path.join(frag_label_dir, f"inklabels.png")
+    ignore_path = os.path.join(frag_label_dir, f"ignore.png")
     mask_path = os.path.join(frag_dir, "mask.png")
 
     # check if fragment directory exists (data/fragments/fragment{frag_id})
