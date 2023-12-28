@@ -15,7 +15,7 @@ _base_ = [
 work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
 base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
-contrasted = True
+contrasted = False
 dataset_target_dir = os.path.join("multilayer_approach", "datasets", "unetr")
 
 # MODEL TYPE
