@@ -50,6 +50,10 @@
     "best_layers_start_indices": [
       28,
       41
+    ],
+    "best_12_inclusive_layers": [
+      31,
+      42
     ]
   },
   {
@@ -155,6 +159,10 @@
     "best_layers_start_indices": [
       28,
       41
+    ],
+    "best_12_inclusive_layers": [
+      31,
+      42
     ]
   },
   {
@@ -178,6 +186,10 @@
       25,
       40
     ],
+    "best_12_inclusive_layers": [
+      27,
+      38
+    ],
     "boost_threshold": 0.0001
   },
   {
@@ -187,6 +199,10 @@
     "best_layers_start_indices": [
       23,
       36
+    ],
+    "best_12_inclusive_layers": [
+      26,
+      37
     ]
   },
   {
