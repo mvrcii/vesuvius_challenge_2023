@@ -44,14 +44,19 @@ def pad_image_to_be_divisible_by_4(image, patch_size):
     return padded_image
 
 
-def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
+def read_fragment(contrasted, patch_size, work_dir, fragment_id, layer_start, layer_count):
     print("Start reading images")
     images = []
 
     for i in tqdm(range(layer_start, layer_start + layer_count)):
-        img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+
+        fragment = "fragments_contrasted" if contrasted else "fragments"
+        img_path = os.path.join(work_dir, "data", fragment, f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
         if not os.path.isfile(img_path):
+            if contrasted:
+                raise Exception(f"Missing Contrasted Slice file: {os.path.join(fragment_id, 'slices', f'{i:05}.tif')}")
+
             print(f"Downloading missing Slice file: {os.path.join(fragment_id, 'slices', f'{i:05}.tif')}")
             if fragment_id in SUPERSEDED_FRAGMENTS:
                 print("Warning: Fragment superseded, added suffix for download!")
@@ -139,8 +144,8 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
 
     # Loading images [12, Height, Width]
-    images = read_fragment(patch_size=patch_size, work_dir=config.work_dir, fragment_id=fragment_id,
-                           layer_start=layer_start, layer_count=config.in_chans)
+    images = read_fragment(contrasted=config.contrasted, patch_size=patch_size, work_dir=config.work_dir,
+                           fragment_id=fragment_id, layer_start=layer_start, layer_count=config.in_chans)
 
     # Load mask
     mask_path = os.path.join(config.work_dir, "data", "fragments", f"fragment{fragment_id}", "mask.png")

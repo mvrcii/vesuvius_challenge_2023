@@ -57,6 +57,7 @@ val_batch_size = train_batch_size
 work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
 base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
+contrasted = True
 dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
