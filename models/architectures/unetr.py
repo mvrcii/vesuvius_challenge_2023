@@ -59,9 +59,9 @@ class SelfAttention(nn.Module):
         self.attention_head_size = int(embed_dim / num_heads)
         self.all_head_size = self.num_attention_heads * self.attention_head_size
 
-        self.query = nn.Linear(embed_dim, self.all_head_size, dtype=torch.float32)
-        self.key = nn.Linear(embed_dim, self.all_head_size, dtype=torch.float32)
-        self.value = nn.Linear(embed_dim, self.all_head_size, dtype=torch.float32)
+        self.query = nn.Linear(embed_dim, self.all_head_size)
+        self.key = nn.Linear(embed_dim, self.all_head_size)
+        self.value = nn.Linear(embed_dim, self.all_head_size)
 
         self.out = nn.Linear(embed_dim, embed_dim)
         self.attn_dropout = nn.Dropout(dropout)
@@ -78,16 +78,21 @@ class SelfAttention(nn.Module):
 
     def forward(self, hidden_states):
         # print("hidden_state before", hidden_states.dtype)
-        hidden_states = hidden_states.to(dtype=torch.float32)
         # print("hidden_state after", hidden_states.dtype)
 
         print(hidden_states.dtype)
         print(self.query.weight.dtype)
         print(self.query.bias.dtype)
 
-        mixed_query_layer = self.query(hidden_states).to(dtype=torch.float32)
-        mixed_key_layer = self.key(hidden_states).to(dtype=torch.float32)
-        mixed_value_layer = self.value(hidden_states).to(dtype=torch.float32)
+        mixed_query_layer = self.query(hidden_states)
+        mixed_key_layer = self.key(hidden_states)
+        mixed_value_layer = self.value(hidden_states)
+
+        print(hidden_states.dtype)
+        print(self.mixed_query_layer.weight.dtype)
+        print(self.mixed_query_layer.bias.dtype)
+
+        # hidden_states = hidden_states.to(dtype=torch.float32)
 
         # Perform attention mat mul calculations with fp32
         # https://github.com/pytorch/pytorch/issues/40497
