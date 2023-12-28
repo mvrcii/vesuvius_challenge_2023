@@ -15,7 +15,6 @@ from tqdm import tqdm
 from utility.configs import Config
 from utility.fragments import FragmentHandler, SUPERSEDED_FRAGMENTS
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 def combine_layers(predictions, max_distance):
