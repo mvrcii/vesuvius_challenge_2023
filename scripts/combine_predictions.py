@@ -325,6 +325,7 @@ class Visualization:
                             length=500, command=self.update_image)
         self.slider.set(self.curr_layer_val)
         self.layer_label = Label(control_frame, text="Current Layer:")
+        print(self.model_layer_idcs)
         self.layer_label.config(text=f"{self.model_layer_idcs[self.curr_layer_val]}")
         self.right_button = Button(control_frame, text="  +  ", command=self.increase_slider)
 
@@ -733,6 +734,10 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
         layer_idcs.append(layer_start_idx)
         layer_values.append(array)
         file_names.append(filename)
+
+    if len(layer_idcs) == 0 or len(layer_values) == 0 or len(file_names) == 0:
+        print("No valid layer files found")
+        sys.exit(1)
 
     return layer_idcs, layer_values, file_names
 
