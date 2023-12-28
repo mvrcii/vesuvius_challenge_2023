@@ -61,12 +61,15 @@ def rename_and_binarize(file_path, output_dir, input_dir, erode=False):
 
     # Only process and copy the file if it doesn't already exist as a binarized file
     if not os.path.exists(output_path) or not is_binarized(output_path):
+        # print("Binarized", file_path)
         output_path, binary_image = binarize_image(file_path, output_path)
 
         if erode:
+            # print("Eroded", file_path)
             binary_image = erode_shapes(img=binary_image, erosion_size=20)
 
         cv2.imwrite(output_path, binary_image)
+        # print("Saved", output_path)
 
 
 def process_files_in_subdirectories(directory, output_dir):
