@@ -116,7 +116,13 @@ THUNDERCRACKER_FRAG_ID = FragmentHandler().get_id("THUNDERCRACKER")
 SUNSTREAKER_FRAG_ID = FragmentHandler().get_id("SUNSTREAKER")
 BLUESTREAK_FRAG_ID = FragmentHandler().get_id("BLUESTREAK")
 
+SKYBIGGER_FRAG_ID = FragmentHandler().get_id("SKYBIGGER")
+DEVASBIGGER_FRAG_ID = FragmentHandler().get_id("DEVASBIGGER")
+BLUEBIGGER_FRAG_ID = FragmentHandler().get_id("BLUEBIGGER")
+JAZZBIGGER_FRAG_ID = FragmentHandler().get_id("JAZZBIGGER")
+GRIMHUGE_FRAG_ID = FragmentHandler().get_id("GRIMHUGE")
 TRAILBREAKER_FRAG_ID = FragmentHandler().get_id("TRAILBREAKER")
+
 TITLE1_FRAG_ID = FragmentHandler().get_id("TITLE1")
 TITLE2_FRAG_ID = FragmentHandler().get_id("TITLE2")
 
