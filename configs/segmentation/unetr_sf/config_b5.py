@@ -47,14 +47,13 @@ unetr_out_channels = 32
 
 val_interval = 1
 
-lr = 5e-5  # 1e-4
+lr = 1e-5  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.97
 weight_decay = 0.001
 
-# losses = [('masked-focal', 2.0), ('masked-dice', 1.0)]
-losses = [('masked-dice', 1.0)]
-focal_gamma = 2.5
+losses = [('masked-focal', 2.0), ('masked-dice', 1.0)]
+focal_gamma = 2.0
 focal_alpha = 0.75
 
 num_workers = 16
