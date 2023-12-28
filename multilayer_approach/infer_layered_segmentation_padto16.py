@@ -255,10 +255,13 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
                     preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to(f'cuda:{gpu}')
 
                 with torch.no_grad():
+                    idx = 0
                     for image in preallocated_batch_tensor[:len(batches)]:
                         sigmoid_tta_output = advanced_tta(model=model, tensor=image,
                                                           rotate=True, flip_vertical=True, flip_horizontal=True)
-                        process_patch(sigmoid_tta_output, x, y)
+                        coords = batch_indices[idx]
+                        process_patch(sigmoid_tta_output, coords[0], coords[1])
+                        idx += 1
 
                 batches = []
                 batch_indices = []
