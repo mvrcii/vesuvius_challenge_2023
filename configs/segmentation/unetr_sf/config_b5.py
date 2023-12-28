@@ -30,7 +30,7 @@ stride = patch_size // 2
 # fragment_ids = [IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID,
 #                 GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID,
 #                 HOT_ROD_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID]
-fragment_ids = [ULTRA_MAGNUS_FRAG_ID]
+fragment_ids = []
 validation_fragments = [SKYBIGGER_FRAG_ID]
 
 # Training parameters
