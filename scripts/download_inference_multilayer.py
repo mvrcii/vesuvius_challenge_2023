@@ -1,8 +1,9 @@
 import argparse
 import os
 import subprocess
+from difflib import get_close_matches
 
-from utility.fragments import get_frag_name_from_id
+from utility.fragments import get_frag_name_from_id, FragmentHandler
 
 
 def validate_folder(local_path, model_run_dir):
@@ -37,6 +38,11 @@ def print_colored(message, color):
     print(f"{colors[color]}{message}{colors['end']}")
 
 
+def closest_match(input_id, all_ids):
+    # Finds the closest match using difflib's get_close_matches
+    matches = get_close_matches(input_id, all_ids, n=1, cutoff=0.1)
+    return matches[0] if matches else None
+
 def find_directory_on_remote(server_path, fragment_id, model_run_dir):
     model_run_dir = '-'.join(model_run_dir.split('-')[:3])
     full_server_path = f"{server_path}/fragment{fragment_id}"
@@ -46,6 +52,19 @@ def find_directory_on_remote(server_path, fragment_id, model_run_dir):
 
 def get_inference_result(fragment_id, full_model_run_dir, hostname, single):
     result_dir = "single_results" if single else "results"
+
+    all_ids = FragmentHandler().get_ids()
+    if fragment_id not in all_ids:
+        print_colored(f"Fragment ID not known by fragment handler: {fragment_id}", "red")
+
+        suggestion = closest_match(fragment_id, all_ids)
+        if suggestion:
+            print_colored(f"Did you mean: {suggestion}?", "blue")
+        choice = input("[y / n]")
+        if choice == "y":
+            fragment_id = suggestion
+        else:
+            exit()
 
     server_paths = {
         "vast": f"~/kaggle1stReimp/inference/{result_dir}",
