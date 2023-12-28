@@ -68,10 +68,10 @@ class BinaryDiceLoss(nn.Module):
 
 
 class MaskedBinaryDiceLoss(nn.Module):
-    def __init__(self, from_logits: bool = True, smooth: float = 0.0, eps: float = 1e-7):
+    def __init__(self, from_logits: bool = True, smoothing: float = 0.05, eps: float = 1e-7):
         super().__init__()
         self.from_logits = from_logits
-        self.smooth = smooth
+        self.smoothing = smoothing
         self.eps = eps
         """Implementation of Dice loss for binary image segmentation tasks with mask
 
@@ -94,13 +94,15 @@ class MaskedBinaryDiceLoss(nn.Module):
         y_pred = y_pred_unmasked * y_mask
         y_true = y_true_unmasked * y_mask
 
+        y_true = y_true * (1 - self.smoothing) + 0.5 * self.smoothing
+
         if self.from_logits:
             y_pred = torch.sigmoid(y_pred)
 
         intersection = (y_pred * y_true).sum(axis=(1, 2))
         union = (y_pred + y_true).sum(axis=(1, 2))
 
-        losses = 1. - (2. * intersection + self.smooth) / (union + self.smooth).clamp_min(self.eps)
+        losses = 1. - (2. * intersection) / union.clamp_min(self.eps)
 
         mean_loss = losses.mean()
 

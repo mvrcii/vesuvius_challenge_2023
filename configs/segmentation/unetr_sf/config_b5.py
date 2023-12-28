@@ -60,6 +60,7 @@ epsilon = 1e-3
 losses = [('masked-dice', 1.0)]
 focal_gamma = 2.0
 focal_alpha = 0.75
+dice_smoothing = 0.05
 
 num_workers = 16
 train_batch_size = 6
