@@ -143,8 +143,10 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     patch_size = config.patch_size
     expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
 
+    contrasted = getattr(config, 'contrasted', False)
+
     # Loading images [12, Height, Width]
-    images = read_fragment(contrasted=config.contrasted, patch_size=patch_size, work_dir=config.work_dir,
+    images = read_fragment(contrasted=contrasted, patch_size=patch_size, work_dir=config.work_dir,
                            fragment_id=fragment_id, layer_start=layer_start, layer_count=config.in_chans)
 
     # Load mask

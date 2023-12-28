@@ -67,7 +67,7 @@ def clear_dataset(config: Config):
 def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     os.makedirs(target_dir, exist_ok=True)
 
-    fragment = "fragments_contrasted" if config.contrasted else "fragments"
+    fragment = "fragments_contrasted" if getattr(config, 'contrasted', False) else "fragments"
 
     fragment_dir = os.path.join(config.data_root_dir, fragment, f"fragment{frag_id}")
     if not os.path.isdir(fragment_dir):
