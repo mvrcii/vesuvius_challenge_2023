@@ -8,11 +8,12 @@ def main():
     parser = argparse.ArgumentParser(description="Submit a training job to Slurm.")
     parser.add_argument("config_path", type=str, help="Path to the config file.")
     parser.add_argument('--seed', type=int, default=None, help='Optional seed for the script')
+    parser.add_argument('--gpu', type=int, default=0, help='Cuda GPU (default: 0)')
 
     args = parser.parse_args()
 
     seed_str = f"--seed {args.seed}" if args.seed else ""
-    cmd_str = f"python3 train.py {args.config_path} {seed_str}"
+    cmd_str = f"python3 train.py {args.config_path} --gpu {args.gpu} {seed_str}"
 
     slurm_cmd = f'sbatch --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
 

@@ -39,6 +39,7 @@ def get_sys_args():
 
     parser.add_argument('config_path', type=str, help='Path to the configuration file')
     parser.add_argument('--seed', type=int, default=None, help='Optional seed for the script')
+    parser.add_argument('--gpu', type=int, default=0, help='Cuda GPU (default: 0)')
 
     # Parsing the arguments
     args = parser.parse_args()
@@ -169,7 +170,7 @@ def main():
         logger=wandb_logger,
         callbacks=get_callbacks(cfg=config, model_run_dir=model_run_dir),
         accelerator="auto",
-        devices=get_device_configuration(),
+        devices=[args.gpu],
         enable_progress_bar=True,
         precision='16-mixed',
         strategy='ddp_find_unused_parameters_true',
