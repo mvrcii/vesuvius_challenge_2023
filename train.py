@@ -182,6 +182,12 @@ def main():
         check_val_every_n_epoch=config.val_interval
     )
 
+    if torch.cuda.is_available():
+        current_device = torch.cuda.current_device()
+        print(f'Training on GPU: cuda:{current_device}')
+    else:
+        print('Training on CPU')
+
     trainer.fit(model, data_module)
 
 

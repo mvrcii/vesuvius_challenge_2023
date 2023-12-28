@@ -24,12 +24,6 @@ class AbstractLightningModule(LightningModule):
         self.from_checkpoint = getattr(cfg, 'from_checkpoint', None)
         self.from_pretrained = getattr(cfg, 'from_pretrained', None)
 
-        if torch.cuda.is_available():
-            current_device = torch.cuda.current_device()
-            self.print(f'Training on GPU: cuda:{current_device}')
-        else:
-            self.print('Training on CPU')
-
         self.loss_functions = get_loss_functions(cfg)
 
     def load_weights(self):
