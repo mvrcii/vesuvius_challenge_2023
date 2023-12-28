@@ -57,7 +57,7 @@ class UNETR_Segformer(nn.Module):
         self.dropout = nn.Dropout2d(dropout)
 
         self.encoder = UNETR(
-            epsilon=self.cfg.epsilon,
+            epsilon=getattr(self.cfg, 'epsilon', 1e-3),
             input_dim=1,
             output_dim=self.cfg.unetr_out_channels,
             img_shape=(16, self.cfg.patch_size, self.cfg.patch_size)
