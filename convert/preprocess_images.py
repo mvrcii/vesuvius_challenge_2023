@@ -7,27 +7,30 @@ from scipy.interpolate import CubicSpline
 from tqdm import tqdm
 
 
-def create_lut(control_points):
-    # Extract the x and y coordinates of the control points
-    x_points, y_points = zip(*control_points)
-
-    # Create a cubic spline passing through the control points
-    spline = CubicSpline(x_points, y_points)
-
-    # Generate the LUT by evaluating the spline for each input intensity
-    lut = spline(np.arange(256))
-
-    # Clip the LUT to the valid range and convert to uint8
-    lut = np.clip(lut, 0, 255).astype('uint8')
-    return lut
-
-
-def apply_lut(image, lut):
-    # Apply the LUT to each channel of the image
-    if len(image.shape) == 3:
-        return cv2.merge([cv2.LUT(channel, lut) for channel in cv2.split(image)])
+def apply_lut_16bit(image, lut):
+    # Manually apply the LUT for 16-bit images
+    if len(image.shape) == 2:  # Grayscale
+        transformed_image = lut[image]
+    elif len(image.shape) == 3:  # Color
+        transformed_image = np.stack([lut[image[:, :, i]] for i in range(3)], axis=-1)
     else:
-        return cv2.LUT(image, lut)
+        raise ValueError("Unsupported image format")
+
+    return transformed_image
+
+
+def create_lut_16bit(control_points):
+    # Adjust the control points for 16-bit range
+    # For example, scale them up from the 8-bit range
+    control_points_16bit = [(x * 257, y * 257) for x, y in control_points]
+
+    # Rest of the code remains the same, but adjust the range for LUT generation
+    x_points, y_points = zip(*control_points_16bit)
+    spline = CubicSpline(x_points, y_points)
+    lut = spline(np.linspace(0, 65535, 65536))
+
+    lut = np.clip(lut, 0, 65535).astype('uint16')
+    return lut
 
 
 def process_image(file_path, lut, output_dir):
@@ -35,9 +38,10 @@ def process_image(file_path, lut, output_dir):
     if os.path.exists(transformed_path):
         return  # Skip processing if the file already exists
 
-    image = cv2.imread(file_path, cv2.IMREAD_COLOR)
+    image = cv2.imread(file_path, cv2.IMREAD_UNCHANGED)
     if image is not None:
-        transformed_image = apply_lut(image, lut)
+        transformed_image = apply_lut_16bit(image, lut)
+
         os.makedirs(os.path.dirname(transformed_path), exist_ok=True)
         cv2.imwrite(transformed_path, transformed_image)
 
@@ -51,9 +55,8 @@ def copy_mask(file_dir, output_dir):
 
 
 def main():
-    control_points = [(0, 0), (114, 55), (255, 255)]
-    lut = create_lut(control_points)
-
+    control_points = [(0, 0), (128, 64), (255, 255)]
+    lut = create_lut_16bit(control_points)
     input_dir = os.path.join('data', 'fragments')
     output_dir = os.path.join('data', 'fragments_contrasted')
     all_files = []
