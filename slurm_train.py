@@ -1,5 +1,7 @@
 import argparse
+import re
 import subprocess
+import time
 
 
 def main():
@@ -14,7 +16,20 @@ def main():
 
     slurm_cmd = f'sbatch --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
 
-    subprocess.run(slurm_cmd, shell=True)
+    result = subprocess.run(slurm_cmd, shell=True, capture_output=True, text=True)
+
+    # Extract job ID from the output
+    match = re.search(r"Submitted batch job (\d+)", result.stdout)
+    if match:
+        job_id = match.group(1)
+        print(f"Slurm job ID: {job_id}")
+
+        time.sleep(2)
+
+        tail_cmd = f"tail -f logs/slurm-{job_id}.out"
+        subprocess.run(tail_cmd, shell=True)
+    else:
+        print("Failed to submit job to Slurm or parse job ID.")
 
 
 if __name__ == "__main__":

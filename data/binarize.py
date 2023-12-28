@@ -30,11 +30,23 @@ def binarize_image(image_path, output_path):
     # Ensure the output directory exists
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-    # Write the binarized image
-    cv2.imwrite(output_path, binary_image)
+    return output_path, binary_image
 
 
-def rename_and_binarize(file_path, output_dir, input_dir):
+def erode_shapes(img, erosion_size):
+    # Threshold the image to get the shapes
+    _, thresh = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
+
+    # Define the erosion kernel
+    kernel = np.ones((erosion_size, erosion_size), np.uint8)
+
+    # Erode the image
+    eroded_image = cv2.erode(thresh, kernel, iterations=1)
+
+    return eroded_image
+
+
+def rename_and_binarize(file_path, output_dir, input_dir, erode=False):
     relative_path = os.path.relpath(file_path, input_dir)
     output_path = os.path.join(output_dir, relative_path)
 
@@ -49,7 +61,15 @@ def rename_and_binarize(file_path, output_dir, input_dir):
 
     # Only process and copy the file if it doesn't already exist as a binarized file
     if not os.path.exists(output_path) or not is_binarized(output_path):
-        binarize_image(file_path, output_path)
+        # print("Binarized", file_path)
+        output_path, binary_image = binarize_image(file_path, output_path)
+
+        if erode:
+            # print("Eroded", file_path)
+            binary_image = erode_shapes(img=binary_image, erosion_size=20)
+
+        cv2.imwrite(output_path, binary_image)
+        # print("Saved", output_path)
 
 
 def process_files_in_subdirectories(directory, output_dir):
@@ -57,7 +77,8 @@ def process_files_in_subdirectories(directory, output_dir):
                  file.endswith('.png')]
 
     for file_path in tqdm(all_files, desc="Processing files"):
-        rename_and_binarize(file_path, output_dir, directory)
+        erode = True if "inklabels.png" in file_path else False
+        rename_and_binarize(file_path, output_dir, directory, erode=erode)
 
 
 def main():

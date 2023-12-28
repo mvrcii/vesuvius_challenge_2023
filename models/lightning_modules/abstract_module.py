@@ -28,17 +28,17 @@ class AbstractLightningModule(LightningModule):
 
     def load_weights(self):
         if self.from_checkpoint:
-            checkpoint_root_path = os.path.join("checkpoints", self.cfg.from_checkpoint)
+            checkpoint_root_path = os.path.join("checkpoints", self.from_checkpoint)
             checkpoint_files = [file for file in os.listdir(checkpoint_root_path) if file.startswith('best-checkpoint')]
             checkpoint_path = os.path.join(checkpoint_root_path, checkpoint_files[-1])
             checkpoint = torch.load(checkpoint_path)
             assert checkpoint
             state_dict = {key.replace('model.', ''): value for key, value in checkpoint['state_dict'].items()}
             self.model.load_state_dict(state_dict)
-            print("Loaded model from checkpoint:", self.cfg.from_checkpoint)
+            print("Loaded model from checkpoint:", self.from_checkpoint)
 
         if self.from_pretrained:
-            print("Loaded model from pretrained:", self.cfg.from_pretrained)
+            print("Loaded model from pretrained:", self.from_pretrained)
 
     def configure_optimizers(self):
         if self.optimizer == 'adamw':
