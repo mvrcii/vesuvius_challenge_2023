@@ -9,6 +9,13 @@ _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
 ]
 
+# PATHS
+work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
+base_label_dir = os.path.join("data", "base_label_files")
+data_root_dir = "data"
+contrasted = True
+dataset_target_dir = os.path.join("multilayer_approach", "datasets")
+
 # MODEL TYPE
 segmentation = True
 
@@ -24,6 +31,7 @@ validation_fragments = [GRIMLARGE_FRAG_ID]
 # Training parameters
 model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
+from_checkpoint = "fine-donkey-1133-unetr-sf-b5-231227-031317"
 architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
@@ -33,14 +41,14 @@ take_full_dataset = False
 ink_ratio = 5
 no_ink_sample_percentage = 1
 
-seed = 97074
+seed = 89299
 epochs = -1
 unetr_out_channels = 32
 
 val_interval = 1
 
-lr = 1e-4  # 1e-4
-step_lr_steps = 2
+lr = 5e-5  # 1e-4
+step_lr_steps = 1
 step_lr_factor = 0.97
 weight_decay = 0.001
 
@@ -52,13 +60,6 @@ focal_alpha = 0.75
 num_workers = 16
 train_batch_size = 5
 val_batch_size = train_batch_size
-
-# PATHS
-work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
-base_label_dir = os.path.join("data", "base_label_files")
-data_root_dir = "data"
-contrasted = True
-dataset_target_dir = os.path.join("multilayer_approach", "datasets")
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
