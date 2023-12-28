@@ -77,20 +77,9 @@ class SelfAttention(nn.Module):
         return x.permute(0, 2, 1, 3)
 
     def forward(self, hidden_states):
-        # print("hidden_state before", hidden_states.dtype)
-        # print("hidden_state after", hidden_states.dtype)
-
-        print(hidden_states.dtype)
-        print(self.query.weight.dtype)
-        print(self.query.bias.dtype)
-
         mixed_query_layer = self.query(hidden_states)
         mixed_key_layer = self.key(hidden_states)
         mixed_value_layer = self.value(hidden_states)
-
-        # print(hidden_states.dtype)
-        # print(mixed_query_layer.weight.dtype)
-        # print(mixed_query_layer.bias.dtype)
 
         # hidden_states = hidden_states.to(dtype=torch.float32)
 
