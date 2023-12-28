@@ -7,15 +7,13 @@ import time
 def main():
     parser = argparse.ArgumentParser(description="Submit a create dataset job to Slurm.")
     parser.add_argument("config_path", type=str, help="Path to the config file.")
-    parser.add_argument('--gpu', type=int, default=0, help='GPU (default: 0)')
     parser.add_argument('--node2', action='store_true', help='Perform advanced TTA')
     args = parser.parse_args()
 
     node_name = "tenant-ac-nowak-h100-reserved-237-02" if args.node2 else "tenant-ac-nowak-h100-reserved-164-01"
 
     cmd_str = (f"python3 "
-               f"multilayer_approach/create_dataset_segmentation.py "
-               f"{args.config_path} --gpu {args.gpu}")
+               f"multilayer_approach/create_dataset_segmentation.py {args.config_path}")
 
     slurm_cmd = f'sbatch --nodelist={node_name} --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
 
