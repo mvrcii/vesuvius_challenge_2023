@@ -35,7 +35,7 @@ validation_fragments = [SKYBIGGER_FRAG_ID]
 # Training parameters
 model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
-from_checkpoint = "fine-donkey-1133-unetr-sf-b5-231227-031317"
+# from_checkpoint = "fine-donkey-1133-unetr-sf-b5-231227-031317"
 architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
@@ -51,7 +51,7 @@ unetr_out_channels = 32
 
 val_interval = 1
 
-lr = 1e-5  # 1e-4
+lr = 5e-5  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.96
 weight_decay = 0.001
