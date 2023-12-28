@@ -1,3 +1,5 @@
+import sys
+
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -66,7 +68,7 @@ class BinaryDiceLoss(nn.Module):
 
 
 class MaskedBinaryDiceLoss(nn.Module):
-    def __init__(self, from_logits: bool = True, smooth: float = 0.0, eps: float = 1e-3):
+    def __init__(self, from_logits: bool = True, smooth: float = 0.0, eps: float = 1e-7):
         super().__init__()
         self.from_logits = from_logits
         self.smooth = smooth
@@ -100,4 +102,16 @@ class MaskedBinaryDiceLoss(nn.Module):
 
         losses = 1. - (2. * intersection + self.smooth) / (union + self.smooth).clamp_min(self.eps)
 
-        return losses.mean()
+        mean_loss = losses.mean()
+
+        if torch.isnan(mean_loss).any():
+            print("Warning: Mean Dice Loss is nan:", mean_loss)
+            print("Warning: Losses:", losses)
+            print("Warning: Union:", union)
+            print("Warning: Intersection:", intersection)
+            print("Warning: Torch Unique y_pred:", torch.unique(y_pred))
+            print("Warning: Torch Unique y_true:", torch.unique(y_true))
+            print("Warning: Torch Unique y_mask:", torch.unique(y_mask))
+            sys.exit(1)
+
+        return mean_loss
