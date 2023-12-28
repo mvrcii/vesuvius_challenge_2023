@@ -25,6 +25,7 @@ def main():
         job_id = match.group(1)
         print(f"Slurm job ID: {job_id}")
 
+        print("Attaching to log file..")
         time.sleep(2)
 
         tail_cmd = f"tail -f logs/slurm-{job_id}.out"
