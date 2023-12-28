@@ -134,16 +134,20 @@ def get_target_dims(work_dir, frag_id):
 
             img_path = os.path.join(slice_dir, f"{i:05}.tif")
             if not os.path.isfile(img_path):
-                if frag_id in SUPERSEDED_FRAGMENTS:
-                    print("Warning: Fragment superseded, added suffix for download!")
-                    frag_id += "_superseded"
-                print(f"Downloading Slice file for dimensions: {os.path.join(frag_id, 'slices', f'{i:05}.tif')}")
-                command = ['bash', "./scripts/utils/download_fragment.sh", frag_id, f'{i:05} {i:05}']
-                subprocess.run(command, check=True)
+                continue
 
             image = cv2.imread(img_path, 0)
             target_dims = image.shape
 
+    if target_dims is None:
+        if frag_id in SUPERSEDED_FRAGMENTS:
+            print("Warning: Fragment superseded, added suffix for download!")
+            frag_id += "_superseded"
+        print(f"Downloading Slice file for dimensions: {os.path.join(frag_id, 'slices', f'{i:05}.tif')}")
+        command = ['bash', "./scripts/utils/download_fragment.sh", frag_id, f'{i:05} {i:05}']
+        subprocess.run(command, check=True)
+        image = cv2.imread(img_path, 0)
+        target_dims = image.shape
     assert target_dims, "Target dimensions are none!"
 
     return target_dims
