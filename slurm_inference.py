@@ -21,8 +21,11 @@ def main():
 
     slurm_cmd = f'sbatch --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
 
+    print(slurm_cmd)
+    exit()
+
     # Run the sbatch command and capture its output
-    result = subprocess.run(slurm_cmd, shell=True, capture_output=True, text=True)
+    #result = subprocess.run(slurm_cmd, shell=True, capture_output=True, text=True)
 
     # Extract job ID from the output
     match = re.search(r"Submitted batch job (\d+)", result.stdout)
