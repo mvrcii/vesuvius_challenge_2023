@@ -51,9 +51,9 @@ unetr_out_channels = 32
 
 val_interval = 1
 
-lr = 5e-5  # 1e-4
+lr = 1e-4  # 1e-4
 step_lr_steps = 1
-step_lr_factor = 0.96
+step_lr_factor = 0.97
 weight_decay = 0.001
 epsilon = 1e-3
 
