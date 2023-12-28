@@ -248,7 +248,6 @@ def read_fragment_images_for_channels(root_dir, patch_size, channels, ch_block_s
         pad1 = (patch_size - image.shape[1] % patch_size) % patch_size
         image = np.pad(image, [(0, pad0), (0, pad1)], constant_values=0)
 
-        print(image.shape)
         images.append(image)
 
     images = np.stack(images, axis=0)
