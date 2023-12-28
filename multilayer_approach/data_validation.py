@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 from utility.fragments import FragmentHandler
 
@@ -58,6 +59,10 @@ def validate_fragment_files(frag_id, cfg, label_dir):
 
     # Get required 12 channels for this fragment
     required_channels_start, required_channels_end = FragmentHandler().get_best_12_layers(frag_id)
+    if required_channels_start is None or required_channels_end is None:
+        print(f"Best 12 layers for fragment {frag_id} not existent")
+        sys.exit(1)
+
     required_channels = set(range(required_channels_start, required_channels_end + 1))
 
     # Check which slice files exist
