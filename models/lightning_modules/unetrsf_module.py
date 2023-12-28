@@ -97,8 +97,8 @@ class UNETR_SFModule(AbstractLightningModule):
                 test_image = wandb.Image(grid, caption="Train Step {}".format(self.train_step))
                 wandb.log({"Validation Image": test_image})
 
-    def calculate_masked_weighted_loss(self, y_pred, y_true, y_mask):
-        losses = [(name, weight, loss_function(y_pred, y_true.float(), y_mask)) for (name, weight, loss_function) in
+    def calculate_masked_weighted_loss(self, logits, y_true, y_mask):
+        losses = [(name, weight, loss_function(logits, y_true.float(), y_mask)) for (name, weight, loss_function) in
                   self.loss_functions]
         total_loss = sum([weight * value for (_, weight, value) in losses])
         losses.append(("total", 1.0, total_loss))
