@@ -55,7 +55,7 @@ def process_fragment(config: Config, fragment_id, channels, label_dir):
 
 
 def clear_dataset(config: Config):
-    print("clearing with patch size ", config.patch_size)
+    print("Clearing patch size", config.patch_size)
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
     if os.path.isdir(root_dir):
         shutil.rmtree(root_dir)
@@ -105,10 +105,6 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     # assert both have sum > 0
     assert label_arr.sum() > 0, "Label array is empty"
     assert ignore_arr.sum() > 0, "Ignore array is empty"
-
-    print("Image Shape:", image_tensor.shape)
-    print("Label Shape:", label_arr.shape)
-    print("Mask Shape:", mask.shape)
 
     assert label_arr.shape == mask.shape == image_tensor[0].shape, (
         f"Shape mismatch for Fragment {frag_id}: Img={image_tensor[0].shape} "
