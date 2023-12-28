@@ -69,7 +69,7 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
 
     fragment = "fragments_contrasted" if config.contrasted else "fragments"
 
-    fragment_dir = os.path.join(config.data_root_dir, "data", fragment, f"fragment{frag_id}")
+    fragment_dir = os.path.join(config.data_root_dir, fragment, f"fragment{frag_id}")
     if not os.path.isdir(fragment_dir):
         raise ValueError(f"Fragment directory does not exist: {fragment_dir}")
 
