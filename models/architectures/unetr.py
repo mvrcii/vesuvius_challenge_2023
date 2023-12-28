@@ -63,6 +63,7 @@ class SelfAttention(nn.Module):
         self.key = nn.Linear(embed_dim, self.all_head_size)
         self.value = nn.Linear(embed_dim, self.all_head_size)
 
+        print("embed_dim", embed_dim.dtype)
         self.out = nn.Linear(embed_dim, embed_dim)
         self.attn_dropout = nn.Dropout(dropout)
         self.proj_dropout = nn.Dropout(dropout)
@@ -96,8 +97,9 @@ class SelfAttention(nn.Module):
             context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
             new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
             context_layer = context_layer.view(*new_context_layer_shape)
-            attention_output = self.out(context_layer)
-            attention_output = self.proj_dropout(attention_output)
+            print(context_layer.dtype)
+        attention_output = self.out(context_layer)
+        attention_output = self.proj_dropout(attention_output)
         return attention_output, weights
 
 
