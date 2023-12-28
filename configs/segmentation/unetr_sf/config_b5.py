@@ -39,7 +39,7 @@ segformer_from_pretrained = f"nvidia/mit-{model_type}"
 architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
-dataset_fraction = 1
+dataset_fraction = 0.5
 take_full_dataset = False
 # Only relevant if take_full_dataset == False
 ink_ratio = 5
