@@ -135,7 +135,8 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
 
 
 def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fragment_id, config: Config,
-                              layer_start, gpu):
+                              layer_start, gpu, resume_arr):
+    resuming = resume_arr is not None
     print("Starting full inference")
     patch_size = config.patch_size
     expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
@@ -178,6 +179,9 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
     out_width = width // 4
 
     out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device=f'cuda:{gpu}')
+    if resuming:
+        out_arr[:] = resume_arr
+
     pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device=f'cuda:{gpu}')
 
     progress_bar = tqdm(total=x_patches * y_patches,
@@ -187,29 +191,33 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
 
     model = model.half()
 
-    def process_patch(logits, x, y):
+    def process_patch(logits, x, y, out_y_start, out_y_end, out_x_start, out_x_end):
         # Calculate the margin to ignore (10% of the patch size)
         # Set the outer 10% of averaged_logits to zero
         logits = logits.clone()
         logits *= ~ignore_edge_mask
-
-        # Determine the location in the stitched_result array
-        out_y_start = y * stride_out
-        out_y_end = out_y_start + label_size
-        out_x_start = x * stride_out
-        out_x_end = out_x_start + label_size
 
         # Add the result to the stitched_result array and increment prediction counts
         out_arr[out_y_start:out_y_end, out_x_start:out_x_end] += logits
         pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
 
     transform = A.Compose(val_image_aug, is_check_shapes=False)
-    use_advanced_tta = False
 
     patch_counter = 0
     for y in range(y_patches):
         for x in range(x_patches):
             progress_bar.update(1)
+
+            # Determine the location in the stitched_result array
+            out_y_start = y * stride_out
+            out_y_end = out_y_start + label_size
+            out_x_start = x * stride_out
+            out_x_end = out_x_start + label_size
+
+            if resuming:
+                # don't process patch if there is already a result for it (if resuming)
+                if not np.all(out_arr[out_y_start:out_y_end, out_x_start:out_x_end] == 0):
+                    continue
 
             x_start = x * stride
             x_end = x_start + patch_size
@@ -242,7 +250,9 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
             sigmoid_tta_output = advanced_tta(model=model, tensor=patch_tensor,
                                               rotate=True, flip_vertical=True, flip_horizontal=True)
 
-            process_patch(sigmoid_tta_output, x, y)
+            process_patch(sigmoid_tta_output, x, y,
+                          out_y_start=out_y_start, out_y_end=out_y_end,
+                          out_x_start=out_x_start, out_x_end=out_x_end)
 
             patch_counter += 1
             if patch_counter % 1000 == 0:
@@ -308,8 +318,7 @@ def parse_args():
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
-    parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
-                                                              'for the inference')
+    parser.add_argument('--resume', action='store_true', help='Continue a previously stopped inference')
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
     parser.add_argument('--gpu', type=int, default=0, help='Cuda GPU (default: 0)')
     args = parser.parse_args()
@@ -396,6 +405,7 @@ def main():
 
     start_best_layer_idx, end_best_layer_idx = get_inference_range(frag_id=fragment_id)
 
+    choice = -1
     for start_idx in range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1) + 1):
         end_idx = start_idx + (config.in_chans - 1)
 
@@ -406,10 +416,27 @@ def main():
         npy_file_path = os.path.join(results_dir,
                                      f"tta-stride-{stride_factor}-sigmoid_logits_{start_idx}_{end_idx}.npy")
 
-        # Check if prediction NPY file already exists
-        if os.path.isfile(npy_file_path):
-            print(f"Inference already exists. Skip layer {start_idx}")
+        if choice == -1 and os.path.isfile(npy_file_path):
+            print(f"Inference file for {start_idx} already exists. Choose action for this and following files:")
+            print("1: Skip existing files")
+            print("2: Overwrite files from scratch")
+            print("3: Resume existing files if they are incomplete (skips them if they are full)")
+            valid_choices = [1, 2, 3]
+            while choice not in valid_choices:
+                choice = int(input())
+                if choice in valid_choices:
+                    break
+                print("Invalid choice, choose one of [1] Skip [2] Overwrite [3] Resume")
+
+        # skip if existing
+        if choice == 1 and os.path.isfile(npy_file_path):
             continue
+
+        resume_arr = None
+        # Check if prediction NPY file already exists
+        if os.path.isfile(npy_file_path) and choice == 3:
+            print(f"Found partial result: {npy_file_path}, resuming inference ...")
+            resume_arr = np.load(npy_file_path)
 
         # Process each N-layer range
         infer_full_fragment_layer(model=model,
@@ -419,7 +446,8 @@ def main():
                                   config=config,
                                   gpu=gpu,
                                   layer_start=start_idx,
-                                  npy_file_path=npy_file_path)
+                                  npy_file_path=npy_file_path,
+                                  resume_arr=resume_arr)
 
 
 if __name__ == '__main__':
