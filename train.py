@@ -173,7 +173,7 @@ def main():
         logger=wandb_logger,
         callbacks=get_callbacks(cfg=config, model_run_dir=model_run_dir),
         accelerator="auto",
-        devices=get_device_configuration(gpu=gpu),
+        devices=get_device_configuration(gpu=args.gpu),
         enable_progress_bar=True,
         precision='16-mixed',
         strategy='ddp_find_unused_parameters_true',
