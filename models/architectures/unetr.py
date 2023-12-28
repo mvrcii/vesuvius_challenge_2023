@@ -97,7 +97,9 @@ class SelfAttention(nn.Module):
             new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
             context_layer = context_layer.view(*new_context_layer_shape)
             print("context", context_layer.dtype)
-            print("out", self.out.factory_kwargs)
+            # Assuming self.out is an instance of nn.Linear
+            print("Weight dtype:", self.out.weight.dtype)
+            print("Bias dtype:", self.out.bias.dtype)
         attention_output = self.out(context_layer)
         attention_output = self.proj_dropout(attention_output)
         return attention_output, weights
