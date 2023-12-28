@@ -77,9 +77,9 @@ class SelfAttention(nn.Module):
         return x.permute(0, 2, 1, 3)
 
     def forward(self, hidden_states):
-        print("hidden_state before", hidden_states.dtype)
+        # print("hidden_state before", hidden_states.dtype)
         hidden_states = hidden_states.to(dtype=torch.float32)
-        print("hidden_state after", hidden_states.dtype)
+        # print("hidden_state after", hidden_states.dtype)
 
         mixed_query_layer = self.query(hidden_states)
         mixed_key_layer = self.key(hidden_states)
@@ -100,10 +100,10 @@ class SelfAttention(nn.Module):
             context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
             new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
             context_layer = context_layer.view(*new_context_layer_shape)
-            print("context", context_layer.dtype)
+            # print("context", context_layer.dtype)
             # Assuming self.out is an instance of nn.Linear
-            print("Weight dtype:", self.out.weight.dtype)
-            print("Bias dtype:", self.out.bias.dtype)
+            # print("Weight dtype:", self.out.weight.dtype)
+            # print("Bias dtype:", self.out.bias.dtype)
         attention_output = self.out(context_layer)
         attention_output = self.proj_dropout(attention_output)
         return attention_output, weights
