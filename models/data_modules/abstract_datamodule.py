@@ -1,15 +1,53 @@
 import os
+import random
 import sys
 
 import albumentations as A
+import numpy as np
 import pandas as pd
+import torch
 from lightning.pytorch import LightningDataModule
 from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, RandomSampler
 
 from models.datasets.abstract_dataset import AbstractDataset
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id
+
+
+# Solution to: Resuming from checkpoint gives different results
+# https://lightning.ai/forums/t/resuming-from-checkpoint-gives-different-results/3826
+class CustomRandomSampler(RandomSampler):
+    def __init__(self, data_source, seed=None, replacement=False, num_samples=None):
+        super().__init__(data_source, replacement, num_samples)
+        self.seed = seed
+
+    def __iter__(self):
+        n = len(self.data_source)
+        if self.generator is None:
+            # Use a fixed seed if provided, else generate a random seed
+            fixed_seed = self.seed if self.seed is not None else torch.randint(0, int(1e6), (1,)).item()
+            self.generator = torch.Generator()
+            self.generator.manual_seed(fixed_seed)
+
+        if self.replacement:
+            return iter(torch.randint(high=n, size=(self.num_samples,), dtype=torch.int64,
+                                      generator=self.generator).tolist())
+        return iter(torch.randperm(n, generator=self.generator).tolist())
+
+
+# Solution to: Is there any way to fix all workers’ seed as a fixed constant for every iteration?
+# https://discuss.pytorch.org/t/how-to-fix-all-workers-seed-via-worker-init-fn-for-every-iter/127006/2
+def worker_init_fn(worker_id):
+    seed = 0
+
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+    return
 
 
 class AbstractDataModule(LightningDataModule):
@@ -55,12 +93,15 @@ class AbstractDataModule(LightningDataModule):
 
         batch_size = self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size
         shuffle = dataset_type == 'train'
+        custom_sampler = CustomRandomSampler(dataset, seed=self.cfg.seed)
         data_loader = DataLoader(dataset,
                                  batch_size=batch_size,
                                  shuffle=shuffle,
                                  num_workers=self.cfg.num_workers,
                                  pin_memory=True,
                                  drop_last=False,
+                                 sampler=custom_sampler,
+                                 worker_init_fn=worker_init_fn,
                                  persistent_workers=True)
 
         return data_loader
