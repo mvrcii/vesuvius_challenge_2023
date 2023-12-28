@@ -91,7 +91,7 @@ def log_wandb_hyperparams(config, wandb_logger):
     wandb_logger.log_hyperparams(cleaned_config)
 
 
-def get_device_configuration():
+def get_device_configuration(gpu):
     """
     Determines the appropriate device configuration for training based on
     the availability of CUDA-enabled GPUs.
@@ -100,13 +100,16 @@ def get_device_configuration():
         - 'accelerator' is a string indicating the type of accelerator ('gpu' or 'cpu').
         - 'devices' is an int or list indicating the devices to be used.
     """
-    if torch.cuda.is_available():
-        # Return all available GPUs
-        gpu_ids = find_usable_cuda_devices()
-        return gpu_ids
+    if gpu != 0:
+        return [gpu]
     else:
-        # No GPUs available, use CPU
-        return 1
+        if torch.cuda.is_available():
+            # Return all available GPUs
+            gpu_ids = find_usable_cuda_devices()
+            return gpu_ids
+        else:
+            # No GPUs available, use CPU
+            return 1
 
 
 def get_callbacks(cfg, model_run_dir):
@@ -170,7 +173,7 @@ def main():
         logger=wandb_logger,
         callbacks=get_callbacks(cfg=config, model_run_dir=model_run_dir),
         accelerator="auto",
-        devices=[args.gpu],
+        devices=get_device_configuration(gpu=gpu),
         enable_progress_bar=True,
         precision='16-mixed',
         strategy='ddp_find_unused_parameters_true',
