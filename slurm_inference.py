@@ -13,7 +13,7 @@ def main():
     parser.add_argument('--tta', action='store_true', help='Perform advanced TTA')
     args = parser.parse_args()
 
-    tta_str = "_tta.py" if args.tta else ""
+    tta_str = "_tta" if args.tta else ""
 
     cmd_str = (f"python3 "
                f"multilayer_approach/infer_layered_segmentation_padto16{tta_str}.py "
