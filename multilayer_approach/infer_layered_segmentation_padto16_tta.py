@@ -191,7 +191,8 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
 
     out_arr = torch.zeros((out_height, out_width), dtype=torch.float16, device=f'cuda:{gpu}')
     if resuming:
-        out_arr[:] = resume_arr
+        resume_tensor = torch.tensor(resume_arr, dtype=torch.float16, device=f'cuda:{gpu}')
+        out_arr[:] = resume_tensor
 
     pred_counts = torch.zeros((out_height, out_width), dtype=torch.int16, device=f'cuda:{gpu}')
 
@@ -238,7 +239,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
 
             if resuming:
                 # don't process patch if there is already a result for it (if resuming)
-                if not np.all(out_arr[out_y_start:out_y_end, out_x_start:out_x_end] == 0):
+                if torch.any(out_arr[out_y_start:out_y_end, out_x_start:out_x_end] != 0):
                     continue
 
             patch = images[:, y_start:y_end, x_start:x_end]  # [12, 512, 512]
