@@ -531,17 +531,24 @@ class Visualization:
             image = self.process_image(save_img=True)
 
             if self.transparent:
-                processed = image.convert('RGBA')
-                datas = processed.getdata()
-
-                newData = []
                 print("Start converting transparent image")
-                for item in tqdm(datas):
-                    alpha = 255 - item[0]
-                    newData.append((0, 0, 0, alpha))
-                processed.putdata(newData)
+                processed = image.convert('RGBA')
+                data = np.array(processed)
+
+                # Calculate the inverse brightness as alpha
+                # Brightness is the average of the R, G, and B channels
+                brightness = np.mean(data[..., :3], axis=-1)
+                alpha = 255 - brightness.astype(np.uint8)
+
+                # Set all pixels to black and use calculated alpha
+                data[..., :3] = 0  # Set R, G, B to 0 (black)
+                data[..., 3] = alpha  # Set alpha channel
+
+                # Convert back to Image
+                processed = Image.fromarray(data)
                 image = processed
                 print("Done converting transparent image")
+
             print("Saved file at", file_path)
             image.save(file_path)
 
@@ -609,7 +616,7 @@ class Visualization:
         processed = None
 
         if mode == "sum":
-            processed = np.sum(self.model_layer_values[rel_start_idx:rel_end_idx + 1], axis=0)
+            processed = np.mean(self.model_layer_values[rel_start_idx:rel_end_idx + 1], axis=0)
         elif mode == "max":
             if self.min_max_mode == 'min':
                 processed = np.minimum.reduce(self.model_layer_values[rel_start_idx:rel_end_idx + 1])
@@ -631,14 +638,15 @@ class Visualization:
 
         threshold = float(self.threshold_var.get())
 
-        if threshold > 0:
-            processed = (processed > threshold).astype(int)
-        else:
+        # if threshold > 0:
+        #     processed = (processed > threshold).astype(int)
+        # else:
+        if threshold < 0:
             processed = processed * (threshold * -1)
             processed[processed > 1] = 1
 
             # OUTLINE BOOSTING
-            processed[processed < 1] = 0
+            # processed[processed < 1] = 0
 
         # Apply threshold
         # processed[processed >= float(threshold)] = 1  # clamp all values that are not 0 (or threshold) to 1
