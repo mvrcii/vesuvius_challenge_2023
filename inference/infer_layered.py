@@ -59,10 +59,6 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
         print(os.path.isfile(img_path))
 
         image = cv2.imread(img_path, 0)
-        if not image:
-            print("Error while reading image", img_path)
-            exit()
-
         assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
 
         image = pad_image_to_be_divisible_by_4(image, patch_size)
@@ -467,8 +463,8 @@ def main():
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_name = model_path.split(f"checkpoints{os.sep}")[-1]
     model_name_modified = '-'.join(model_name.split('-')[0:5])
-    root_dir = os.path.join("", "results", f"fragment{fragment_id}")
-    results_dir = os.path.join("", "results", f"fragment{fragment_id}",
+    root_dir = os.path.join("inference", "results", f"fragment{fragment_id}")
+    results_dir = os.path.join("inference", "results", f"fragment{fragment_id}",
                                f"{date_time_string}_{model_name_modified}")
 
     os.makedirs(root_dir, exist_ok=True)
