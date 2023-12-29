@@ -446,6 +446,7 @@ def main():
 
         # skip if existing
         if choice == 1 and os.path.isfile(npy_file_path):
+            print("Found existing, skipping ", npy_file_path)
             continue
 
         resume_arr = None
