@@ -227,6 +227,15 @@
       42
     ]
   },
+    {
+    "id": "20231221180251",
+    "name": "TRAILBIGGER",
+    "boost_threshold": 1,
+    "best_layers_start_indices": [
+      28,
+      42
+    ]
+  },
   {
     "id": "20231016151002",
     "name": "JAZZBIGGER",

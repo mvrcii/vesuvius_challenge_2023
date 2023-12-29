@@ -123,6 +123,7 @@ BLUEBIGGER_FRAG_ID = FragmentHandler().get_id("BLUEBIGGER")
 JAZZBIGGER_FRAG_ID = FragmentHandler().get_id("JAZZBIGGER")
 GRIMHUGE_FRAG_ID = FragmentHandler().get_id("GRIMHUGE")
 TRAILBREAKER_FRAG_ID = FragmentHandler().get_id("TRAILBREAKER")
+TRAILBIGGER_FRAG_ID = FragmentHandler().get_id("TRAILBIGGER")
 
 TITLE1_FRAG_ID = FragmentHandler().get_id("TITLE1")
 TITLE2_FRAG_ID = FragmentHandler().get_id("TITLE2")
