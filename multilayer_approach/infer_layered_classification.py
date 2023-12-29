@@ -132,6 +132,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
     transform = A.Compose(val_image_aug, is_check_shapes=False)
 
     batch_counter = 0
+    print("starting for loop")
     for y in range(y_patches):
         for x in range(x_patches):
             progress_bar.update(1)
