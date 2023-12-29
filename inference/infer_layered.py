@@ -56,6 +56,8 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
             command = ['bash', "./scripts/utils/download_fragment.sh", fragment_id, f'{i:05} {i:05}']
             subprocess.run(command, check=True)
 
+        print(os.path.isfile(img_path))
+
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
 
