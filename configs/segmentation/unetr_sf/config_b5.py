@@ -35,7 +35,7 @@ validation_fragments = [JETFIRE_FRAG_ID]
 # Training parameters
 model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
-from_checkpoint = "jolly-surf-1176-unetr-sf-b5-231229-184230"
+# from_checkpoint = "jolly-surf-1176-unetr-sf-b5-231229-184230"
 architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
@@ -51,13 +51,13 @@ unetr_out_channels = 16
 
 val_interval = 1
 
-lr = 8e-5  # 1e-4
+lr = 1e-4  # 1e-4
 step_lr_steps = 1
 step_lr_factor = 0.98
-weight_decay = 0.002
+weight_decay = 0.001
 epsilon = 1e-3
 
-losses = [('masked-focal', 1.0), ('masked-dice', 1.0)]
+losses = [('masked-dice', 1.0)]
 focal_gamma = 3.0
 focal_alpha = 0.85
 dice_smoothing = 0.05
