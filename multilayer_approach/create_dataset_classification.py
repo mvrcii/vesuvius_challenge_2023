@@ -93,6 +93,8 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
 
     image_tensor = read_fragment_images_for_channels(root_dir=fragment_dir, patch_size=config.patch_size,
                                                      channels=read_chans, ch_block_size=config.in_chans)
+    print("label_path")
+    print(label_path)
     label_arr = read_label(label_path=label_path, patch_size=config.patch_size)
     ignore_arr = read_label(label_path=ignore_path, patch_size=config.patch_size)
 
@@ -251,6 +253,8 @@ def read_fragment_images_for_channels(root_dir, patch_size, channels, ch_block_s
 
 def read_label(label_path, patch_size):
     if not os.path.isfile(label_path):
+        print("could not find label at ", label_path)
+        exit()
         return None
 
     label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
