@@ -6,7 +6,7 @@ import time
 
 def main():
     parser = argparse.ArgumentParser(description="Submit a training job to Slurm.")
-    parser.add_argument("config_path", type=str, help="Path to the config file.")
+    parser.add_argument("checkpoint_folder", type=str, help="Checkpoint folder.")
     parser.add_argument('fragment_id', type=str, help='The fragment to infer.')
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
     parser.add_argument('--gpu', type=int, default=0, help='GPU (default: 0)')
@@ -22,7 +22,7 @@ def main():
 
     cmd_str = (f"python3 "
                f"{script_name} "
-               f"{args.config_path} {args.fragment_id} --stride {args.stride} --gpu {args.gpu}")
+               f"{args.checkpoint_folder} {args.fragment_id} --stride {args.stride} --gpu {args.gpu}")
 
     slurm_cmd = f'sbatch --nodelist={node_name} --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
 
