@@ -97,6 +97,9 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     ignore_arr = read_label(label_path=ignore_path, patch_size=config.patch_size)
 
     # assert label arr is binary
+    if set(np.unique(label_arr)) != {0, 1}:
+        print(np.unique(label_arr))
+        print(frag_id)
     assert set(np.unique(label_arr)) == {0, 1}, "Invalid label, not binary: " + str(np.unique(label_arr))
 
     # assert ignore arr is binary
