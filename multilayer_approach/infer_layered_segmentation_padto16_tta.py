@@ -236,17 +236,20 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
             mask_patch = mask[y_start:y_end, x_start:x_end]
             # is mask is completely zero, ignore patch
             if np.all(mask_patch == 0):
+                print("full mask cnotinue")
                 continue
 
             if resuming:
                 # don't process patch if there is already a result for it (if resuming)
                 if torch.any(out_arr[out_y_start:out_y_end, out_x_start:out_x_end] != 0):
+                    print("resume contine")
                     continue
 
             patch = images[:, y_start:y_end, x_start:x_end]  # [12, 512, 512]
 
             if patch.shape != expected_patch_shape_extracted:
                 # patch is at the edge => skip it
+                print("shaep mismatch contine:", patch.shape)
                 continue
 
             patch = np.expand_dims(patch, 0)  # [1, 12, 512, 512]
@@ -255,6 +258,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
 
             # If the patch size is smaller than the expected size, skip it
             if patch.shape != expected_patch_shape_padded:
+                print("shape after padding mismatch continue:", patch.shape)
                 continue
 
             # apply necessary transformations
