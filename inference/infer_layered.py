@@ -59,6 +59,10 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
         print(os.path.isfile(img_path))
 
         image = cv2.imread(img_path, 0)
+        if not image:
+            print("Error while reading image", img_path)
+            exit()
+
         assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
 
         image = pad_image_to_be_divisible_by_4(image, patch_size)
