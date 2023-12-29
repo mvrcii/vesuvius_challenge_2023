@@ -30,7 +30,7 @@ def process_output(frag_id, command, tta, stride, checkpoint):
 def main():
     available_nodes = [2]
     excluded_gpus_node_one = {1, 3, 5}  # Exclude reserved-164-01 gpus here
-    excluded_gpus_node_two = {0, 1, 2, 3, 4, 7}  # Exclude reserved-237-02 gpus here
+    excluded_gpus_node_two = {0, 1, 3, 4, 5, 6, 7}  # Exclude reserved-237-02 gpus here
 
     available_gpus = [gpu_id for gpu_id in range(0, 8)]
     available_gpu_combinations = [(node_id, gpu_id) for node_id in available_nodes for gpu_id in available_gpus
@@ -70,7 +70,7 @@ def main():
         try:
             result = subprocess.run(command, capture_output=True, text=True)
             print(result)
-            match = re.search(r"Slurm job ID: (\d+)", result)
+            match = re.search(r"Slurm job ID: (\d+)", result.stdout)
             if match:
                 job_id = match.group(1)
 
