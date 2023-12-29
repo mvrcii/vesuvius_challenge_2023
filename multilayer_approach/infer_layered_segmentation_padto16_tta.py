@@ -73,7 +73,7 @@ def read_fragment(contrasted, patch_size, work_dir, fragment_id, layer_start, la
     return images
 
 
-def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizontal=False):
+def advanced_tta(model, tensor):
     """
     Apply test-time augmentation to the input tensor and make a batch inference with PyTorch.
 
@@ -89,17 +89,14 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
         tta_batch.append(tensor.clone())
 
         # Apply rotation augmentations
-        if rotate:
-            for k in [1, 2, 3]:
-                rotated = torch.rot90(tensor, k, [1, 2]).clone()  # 16, 512, 512
-                print(rotated.shape)
-                tta_batch.append(rotated)
+        for k in [1, 2, 3]:
+            rotated = torch.rot90(tensor, k, [1, 2]).clone()  # 16, 512, 512
+            print(rotated.shape)
+            tta_batch.append(rotated)
 
         # Apply flip augmentations
-        if flip_vertical:
-            tta_batch.append(torch.flip(tensor, [1]).clone())  # Vertical flip
-        if flip_horizontal:
-            tta_batch.append(torch.flip(tensor, [2]).clone())  # Horizontal flip
+        tta_batch.append(torch.flip(tensor, [1]).clone())  # Vertical flip
+        tta_batch.append(torch.flip(tensor, [2]).clone())  # Horizontal flip
 
         # Convert list to torch tensor
         tta_batch = torch.stack(tta_batch).half()  # [6, 16, 512, 512]
@@ -114,17 +111,15 @@ def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizont
         reverted_outputs = []
         for i, output in enumerate(tta_outputs):
             output = output.clone()
-            print(output.shape)
-            if rotate:
-                if i == 1:  # Revert rotate left
-                    output = torch.rot90(output, 3, [0, 1])
-                elif i == 2:  # Revert rotate 180
-                    output = torch.rot90(output, 2, [0, 1])
-                elif i == 3:  # Revert rotate right
-                    output = torch.rot90(output, 1, [0, 1])
-            if flip_vertical and i == len(tta_outputs) - 2 + int(flip_horizontal):
+            if i == 1:  # Revert rotate left
+                output = torch.rot90(output, 3, [0, 1])
+            elif i == 2:  # Revert rotate 180
+                output = torch.rot90(output, 2, [0, 1])
+            elif i == 3:  # Revert rotate right
+                output = torch.rot90(output, 1, [0, 1])
+            elif i == 4:  # Revert vertical flip
                 output = torch.flip(output, [0])
-            if flip_horizontal and i == len(tta_outputs) - 1:
+            elif i == 5:  # Revert horizontal flip
                 output = torch.flip(output, [1])
             reverted_outputs.append(output.clone().squeeze())
 
@@ -247,8 +242,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
             patch = transform(image=patch)['image']
             patch_tensor = torch.from_numpy(patch).float().to(f'cuda:{gpu}')
 
-            sigmoid_tta_output = advanced_tta(model=model, tensor=patch_tensor,
-                                              rotate=True, flip_vertical=True, flip_horizontal=True)
+            sigmoid_tta_output = advanced_tta(model=model, tensor=patch_tensor)
 
             process_patch(sigmoid_tta_output, x, y,
                           out_y_start=out_y_start, out_y_end=out_y_end,
