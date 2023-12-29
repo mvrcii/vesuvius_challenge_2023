@@ -112,7 +112,6 @@ def advanced_tta(model, tensor):
         # print("Batch Shape before model forward:", tta_batch.shape)
 
         # Get the model's predictions for the batch
-        print("doing forward pass")
         tta_outputs = model(tta_batch)  # (6, 128, 128)
         # print("Batch Shape after model forward:", tta_outputs.shape)
 

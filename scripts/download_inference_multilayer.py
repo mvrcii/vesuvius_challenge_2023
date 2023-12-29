@@ -5,8 +5,6 @@ import subprocess
 import sys
 from difflib import get_close_matches
 
-import paramiko
-
 from utility.fragments import get_frag_name_from_id, FragmentHandler
 
 
@@ -59,18 +57,6 @@ def find_directory_on_remote(server_path, fragment_id, model_run_dir):
     return os.path.join(full_server_path, f"*{model_run_dir}*"), model_run_dir
 
 
-def list_remote_files(hostname, username, password, remote_directory):
-    try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname, username=username, password=password)
-        stdin, stdout, stderr = ssh.exec_command(f'ls {remote_directory}')
-        file_list = stdout.read().decode().splitlines()
-        ssh.close()
-        return file_list
-    except Exception as e:
-        print_colored(f"Error: {str(e)}", "red")
-        return []
 
 
 def get_server_path(hostname, result_dir):
