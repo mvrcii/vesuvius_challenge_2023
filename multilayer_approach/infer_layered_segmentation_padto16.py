@@ -82,6 +82,8 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
 
     contrasted = getattr(config, 'contrasted', False)
+    print("Using contrasted fragment slices" if contrasted else "Using normal fragment slices")
+
 
     # Loading images [12, Height, Width]
     images = read_fragment(contrasted=contrasted, patch_size=patch_size, work_dir=config.work_dir,
