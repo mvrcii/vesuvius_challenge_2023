@@ -129,7 +129,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
                              f"with {get_ckpt_name_from_id(ckpt_name).upper()}: Processing patches"
                              f" for layers {layer_start}-{layer_start + config.in_chans - 1}")
 
-    preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape), dtype=torch.float16,
+    preallocated_batch_tensor = torch.zeros((batch_size, *expected_patch_shape_padded), dtype=torch.float16,
                                             device=f'cuda:{gpu}')
     model = model.half()
 
