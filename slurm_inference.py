@@ -12,6 +12,7 @@ def main():
     parser.add_argument('--gpu', type=int, default=0, help='GPU (default: 0)')
     parser.add_argument('--tta', action='store_true', help='Perform advanced TTA')
     parser.add_argument('--node2', action='store_true', help='Use Node 2')
+    parser.add_argument('--no_tail', action='store_true', help='Tail into the inference')
     args = parser.parse_args()
 
     tta_str = "_tta" if args.tta else ""
@@ -35,12 +36,13 @@ def main():
         job_id = match.group(1)
         print(f"Slurm job ID: {job_id}")
 
-        delay_seconds = 2  # Adjust this value as needed
-        print(f"Waiting for {delay_seconds} seconds before tailing the log file...")
-        time.sleep(delay_seconds)
+        if not args.no_tail:
+            delay_seconds = 2  # Adjust this value as needed
+            print(f"Waiting for {delay_seconds} seconds before tailing the log file...")
+            time.sleep(delay_seconds)
 
-        tail_cmd = f"tail -f logs/slurm-{job_id}.out"
-        subprocess.run(tail_cmd, shell=True)
+            tail_cmd = f"tail -f logs/slurm-{job_id}.out"
+            subprocess.run(tail_cmd, shell=True)
     else:
         print("Failed to submit job to Slurm or parse job ID.")
 

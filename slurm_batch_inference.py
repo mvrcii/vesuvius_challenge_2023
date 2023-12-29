@@ -5,10 +5,32 @@ import sys
 from utility.fragments import *
 
 
+def process_output(frag_id, command, tta, stride, checkpoint):
+    try:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, _ = process.communicate()
+
+        match = re.search(r"Slurm job ID: (\d+)", stdout)
+        if match:
+            job_id = match.group(1)
+
+            # Build the string based on TTA, checkpoint, and stride
+            tta_str = " + TTA" if tta else ""
+            checkpoint_name = checkpoint.split('-')[0]  # Assuming checkpoint format includes name
+            stride_str = f"S{stride}"
+            print(f"{get_frag_name_from_id(frag_id)} {stride_str}{tta_str} ({checkpoint_name}) {job_id}")
+        else:
+            print(f"Failed to get job ID for {frag_id}")
+
+    except Exception as e:
+        print(f"Exception occurred while starting {frag_id}: {e}")
+
+
+
 def main():
     available_nodes = [2]
     excluded_gpus_node_one = {1, 3, 5}  # Exclude reserved-164-01 gpus here
-    excluded_gpus_node_two = {0, 1, 2, 3, 4, 5, 6}  # Exclude reserved-237-02 gpus here
+    excluded_gpus_node_two = {0, 1, 3, 4, 5, 6, 7}  # Exclude reserved-237-02 gpus here
 
     available_gpus = [gpu_id for gpu_id in range(0, 8)]
     available_gpu_combinations = [(node_id, gpu_id) for node_id in available_nodes for gpu_id in available_gpus
@@ -26,7 +48,7 @@ def main():
     # ]
 
     frags_2_infer = [
-        JAZZBIGGER_FRAG_ID
+        IRONHIDE_FRAG_ID, ULTRA_MAGNUS_FRAG_ID
     ]
 
     for frag_id, (node_id, gpu_id) in zip(frags_2_infer, available_gpu_combinations):
@@ -42,11 +64,13 @@ def main():
         if tta:
             command.append('--tta')
 
-        try:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            stdout, _ = process.communicate()
+        if tta:
+            command.append('--no_tail')
 
-            match = re.search(r"Slurm job ID: (\d+)", stdout)
+        try:
+            result = subprocess.run(command, capture_output=True, text=True)
+            print(result)
+            match = re.search(r"Slurm job ID: (\d+)", result.stdout)
             if match:
                 job_id = match.group(1)
 
