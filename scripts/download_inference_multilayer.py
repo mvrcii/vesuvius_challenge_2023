@@ -1,7 +1,11 @@
 import argparse
 import os
+import shutil
 import subprocess
+import sys
 from difflib import get_close_matches
+
+import paramiko
 
 from utility.fragments import get_frag_name_from_id, FragmentHandler
 
@@ -28,20 +32,25 @@ def validate_folder(local_path, model_run_dir):
         return False
 
 
-def print_colored(message, color):
+def print_colored(message, color, _print=True):
     colors = {
         "blue": '\033[94m',
         "green": '\033[92m',
         "red": '\033[91m',
+        "purple": '\033[95m',
         "end": '\033[0m',
     }
-    print(f"{colors[color]}{message}{colors['end']}")
+    if _print:
+        print(f"{colors[color]}{message}{colors['end']}")
+    else:
+        return f"{colors[color]}{message}{colors['end']}"
 
 
 def closest_match(input_id, all_ids):
     # Finds the closest match using difflib's get_close_matches
     matches = get_close_matches(input_id, all_ids, n=1, cutoff=0.1)
     return matches[0] if matches else None
+
 
 def find_directory_on_remote(server_path, fragment_id, model_run_dir):
     model_run_dir = '-'.join(model_run_dir.split('-')[:3])
@@ -50,22 +59,21 @@ def find_directory_on_remote(server_path, fragment_id, model_run_dir):
     return os.path.join(full_server_path, f"*{model_run_dir}*"), model_run_dir
 
 
-def get_inference_result(fragment_id, full_model_run_dir, hostname, single):
-    result_dir = "single_results" if single else "results"
+def list_remote_files(hostname, username, password, remote_directory):
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(hostname, username=username, password=password)
+        stdin, stdout, stderr = ssh.exec_command(f'ls {remote_directory}')
+        file_list = stdout.read().decode().splitlines()
+        ssh.close()
+        return file_list
+    except Exception as e:
+        print_colored(f"Error: {str(e)}", "red")
+        return []
 
-    all_ids = FragmentHandler().get_ids()
-    if fragment_id not in all_ids:
-        print_colored(f"Fragment ID not known by fragment handler: {fragment_id}", "red")
 
-        suggestion = closest_match(fragment_id, all_ids)
-        if suggestion:
-            print_colored(f"Did you mean: {suggestion}?", "blue")
-        choice = input("[y / n]")
-        if choice == "y":
-            fragment_id = suggestion
-        else:
-            exit()
-
+def get_server_path(hostname, result_dir):
     server_paths = {
         "vast": f"~/kaggle1stReimp/inference/{result_dir}",
         "andro": f"~/kaggle1stReimp/inference/{result_dir}"
@@ -73,9 +81,29 @@ def get_inference_result(fragment_id, full_model_run_dir, hostname, single):
 
     if hostname not in server_paths:
         print_colored("Wrong hostname", "red")
-        return
+        sys.exit(1)
 
-    server_path = server_paths[hostname]
+    return server_paths[hostname]
+
+
+def get_inference_result(fragment_id, full_model_run_dir, hostname, single, force=False):
+    result_dir = "single_results" if single else "results"
+    server_path = get_server_path(hostname, result_dir)
+
+    fragment_ids = FragmentHandler().get_ids()
+    frag_name = get_frag_name_from_id(fragment_id).upper()
+
+    if fragment_id not in fragment_ids:
+        print_colored(f"Fragment ID not known by fragment handler: {fragment_id}", "red")
+
+        suggestion = closest_match(fragment_id, fragment_ids)
+        if suggestion:
+            print_colored(f"Did you mean: {suggestion}?", "blue")
+        choice = input("[y / n]")
+        if choice == "y":
+            fragment_id = suggestion
+        else:
+            exit()
 
     full_server_path, short_model_run_dir = find_directory_on_remote(
         fragment_id=fragment_id,
@@ -96,23 +124,47 @@ def get_inference_result(fragment_id, full_model_run_dir, hostname, single):
         if validate_folder(local_path, short_model_run_dir):
             print(os.path.join(local_path, short_model_run_dir))
 
-            frag_name = get_frag_name_from_id(fragment_id).upper()
-            print_colored(
-                f"SKIP:\tInference download for {short_model_run_dir.upper()} and {frag_name} '{fragment_id}' already exists",
-                "blue")
-            return
+            if not force:
+                frag_name = get_frag_name_from_id(fragment_id).upper()
+                print_colored(
+                    f"SKIP:\tInference download for {short_model_run_dir.upper()} and {frag_name} '{fragment_id}' already exists",
+                    "blue")
+                return
 
-    frag_name = get_frag_name_from_id(fragment_id).upper()
-    print_colored(
-        f"START:\tInference download for {short_model_run_dir.upper()} and {frag_name} '{fragment_id}'",
-        "green")
+    if force:
+        force_str = print_colored("FORCED INFERENCE DOWNLOAD:", color="purple", _print=False)
+        print_colored(f"{force_str:38}{short_model_run_dir.upper()} and {frag_name} '{fragment_id}'", "green")
 
-    # Using scp to copy the directory
-    command = f'scp -r "{hostname}:{full_server_path}" "{local_path}"'
-    print(command)
+        # Define paths for the snapshots directory and a temporary backup location.
+        snapshots_dir = os.path.join(local_path, short_model_run_dir, 'snapshots')
+        temp_snapshots_dir = "/tmp/snapshots_backup"
 
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    process.wait()
+        # Check if snapshots directory exists and move it to a temporary location.
+        if os.path.isdir(snapshots_dir):
+            shutil.move(snapshots_dir, temp_snapshots_dir)
+
+        # Delete the existing local target directory.
+        target_dir = os.path.join(local_path, short_model_run_dir)
+        if os.path.isdir(target_dir):
+            shutil.rmtree(target_dir)
+
+        # Force download the inference using scp or similar method.
+        command = f'scp -r "{hostname}:{full_server_path}" "{local_path}"'
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        process.wait()
+
+        # After download, move the snapshots back if it was previously moved.
+        if os.path.isdir(temp_snapshots_dir):
+            shutil.move(temp_snapshots_dir, snapshots_dir)
+
+    else:
+        print_colored(f"START:\tInference download for {short_model_run_dir.upper()} "
+                      f"and {frag_name} '{fragment_id}'", "green")
+
+        # Using scp to copy the directory
+        command = f'scp -r "{hostname}:{full_server_path}" "{local_path}"'
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        process.wait()
 
     # Check if scp succeeded
     if process.returncode != 0:
@@ -131,6 +183,7 @@ if __name__ == "__main__":
     parser.add_argument("fragment_id", type=str, help="Fragment ID")
     parser.add_argument("checkpoint_folder_name", type=str, help="Checkpoint folder name")
     parser.add_argument("hostname", type=str, help="Hostname")
+    parser.add_argument("--force", action='store_true', help="Force the download and overwrite npy files")
     args = parser.parse_args()
 
-    get_inference_result(args.fragment_id, args.checkpoint_folder_name, args.hostname, single=False)
+    get_inference_result(args.fragment_id, args.checkpoint_folder_name, args.hostname, single=False, force=args.force)
