@@ -22,7 +22,7 @@ stride = patch_size // 1
 
 # if used with create_dataset_classification all samples with ink_ratio == 0 and > ink_ratio will be saved
 # E.g. ink_ratio == 50 => discard samples with ink_ratio 1-49. Label for a sample will be its ink ratio
-ink_ratio = 25
+ink_ratio = 99
 
 
 no_ink_sample_percentage = 1

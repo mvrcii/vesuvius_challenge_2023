@@ -75,12 +75,12 @@ class UNET3D_DataModule(LightningDataModule):
         if cfg.seed == -1:
             cfg.seed = None  # Set random seed if -1 is given
 
-        if "ignore_p" in df.columns:
+        if getattr(cfg, "max_ignore_th", False) and "ignore_p" in df.columns:
             print("Before ignoring: ", len(df.index))
             df = df[df["ignore_p"] < cfg.max_ignore_th]
             print(f"After ignoring patches with ignore_p > {cfg.max_ignore_th}: ", len(df.index))
 
-        if not cfg.take_full_dataset:
+        if not getattr(cfg, "take_full_dataset", False):
             count_zero = (df['ink_p'] == 0).sum()
             count_greater_than_zero = (df['ink_p'] > 0).sum()
             print(
@@ -93,7 +93,7 @@ class UNET3D_DataModule(LightningDataModule):
             # Step 2: Decide how many no-ink samples
             no_ink_sample_count = int(len(df_ink_p_greater_than_ink_ratio) * cfg.no_ink_sample_percentage)
 
-            # Step 3: Filter out rows where ink_p <= 0 and limit the number of rows
+            # Step 3: Select the correct amount of samples with 0 ink
             df_good_no_inks = df[df['ink_p'] == 0].head(no_ink_sample_count)
 
             # # Step 4: Concatenate the two DataFrames
