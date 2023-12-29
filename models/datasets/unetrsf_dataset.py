@@ -23,17 +23,9 @@ class UNETR_SFDataset(UNET3D_SFDataset):
         # Random cut-and-paste augmentation
         if random.random() < 0.3:  # Adjust the probability as needed
             num_layers = image.shape[0]
-            print("num layers")
-            print(num_layers)
             num_layers_to_cut = random.randint(1, 4)  # Randomly choose 1-4 layers to cut
-            print("num to cut")
-            print(num_layers_to_cut)
             start_layer = random.randint(0, num_layers - num_layers_to_cut)  # Choose start layer for cut
-            print("start")
-            print(start_layer)
             end_layer = start_layer + num_layers_to_cut  # End layer for cut
-            print("endlayer")
-            print(end_layer)
 
             # Extract the block of layers
             cut_block = image[start_layer:end_layer]
@@ -61,6 +53,7 @@ class UNETR_SFDataset(UNET3D_SFDataset):
                 # Shift layers down and pad at the top
                 image = torch.cat((zero_padding, image[:-shift_amount]), dim=0)
 
+        # todo fix, see above
         image = image.unsqueeze(0)
         # pad image to have 16 layers
         image = torch.cat([image, torch.zeros(1, 16 - image.shape[1], self.patch_size, self.patch_size)], dim=1)
