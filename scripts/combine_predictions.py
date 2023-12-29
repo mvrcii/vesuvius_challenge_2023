@@ -16,7 +16,6 @@ from utility.configs import Config
 from utility.fragments import FragmentHandler, SUPERSEDED_FRAGMENTS
 
 
-
 def combine_layers(predictions, max_distance):
     """
     Combine predictions from multiple layers with a weighting that decreases
@@ -471,6 +470,7 @@ class Visualization:
         return new_dir_name
 
     def save_snapshot(self):
+        global type_list
         # Save in model dir within fragment for single model
         model_dir = self.model_dir
         target_dir = os.path.join(self.root_dir, model_dir, "snapshots")
@@ -487,6 +487,7 @@ class Visualization:
         mode = self.modes[mode_key].upper()
         inverted_str = f'_inverted' if self.inverted else ""
         transparent_str = f'_transparent' if self.transparent else ""
+        type_str = f'_{type_list[0]}' if len(type_list[0]) > 0 else ""
 
         # Layer mode
         if mode_key == 2:
@@ -520,13 +521,8 @@ class Visualization:
             end_layer = int(self.end_layer_var.get())
 
             layer_str = f'{start_layer}-{end_layer}'
-
-            file_path = os.path.join(target_dir, f"{os.path.basename(model_names_str)}_"
-                                                 f"mode={mode}_"
-                                                 f"layer={layer_str}_"
-                                                 f"th={float(threshold):g}"
-                                                 f"{inverted_str}"
-                                                 f"{transparent_str}.png")
+            name = f"{os.path.basename(model_names_str)}_mode={mode}_layer={layer_str}_th={float(threshold):g}{inverted_str}{transparent_str}{type_str}.png"
+            file_path = os.path.join(target_dir, name)
 
             image = self.process_image(save_img=True)
 
@@ -724,6 +720,7 @@ class Visualization:
 
 
 def load_predictions(root_dir, single_layer, layer_indices=None):
+    global type_list
     layer_idcs = list()
     layer_values = []
     file_names = list()
@@ -735,8 +732,13 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
         type_set.add(npy_file_name.split("sigmoid")[0])
 
     type_list = list(type_set)
+    for i, name in enumerate(type_list):
+        if type_list[i].endswith("-"):
+            type_list[i] = type_list[i][:-1]
+
     if len(type_list) > 1:
         print("Which inference type do you want to see?")
+
         for i, type_name in enumerate(type_list):
             print(f"{i}: {type_name}")
         selection = int(input())
@@ -744,6 +746,7 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
         if selection == 0:
             check_start = "sigmoid"
 
+        type_list[0] = type_list[selection]
         file_paths = [x for x in file_paths if x.startswith(check_start)]
 
     file_paths.sort(key=lambda x: get_start_layer_idx(x, single_layer))
@@ -770,6 +773,7 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
 
 
 if __name__ == "__main__":
+    type_list = []
     transparent = True
     save_all_layers = False
     max_ensemble = False
