@@ -488,6 +488,9 @@ class Visualization:
         transparent_str = f'_transparent' if transparent else ""
         type_str = f'_{type_list[0]}' if len(type_list[0]) > 0 else ""
 
+        if mode == 'MAX' and self.min_max_mode == 'min':
+            mode = 'MIN'
+
         # Layer mode
         if mode_key == 2:
             if self.save_all_layers:
