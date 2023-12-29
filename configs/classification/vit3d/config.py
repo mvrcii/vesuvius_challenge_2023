@@ -39,6 +39,7 @@ architecture = 'vit3d'
 model_name = f"{architecture}-{model_type}"
 seed = 194144
 epochs = -1
+epsilon = 1e-3
 dataset_fraction = 1
 val_interval = 1
 fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID]
