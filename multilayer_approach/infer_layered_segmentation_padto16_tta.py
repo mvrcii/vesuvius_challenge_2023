@@ -251,7 +251,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
 
             if patch.shape != expected_patch_shape_extracted:
                 # patch is at the edge => skip it
-                print("shaep mismatch contine:", patch.shape)
                 continue
 
             patch = np.expand_dims(patch, 0)  # [1, 12, 512, 512]
@@ -260,7 +259,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
 
             # If the patch size is smaller than the expected size, skip it
             if patch.shape != expected_patch_shape_padded:
-                print("shape after padding mismatch continue:", patch.shape)
                 continue
 
             # apply necessary transformations
