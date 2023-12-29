@@ -8,7 +8,7 @@ from utility.fragments import *
 def main():
     available_nodes = [2]
     excluded_gpus_node_one = {1, 3, 5}  # Exclude reserved-164-01 gpus here
-    excluded_gpus_node_two = {0, 1, 2, 3, 4, 7}  # Exclude reserved-237-02 gpus here
+    excluded_gpus_node_two = {0, 1, 2, 3, 4, 5, 6}  # Exclude reserved-237-02 gpus here
 
     available_gpus = [gpu_id for gpu_id in range(0, 8)]
     available_gpu_combinations = [(node_id, gpu_id) for node_id in available_nodes for gpu_id in available_gpus
@@ -26,7 +26,7 @@ def main():
     # ]
 
     frags_2_infer = [
-        SUNSTREAKER_FRAG_ID, BLASTER_FRAG_ID
+        JAZZBIGGER_FRAG_ID
     ]
 
     for frag_id, (node_id, gpu_id) in zip(frags_2_infer, available_gpu_combinations):
