@@ -21,10 +21,10 @@ class Vit3D_Module(AbstractLightningModule):
         image_patch_size = (8, 8)  # Size of patches each frame is divided into (height, width)
         frame_patch_size = 3  # Number of frames grouped into a single temporal patch
         dim = 512  # Dimensionality of token embeddings in the transformer
-        depth = 6  # Number of layers (blocks) in the transformer
-        heads = 8  # Number of attention heads in each transformer layer
+        depth = 16  # Number of layers (blocks) in the transformer
+        heads = 16  # Number of attention heads in each transformer layer
         mlp_dim = 1024  # Dimensionality of the feedforward network in each transformer layer
-        dim_head = 64  # Dimensionality of each attention head
+        dim_head = 128  # Dimensionality of each attention head
         dropout = 0.1  # Dropout rate used in attention and feedforward networks
         emb_dropout = 0.1  # Dropout rate for token
 
