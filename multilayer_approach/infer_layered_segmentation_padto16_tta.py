@@ -417,7 +417,10 @@ def main():
 
     start_best_layer_idx, end_best_layer_idx = get_inference_range(frag_id=fragment_id)
 
-    choice = -1
+    # -1 gives user the choice
+    # choice = -1
+    # 3 hardcodes resuming
+    choice = 3
     for start_idx in range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1) + 1):
         end_idx = start_idx + (config.in_chans - 1)
 
