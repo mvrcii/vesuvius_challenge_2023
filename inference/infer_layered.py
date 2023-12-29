@@ -1,5 +1,6 @@
 import argparse
 import os
+import subprocess
 import sys
 import warnings
 from datetime import datetime
@@ -16,7 +17,7 @@ from transformers.utils import logging
 
 from utility.checkpoints import get_ckpt_name_from_id
 from utility.configs import Config
-from utility.fragments import get_frag_name_from_id, FragmentHandler
+from utility.fragments import get_frag_name_from_id, FragmentHandler, SUPERSEDED_FRAGMENTS
 from utility.meta_data import AlphaBetaMeta
 
 '''
@@ -46,7 +47,15 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
 
     for i in range(layer_start, layer_start + layer_count):
         img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
-        print(img_path)
+
+        if not os.path.isfile(img_path):
+            print(f"Downloading missing Slice file: {os.path.join(fragment_id, 'slices', f'{i:05}.tif')}")
+            if fragment_id in SUPERSEDED_FRAGMENTS:
+                print("Warning: Fragment superseded, added suffix for download!")
+                fragment_id += "_superseded"
+            command = ['bash', "./scripts/utils/download_fragment.sh", fragment_id, f'{i:05} {i:05}']
+            subprocess.run(command, check=True)
+
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
 
