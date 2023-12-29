@@ -205,6 +205,19 @@
     ],
     "boost_threshold": 0.0001
   },
+    {
+    "id": "20231007101618",
+    "name": "SKYLINE",
+    "best_layers_start_indices": [
+      25,
+      40
+    ],
+    "best_12_inclusive_layers": [
+      27,
+      38
+    ],
+    "boost_threshold": 0.0001
+  },
   {
     "id": "20231022170901",
     "name": "DEVASBIGGER",

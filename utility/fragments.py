@@ -103,25 +103,31 @@ class FragmentHandler(metaclass=SingletonMeta):
 
 
 # TRAIN SET ALPHA
+JETFIRE_FRAG_ID = FragmentHandler().get_id("JETFIRE")
 ULTRA_MAGNUS_FRAG_ID = FragmentHandler().get_id("ULTRA_MAGNUS")
 IRONHIDE_FRAG_ID = FragmentHandler().get_id("IRONHIDE")
-JAZZILLA_FRAG_ID = FragmentHandler().get_id("JAZZILLA")
-JETFIRE_FRAG_ID = FragmentHandler().get_id("JETFIRE")
 BLASTER_FRAG_ID = FragmentHandler().get_id("BLASTER")
 HOT_ROD_FRAG_ID = FragmentHandler().get_id("HOT_ROD")
-GRIMLARGE_FRAG_ID = FragmentHandler().get_id("GRIMLARGE")
-DEVASTATOR_FRAG_ID = FragmentHandler().get_id("DEVASTATOR")
-SKYWARP_FRAG_ID = FragmentHandler().get_id("SKYWARP")
 THUNDERCRACKER_FRAG_ID = FragmentHandler().get_id("THUNDERCRACKER")
 SUNSTREAKER_FRAG_ID = FragmentHandler().get_id("SUNSTREAKER")
-BLUESTREAK_FRAG_ID = FragmentHandler().get_id("BLUESTREAK")
 
-SKYHUGE_FRAG_ID = FragmentHandler().get_id("SKYHUGE")
-SKYBIGGER_FRAG_ID = FragmentHandler().get_id("SKYBIGGER")
-DEVASBIGGER_FRAG_ID = FragmentHandler().get_id("DEVASBIGGER")
-BLUEBIGGER_FRAG_ID = FragmentHandler().get_id("BLUEBIGGER")
+JAZZILLA_FRAG_ID = FragmentHandler().get_id("JAZZILLA")
 JAZZBIGGER_FRAG_ID = FragmentHandler().get_id("JAZZBIGGER")
+
+GRIMLARGE_FRAG_ID = FragmentHandler().get_id("GRIMLARGE")
 GRIMHUGE_FRAG_ID = FragmentHandler().get_id("GRIMHUGE")
+
+DEVASTATOR_FRAG_ID = FragmentHandler().get_id("DEVASTATOR")
+DEVASBIGGER_FRAG_ID = FragmentHandler().get_id("DEVASBIGGER")
+
+BLUESTREAK_FRAG_ID = FragmentHandler().get_id("BLUESTREAK")
+BLUEBIGGER_FRAG_ID = FragmentHandler().get_id("BLUEBIGGER")
+
+SKYWARP_FRAG_ID = FragmentHandler().get_id("SKYWARP")
+SKYBIGGER_FRAG_ID = FragmentHandler().get_id("SKYBIGGER")
+SKYHUGE_FRAG_ID = FragmentHandler().get_id("SKYHUGE")
+SKYLINE_FRAG_ID = FragmentHandler().get_id("SKYLINE")
+
 TRAILBREAKER_FRAG_ID = FragmentHandler().get_id("TRAILBREAKER")
 TRAILBIGGER_FRAG_ID = FragmentHandler().get_id("TRAILBIGGER")
 
@@ -136,7 +142,8 @@ FRAGMENTS_BETA = [BLASTER_FRAG_ID, HOT_ROD_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,
 FRAGMENTS_IGNORE = [TITLE1_FRAG_ID, TITLE2_FRAG_ID, SKYWARP_FRAG_ID, IRONHIDE_FRAG_ID]
 
 SUPERSEDED_FRAGMENTS = [GRIMLARGE_FRAG_ID, JAZZILLA_FRAG_ID, DEVASTATOR_FRAG_ID,
-                        SKYWARP_FRAG_ID, BLUESTREAK_FRAG_ID, SKYBIGGER_FRAG_ID, TRAILBREAKER_FRAG_ID]
+                        SKYWARP_FRAG_ID, BLUESTREAK_FRAG_ID, SKYBIGGER_FRAG_ID,
+                        TRAILBREAKER_FRAG_ID, SKYHUGE_FRAG_ID]
 
 
 def get_frag_name_from_id(frag_id):
