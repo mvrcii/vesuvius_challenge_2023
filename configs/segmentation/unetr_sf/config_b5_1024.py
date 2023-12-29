@@ -35,7 +35,7 @@ validation_fragments = [HOT_ROD_FRAG_ID, BLUEBIGGER_FRAG_ID]
 # Training parameters
 model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
-from_checkpoint = "playful-aardvark-1152-unetr-sf-b5-231228-170431"
+# from_checkpoint = "playful-aardvark-1152-unetr-sf-b5-231228-170431"
 architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
