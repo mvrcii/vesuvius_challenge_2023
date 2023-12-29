@@ -36,7 +36,7 @@ def main():
                    f"--stride {stride}",
                    "--node2" if node_id == 2 else "",
                    "--tta" if tta else ""]
-        # print(" ".join(command))
+        print(" ".join(command))
 
         try:
             subprocess.run(command, shell=True)
