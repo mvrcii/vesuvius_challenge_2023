@@ -633,18 +633,17 @@ class Visualization:
 
         threshold = float(self.threshold_var.get())
 
-        # if threshold > 0:
-        #     processed = (processed > threshold).astype(int)
+        if threshold > 0:
+            processed = (processed > threshold).astype(int)
+            processed[processed >= float(threshold)] = 1  # clamp all values that are not 0 (or threshold) to 1
         # else:
         if threshold < 0:
             processed = processed * (threshold * -1)
             processed[processed > 1] = 1
-
             # OUTLINE BOOSTING
             # processed[processed < 1] = 0
 
         # Apply threshold
-        # processed[processed >= float(threshold)] = 1  # clamp all values that are not 0 (or threshold) to 1
         print("Applied threshold:", float(threshold))
 
         if self.inverted:
