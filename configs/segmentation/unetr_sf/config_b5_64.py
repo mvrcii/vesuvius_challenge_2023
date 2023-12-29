@@ -25,7 +25,7 @@ segmentation = True
 in_chans = 12
 patch_size = 64
 label_size = patch_size // 4
-stride = patch_size // 2
+stride = patch_size
 
 fragment_ids = [IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID,
                 GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID,
