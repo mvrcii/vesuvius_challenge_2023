@@ -86,7 +86,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, fragm
 
     # Hyperparams
     label_size = config.patch_size // 4
-    stride_factor = 8
+    stride_factor = 2
 
     stride = patch_size // stride_factor
     stride_out = label_size // stride_factor
