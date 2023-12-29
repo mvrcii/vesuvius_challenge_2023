@@ -729,7 +729,7 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
     file_names = list()
 
     file_paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')
-                  and not x.startswith('stride-2')]
+                  and not x.startswith('stride-2') and not x.startswith('stride-4')]
     file_paths.sort(key=lambda x: get_start_layer_idx(x, single_layer))
 
     for filename in file_paths:

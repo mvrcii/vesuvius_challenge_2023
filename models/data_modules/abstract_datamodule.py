@@ -91,9 +91,14 @@ class AbstractDataModule(LightningDataModule):
                                labels=label_list,
                                transform=transform)
 
-        batch_size = self.cfg.train_batch_size if dataset_type == 'train' else self.cfg.val_batch_size
-        shuffle = dataset_type == 'train'
         custom_sampler = CustomRandomSampler(dataset, seed=self.cfg.seed)
+        batch_size = self.cfg.val_batch_size
+        shuffle = False
+        if dataset_type == 'train':
+            batch_size = self.cfg.train_batch_size
+            custom_sampler = None
+            shuffle = True
+
         data_loader = DataLoader(dataset,
                                  batch_size=batch_size,
                                  shuffle=shuffle,

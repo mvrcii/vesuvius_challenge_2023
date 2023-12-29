@@ -9,13 +9,16 @@ def main():
     parser.add_argument("config_path", type=str, help="Path to the config file.")
     parser.add_argument('--seed', type=int, default=None, help='Optional seed for the script')
     parser.add_argument('--gpu', type=int, default=0, help='Cuda GPU (default: 0)')
+    parser.add_argument('--node2', action='store_true', help='Perform advanced TTA')
 
     args = parser.parse_args()
+
+    node_name = "tenant-ac-nowak-h100-reserved-237-02" if args.node2 else "tenant-ac-nowak-h100-reserved-164-01"
 
     seed_str = f"--seed {args.seed}" if args.seed else ""
     cmd_str = f"python3 train.py {args.config_path} --gpu {args.gpu} {seed_str}"
 
-    slurm_cmd = f'sbatch --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
+    slurm_cmd = f'sbatch --nodelist={node_name} --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
 
     result = subprocess.run(slurm_cmd, shell=True, capture_output=True, text=True)
 
