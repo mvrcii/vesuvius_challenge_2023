@@ -5,24 +5,15 @@ import time
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Submit a training job to Slurm.")
+    parser = argparse.ArgumentParser(description="Submit a create dataset job to Slurm.")
     parser.add_argument("config_path", type=str, help="Path to the config file.")
-    parser.add_argument('fragment_id', type=str, help='The fragment to infer.')
-    parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
-    parser.add_argument('--gpu', type=int, default=0, help='GPU (default: 0)')
-    parser.add_argument('--tta', action='store_true', help='Perform advanced TTA')
-    parser.add_argument('--node2', action='store_true', help='Use Node 2')
+    parser.add_argument('--node2', action='store_true', help='Perform advanced TTA')
     args = parser.parse_args()
 
-    tta_str = "_tta" if args.tta else ""
-
     node_name = "tenant-ac-nowak-h100-reserved-237-02" if args.node2 else "tenant-ac-nowak-h100-reserved-164-01"
-    script_name = f"multilayer_approach/infer_layered_segmentation_padto16{tta_str}.py"
-    print("Using", script_name)
 
     cmd_str = (f"python3 "
-               f"{script_name} "
-               f"{args.config_path} {args.fragment_id} --stride {args.stride} --gpu {args.gpu}")
+               f"multilayer_approach/create_dataset_segmentation.py {args.config_path}")
 
     slurm_cmd = f'sbatch --nodelist={node_name} --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
 

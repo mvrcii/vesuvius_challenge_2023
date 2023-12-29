@@ -146,6 +146,7 @@ def main():
 
     config = Config.load_from_file(args.config_path)
 
+    # https://lightning.ai/forums/t/resuming-from-checkpoint-gives-different-results/3826
     if args.seed:
         seed_everything(args.seed)
         np.random.seed(args.seed)
