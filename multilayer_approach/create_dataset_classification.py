@@ -76,8 +76,8 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     label_dir = os.path.join(label_dir, frag_id)
     if not os.path.isdir(label_dir):
         raise ValueError(f"Label directory does not exist: {fragment_dir}")
-    label_path = os.path.join(label_dir, f"{frag_id}_inklabels.png")
-    ignore_path = os.path.join(label_dir, f"{frag_id}_ignore.png")
+    label_path = os.path.join(label_dir, f"inklabels.png")
+    ignore_path = os.path.join(label_dir, f"ignore.png")
 
     # Load mask
     mask_path = os.path.join(fragment_dir, f"mask.png")
