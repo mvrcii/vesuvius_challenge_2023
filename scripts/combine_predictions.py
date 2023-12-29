@@ -153,7 +153,6 @@ def get_target_dims(work_dir, frag_id):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Batch Infer Layered Script')
-    parser.add_argument('--transparent', action='store_true', help='Save the combined image in transparent')
     parser.add_argument('--save_all_layers', action='store_true', help='Save all layer files (in total 61)')
     parser.add_argument('--max_ensemble', action='store_true', help='Show the max ensemble between two models')
     parser.add_argument('--submission', action='store_true', help='Formats file names in submission mode')
@@ -219,8 +218,7 @@ def main():
     frag_dir = os.path.join(frag_root, f'fragment{frag_id}')
     model_dir, model_name = get_selected_model_name(frag_dir=frag_dir)
 
-    global transparent, save_all_layers, max_ensemble, submission_mode
-    transparent = args.transparent
+    global sparent, save_all_layers, max_ensemble, submission_mode
     save_all_layers = args.save_all_layers
     max_ensemble = args.max_ensemble
     submission_mode = args.submission
@@ -276,7 +274,6 @@ class Visualization:
         self.min_max_mode = 'max'
 
         self.max_ensemble = max_ensemble
-        self.transparent = transparent
         self.save_all_layers = save_all_layers
         self.submission_mode = submission_mode
 
@@ -299,6 +296,8 @@ class Visualization:
         save_button.pack(side="left")
         invert_button = Button(utility_frame, text="Invert colors", command=lambda: self.invert_colors())
         invert_button.pack(side="left")
+        save_transparent_button = Button(utility_frame, text="Save Transparent", command=lambda: self.save_snapshot(transparent=True))
+        save_transparent_button.pack(side="left")
 
         # Create a frame for the mode selection buttons
         mode_frame = Frame(self.root)
@@ -469,7 +468,7 @@ class Visualization:
         new_dir_name = prefix + "_".join(simplified_parts) + "_" + timestamp
         return new_dir_name
 
-    def save_snapshot(self):
+    def save_snapshot(self, transparent = False):
         global type_list
         # Save in model dir within fragment for single model
         model_dir = self.model_dir
@@ -486,7 +485,7 @@ class Visualization:
         mode_key = self.mode_var.get()
         mode = self.modes[mode_key].upper()
         inverted_str = f'_inverted' if self.inverted else ""
-        transparent_str = f'_transparent' if self.transparent else ""
+        transparent_str = f'_transparent' if transparent else ""
         type_str = f'_{type_list[0]}' if len(type_list[0]) > 0 else ""
 
         # Layer mode
@@ -526,7 +525,7 @@ class Visualization:
 
             image = self.process_image(save_img=True)
 
-            if self.transparent:
+            if transparent:
                 print("Start converting transparent image")
                 processed = image.convert('RGBA')
                 data = np.array(processed)
@@ -774,7 +773,6 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
 
 if __name__ == "__main__":
     type_list = []
-    transparent = True
     save_all_layers = False
     max_ensemble = False
     submission_mode = False
