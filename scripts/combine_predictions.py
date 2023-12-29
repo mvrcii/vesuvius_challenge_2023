@@ -740,7 +740,11 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
         for i, type_name in enumerate(type_list):
             print(f"{i}: {type_name}")
         selection = int(input())
-        file_paths = [x for x in file_paths if x.startswith(type_list[selection])]
+        check_start = type_list[selection]
+        if selection == 0:
+            check_start = "sigmoid"
+
+        file_paths = [x for x in file_paths if x.startswith(check_start)]
 
     file_paths.sort(key=lambda x: get_start_layer_idx(x, single_layer))
 
