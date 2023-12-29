@@ -75,68 +75,6 @@ def read_fragment(contrasted, patch_size, work_dir, fragment_id, layer_start, la
     return images
 
 
-def advanced_tta(model, tensor, rotate=False, flip_vertical=False, flip_horizontal=False):
-    """
-    Apply test-time augmentation to the input tensor and make a batch inference with PyTorch.
-
-    :param tensor: Image tensor with shape (16, 512, 512).
-    :param rotate: Apply rotation if True.
-    :param flip_vertical: Apply vertical flip if True.
-    :param flip_horizontal: Apply horizontal flip if True.
-    :return: Batch of TTA-processed tensors.
-    """
-    tta_batch = []
-    tensor = tensor.squeeze()  # 16, 512, 512
-    tta_batch.append(tensor.clone())
-
-    # Apply rotation augmentations
-    if rotate:
-        for k in [1, 2, 3]:
-            rotated = torch.rot90(tensor, k, [1, 2]).clone()  # 16, 512, 512
-            print(rotated.shape)
-            tta_batch.append(rotated)
-
-    print(len(tta_batch))
-
-    # Apply flip augmentations
-    if flip_vertical:
-        tta_batch.append(torch.flip(tensor, [1]).clone())  # Vertical flip
-    if flip_horizontal:
-        tta_batch.append(torch.flip(tensor, [2]).clone())  # Horizontal flip
-
-    # Convert list to torch tensor
-    tta_batch = torch.stack(tta_batch).half()  # [6, 16, 512, 512]
-    tta_batch = tta_batch.unsqueeze(1)  # [6, 1, 16, 512, 512]
-    print("Batch Shape before model forward:", tta_batch.shape)
-
-    # Get the model's predictions for the batch
-    tta_outputs = model(tta_batch)  # (6, 128, 128)
-    print("Batch Shape after model forward:", tta_outputs.shape)
-
-    # Post-process to revert the TTA
-    reverted_outputs = []
-    for i, output in enumerate(tta_outputs):
-        output = output.clone()
-        print(output.shape)
-        if rotate:
-            if i == 1:  # Revert rotate left
-                output = torch.rot90(output, 3, [0, 1])
-            elif i == 2:  # Revert rotate 180
-                output = torch.rot90(output, 2, [0, 1])
-            elif i == 3:  # Revert rotate right
-                output = torch.rot90(output, 1, [0, 1])
-        if flip_vertical and i == len(tta_outputs) - 2 + int(flip_horizontal):
-            output = torch.flip(output, [0])
-        if flip_horizontal and i == len(tta_outputs) - 1:
-            output = torch.flip(output, [1])
-        reverted_outputs.append(output.clone().squeeze())
-
-    stacked_outputs = torch.stack(reverted_outputs)
-    sigmoided_outputs = torch.sigmoid(stacked_outputs).detach()
-
-    return sigmoided_outputs.mean(dim=0)
-
-
 def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, stride_factor, fragment_id, config: Config,
                               layer_start, gpu):
     print("Starting full inference")
@@ -212,7 +150,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
         pred_counts[out_y_start + margin:out_y_end - margin, out_x_start + margin:out_x_end - margin] += 1
 
     transform = A.Compose(val_image_aug, is_check_shapes=False)
-    use_advanced_tta = False
 
     batch_counter = 0
     for y in range(y_patches):
@@ -252,16 +189,15 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
                 transformed_images = [transform(image=image)['image'] for image in batches]
 
                 for idx, patch in enumerate(transformed_images):
-                    preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to(f'cuda:{gpu}')
+                    preallocated_batch_tensor[idx] = torch.from_numpy(patch).float().to('cuda')
 
                 with torch.no_grad():
-                    idx = 0
-                    for image in preallocated_batch_tensor[:len(batches)]:
-                        sigmoid_tta_output = advanced_tta(model=model, tensor=image,
-                                                          rotate=True, flip_vertical=True, flip_horizontal=True)
-                        coords = batch_indices[idx]
-                        process_patch(sigmoid_tta_output, coords[0], coords[1])
-                        idx += 1
+                    outputs = model(preallocated_batch_tensor[:len(batches)])
+
+                sigmoid_output = torch.sigmoid(outputs).detach()
+
+                for idx, (x, y) in enumerate(batch_indices):
+                    process_patch(sigmoid_output[idx], x, y)  # Function to process each patch
 
                 batches = []
                 batch_indices = []
@@ -288,9 +224,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     # Average the predictions
     out_arr = torch.where(pred_counts > 0, torch.div(out_arr, pred_counts), out_arr)
 
-    if use_advanced_tta:
-        global total_advanced_tta_patches
-        print(f"Advanced TTA Patches for layer start {layer_start}: {total_advanced_tta_patches}")
 
     torch.cuda.empty_cache()
     output = out_arr.cpu().numpy()
@@ -498,7 +431,7 @@ def main():
             break
 
         npy_file_path = os.path.join(results_dir,
-                                     f"tta-stride-{stride_factor}-sigmoid_logits_{start_idx}_{end_idx}.npy")
+                                     f"stride-{stride_factor}-sigmoid_logits_{start_idx}_{end_idx}.npy")
 
         # Check if prediction NPY file already exists
         if os.path.isfile(npy_file_path):
