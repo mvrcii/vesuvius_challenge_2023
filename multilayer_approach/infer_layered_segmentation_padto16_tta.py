@@ -150,7 +150,8 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
     resuming = resume_arr is not None
     print("Starting full inference")
     patch_size = config.patch_size
-    expected_patch_shape = (1, config.in_chans + 4, patch_size, patch_size)
+    expected_patch_shape_padded = (1, config.in_chans + 4, patch_size, patch_size)
+    expected_patch_shape_extracted = (12, patch_size, patch_size)
 
     contrasted = getattr(config, 'contrasted', False)
 
@@ -244,7 +245,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
 
             patch = images[:, y_start:y_end, x_start:x_end]  # [12, 512, 512]
 
-            if patch.shape != (12, 512, 512):
+            if patch.shape != expected_patch_shape_extracted:
                 # patch is at the edge => skip it
                 continue
 
@@ -253,7 +254,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
             patch = np.concatenate([patch, zero_padding], axis=1)  # [1, 16, 512, 512]
 
             # If the patch size is smaller than the expected size, skip it
-            if patch.shape != expected_patch_shape:
+            if patch.shape != expected_patch_shape_padded:
                 continue
 
             # apply necessary transformations
