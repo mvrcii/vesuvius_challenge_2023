@@ -58,12 +58,12 @@ val_batch_size = 64
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
-    # A.OneOf([
-    #     A.HorizontalFlip(),
-    #     A.VerticalFlip(),
-    #     A.RandomRotate90(),
-    #     A.Transpose(),
-    # ], p=0.1),
+    A.OneOf([
+        A.HorizontalFlip(),
+        A.VerticalFlip(),
+        A.RandomRotate90(),
+        A.Transpose(),
+    ], p=0.5),
     # A.ChannelDropout(p=0.05, channel_drop_range=(1, 1), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
