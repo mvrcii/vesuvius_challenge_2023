@@ -728,8 +728,20 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
     layer_values = []
     file_names = list()
 
-    file_paths = [x for x in os.listdir(root_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')
-                  and not x.startswith('stride-2') and not x.startswith('stride-4')]
+    type_set = set()
+
+    file_paths = [x for x in os.listdir(root_dir) if x.endswith('.npy')]
+    for npy_file_name in file_paths:
+        type_set.add(npy_file_name.split("sigmoid")[0])
+
+    type_list = list(type_set)
+    if len(type_list) > 1:
+        print("Which inference type do you want to see?")
+        for i, type_name in enumerate(type_list):
+            print(f"{i}: {type_name}")
+        selection = int(input())
+        file_paths = [x for x in file_paths if x.startswith(type_list[selection])]
+
     file_paths.sort(key=lambda x: get_start_layer_idx(x, single_layer))
 
     for filename in file_paths:
