@@ -252,13 +252,7 @@ class Visualization:
         self.model_layer_idcs, self.model_layer_values, self.file_names = load_predictions(root_dir=model_dir,
                                                                                            layer_indices=valid_layers,
                                                                                            single_layer=single_layer)
-        multilayer = True
-        if multilayer:
-            start_layer_idx, end_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)
-            # end_layer_idx = 0
-            # start_layer_idx = 0
-        else:
-            start_layer_idx, end_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)  # inclusive
+        start_layer_idx, end_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)
 
         self.model_name = model_name
         self.model_dir = model_dir
@@ -519,10 +513,10 @@ class Visualization:
                 print(f"Saving {file_name}")
         else:
             threshold = self.get_threshold()
-            start_layer = int(self.start_layer_var.get())
-            end_layer = int(self.end_layer_var.get())
+            start_layer_idx = int(self.start_layer_var.get())
+            last_start_layer_idx = self.model_layer_idcs[-1]
 
-            layer_str = f'{start_layer}-{end_layer}'
+            layer_str = f'{start_layer_idx}-{last_start_layer_idx}'
             name = f"{os.path.basename(model_names_str)}_mode={mode}_layer={layer_str}_th={float(threshold):g}{inverted_str}{transparent_str}{type_str}.png"
             file_path = os.path.join(target_dir, name)
 
