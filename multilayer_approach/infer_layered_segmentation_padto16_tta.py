@@ -91,12 +91,20 @@ def advanced_tta(model, tensor):
         # Apply rotation augmentations
         for k in [1, 2, 3]:
             rotated = torch.rot90(tensor, k, [1, 2]).clone()  # 16, 512, 512
-            print(rotated.shape)
             tta_batch.append(rotated)
 
         # Apply flip augmentations
-        tta_batch.append(torch.flip(tensor, [1]).clone())  # Vertical flip
-        tta_batch.append(torch.flip(tensor, [2]).clone())  # Horizontal flip
+        vert_flipped = torch.flip(tensor, [1]).clone()
+        hor_flipped = torch.flip(tensor, [2]).clone()
+        z_flipped = torch.flip(tensor, [0]).clone()
+
+        tta_batch.append(vert_flipped)  # Vertical flip
+        tta_batch.append(hor_flipped)  # Horizontal flip
+        tta_batch.append(z_flipped)
+
+        for k in [1, 2, 3]:
+            rotated = torch.rot90(z_flipped, k, [1, 2]).clone()  # 16, 512, 512
+            tta_batch.append(rotated)
 
         # Convert list to torch tensor
         tta_batch = torch.stack(tta_batch).half()  # [6, 16, 512, 512]
@@ -121,6 +129,14 @@ def advanced_tta(model, tensor):
                 output = torch.flip(output, [0])
             elif i == 5:  # Revert horizontal flip
                 output = torch.flip(output, [1])
+            elif i == 6:  # Z-flip, nothing to revert
+                pass
+            elif i == 7:  # Revert rotate left (of z flipped)
+                output = torch.rot90(output, 3, [0, 1])
+            elif i == 8:  # Revert rotate 180 (of z flipped)
+                output = torch.rot90(output, 2, [0, 1])
+            elif i == 9:  # Revert rotate right (of z flipped)
+                output = torch.rot90(output, 1, [0, 1])
             reverted_outputs.append(output.clone().squeeze())
 
         stacked_outputs = torch.stack(reverted_outputs)
