@@ -1,4 +1,5 @@
 import subprocess
+import sys
 
 from utility.fragments import *
 
@@ -28,18 +29,20 @@ def main():
     ]
 
     for frag_id, (node_id, gpu_id) in zip(frags_2_infer, available_gpu_combinations):
-        command = ["python3",
-                   "slurm_inference.py",
-                   checkpoint,
-                   frag_id,
-                   f"--gpu {gpu_id}",
-                   f"--stride {stride}",
-                   "--node2" if node_id == 2 else "",
-                   "--tta" if tta else ""]
-        print(command)
+        command = [sys.executable, "slurm_inference.py",
+                   str(checkpoint),
+                   str(frag_id),
+                   '--gpu', str(gpu_id),
+                   '--stride', str(stride)]
+
+        if node_id == 2:
+            command.append('--node2')
+
+        if tta:
+            command.append('--tta')
 
         try:
-            #subprocess.run(command)
+            subprocess.run(command, shell=True)
             print(f"Job for {get_frag_name_from_id(frag_id):17} {frag_id:17} queued on Node={node_id} and GPU={gpu_id}")
         except Exception as e:
             print(f"Exception occurred while queuing {frag_id}: {e}")
