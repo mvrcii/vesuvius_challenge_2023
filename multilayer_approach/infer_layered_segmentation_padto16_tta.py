@@ -112,6 +112,7 @@ def advanced_tta(model, tensor):
         # print("Batch Shape before model forward:", tta_batch.shape)
 
         # Get the model's predictions for the batch
+        print("doing forward pass")
         tta_outputs = model(tta_batch)  # (6, 128, 128)
         # print("Batch Shape after model forward:", tta_outputs.shape)
 
@@ -217,6 +218,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
     transform = A.Compose(val_image_aug, is_check_shapes=False)
 
     patch_counter = 0
+    print("starting loop")
     for y in range(y_patches):
         for x in range(x_patches):
             progress_bar.update(1)
