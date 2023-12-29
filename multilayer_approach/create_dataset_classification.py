@@ -1,6 +1,8 @@
+import sys
+import os
+
 import argparse
 import gc
-import os
 import shutil
 
 import cv2
@@ -9,6 +11,7 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from data.utils import write_to_config
 from multilayer_approach.data_validation import validate_fragments
 from utility.configs import Config
