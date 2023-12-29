@@ -36,10 +36,10 @@ def main():
                    f"--stride {stride}",
                    "--node2" if node_id == 2 else "",
                    "--tta" if tta else ""]
-        print(" ".join(command))
+        print(command)
 
         try:
-            subprocess.run(command)
+            #subprocess.run(command)
             print(f"Job for {get_frag_name_from_id(frag_id):17} {frag_id:17} queued on Node={node_id} and GPU={gpu_id}")
         except Exception as e:
             print(f"Exception occurred while queuing {frag_id}: {e}")
