@@ -120,8 +120,8 @@ def get_callbacks(cfg, model_run_dir):
         os.makedirs(model_run_dir, exist_ok=True)
         cfg.save_to_file(model_run_dir)
 
-        monitor_metric = "val_auc"
-        filename_metric = "{val_auc:.2f}"  # Default filename metric placeholder
+        monitor_metric = "val_accuracy"
+        filename_metric = "{val_accuracy:.2f}"  # Default filename metric placeholder
 
         if cfg.segmentation:
             monitor_metric = "val_iou"
