@@ -84,6 +84,7 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     if not os.path.isfile(mask_path):
         raise ValueError(f"Mask file does not exist for fragment: {frag_id}")
 
+    print("reading mask")
     mask = read_label(label_path=mask_path, patch_size=config.patch_size)
 
     start_channel = min(channels)
@@ -93,6 +94,7 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
 
     image_tensor = read_fragment_images_for_channels(root_dir=fragment_dir, patch_size=config.patch_size,
                                                      channels=read_chans, ch_block_size=config.in_chans)
+    print("reading label")
     label_arr = read_label(label_path=label_path, patch_size=config.patch_size)
     ignore_arr = read_label(label_path=ignore_path, patch_size=config.patch_size)
 
@@ -106,9 +108,9 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     assert label_arr.sum() > 0, "Label array is empty"
     assert ignore_arr.sum() > 0, "Ignore array is empty"
 
-    assert label_arr.shape == mask.shape == image_tensor[0].shape, (
+    assert ignore_arr.shape == label_arr.shape == mask.shape == image_tensor[0].shape, (
         f"Shape mismatch for Fragment {frag_id}: Img={image_tensor[0].shape} "
-        f"Mask={mask.shape} Label={label_arr.shape}")
+        f"Mask={mask.shape} Label={label_arr.shape} Ignore Arr={ignore_arr.shape}")
 
     patch_cnt, skipped_cnt, ignore_skipped_count = process_channel_stack(config=config,
                                                                          target_dir=target_dir,
@@ -261,6 +263,7 @@ def read_label(label_path, patch_size):
         return None
 
     label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
+    print("before padding ", label.shape)
     assert label is not None and label.shape[0] != 0 and label.shape[
         1] != 0, "Label is empty or not loaded correctly"
 
@@ -273,6 +276,7 @@ def read_label(label_path, patch_size):
     assert set(np.unique(np.array(label))) == {0, 1}, "Invalid label"
 
     # Expand dimensions for label stacking
+    print("after padding ", label.shape)
 
     return label
 
