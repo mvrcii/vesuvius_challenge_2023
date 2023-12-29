@@ -45,6 +45,7 @@ def main():
         try:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             stdout, _ = process.communicate()
+
             match = re.search(r"Slurm job ID: (\d+)", stdout)
             if match:
                 job_id = match.group(1)
