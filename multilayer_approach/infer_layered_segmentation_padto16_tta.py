@@ -225,10 +225,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
             out_x_start = x * stride_out
             out_x_end = out_x_start + label_size
 
-            if resuming:
-                # don't process patch if there is already a result for it (if resuming)
-                if not np.all(out_arr[out_y_start:out_y_end, out_x_start:out_x_end] == 0):
-                    continue
 
             x_start = x * stride
             x_end = x_start + patch_size
@@ -239,6 +235,11 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
             # is mask is completely zero, ignore patch
             if np.all(mask_patch == 0):
                 continue
+
+            if resuming:
+                # don't process patch if there is already a result for it (if resuming)
+                if not np.all(out_arr[out_y_start:out_y_end, out_x_start:out_x_end] == 0):
+                    continue
 
             patch = images[:, y_start:y_end, x_start:x_end]  # [12, 512, 512]
 
