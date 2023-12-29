@@ -738,8 +738,8 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
             print(f"{i}: {type_name}")
         selection = int(input())
         check_start = type_list[selection]
-        if selection == 0:
-            check_start = "sigmoid"
+        # if selection == 0:
+        #     check_start = "sigmoid"
 
         type_list[0] = type_list[selection]
         file_paths = [x for x in file_paths if x.startswith(check_start)]
