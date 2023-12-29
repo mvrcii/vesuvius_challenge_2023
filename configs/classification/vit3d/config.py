@@ -37,24 +37,23 @@ take_full_dataset = False
 model_type = "regular"
 architecture = 'vit3d'
 model_name = f"{architecture}-{model_type}"
-seed = 1337
+seed = 9707497070
 epochs = -1
 dataset_fraction = 1
 val_interval = 1
 fragment_ids = [JAZZILLA_FRAG_ID, JETFIRE_FRAG_ID, IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID]
 # fragment_ids = [GRIMLARGE_FRAG_ID]
 validation_fragments = [GRIMLARGE_FRAG_ID]
-train_split = 0.8
 lr = 5e-4
 eta_min = 1e-5
-step_lr_steps = 3
+step_lr_steps = 2
 step_lr_factor = 0.99
 weight_decay = 0.001
 losses = [('mse', 1.0)]
 
 num_workers = 1
-train_batch_size = 256
-val_batch_size = 256
+train_batch_size = 64
+val_batch_size = 64
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
 train_aug = [
