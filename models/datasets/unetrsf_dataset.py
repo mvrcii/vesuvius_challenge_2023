@@ -12,6 +12,10 @@ class UNETR_SFDataset(UNET3D_SFDataset):
     def __getitem__(self, idx):
         image, label = super().__getitem__(idx)
 
+        # todo fix
+        # so z modifications are easier below
+        image = image.squeeze(0)
+
         # Z Axis Augmentation
         if random.random() < 0.3:
             image = torch.flip(image, dims=[0])
@@ -57,6 +61,7 @@ class UNETR_SFDataset(UNET3D_SFDataset):
                 # Shift layers down and pad at the top
                 image = torch.cat((zero_padding, image[:-shift_amount]), dim=0)
 
+        image = image.unsqueeze(0)
         # pad image to have 16 layers
         image = torch.cat([image, torch.zeros(1, 16 - image.shape[1], self.patch_size, self.patch_size)], dim=1)
 
