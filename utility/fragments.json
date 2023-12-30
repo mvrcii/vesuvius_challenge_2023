@@ -247,6 +247,10 @@
     "best_layers_start_indices": [
       28,
       42
+    ],
+    "best_12_inclusive_layers": [
+      28,
+      42
     ]
   },
   {
