@@ -84,7 +84,7 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     if not os.path.isfile(mask_path):
         raise ValueError(f"Mask file does not exist for fragment: {frag_id}")
 
-    print("reading mask")
+    # print("reading mask")
     mask = read_label(label_path=mask_path, patch_size=config.patch_size)
 
     start_channel = min(channels)
@@ -94,7 +94,7 @@ def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
 
     image_tensor = read_fragment_images_for_channels(root_dir=fragment_dir, patch_size=config.patch_size,
                                                      channels=read_chans, ch_block_size=config.in_chans)
-    print("reading label")
+    # print("reading label")
     label_arr = read_label(label_path=label_path, patch_size=config.patch_size)
     ignore_arr = read_label(label_path=ignore_path, patch_size=config.patch_size)
 
@@ -263,7 +263,7 @@ def read_label(label_path, patch_size):
         return None
 
     label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
-    print("before padding ", label.shape)
+    # print("before padding ", label.shape)
     assert label is not None and label.shape[0] != 0 and label.shape[
         1] != 0, "Label is empty or not loaded correctly"
 
@@ -276,7 +276,7 @@ def read_label(label_path, patch_size):
     assert set(np.unique(np.array(label))) == {0, 1}, "Invalid label"
 
     # Expand dimensions for label stacking
-    print("after padding ", label.shape)
+    # print("after padding ", label.shape)
 
     return label
 
