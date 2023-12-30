@@ -296,15 +296,17 @@
     "name": "RICHI2",
     "best_layers_start_indices": [
       20,
-      25
-    ]
+      33
+    ],
+    "rotation": -1
   },
   {
     "id": "RICHI3",
     "name": "RICHI3",
     "best_layers_start_indices": [
       20,
-      25
-    ]
+      33
+    ],
+    "rotation": -1
   }
 ]

@@ -81,7 +81,7 @@ def main():
             if match:
                 job_id = match.group(1)
                 tta_str = " + TTA" if tta else ""
-                checkpoint_name = checkpoint.split('-')[0]
+                checkpoint_name = checkpoint.split('-')[0:2]
                 stride_str = f"S{stride}"
                 print(f"{get_frag_name_from_id(frag_id)} {stride_str}{tta_str} ({checkpoint_name}) {job_id}")
             else:
