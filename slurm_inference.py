@@ -6,6 +6,20 @@ import time
 from utility.fragments import get_frag_name_from_id
 
 
+def print_colored(message, color, _print=True):
+    colors = {
+        "blue": '\033[94m',
+        "green": '\033[92m',
+        "red": '\033[91m',
+        "purple": '\033[95m',
+        "end": '\033[0m',
+    }
+    if _print:
+        print(f"{colors[color]}{message}{colors['end']}")
+    else:
+        return f"{colors[color]}{message}{colors['end']}"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Submit a inference job to Slurm.")
     parser.add_argument("checkpoint_path", type=str, help="Path to the checkpoint file.")
@@ -22,7 +36,7 @@ def main():
 
     node_name = "tenant-ac-nowak-h100-reserved-237-02" if args.node2 else "tenant-ac-nowak-h100-reserved-164-01"
     script_name = f"multilayer_approach/infer_layered_segmentation_padto16{tta_str}.py"
-    print("Using", script_name)
+    print_colored(f"INFO:\tUsing {script_name}", "blue")
 
     command = ["python3", str(script_name), str(args.checkpoint_path), str(args.fragment_id),
                '--stride', str(args.stride),
@@ -40,22 +54,23 @@ def main():
     match = re.search(r"Submitted batch job (\d+)", result.stdout)
     if match:
         job_id = match.group(1)
-        print(f"Slurm job ID: {job_id}")
+        # print(f"Slurm job ID: {job_id}")
 
         checkpoint_name = args.checkpoint_path.split('-')[0]
         tta_str = " + TTA" if args.tta else ""
         stride_str = f"S{args.stride}"
-        print(f"{get_frag_name_from_id(args.fragment_id)} {stride_str}{tta_str} ({checkpoint_name}) {job_id}")
-
+        message = f"INFO:\t{get_frag_name_from_id(args.fragment_id):20}\t'{args.fragment_id:15}' {stride_str}{tta_str} ({checkpoint_name}) {job_id}"
+        print_colored(message=message, color="purple")
         if not args.no_tail:
             delay_seconds = 2  # Adjust this value as needed
-            print(f"Waiting for {delay_seconds} seconds before tailing the log file...")
+            print_colored(f"INFO:\tWaiting for {delay_seconds} seconds before tailing the log file...", color="blue")
             time.sleep(delay_seconds)
 
             tail_cmd = f"tail -f logs/slurm-{job_id}.out"
             subprocess.run(tail_cmd, shell=True)
     else:
-        print("Failed to submit job to Slurm or parse job ID.")
+        print_colored("ERROR:\tFailed to submit job to Slurm or parse job ID.", color="red")
+
 
 if __name__ == "__main__":
     main()
