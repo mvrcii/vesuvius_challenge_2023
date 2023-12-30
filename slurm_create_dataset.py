@@ -26,7 +26,7 @@ def main():
         job_id = match.group(1)
         print(f"Slurm job ID: {job_id}")
 
-        delay_seconds = 2  # Adjust this value as needed
+        delay_seconds = 10  # Adjust this value as needed
         print(f"Waiting for {delay_seconds} seconds before tailing the log file...")
         time.sleep(delay_seconds)
 
