@@ -5,7 +5,7 @@ import albumentations as A
 from utility.fragments import (IRONHIDE_FRAG_ID, BLASTER_FRAG_ID,
                                THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
                                SKYBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, HOT_ROD_FRAG_ID, SUNSTREAKER_FRAG_ID,
-                               ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID)
+                               ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID, SKYHUGE_FRAG_ID, TRAILBIGGER_FRAG_ID)
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -27,15 +27,15 @@ patch_size = 512
 label_size = patch_size // 4
 stride = patch_size // 2
 
-fragment_ids = [IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID,
-                JAZZBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, GRIMHUGE_FRAG_ID,
-                HOT_ROD_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID]
-validation_fragments = [SKYBIGGER_FRAG_ID]
+fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
+                SKYHUGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
+                DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,  # BLUEBIGGER_FRAG_ID
+                TRAILBIGGER_FRAG_ID]
+validation_fragments = [BLUEBIGGER_FRAG_ID]
 
 # Training parameters
 model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
-# from_checkpoint = "jolly-surf-1176-unetr-sf-b5-231229-184230"
 architecture = 'unetr-sf'
 model_name = f"{architecture}-{model_type}"
 
@@ -45,7 +45,7 @@ take_full_dataset = False
 ink_ratio = 5
 no_ink_sample_percentage = 1
 
-seed = 89299
+seed = 101010
 epochs = -1
 unetr_out_channels = 32
 
@@ -53,11 +53,11 @@ val_interval = 1
 
 lr = 1e-4  # 1e-4
 step_lr_steps = 1
-step_lr_factor = 0.98
+step_lr_factor = 0.97
 weight_decay = 0.001
 epsilon = 1e-3
 
-losses = [('masked-dice', 1.0)]
+losses = [('focal-dice', 1.0), ('masked-dice', 1.0)]
 focal_gamma = 3.0
 focal_alpha = 0.85
 dice_smoothing = 0.05
