@@ -13,6 +13,7 @@ def main():
     parser.add_argument('--tta', action='store_true', help='Perform advanced TTA')
     parser.add_argument('--node2', action='store_true', help='Use Node 2')
     parser.add_argument('--no_tail', action='store_true', help='Tail into the inference')
+    parser.add_argument('--full_sweep', action='store_true', help='Do a full layer inference sweep (0-63)')
     args = parser.parse_args()
 
     tta_str = "_tta" if args.tta else ""
@@ -21,11 +22,14 @@ def main():
     script_name = f"multilayer_approach/infer_layered_segmentation_padto16{tta_str}.py"
     print("Using", script_name)
 
-    cmd_str = (f"python3 "
-               f"{script_name} "
-               f"{args.checkpoint_path} {args.fragment_id} --stride {args.stride} --gpu {args.gpu}")
+    command = ["python3", script_name, args.checkpoint_path, args.fragment_id,
+               '--stride', args.stride,
+               '--gpu', args.gpu]
 
-    slurm_cmd = f'sbatch --nodelist={node_name} --wrap="{cmd_str}" -o "logs/slurm-%j.out"'
+    if args.tta and args.full_sweep:
+        command.append('--full_sweep')
+
+    slurm_cmd = f'sbatch --nodelist={node_name} --wrap="{" ".join(command)}" -o "logs/slurm-%j.out"'
 
     # Run the sbatch command and capture its output
     result = subprocess.run(slurm_cmd, shell=True, capture_output=True, text=True)

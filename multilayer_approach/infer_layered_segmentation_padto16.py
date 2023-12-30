@@ -341,6 +341,7 @@ def parse_args():
                                                               'for the inference')
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
     parser.add_argument('--gpu', type=int, default=0, help='Cuda GPU (default: 0)')
+    parser.add_argument('--full_sweep', action='store_true', help='Do a full layer inference sweep (0-63)')
     args = parser.parse_args()
 
     return args
@@ -425,6 +426,9 @@ def main():
     os.makedirs(results_dir, exist_ok=True)
 
     start_best_layer_idx, end_best_layer_idx = get_inference_range(frag_id=fragment_id)
+    if args.full_sweep:
+        start_best_layer_idx = 0
+        end_best_layer_idx = 63
 
     for start_idx in range(start_best_layer_idx, end_best_layer_idx - (config.in_chans - 1) + 1):
         end_idx = start_idx + (config.in_chans - 1)
