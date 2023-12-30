@@ -297,7 +297,8 @@
     "best_layers_start_indices": [
       20,
       33
-    ]
+    ],
+    "rotation": -1
   },
   {
     "id": "RICHI3",
@@ -305,6 +306,7 @@
     "best_layers_start_indices": [
       20,
       33
-    ]
+    ],
+    "rotation": -1
   }
 ]

@@ -3,6 +3,8 @@ import re
 import subprocess
 import time
 
+from utility.fragments import get_frag_name_from_id
+
 
 def main():
     parser = argparse.ArgumentParser(description="Submit a inference job to Slurm.")
@@ -39,6 +41,11 @@ def main():
     if match:
         job_id = match.group(1)
         print(f"Slurm job ID: {job_id}")
+
+        checkpoint_name = args.checkpoint_path.split('-')[0]
+        tta_str = " + TTA" if args.tta else ""
+        stride_str = f"S{args.stride}"
+        print(f"{get_frag_name_from_id(args.fragment_id)} {stride_str}{tta_str} ({checkpoint_name}) {job_id}")
 
         if not args.no_tail:
             delay_seconds = 2  # Adjust this value as needed
