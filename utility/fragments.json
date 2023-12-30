@@ -219,6 +219,19 @@
     "boost_threshold": 0.0001
   },
   {
+    "id": "20231007101619",
+    "name": "SKYGLORIOUS",
+    "best_layers_start_indices": [
+      25,
+      40
+    ],
+    "best_12_inclusive_layers": [
+      27,
+      38
+    ],
+    "boost_threshold": 0.0001
+  },
+  {
     "id": "20231022170901",
     "name": "DEVASBIGGER",
     "boost_threshold": 0.00001,

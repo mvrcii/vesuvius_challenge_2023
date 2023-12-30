@@ -127,6 +127,7 @@ SKYWARP_FRAG_ID = FragmentHandler().get_id("SKYWARP")
 SKYBIGGER_FRAG_ID = FragmentHandler().get_id("SKYBIGGER")
 SKYHUGE_FRAG_ID = FragmentHandler().get_id("SKYHUGE")
 SKYLINE_FRAG_ID = FragmentHandler().get_id("SKYLINE")
+SKYGLORIOUS_FRAG_ID = FragmentHandler().get_id("SKYGLORIOUS")
 
 TRAILBREAKER_FRAG_ID = FragmentHandler().get_id("TRAILBREAKER")
 TRAILBIGGER_FRAG_ID = FragmentHandler().get_id("TRAILBIGGER")
