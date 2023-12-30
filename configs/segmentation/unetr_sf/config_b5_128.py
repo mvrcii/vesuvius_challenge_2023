@@ -27,12 +27,13 @@ patch_size = 128
 label_size = patch_size // 4
 stride = patch_size // 2
 
-fragment_ids = [IRONHIDE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID,
-                GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID,
-                SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLASTER_FRAG_ID, SKYBIGGER_FRAG_ID]
-validation_fragments = [HOT_ROD_FRAG_ID, BLUEBIGGER_FRAG_ID]
+fragment_ids = [IRONHIDE_FRAG_ID, BLASTER_FRAG_ID, THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID,
+                JAZZBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, SKYBIGGER_FRAG_ID,
+                HOT_ROD_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID]
+validation_fragments = [GRIMHUGE_FRAG_ID]
 
 # Training parameters
+z_augment = True
 model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "playful-aardvark-1152-unetr-sf-b5-231228-170431"
