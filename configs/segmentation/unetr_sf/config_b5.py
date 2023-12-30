@@ -57,7 +57,7 @@ step_lr_factor = 0.97
 weight_decay = 0.001
 epsilon = 1e-3
 
-losses = [('masked-dice', 1.0)]
+losses = [('focal-dice', 1.0), ('masked-dice', 1.0)]
 focal_gamma = 3.0
 focal_alpha = 0.85
 dice_smoothing = 0.05
