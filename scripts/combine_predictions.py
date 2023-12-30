@@ -506,7 +506,7 @@ class Visualization:
                 layer = int(self.get_threshold())
                 self.curr_layer_val = layer
                 threshold = float(self.threshold_var.get())
-                file_name = f"{model_names_str}_mode={mode}_layer={layer}_th={threshold:g}{inverted_str}.png"
+                file_name = f"{os.path.basename(model_names_str)}_mode={mode}_layer={layer}_th={threshold:g}{inverted_str}.png"
                 file_path = os.path.join(target_dir, file_name)
                 image = self.process_image(save_img=True)
                 image.save(file_path)
