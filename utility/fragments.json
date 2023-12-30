@@ -290,5 +290,21 @@
       25,
       45
     ]
+  },
+  {
+    "id": "RICHI2",
+    "name": "RICHI2",
+    "best_layers_start_indices": [
+      20,
+      25
+    ]
+  },
+  {
+    "id": "RICHI3",
+    "name": "RICHI3",
+    "best_layers_start_indices": [
+      20,
+      25
+    ]
   }
 ]
