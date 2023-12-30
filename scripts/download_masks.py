@@ -43,6 +43,13 @@ def download_masks():
                 if url_frag_id == "RICHI":
                     print("Warning: Unusual download url!")
                     url = f'http://dl.ash2txt.org/richi-uploads/ThaumatoAnakalyptor/scroll1/working_first_letter/thaumato_mask.png'
+                elif url_frag_id == "RICHI2":
+                    print("Warning: Unusual download url!")
+                    url = f'http://dl2.ash2txt.org/richi-uploads/ThaumatoAnakalyptor/scroll_3/sample_segments2/working_700_small_10/thaumato_mask.png'
+                elif url_frag_id == "RICHI3":
+                    print("Warning: Unusual download url!")
+                    url = f'http://dl2.ash2txt.org/richi-uploads/ThaumatoAnakalyptor/scroll_3/sample_segments2/working_700_small_12/thaumato_mask.png'
+
 
                 try:
                     response = requests.get(url, auth=HTTPBasicAuth(username, password))
