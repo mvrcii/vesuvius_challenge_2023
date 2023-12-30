@@ -26,7 +26,7 @@ def main():
                '--stride', args.stride,
                '--gpu', args.gpu]
 
-    if args.tta and args.full_sweep:
+    if not args.tta and args.full_sweep:
         command.append('--full_sweep')
 
     slurm_cmd = f'sbatch --nodelist={node_name} --wrap="{" ".join(command)}" -o "logs/slurm-%j.out"'
