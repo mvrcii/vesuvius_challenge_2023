@@ -56,7 +56,7 @@ def main():
         job_id = match.group(1)
         checkpoint_name = args.checkpoint_path.split('-')[0:2]
         tta_str = " + TTA" if args.tta else ""
-        stride_str = f"S{args.stride}"
+        stride_str = f"Stride = {args.stride}"
         message = f"INFO:\t{get_frag_name_from_id(args.fragment_id):10}\t{args.fragment_id:15} {stride_str}{tta_str} ({checkpoint_name}) {job_id}"
         print_colored(message=message, color="purple")
         if not args.no_tail:
