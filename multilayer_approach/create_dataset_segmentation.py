@@ -21,7 +21,6 @@ Image.MAX_IMAGE_PIXELS = None
 
 def extract_patches(config: Config, frags, label_dir):
     frag_id_2_channel = validate_fragments(config, frags, label_dir)
-    print(frag_id_2_channel)
     logging.info(f"Starting to extract image and label patches..")
 
     for fragment_id, channels in frag_id_2_channel.items():
@@ -253,8 +252,7 @@ def read_fragment_images_for_channels(root_dir, patch_size, channels, ch_block_s
         images.append(image)
 
     images = np.stack(images, axis=0)
-    print(images.shape)
-    assert images.ndim == 3 and images.shape[0] == ch_block_size
+    assert images.ndim == 3 and images.shape[0] == ch_block_size, f"Images shape {images.shape}, ch_block_size {ch_block_size}"
 
     return np.array(images)
 
