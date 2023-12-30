@@ -66,7 +66,7 @@ def rename_and_binarize(file_path, output_dir, input_dir, erode=False):
 
         if erode:
             # print("Eroded", file_path)
-            binary_image = erode_shapes(img=binary_image, erosion_size=20)
+            binary_image = erode_shapes(img=binary_image, erosion_size=5)
 
         cv2.imwrite(output_path, binary_image)
         # print("Saved", output_path)
@@ -82,8 +82,8 @@ def process_files_in_subdirectories(directory, output_dir):
 
 
 def main():
-    input_dir = os.path.join("data", "labels", "twelve_layer_unetr", "processed")
-    output_dir = os.path.join("data", "labels", "twelve_layer_unetr", "binarized")
+    input_dir = os.path.join("data", "labels", "twelve_layer_unetr_it2", "processed")
+    output_dir = os.path.join("data", "labels", "twelve_layer_unetr_it2", "binarized")
 
     process_files_in_subdirectories(input_dir, output_dir)
 
