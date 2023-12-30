@@ -22,9 +22,9 @@ def main():
     script_name = f"multilayer_approach/infer_layered_segmentation_padto16{tta_str}.py"
     print("Using", script_name)
 
-    command = ["python3", script_name, args.checkpoint_path, args.fragment_id,
-               '--stride', args.stride,
-               '--gpu', args.gpu]
+    command = ["python3", str(script_name), str(args.checkpoint_path), str(args.fragment_id),
+               '--stride', str(args.stride),
+               '--gpu', str(args.gpu)]
 
     if not args.tta and args.full_sweep:
         command.append('--full_sweep')
