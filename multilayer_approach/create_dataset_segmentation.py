@@ -21,7 +21,7 @@ Image.MAX_IMAGE_PIXELS = None
 
 def extract_patches(config: Config, frags, label_dir):
     frag_id_2_channel = validate_fragments(config, frags, label_dir)
-
+    print(frag_id_2_channel)
     logging.info(f"Starting to extract image and label patches..")
 
     for fragment_id, channels in frag_id_2_channel.items():
