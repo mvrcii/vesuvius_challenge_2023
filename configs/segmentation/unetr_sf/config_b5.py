@@ -51,10 +51,10 @@ unetr_out_channels = 32
 
 val_interval = 1
 
-lr = 1e-4  # 1e-4
-step_lr_steps = 1
-step_lr_factor = 0.97
-weight_decay = 0.001
+lr = 8e-5  # 1e-4
+step_lr_steps = 2
+step_lr_factor = 0.98
+weight_decay = 0.005
 epsilon = 1e-3
 
 losses = [('focal-dice', 1.0), ('masked-dice', 1.0)]
