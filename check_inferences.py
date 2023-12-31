@@ -56,6 +56,7 @@ def has_more_than_x_percent_zeros(array, threshold, mask=None, tolerance=0.1):
     # array = binarize_image(array)
     print(np.min(array), np.max(array))
     print(np.min(mask), np.max(mask))
+    print(mask)
     if mask is not None:
         # Resize the mask to match the array dimensions
         mask_resized = resize(mask, array.shape, anti_aliasing=True)
