@@ -30,7 +30,7 @@ def extract_info_from_paths(paths, inference_root_dir):
             stride = 'S4'
         else:
             stride = 'S?'
-        model_name_parts = parts[-2].split('_')[:2]  # First two substrings after the timestamp
+        model_name_parts = '-'.join(parts[-2].split('_')[:2][-1].split('-')[0:2])  # First two substrings after the timestamp
         print(model_name_parts)
         model_name = '-'.join(model_name_parts)
 
