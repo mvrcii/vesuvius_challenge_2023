@@ -64,7 +64,7 @@ def get_fragment_id(fragment_id_or_name):
 def main():
     parser = argparse.ArgumentParser(description="Submit a inference job to Slurm.")
     parser.add_argument("checkpoint_path", type=str, help="Path to the checkpoint file.")
-    parser.add_argument('fragment_id_or_name', type=str, help='The fragment to infer.')
+    parser.add_argument('fragment_id', type=str, help='The fragment to infer.')
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
     parser.add_argument('--gpu', type=int, default=0, help='GPU (default: 0)')
     parser.add_argument('--tta', action='store_true', help='Perform advanced TTA')
