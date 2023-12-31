@@ -47,7 +47,7 @@ def main():
 
         try:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            output = process.stdout
+            output = str(process.stdout)
             match = re.search(r"Submitted batch job (\d+)", output)
             job_id = ''
             if match:
