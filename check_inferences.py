@@ -50,9 +50,10 @@ def extract_info_from_paths(paths, work_dir, inference_root_dir):
 def has_more_than_x_percent_zeros(image, threshold, mask):
     mask_blacks = np.count_nonzero(mask == 0)
     image_blacks = np.count_nonzero(image == 0)
+    image_non_blacks = np.count_nonzero(image != 0)
     blacks = (image_blacks - mask_blacks)
     assert blacks >= 0
-    blacks_perc = blacks / image.size
+    blacks_perc = blacks / image_non_blacks
     # print("Blacks In Mask=", mask_blacks)
     # print("Blacks In Image=", image_blacks)
     print("Blacks in Image (in %) =", blacks_perc * 100)
