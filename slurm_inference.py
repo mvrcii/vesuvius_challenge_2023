@@ -32,7 +32,7 @@ def get_fragment_id(fragment_id_or_name, confidence):
         fragment_id = name_to_id.get(fragment_id_or_name, fragment_id_or_name)
     else:
         id_suggestions = dynamic_closest_matches(fragment_id_or_name, fragment_ids)
-        name_suggestions = dynamic_closest_matches(fragment_id_or_name, fragment_names, threshold=0.8)
+        name_suggestions = dynamic_closest_matches(fragment_id_or_name, fragment_names, threshold=confidence)
         suggestions = list(set(id_suggestions + name_suggestions))
 
         if suggestions:
@@ -88,9 +88,6 @@ def main():
 
     if not args.tta and args.full_sweep:
         command.append('--full_sweep')
-
-    print(" ".join(command))
-    exit()
 
     slurm_cmd = f'sbatch --nodelist={node_name} --wrap="{" ".join(command)}" -o "logs/slurm-%j.out"'
 
