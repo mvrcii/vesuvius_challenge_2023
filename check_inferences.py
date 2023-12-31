@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 report_zero_percent = 0.03  # if file has > 60% zeros, print something
-runs_to_ckeck = ["olive-wind-1194-unetr-sf-b5-231231-064008"]
+runs_to_ckeck = ["olive-wind-1194"]
 
 print("Checking:")
 for x in runs_to_ckeck:
@@ -26,15 +26,15 @@ for fragment_id in os.listdir(fragments_dir):
     if os.path.isdir(fragment_path):
         # Check each run name directory
         for sub_dir in os.listdir(fragment_path):
-            print("Checking", sub_dir)
+            # print("Checking", sub_dir)
             for run_name in runs_to_ckeck:
-                if not sub_dir.endswith(run_name):
-                    print(sub_dir)
-                    print("does not end with ", run_name)
+                if not sub_dir.contains(run_name):
+                    # print(sub_dir)
+                    # print("does not end with ", run_name)
                     continue
                 run_path = os.path.join(fragment_path, sub_dir)
                 if os.path.isdir(run_path):
-                    print("searching in ", run_path)
+                    # print("searching in ", run_path)
                     # Process each .npy file
                     for file in os.listdir(run_path):
                         if file.endswith(".npy"):
