@@ -46,7 +46,7 @@ dataset_fraction = 1.0
 take_full_dataset = False
 # Only relevant if take_full_dataset == False
 ink_ratio = 10
-no_ink_sample_percentage = 2
+no_ink_sample_percentage = 1
 
 seed = 43
 epochs = -1
