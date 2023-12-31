@@ -6,7 +6,7 @@ import numpy as np
 from slurm_inference import print_colored
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id, SUPERSEDED_FRAGMENTS, FRAGMENTS_IGNORE
-
+from PIL import Image
 
 # # Parse command-line arguments
 # parser = argparse.ArgumentParser(description='Check for files with > x% zeros.')
@@ -46,8 +46,11 @@ def extract_info_from_paths(paths, work_dir, inference_root_dir):
         print_colored(f"FULL PATH:\t{path}", color="purple")
 
 # Function to check if an array has more than x% zeros
-def has_more_than_x_percent_zeros(array, x):
-    return np.count_nonzero(array == 0) / array.size > x
+def has_more_than_x_percent_zeros(image, threshold, mask):
+    mask_blacks = np.count_nonzero(mask == 0)
+    blacks = (np.count_nonzero(image == 0) - mask_blacks)
+    assert blacks >= 0
+    return (blacks / image.size) > threshold
 
 
 def get_sys_args():
@@ -59,7 +62,7 @@ def get_sys_args():
     return parser.parse_args()
 
 
-def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
+def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work_dir):
     zero_ints = []
     fail_load = []
 
@@ -91,7 +94,15 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
                                 file_path = os.path.join(run_path, file)
                                 try:
                                     array = np.load(file_path)
-                                    if has_more_than_x_percent_zeros(array, threshold):
+                                    mask_path = os.path.join(work_dir, "data", "fragments",
+                                                             f"fragment{fragment_id}", "mask.png")
+                                    if not os.path.isfile(mask_path):
+                                        raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
+                                    mask = np.asarray(Image.open(mask_path))
+
+                                    assert mask.shape == array.shape
+
+                                    if has_more_than_x_percent_zeros(array, threshold, mask=mask):
                                         zero_ints.append(file_path)
                                 except Exception as e:
                                     fail_load.append(file_path)
@@ -115,7 +126,8 @@ def main():
 
     zero_ints, fail_load = check_fragment_dir(checkpoints_to_check=checkpoints_to_check,
                                               inference_root_dir=inference_root_dir,
-                                              threshold=args.no_ink_ratio)
+                                              threshold=args.no_ink_ratio,
+                                              work_dir=work_dir)
 
     print_colored(f"\nFiles with > {args.no_ink_ratio} zero percentage:", color="purple")
     print_colored("----------------------------------------------------", color="purple")
