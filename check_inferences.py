@@ -31,6 +31,7 @@ def extract_info_from_paths(paths, inference_root_dir):
         else:
             stride = 'S?'
         model_name_parts = parts[-2].split('_')[:2]  # First two substrings after the timestamp
+        print(model_name_parts)
         model_name = '-'.join(model_name_parts)
 
         frag_name = get_frag_name_from_id(fragment_id)
