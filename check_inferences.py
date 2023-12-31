@@ -53,9 +53,9 @@ def has_more_than_x_percent_zeros(image, threshold, mask):
     blacks = (image_blacks - mask_blacks)
     assert blacks >= 0
     blacks_perc = blacks / image.size
-    print("Blacks In Mask=", mask_blacks)
-    print("Blacks In Image=", image_blacks)
-    print("Blacks in Image (in %)=", blacks_perc * 100)
+    # print("Blacks In Mask=", mask_blacks)
+    # print("Blacks In Image=", image_blacks)
+    print("Blacks in Image (in %) =", blacks_perc * 100)
     return blacks_perc > threshold
 
 
