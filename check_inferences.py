@@ -63,6 +63,7 @@ def has_more_than_x_percent_zeros(array, threshold, mask=None, tolerance=0.1):
         # Count non-black pixels in the mask
         non_black_mask_count = np.count_nonzero(mask_near_zero)
     else:
+        print("Mask is None")
         unique_black_count = np.count_nonzero(array == 0)
         non_black_mask_count = np.size(array)
 
