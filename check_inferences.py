@@ -58,15 +58,17 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
     zero_ints = []
     fail_load = []
 
+    skip_list = []
+
     for fragment_id in os.listdir(inference_root_dir):
         fragment_id = fragment_id.split('fragment')[-1]
 
         if fragment_id in SUPERSEDED_FRAGMENTS:
-            print_colored(f"SKIP:\t{get_frag_name_from_id(fragment_id)} is superseded", color='blue')
+            skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id)} is superseded")
             continue
 
         if fragment_id in FRAGMENTS_IGNORE:
-            print_colored(f"SKIP:\t{get_frag_name_from_id(fragment_id)} is being ignored", color='blue')
+            skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id)} is being ignored")
             continue
 
         print_colored(f"INFO:\t{get_frag_name_from_id(fragment_id):15} '{fragment_id}'", color="blue")
@@ -88,6 +90,10 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
                                         zero_ints.append(file_path)
                                 except Exception as e:
                                     fail_load.append(file_path)
+
+    for message in skip_list:
+        print_colored(message, color='blue')
+
     return zero_ints, fail_load
 
 
