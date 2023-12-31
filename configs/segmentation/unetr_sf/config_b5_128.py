@@ -5,7 +5,8 @@ import albumentations as A
 from utility.fragments import (IRONHIDE_FRAG_ID, BLASTER_FRAG_ID,
                                THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
                                DEVASBIGGER_FRAG_ID, HOT_ROD_FRAG_ID, SUNSTREAKER_FRAG_ID,
-                               ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID, SKYHUGE_FRAG_ID, TRAILBIGGER_FRAG_ID)
+                               ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID, SKYHUGE_FRAG_ID, TRAILBIGGER_FRAG_ID,
+                               SKYGLORIOUS_FRAG_ID)
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -27,10 +28,11 @@ patch_size = 128
 label_size = patch_size // 4
 stride = patch_size // 2
 
-fragment_ids = [TRAILBIGGER_FRAG_ID, BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
-                SKYHUGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZBIGGER_FRAG_ID,
-                DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID]
-validation_fragments = [GRIMHUGE_FRAG_ID]
+fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
+                SKYHUGE_FRAG_ID, SKYGLORIOUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
+                DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,  BLUEBIGGER_FRAG_ID,
+                TRAILBIGGER_FRAG_ID]
+validation_fragments = [BLUEBIGGER_FRAG_ID]
 
 # Training parameters
 z_augment = True
@@ -43,10 +45,10 @@ model_name = f"{architecture}-{model_type}"
 dataset_fraction = 1.0
 take_full_dataset = False
 # Only relevant if take_full_dataset == False
-ink_ratio = 15
-no_ink_sample_percentage = 1
+ink_ratio = 10
+no_ink_sample_percentage = 2
 
-seed = 7340043
+seed = 43
 epochs = -1
 unetr_out_channels = 32
 
@@ -64,7 +66,7 @@ focal_alpha = 0.75
 dice_smoothing = 0.05
 
 num_workers = 16
-train_batch_size = 16
+train_batch_size = 32
 val_batch_size = train_batch_size
 
 # TRAIN AUG AND VAL AUG HAVE TO BE LAST PARAMETERS OF CONFIG IN THIS ORDER
@@ -79,7 +81,7 @@ train_aug = [
                    rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
     A.GridDistortion(p=0.05, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
                      border_mode=0, value=(0, 0, 0), mask_value=None, normalized=False),
-    A.ChannelDropout(p=0.2, channel_drop_range=(1, 4), fill_value=0),
+    A.ChannelDropout(p=0.2, channel_drop_range=(1, 5), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
