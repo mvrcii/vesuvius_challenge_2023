@@ -22,7 +22,7 @@ def print_colored(message, color, _print=True):
         return f"{colors[color]}{message}{colors['end']}"
 
 
-def get_fragment_id(fragment_id_or_name):
+def get_fragment_id(fragment_id_or_name, confidence):
     fragment_ids = FragmentHandler().get_ids()
     fragment_names = FragmentHandler().get_names()
     name_to_id = FragmentHandler().FRAGMENTS
@@ -32,7 +32,7 @@ def get_fragment_id(fragment_id_or_name):
         fragment_id = name_to_id.get(fragment_id_or_name, fragment_id_or_name)
     else:
         id_suggestions = dynamic_closest_matches(fragment_id_or_name, fragment_ids)
-        name_suggestions = dynamic_closest_matches(fragment_id_or_name, fragment_names)
+        name_suggestions = dynamic_closest_matches(fragment_id_or_name, fragment_names, threshold=0.8)
         suggestions = list(set(id_suggestions + name_suggestions))
 
         if suggestions:
@@ -73,7 +73,7 @@ def main():
     parser.add_argument('--full_sweep', action='store_true', help='Do a full layer inference sweep (0-63)')
     args = parser.parse_args()
 
-    fragment_id = get_fragment_id(fragment_id_or_name=args.fragment_id)
+    fragment_id = get_fragment_id(fragment_id_or_name=args.fragment_id, confidence=0.8)
     checkpoint_path = get_checkpoint_name(args.checkpoint_path, checkpoint_dict=CHECKPOINTS)
 
     tta_str = "_tta" if args.tta else ""
