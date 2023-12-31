@@ -33,7 +33,7 @@ fragment_ids = [TRAILBIGGER_FRAG_ID, BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_
 validation_fragments = [JAZZBIGGER_FRAG_ID]
 
 # Training parameters
-z_augment = False
+z_augment = True
 model_type = "b5"
 segformer_from_pretrained = f"nvidia/mit-{model_type}"
 # from_checkpoint = "playful-aardvark-1152-unetr-sf-b5-231228-170431"
