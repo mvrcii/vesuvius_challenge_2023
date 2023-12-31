@@ -1,3 +1,4 @@
+import re
 import subprocess
 import sys
 
@@ -7,7 +8,7 @@ from utility.fragments import *
 def main():
     available_nodes = [2]
     excluded_gpus_node_one = {}  # Exclude reserved-164-01 gpus here
-    excluded_gpus_node_two = {0}  # Exclude reserved-237-02 gpus here
+    excluded_gpus_node_two = {0, 1}  # Exclude reserved-237-02 gpus here
 
     available_gpus = [gpu_id for gpu_id in range(0, 8)]
     available_gpu_combinations = [(node_id, gpu_id) for node_id in available_nodes for gpu_id in available_gpus
@@ -18,9 +19,13 @@ def main():
     stride = 2
     checkpoint = "wise-energy-1190-unetr-sf-b5-231231-055216"
 
-    frags_2_infer = [GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID, HOT_ROD_FRAG_ID, BLASTER_FRAG_ID,
-                     SUNSTREAKER_FRAG_ID, THUNDERCRACKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, IRONHIDE_FRAG_ID,
-                     JETFIRE_FRAG_ID, BLUEBIGGER_FRAG_ID, TRAILBREAKER_FRAG_ID, DEVASBIGGER_FRAG_ID,
+    # frags_2_infer = [GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID, HOT_ROD_FRAG_ID, BLASTER_FRAG_ID,
+    #                  SUNSTREAKER_FRAG_ID, THUNDERCRACKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, IRONHIDE_FRAG_ID,
+    #                  JETFIRE_FRAG_ID, BLUEBIGGER_FRAG_ID, TRAILBREAKER_FRAG_ID, DEVASBIGGER_FRAG_ID,
+    #                  SKYGLORIOUS_FRAG_ID, TRAILBIGGER_FRAG_ID
+    #                  ]
+
+    frags_2_infer = [IRONHIDE_FRAG_ID, JETFIRE_FRAG_ID, BLUEBIGGER_FRAG_ID, TRAILBREAKER_FRAG_ID, DEVASBIGGER_FRAG_ID,
                      SKYGLORIOUS_FRAG_ID, TRAILBIGGER_FRAG_ID
                      ]
 
@@ -42,28 +47,18 @@ def main():
 
         try:
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            output = process.stdout
+            match = re.search(r"Submitted batch job (\d+)", output)
+            job_id = ''
+            if match:
+                job_id = match.group(1)
+
             tta_str = " + TTA" if tta else ""
-            checkpoint_name = checkpoint.split('-')[0:2]
+            checkpoint_name = "-".join(checkpoint.split('-')[0:2])
             stride_str = f"S{stride}"
-            print(f"{get_frag_name_from_id(frag_id)} {stride_str}{tta_str} ({checkpoint_name})")
+            print(f"{get_frag_name_from_id(frag_id)} {stride_str}{tta_str} ({checkpoint_name}) {job_id}")
         except Exception as e:
             print(f"Exception occurred while starting {frag_id}: {e}")
-
-    # Check for output from subprocesses
-    # for process, frag_id in processes:
-    #     try:
-    #         stdout, _ = process.communicate()
-    #         match = re.search(r"Slurm job ID: (\d+)", stdout)
-    #         if match:
-    #             job_id = match.group(1)
-    #             tta_str = " + TTA" if tta else ""
-    #             checkpoint_name = checkpoint.split('-')[0:2]
-    #             stride_str = f"S{stride}"
-    #             print(f"{get_frag_name_from_id(frag_id)} {stride_str}{tta_str} ({checkpoint_name}) {job_id}")
-    #         else:
-    #             print(f"Failed to get job ID for {frag_id}")
-    #     except Exception as e:
-    #         print(f"Exception occurred while handling output for {frag_id}: {e}")
 
     print("Batch job submission completed.")
 
