@@ -30,8 +30,6 @@ def extract_info_from_paths(paths, work_dir):
             stride = 'S4'
         else:
             stride = 'S?'
-        stride = 'S2' if 'stride-2' in file_name else 'Unknown'
-        stride = 'S4' if 'stride-4' in file_name else 'Unknown'
         model_name_parts = parts[-2].split('_')[:2]  # First two substrings after the timestamp
         model_name = '-'.join(model_name_parts)
 
@@ -39,7 +37,7 @@ def extract_info_from_paths(paths, work_dir):
         frag_name = get_frag_name_from_id(fragment_id)
 
         # Print the formatted information
-        print_colored(message=f"PLEASE CHECK: {frag_name:15}{fragment_id:10} {stride} ({model_name})", color="purple")
+        print_colored(message=f"PLEASE CHECK: {frag_name:20} {fragment_id:10} {stride} ({model_name})", color="purple")
 
 
 # Function to check if an array has more than x% zeros
