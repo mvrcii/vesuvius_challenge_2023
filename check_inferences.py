@@ -34,6 +34,7 @@ def extract_info_from_paths(paths, work_dir):
         model_name = '-'.join(model_name_parts)
 
         # Retrieve the fragment name
+        print(fragment_id)
         frag_name = get_frag_name_from_id(fragment_id)
 
         # Print the formatted information
