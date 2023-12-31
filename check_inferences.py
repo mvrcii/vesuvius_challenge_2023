@@ -33,8 +33,6 @@ def extract_info_from_paths(paths, inference_root_dir):
         model_name_parts = parts[-2].split('_')[:2]  # First two substrings after the timestamp
         model_name = '-'.join(model_name_parts)
 
-        # Retrieve the fragment name
-        print(fragment_id)
         frag_name = get_frag_name_from_id(fragment_id)
 
         # Print the formatted information
