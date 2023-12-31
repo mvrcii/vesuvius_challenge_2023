@@ -51,6 +51,7 @@ def binarize_image(array):
     # Binarize the image: 0 remains 0, anything greater becomes 255
     return np.where(array > 0.01, 1, 0)
 
+
 # Function to check if an array has more than x% zeros
 def has_more_than_x_percent_zeros(array, threshold, mask=None):
     array = binarize_image(array)
@@ -58,6 +59,8 @@ def has_more_than_x_percent_zeros(array, threshold, mask=None):
     if mask is not None:
         # Resize the mask to match the array dimensions
         mask_resized = resize(mask, array.shape, anti_aliasing=True)
+
+        mask_resized = mask_resized == 0.0
 
         # Calculate unique black pixels in the array not covered by the mask
         unique_black = (array == 0) & mask_resized
