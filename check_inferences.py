@@ -24,7 +24,8 @@ print("Searching in", fragments_dir)
 def has_more_than_x_percent_zeros(array, x):
     return np.count_nonzero(array == 0) / array.size > x
 
-
+zero_ints = []
+fail_load = []
 # Iterate over each fragment directory
 for fragment_id in os.listdir(fragments_dir):
     print("Checking", fragment_id)
@@ -45,6 +46,20 @@ for fragment_id in os.listdir(fragments_dir):
                     for file in os.listdir(run_path):
                         if file.endswith(".npy"):
                             file_path = os.path.join(run_path, file)
-                            array = np.load(file_path)
-                            if has_more_than_x_percent_zeros(array, report_zero_percent):
-                                print(f"{file_path}")
+                            try:
+                                array = np.load(file_path)
+                                if has_more_than_x_percent_zeros(array, report_zero_percent):
+                                    zero_ints.append(file_path)
+                            except ValueError:
+                                fail_load.append(file_path)
+                                pass
+
+print(f"Files with > {report_zero_percent} zero percentage:")
+print("----------------------------------------------------")
+for x in zero_ints:
+    print(x)
+print("")
+print(f"Files that failed to load:")
+print("----------------------------------------------------")
+for x in fail_load:
+    print(x)
