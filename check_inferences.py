@@ -97,21 +97,17 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                         for file in os.listdir(run_path):
                             if file.endswith(".npy"):
                                 file_path = os.path.join(run_path, file)
-                                try:
-                                    array = np.load(file_path)
-                                    mask_path = os.path.join(work_dir, "data", "fragments",
-                                                             f"fragment{fragment_id}", "mask.png")
-                                    if not os.path.isfile(mask_path):
-                                        raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
-                                    mask = np.asarray(Image.open(mask_path))
+                                array = np.load(file_path)
+                                mask_path = os.path.join(work_dir, "data", "fragments",
+                                                         f"fragment{fragment_id}", "mask.png")
+                                if not os.path.isfile(mask_path):
+                                    raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
+                                mask = np.asarray(Image.open(mask_path))
 
-                                    assert mask.shape == array.shape
+                                assert mask.shape == array.shape
 
-                                    if has_more_than_x_percent_zeros(array, threshold, mask=mask):
-                                        zero_ints.append(file_path)
-                                except Exception as e:
-                                    print(e)
-                                    # fail_load.append(file_path)
+                                if has_more_than_x_percent_zeros(array, threshold, mask=mask):
+                                    zero_ints.append(file_path)
 
     for message in skip_list:
         print_colored(message, color='blue')
