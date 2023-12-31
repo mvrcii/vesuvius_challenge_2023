@@ -47,6 +47,4 @@ for fragment_id in os.listdir(fragments_dir):
                             file_path = os.path.join(run_path, file)
                             array = np.load(file_path)
                             if has_more_than_x_percent_zeros(array, report_zero_percent):
-                                print(f"File with >{report_zero_percent*100}% zeros: {file_path}")
-                            else:
-                                print(f"{file} is correct")
+                                print(f"{file_path}")
