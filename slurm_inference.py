@@ -98,10 +98,10 @@ def main():
     match = re.search(r"Submitted batch job (\d+)", result.stdout)
     if match:
         job_id = match.group(1)
-        checkpoint_name = "-".join(args.checkpoint_path.split('-')[0:2])
+        checkpoint_name = "-".join(checkpoint_path.split('-')[0:2])
         tta_str = " + TTA" if args.tta else ""
         stride_str = f"S{args.stride}"
-        message = f"INFO:\t{get_frag_name_from_id(args.fragment_id)} {stride_str}{tta_str} ({checkpoint_name}) {job_id}"
+        message = f"INFO:\t{get_frag_name_from_id(fragment_id)} {stride_str}{tta_str} ({checkpoint_name}) {job_id}"
         print_colored(message=message, color="purple")
         if not args.no_tail:
             delay_seconds = 2  # Adjust this value as needed
