@@ -4,8 +4,8 @@ import argparse
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(description='Check for files with > x% zeros.')
-parser.add_argument('report_zero_percent', type=float, help='Percent threshold for zeros')
 parser.add_argument('runs_to_check', type=str, help='Comma-separated list of run names')
+parser.add_argument('report_zero_percent', type=float, help='Percent threshold for zeros')
 args = parser.parse_args()
 
 report_zero_percent = args.report_zero_percent
