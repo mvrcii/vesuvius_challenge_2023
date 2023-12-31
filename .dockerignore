@@ -43,6 +43,7 @@ inference/results/**
 inference/archived_results/**
 inference/single_results/**
 slurm_logs/
+conf_local.py
 
 
 # debug undo this

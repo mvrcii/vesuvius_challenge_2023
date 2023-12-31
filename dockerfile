@@ -25,10 +25,9 @@ RUN apt-get update && apt-get install -y \
 ENV DEBIAN_FRONTEND=
 
 RUN pip install --no-cache-dir -r requirements.txt
-RUN echo -e 'import os
-work_dir = os.path.join("/usr/src/app")
-node = True' > conf_local.py
+RUN echo -e 'import os\nwork_dir = os.path.join("/usr/src/app")\nnode = True' > /usr/src/app/conf_local.py
 
+ENV PYTHONPATH "${PYTHONPATH}:/usr/src/app"
 # Define the command to run your application
 # Replace 'your_script.py' with the script you want to run, e.g., 'train.py'
-CMD ["python", "your_script.py"]
+# CMD ["python", "your_script.py"]
