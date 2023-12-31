@@ -15,14 +15,13 @@ from utility.fragments import get_frag_name_from_id, SUPERSEDED_FRAGMENTS, FRAGM
 # args = parser.parse_args()
 
 
-def extract_info_from_paths(paths, work_dir):
+def extract_info_from_paths(paths, inference_root_dir):
     for path in paths:
         # Remove the work directory part from the path
-        relative_path = path.replace(work_dir, '')
+        relative_path = path.replace(inference_root_dir, '')
 
         # Extract the fragment ID, stride, and model name
         parts = relative_path.split('/')
-        print(parts)
         fragment_id = parts[2].replace('fragment', '')
         file_name = parts[-1]
         if 'stride-2' in file_name:
@@ -116,7 +115,7 @@ def main():
 
     print_colored(f"\nFiles with > {args.no_ink_ratio} zero percentage:", color="purple")
     print_colored("----------------------------------------------------", color="purple")
-    extract_info_from_paths(paths=zero_ints, work_dir=work_dir)
+    extract_info_from_paths(paths=zero_ints, inference_root_dir=inference_root_dir)
     if len(zero_ints) == 0:
         print_colored("None", color="purple")
     print_colored("----------------------------------------------------", color="purple")
