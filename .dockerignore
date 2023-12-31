@@ -43,3 +43,7 @@ inference/results/**
 inference/archived_results/**
 inference/single_results/**
 slurm_logs/
+
+
+# debug undo this
+data/**

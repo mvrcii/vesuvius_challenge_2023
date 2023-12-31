@@ -24,7 +24,10 @@ RUN apt-get update && apt-get install -y \
 # Reset the DEBIAN_FRONTEND variable
 ENV DEBIAN_FRONTEND=
 
-RUN pip install --no-cache-dir -r requirements.txt --no-deps
+RUN pip install --no-cache-dir -r requirements.txt
+RUN echo -e 'import os
+work_dir = os.path.join("/usr/src/app")
+node = True' > conf_local.py
 
 # Define the command to run your application
 # Replace 'your_script.py' with the script you want to run, e.g., 'train.py'
