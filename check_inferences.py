@@ -49,7 +49,7 @@ def extract_info_from_paths(paths, work_dir, inference_root_dir):
 
 def binarize_image(array):
     # Binarize the image: 0 remains 0, anything greater becomes 255
-    return np.where(array > 10, 255, 0)
+    return np.where(array > 0.01, 1, 0)
 
 # Function to check if an array has more than x% zeros
 def has_more_than_x_percent_zeros(array, threshold, mask=None, tolerance=0.1):
