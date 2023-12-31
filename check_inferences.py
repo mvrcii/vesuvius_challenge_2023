@@ -54,8 +54,8 @@ def binarize_image(array):
 # Function to check if an array has more than x% zeros
 def has_more_than_x_percent_zeros(array, threshold, mask=None, tolerance=0.1):
     # array = binarize_image(array)
-    print(np.unique(array))
-    print(np.unique(mask))
+    print(np.min(array), np.max(array))
+    print(np.min(mask), np.max(mask))
     if mask is not None:
         # Resize the mask to match the array dimensions
         mask_resized = resize(mask, array.shape, anti_aliasing=True)
