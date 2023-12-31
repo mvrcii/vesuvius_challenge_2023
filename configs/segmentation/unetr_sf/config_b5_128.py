@@ -50,7 +50,7 @@ no_ink_sample_percentage = 0.75
 
 seed = 43
 epochs = -1
-unetr_out_channels = 32
+unetr_out_channels = 48
 
 val_interval = 1
 
