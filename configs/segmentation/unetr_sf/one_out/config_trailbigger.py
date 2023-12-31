@@ -27,10 +27,10 @@ patch_size = 128
 label_size = patch_size // 4
 stride = patch_size // 2
 
-fragment_ids = [TRAILBIGGER_FRAG_ID, BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
-                SKYHUGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZBIGGER_FRAG_ID,
+fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
+                SKYHUGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZBIGGER_FRAG_ID, GRIMHUGE_FRAG_ID,
                 DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID]
-validation_fragments = [GRIMHUGE_FRAG_ID]
+validation_fragments = [TRAILBIGGER_FRAG_ID]
 
 # Training parameters
 z_augment = True
@@ -44,7 +44,7 @@ dataset_fraction = 1.0
 take_full_dataset = False
 # Only relevant if take_full_dataset == False
 ink_ratio = 15
-no_ink_sample_percentage = 1
+no_ink_sample_percentage = 0.75
 
 seed = 7340043
 epochs = -1
