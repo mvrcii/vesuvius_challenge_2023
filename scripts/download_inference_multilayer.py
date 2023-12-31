@@ -3,8 +3,9 @@ import os
 import shutil
 import subprocess
 import sys
-from difflib import get_close_matches
+from difflib import get_close_matches, SequenceMatcher
 
+from utility.checkpoints import CHECKPOINTS
 from utility.fragments import get_frag_name_from_id, FragmentHandler
 
 
@@ -44,19 +45,11 @@ def print_colored(message, color, _print=True):
         return f"{colors[color]}{message}{colors['end']}"
 
 
-def closest_match(input_id, all_ids):
-    # Finds the closest match using difflib's get_close_matches
-    matches = get_close_matches(input_id, all_ids, n=1, cutoff=0.1)
-    return matches[0] if matches else None
-
-
 def find_directory_on_remote(server_path, fragment_id, model_run_dir):
     model_run_dir = '-'.join(model_run_dir.split('-')[:3])
     full_server_path = f"{server_path}/fragment{fragment_id}"
 
     return os.path.join(full_server_path, f"*{model_run_dir}*"), model_run_dir
-
-
 
 
 def get_server_path(hostname, result_dir):
@@ -72,29 +65,78 @@ def get_server_path(hostname, result_dir):
     return server_paths[hostname]
 
 
-def get_inference_result(fragment_id, full_model_run_dir, hostname, single, force=False):
+def similarity_score(a, b):
+    return SequenceMatcher(None, a, b).ratio()
+
+
+def dynamic_closest_matches(input_str, options, threshold=0.6):
+    input_str = input_str.upper()
+    scored_options = [(option, similarity_score(input_str, option)) for option in options]
+    close_matches = [option for option, score in scored_options if score >= threshold]
+    return sorted(close_matches, key=lambda x: -similarity_score(input_str, x))
+
+
+def closest_match(input_str, options, num_matches=1):
+    cutoff_value = 0.1  # Adjust as needed
+    return get_close_matches(input_str.lower(), options, n=num_matches, cutoff=cutoff_value)
+
+def get_checkpoint_name(user_input, checkpoint_dict):
+    short_names = checkpoint_dict.keys()
+    match = closest_match(user_input, short_names)
+    if match:
+        return checkpoint_dict[match[0]]
+    else:
+        print(f"No valid checkpoint found for: {user_input}")
+        exit()
+
+
+def get_inference_result(fragment_id_or_name, checkpoint_keyword, hostname, single, force=False):
     result_dir = "single_results" if single else "results"
     server_path = get_server_path(hostname, result_dir)
-
     fragment_ids = FragmentHandler().get_ids()
-    frag_name = get_frag_name_from_id(fragment_id).upper()
+    fragment_names = FragmentHandler().get_names()
+    name_to_id = FragmentHandler().FRAGMENTS
+    checkpoint_dict = CHECKPOINTS
 
-    if fragment_id not in fragment_ids:
-        print_colored(f"Fragment ID not known by fragment handler: {fragment_id}", "red")
+    # Check if input is an ID or a Name and convert to ID if necessary
+    if fragment_id_or_name in fragment_ids or fragment_id_or_name in name_to_id:
+        fragment_id = name_to_id.get(fragment_id_or_name, fragment_id_or_name)
+    else:
+        id_suggestions = dynamic_closest_matches(fragment_id_or_name, fragment_ids)
+        name_suggestions = dynamic_closest_matches(fragment_id_or_name, fragment_names)
+        suggestions = list(set(id_suggestions + name_suggestions))
 
-        suggestion = closest_match(fragment_id, fragment_ids)
-        if suggestion:
-            print_colored(f"Did you mean: {suggestion}?", "blue")
-        choice = input("[y / n]")
-        if choice == "y":
-            fragment_id = suggestion
+        if suggestions:
+            if len(suggestions) > 1:
+                print("Did you mean one of the following?")
+                for idx, suggestion in enumerate(suggestions, 1):
+                    print(f"{idx}. {suggestion}")
+
+                choice = input("Enter the number of the correct option, or 'n' to cancel: ")
+                if choice.isdigit() and 1 <= int(choice) <= len(suggestions):
+                    selected_suggestion = suggestions[int(choice) - 1]
+                    print(selected_suggestion)
+                    fragment_id = name_to_id.get(selected_suggestion, selected_suggestion)
+                else:
+                    print("Invalid selection.")
+                    exit()
+            elif len(suggestions) == 1:
+                fragment_id = name_to_id.get(suggestions[0])
+            else:
+                print("No valid suggestion found.")
+                exit()
         else:
+            print_colored(f"No close match found for: {fragment_id_or_name}", "red")
             exit()
 
+    # Handle checkpoint
+    full_checkpoint_name = get_checkpoint_name(checkpoint_keyword, checkpoint_dict)
+
+    frag_name = get_frag_name_from_id(fragment_id)
     full_server_path, short_model_run_dir = find_directory_on_remote(
         fragment_id=fragment_id,
         server_path=server_path,
-        model_run_dir=full_model_run_dir,
+        model_run_dir=full_checkpoint_name,  # Use the full checkpoint name here
     )
 
     local_path = os.path.join(os.getcwd(), f"inference/{result_dir}/fragment{fragment_id}")
@@ -166,10 +208,12 @@ def get_inference_result(fragment_id, full_model_run_dir, hostname, single, forc
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download inference result from a node")
-    parser.add_argument("fragment_id", type=str, help="Fragment ID")
     parser.add_argument("checkpoint_folder_name", type=str, help="Checkpoint folder name")
-    parser.add_argument("hostname", type=str, default='andro', help="Hostname")
+    parser.add_argument("fragment_id", type=str, help="Fragment ID")
+    parser.add_argument("--hostname", type=str, default='andro', help="Hostname")
     parser.add_argument("--force", action='store_false', help="Force the download and overwrite npy files")
     args = parser.parse_args()
 
-    get_inference_result(args.fragment_id, args.checkpoint_folder_name, args.hostname, single=False, force=args.force)
+    get_inference_result(fragment_id_or_name=args.fragment_id,
+                         checkpoint_keyword=args.checkpoint_folder_name,
+                         hostname=args.hostname, single=False, force=args.force)
