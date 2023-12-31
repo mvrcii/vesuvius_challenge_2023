@@ -7,23 +7,12 @@ from slurm_inference import print_colored
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id
 
-# Parse command-line arguments
-parser = argparse.ArgumentParser(description='Check for files with > x% zeros.')
-parser.add_argument('runs_to_check', type=str, help='Comma-separated list of run names')
-parser.add_argument('report_zero_percent', type=float, help='Percent threshold for zeros')
-args = parser.parse_args()
 
-report_zero_percent = args.report_zero_percent
-runs_to_check = args.runs_to_check.split(',')
-
-print("Checking:")
-for x in runs_to_check:
-    print(x)
-
-# Path to the fragments directory
-fragments_dir = os.path.expanduser(
-    "~/kaggle1stReimp/inference/results")  # Update with the path to your fragments directory
-print("Searching in", fragments_dir)
+# # Parse command-line arguments
+# parser = argparse.ArgumentParser(description='Check for files with > x% zeros.')
+# parser.add_argument('runs_to_check', type=str, help='Comma-separated list of run names')
+# parser.add_argument('report_zero_percent', type=float, help='Percent threshold for zeros')
+# args = parser.parse_args()
 
 
 def extract_info_from_paths(paths, work_dir):
@@ -53,38 +42,34 @@ def has_more_than_x_percent_zeros(array, x):
 
 def get_sys_args():
     parser = argparse.ArgumentParser(description="Check a given inference directory with numpy files.")
-    parser.add_argument('fragments_root_dir', type=str, help='The root directory of all fragment inference results to check.')
-    parser.add_argument('ink_threshold', type=float, default=0.5, help='A threshold that determines how '
-                                                                     'much minimum percentage of non-ink (pixels with value 0)'
-                                                                     'must be present in a .npy file.')
+    parser.add_argument('checkpoint_list', type=str, help='Comma-separated list of checkpoint names')
+    parser.add_argument('no_ink_ratio', type=float, default=0.5, help='A threshold that determines how '
+                                                                      'much minimum percentage of non-ink (pixels with value 0)'
+                                                                      'must be present in a .npy file.')
     return parser.parse_args()
 
-def check_fragment_dir(fragments_dir):
+
+def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
     zero_ints = []
     fail_load = []
     # Iterate over each fragment directory
-    for fragment_id in os.listdir(fragments_dir):
+    for fragment_id in os.listdir(inference_root_dir):
         print_colored(f"Checking {get_frag_name_from_id(fragment_id):15} '{fragment_id}'", color="blue")
-        fragment_path = os.path.join(fragments_dir, fragment_id)
+        fragment_path = os.path.join(inference_root_dir, fragment_id)
         if os.path.isdir(fragment_path):
             # Check each run name directory
             for sub_dir in os.listdir(fragment_path):
-                # print("Checking", sub_dir)
-                for run_name in runs_to_check:
-                    if run_name not in sub_dir:
-                        # print(sub_dir)
-                        # print("does not end with ", run_name)
+                for checkpoint in checkpoints_to_check:
+                    if checkpoint not in sub_dir:
                         continue
                     run_path = os.path.join(fragment_path, sub_dir)
                     if os.path.isdir(run_path):
-                        # print("searching in ", run_path)
-                        # Process each .npy file
                         for file in os.listdir(run_path):
                             if file.endswith(".npy"):
                                 file_path = os.path.join(run_path, file)
                                 try:
                                     array = np.load(file_path)
-                                    if has_more_than_x_percent_zeros(array, report_zero_percent):
+                                    if has_more_than_x_percent_zeros(array, threshold):
                                         zero_ints.append(file_path)
                                 except Exception as e:
                                     fail_load.append(file_path)
@@ -95,16 +80,25 @@ def main():
     args = get_sys_args()
     config = Config().load_local_cfg()
 
-    zero_ints, fail_load = check_fragment_dir(fragments_dir=args.fragments_root_dir)
-    extract_info_from_paths(paths=zero_ints, work_dir=config.work_dir)
-    #
-    # print("")
-    # print(f"Files with > {report_zero_percent} zero percentage:")
-    # print("----------------------------------------------------")
-    # for x in zero_ints:
-    #     print(x)
-    # if len(zero_ints) == 0:
-    #     print("None")
+    work_dir = os.path.expanduser(config.work_dir)
+    inference_root_dir = os.path.join(work_dir, "inference", "results")
+
+    checkpoints_to_check = args.checkpoint_list.split(',')
+    for checkpoint in checkpoints_to_check:
+        print_colored(f"INFO:\tChecking {checkpoint}", color="purple")
+
+    zero_ints, fail_load = check_fragment_dir(checkpoints_to_check=checkpoints_to_check,
+                                              inference_root_dir=inference_root_dir,
+                                              threshold=args.no_ink_ratio)
+
+    print_colored(f"\nFiles with > {args.no_ink_ratio} zero percentage:", color="purple")
+    print_colored("----------------------------------------------------", color="purple")
+    extract_info_from_paths(paths=zero_ints, work_dir=work_dir)
+    if len(zero_ints) == 0:
+        print_colored("None", color="purple")
+    print_colored("----------------------------------------------------", color="purple")
+
+
     # print("")
     # print(f"Files that failed to load:")
     # print("----------------------------------------------------")
