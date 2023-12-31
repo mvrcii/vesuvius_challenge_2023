@@ -28,7 +28,7 @@ for fragment_id in os.listdir(fragments_dir):
         for sub_dir in os.listdir(fragment_path):
             # print("Checking", sub_dir)
             for run_name in runs_to_ckeck:
-                if not sub_dir.contains(run_name):
+                if not run_name in sub_dir:
                     # print(sub_dir)
                     # print("does not end with ", run_name)
                     continue
