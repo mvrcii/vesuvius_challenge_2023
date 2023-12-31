@@ -2,6 +2,7 @@ import argparse
 import os
 
 import numpy as np
+from skimage.transform import resize
 
 from slurm_inference import print_colored
 from utility.configs import Config
@@ -103,6 +104,10 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                                 if not os.path.isfile(mask_path):
                                     raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
                                 mask = np.asarray(Image.open(mask_path))
+                                new_height = mask.shape[0] * 4
+                                new_width = mask.shape[1] * 4
+                                mask = resize(mask, (new_height, new_width), anti_aliasing=True)
+
                                 print(mask.shape, array.shape)
                                 assert mask.shape == array.shape
 
