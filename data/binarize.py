@@ -82,8 +82,8 @@ def process_files_in_subdirectories(directory, output_dir):
 
 
 def main():
-    input_dir = os.path.join("data", "labels", "twelve_layer_unetr_it2", "processed")
-    output_dir = os.path.join("data", "labels", "twelve_layer_unetr_it2", "binarized")
+    input_dir = os.path.join("data", "labels", "twelve_layer_unetr_it3", "processed")
+    output_dir = os.path.join("data", "labels", "twelve_layer_unetr_it3", "binarized")
 
     process_files_in_subdirectories(input_dir, output_dir)
 
