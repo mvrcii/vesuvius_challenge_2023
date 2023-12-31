@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-report_zero_percent = 0.6  # if file has > 60% zeros, print something
+report_zero_percent = 0.03  # if file has > 60% zeros, print something
 runs_to_ckeck = ["olive-wind-1194-unetr-sf-b5-231231-064008"]
 
 print("Checking:")
