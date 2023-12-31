@@ -1,6 +1,6 @@
 # Start from a PyTorch base image with Python 3.8 and CUDA 12.0 support
 # PyTorch's official Docker images usually come with both Python and CUDA installed
-FROM pytorch/pytorch:2.1.1-cuda12.0-cudnn8-runtime
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
