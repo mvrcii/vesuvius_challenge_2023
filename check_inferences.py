@@ -38,7 +38,6 @@ def extract_info_from_paths(paths, work_dir, inference_root_dir):
             stride += '+ TTA'
 
         model_name_parts = parts[-2].split('_')[:2][-1].split('-')[0:2]  # First two substrings after the timestamp
-        print(model_name_parts)
         model_name = '-'.join(model_name_parts)
 
         frag_name = get_frag_name_from_id(fragment_id)
@@ -69,6 +68,7 @@ def has_more_than_x_percent_zeros(array, threshold, mask=None, tolerance=0.1):
 
     # Calculate percentage and check against threshold
     black_pixel_percentage = unique_black_count / non_black_mask_count if non_black_mask_count > 0 else 0
+    print("Black pixel percentage:", black_pixel_percentage)
     return black_pixel_percentage > threshold
 
 
