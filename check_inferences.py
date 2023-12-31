@@ -73,6 +73,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
 
         print_colored(f"INFO:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}", color="blue")
         fragment_path = os.path.join(inference_root_dir, fragment_id)
+        print("fragment path", fragment_path)
         if os.path.isdir(fragment_path):
             # Check each run name directory
             for sub_dir in os.listdir(fragment_path):
