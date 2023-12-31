@@ -37,8 +37,8 @@ def extract_info_from_paths(paths, inference_root_dir):
         frag_name = get_frag_name_from_id(fragment_id)
 
         # Print the formatted information
-        print_colored(message=f"PLEASE CHECK: {frag_name:20} {fragment_id:10} {stride} ({model_name})", color="purple")
-
+        print_colored(message=f"PLEASE CHECK:\t{frag_name:20} {fragment_id:10} {stride} ({model_name})", color="purple")
+        print_colored(f"FULL PATH:\t{relative_path}", color="purple")
 
 # Function to check if an array has more than x% zeros
 def has_more_than_x_percent_zeros(array, x):
