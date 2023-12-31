@@ -168,8 +168,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download inference result from a node")
     parser.add_argument("fragment_id", type=str, help="Fragment ID")
     parser.add_argument("checkpoint_folder_name", type=str, help="Checkpoint folder name")
-    parser.add_argument("hostname", type=str, help="Hostname")
-    parser.add_argument("--force", action='store_true', help="Force the download and overwrite npy files")
+    parser.add_argument("hostname", type=str, default='andro', help="Hostname")
+    parser.add_argument("--force", action='store_false', help="Force the download and overwrite npy files")
     args = parser.parse_args()
 
     get_inference_result(args.fragment_id, args.checkpoint_folder_name, args.hostname, single=False, force=args.force)
