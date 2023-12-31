@@ -25,15 +25,18 @@ for fragment_id in os.listdir(fragments_dir):
     fragment_path = os.path.join(fragments_dir, fragment_id)
     if os.path.isdir(fragment_path):
         # Check each run name directory
-        for run_name in runs_to_ckeck:
-            run_path = os.path.join(fragment_path, run_name)
-            if os.path.isdir(run_path):
-                # Process each .npy file
-                for file in os.listdir(run_path):
-                    if file.endswith(".npy"):
-                        file_path = os.path.join(run_path, file)
-                        array = np.load(file_path)
-                        if has_more_than_60_percent_zeros(array):
-                            print(f"File with >{report_zero_percent} zeros: {file_path}")
-                        else:
-                            print(f"{file} is correct")
+        for sub_dir in os.listdir(fragment_path):
+            for run_name in runs_to_ckeck:
+                if not sub_dir.endswith(run_name):
+                    continue
+                run_path = os.path.join(fragment_path, sub_dir)
+                if os.path.isdir(run_path):
+                    # Process each .npy file
+                    for file in os.listdir(run_path):
+                        if file.endswith(".npy"):
+                            file_path = os.path.join(run_path, file)
+                            array = np.load(file_path)
+                            if has_more_than_60_percent_zeros(array):
+                                print(f"File with >{report_zero_percent} zeros: {file_path}")
+                            else:
+                                print(f"{file} is correct")
