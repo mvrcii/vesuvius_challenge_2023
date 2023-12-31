@@ -84,9 +84,12 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
                         for file in os.listdir(run_path):
                             if file.endswith(".npy"):
                                 file_path = os.path.join(run_path, file)
+                                print("checking", file_path)
+
                                 try:
                                     array = np.load(file_path)
                                     if has_more_than_x_percent_zeros(array, threshold):
+                                        print("zero int!")
                                         zero_ints.append(file_path)
                                 except Exception as e:
                                     fail_load.append(file_path)
