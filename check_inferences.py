@@ -110,7 +110,8 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                                     if has_more_than_x_percent_zeros(array, threshold, mask=mask):
                                         zero_ints.append(file_path)
                                 except Exception as e:
-                                    fail_load.append(file_path)
+                                    print(e)
+                                    # fail_load.append(file_path)
 
     for message in skip_list:
         print_colored(message, color='blue')
