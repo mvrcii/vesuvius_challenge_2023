@@ -74,7 +74,8 @@ def has_more_than_x_percent_zeros(array, threshold, mask=None):
         non_black_mask_count = np.size(array)
 
     # Calculate percentage and check against threshold
-    black_pixel_percentage = unique_black_count / non_black_mask_count if non_black_mask_count > 0 else 0
+    black_pixel_percentage = round(unique_black_count / non_black_mask_count if non_black_mask_count > 0 else 0, 6)
+
     print("Black pixel percentage:", black_pixel_percentage)
     return black_pixel_percentage > threshold
 
