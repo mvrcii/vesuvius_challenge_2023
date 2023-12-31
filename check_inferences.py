@@ -50,9 +50,8 @@ for fragment_id in os.listdir(fragments_dir):
                                 array = np.load(file_path)
                                 if has_more_than_x_percent_zeros(array, report_zero_percent):
                                     zero_ints.append(file_path)
-                            except ValueError:
+                            except Exception as e:
                                 fail_load.append(file_path)
-                                pass
 
 print(f"Files with > {report_zero_percent} zero percentage:")
 print("----------------------------------------------------")
