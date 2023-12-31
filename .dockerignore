@@ -27,10 +27,10 @@
 
 .idea
 .ipynb_checkpoints
-*.xml
+**/*.xml
 
-*.npy
-*.tif
+**/*.npy
+**/*.tif
 wandb
 
 venv
