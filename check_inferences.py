@@ -114,6 +114,8 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
 
 
 def main():
+    Image.MAX_IMAGE_PIXELS = None
+
     args = get_sys_args()
     config = Config().load_local_cfg()
 
