@@ -10,7 +10,7 @@ for x in runs_to_ckeck:
     print(x)
 
 # Path to the fragments directory
-fragments_dir = "~/kaggle1stReimp/inference/results"  # Update with the path to your fragments directory
+fragments_dir = os.path.expanduser("~/kaggle1stReimp/inference/results")  # Update with the path to your fragments directory
 print("Searching in ", fragments_dir)
 
 
