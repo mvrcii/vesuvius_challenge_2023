@@ -46,7 +46,7 @@ dataset_fraction = 1.0
 take_full_dataset = False
 # Only relevant if take_full_dataset == False
 ink_ratio = 10
-no_ink_sample_percentage = 1
+no_ink_sample_percentage = 0.5
 
 seed = 43
 epochs = -1
@@ -60,9 +60,9 @@ step_lr_factor = 0.98
 weight_decay = 0.001
 epsilon = 1e-3
 
-losses = [('masked-dice', 1.0), ('masked-focal', 1.0)]
+losses = [('masked-dice', 1.0), ('masked-focal', 4)]
 focal_gamma = 2.0
-focal_alpha = 0.75
+focal_alpha = 0.85
 dice_smoothing = 0.05
 
 num_workers = 16
