@@ -2,12 +2,13 @@ import argparse
 import os
 
 import numpy as np
+from PIL import Image
 from skimage.transform import resize
 
 from slurm_inference import print_colored
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id, SUPERSEDED_FRAGMENTS, FRAGMENTS_IGNORE
-from PIL import Image
+
 
 # # Parse command-line arguments
 # parser = argparse.ArgumentParser(description='Check for files with > x% zeros.')
@@ -46,22 +47,28 @@ def extract_info_from_paths(paths, work_dir, inference_root_dir):
         print_colored(message=f"PLEASE CHECK:\t{frag_name:20} {fragment_id:10} {stride} ({model_name})", color="purple")
         print_colored(f"FULL PATH:\t{path}", color="purple")
 
+
 # Function to check if an array has more than x% zeros
-def has_more_than_x_percent_zeros(image, threshold, mask):
+def has_more_than_x_percent_zeros(array, threshold, mask=None, tolerance=0.1):
+    if mask is not None:
+        # Resize the mask to match the array dimensions
+        mask_resized = resize(mask, array.shape, anti_aliasing=True)
 
-    prediction_black = image == 0
-    mask_black = mask == 0
+        # Create a boolean mask for near-zero values in the resized mask
+        mask_near_zero = mask_resized < tolerance
 
-    unique_black = prediction_black & ~mask_black
-    unique_black_count = np.count_nonzero(unique_black)
+        # Calculate unique black pixels in the array not covered by the mask
+        unique_black = (array == 0) & mask_near_zero
+        unique_black_count = np.count_nonzero(unique_black)
 
-    # Calculate the total number of pixels not black in the mask
-    non_black_mask_count = np.count_nonzero(~mask_black)
+        # Count non-black pixels in the mask
+        non_black_mask_count = np.count_nonzero(mask_near_zero)
+    else:
+        unique_black_count = np.count_nonzero(array == 0)
+        non_black_mask_count = np.size(array)
 
-    # Calculate percentage of unique black pixels relative to non-black pixels in the mask
+    # Calculate percentage and check against threshold
     black_pixel_percentage = unique_black_count / non_black_mask_count if non_black_mask_count > 0 else 0
-
-    # Check if the percentage is above the threshold
     return black_pixel_percentage > threshold
 
 
@@ -110,7 +117,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                                 if not os.path.isfile(mask_path):
                                     raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
                                 mask = np.asarray(Image.open(mask_path))
-                                mask = resize(array, (mask.shape[0] // 4, mask.shape[1] // 4), anti_aliasing=True)
+                                mask = resize(mask, (array.shape[0], array.shape[1]), anti_aliasing=True)
 
                                 if has_more_than_x_percent_zeros(array, threshold, mask=mask):
                                     zero_ints.append(file_path)
@@ -145,7 +152,6 @@ def main():
     if len(zero_ints) == 0:
         print_colored("None", color="purple")
     print_colored("----------------------------------------------------", color="purple")
-
 
     print(f"Files that failed to load:")
     print("----------------------------------------------------")
