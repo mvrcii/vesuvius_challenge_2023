@@ -99,14 +99,13 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                             if file.endswith(".npy"):
                                 file_path = os.path.join(run_path, file)
                                 array = np.load(file_path)
+                                array = resize(array, (array.shape[0] // 4, array.shape[1] // 4), anti_aliasing=True)
+
                                 mask_path = os.path.join(work_dir, "data", "fragments",
                                                          f"fragment{fragment_id}", "mask.png")
                                 if not os.path.isfile(mask_path):
                                     raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
                                 mask = np.asarray(Image.open(mask_path))
-                                new_height = mask.shape[0] * 4
-                                new_width = mask.shape[1] * 4
-                                mask = resize(mask, (new_height, new_width), anti_aliasing=True)
 
                                 print(mask.shape, array.shape)
                                 assert mask.shape == array.shape
