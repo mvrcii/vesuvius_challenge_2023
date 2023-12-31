@@ -144,13 +144,12 @@ def main():
     print_colored("----------------------------------------------------", color="purple")
 
 
-    # print("")
-    # print(f"Files that failed to load:")
-    # print("----------------------------------------------------")
-    # for x in fail_load:
-    #     print(x)
-    # if len(fail_load) == 0:
-    #     print("None")
+    print(f"Files that failed to load:")
+    print("----------------------------------------------------")
+    for x in fail_load:
+        print(x)
+    if len(fail_load) == 0:
+        print("None")
 
 
 if __name__ == '__main__':
