@@ -31,6 +31,10 @@ def extract_info_from_paths(paths, work_dir, inference_root_dir):
             stride = 'S4'
         else:
             stride = 'S?'
+
+        if 'tta' in file_name:
+            stride += '+ TTA'
+
         model_name_parts = parts[-2].split('_')[:2][-1].split('-')[0:2]  # First two substrings after the timestamp
         print(model_name_parts)
         model_name = '-'.join(model_name_parts)
