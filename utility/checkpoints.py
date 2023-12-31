@@ -18,7 +18,7 @@ CHECKPOINTS = {
     # UNETR
     # 128 BS
     "efficient-aardvark": "efficient-aardvark-1173-unetr-sf-b5-231229-082126",
-    "desert-sea": "wise-energy-1190-unetr-sf-b5-231231-055216",
+    "desert-sea": "desert-sea-1183-unetr-sf-b5-231230-074546",
     "olive-wind": "olive-wind-1194-unetr-sf-b5-231231-064008",
     "curious-rain": "curious-rain-1193-unetr-sf-b5-231231-063741",
     "zesty-shape": "zesty-shape-1196-unetr-sf-b5-231231-135846",

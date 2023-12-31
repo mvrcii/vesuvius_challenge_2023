@@ -2,6 +2,8 @@ import argparse
 import os
 
 import numpy as np
+from PIL import Image
+from skimage.transform import resize
 
 from slurm_inference import print_colored
 from utility.configs import Config
@@ -36,7 +38,6 @@ def extract_info_from_paths(paths, work_dir, inference_root_dir):
             stride += '+ TTA'
 
         model_name_parts = parts[-2].split('_')[:2][-1].split('-')[0:2]  # First two substrings after the timestamp
-        print(model_name_parts)
         model_name = '-'.join(model_name_parts)
 
         frag_name = get_frag_name_from_id(fragment_id)
@@ -45,9 +46,38 @@ def extract_info_from_paths(paths, work_dir, inference_root_dir):
         print_colored(message=f"PLEASE CHECK:\t{frag_name:20} {fragment_id:10} {stride} ({model_name})", color="purple")
         print_colored(f"FULL PATH:\t{path}", color="purple")
 
+
+def binarize_image(array):
+    # Binarize the image: 0 remains 0, anything greater becomes 255
+    return np.where(array > 0.01, 1, 0)
+
+
 # Function to check if an array has more than x% zeros
-def has_more_than_x_percent_zeros(array, x):
-    return np.count_nonzero(array == 0) / array.size > x
+def has_more_than_x_percent_zeros(array, threshold, mask=None):
+    array = binarize_image(array)
+
+    if mask is not None:
+        # Resize the mask to match the array dimensions
+        mask_resized = resize(mask, array.shape, anti_aliasing=True)
+
+        mask_resized = mask_resized == 0.0
+
+        # Calculate unique black pixels in the array not covered by the mask
+        unique_black = (array == 0) & mask_resized
+        unique_black_count = np.count_nonzero(unique_black)
+
+        # Count non-black pixels in the mask
+        non_black_mask_count = np.count_nonzero(mask_resized)
+    else:
+        print("Mask is None")
+        unique_black_count = np.count_nonzero(array == 0)
+        non_black_mask_count = np.size(array)
+
+    # Calculate percentage and check against threshold
+    black_pixel_percentage = round(unique_black_count / non_black_mask_count if non_black_mask_count > 0 else 0, 6)
+
+    print("Black pixel percentage:", black_pixel_percentage)
+    return black_pixel_percentage > threshold
 
 
 def get_sys_args():
@@ -59,7 +89,7 @@ def get_sys_args():
     return parser.parse_args()
 
 
-def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
+def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work_dir):
     zero_ints = []
     fail_load = []
 
@@ -89,12 +119,16 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
                         for file in os.listdir(run_path):
                             if file.endswith(".npy"):
                                 file_path = os.path.join(run_path, file)
-                                try:
-                                    array = np.load(file_path)
-                                    if has_more_than_x_percent_zeros(array, threshold):
-                                        zero_ints.append(file_path)
-                                except Exception as e:
-                                    fail_load.append(file_path)
+                                array = np.load(file_path)
+                                mask_path = os.path.join(work_dir, "data", "fragments",
+                                                         f"fragment{fragment_id}", "mask.png")
+                                if not os.path.isfile(mask_path):
+                                    raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
+                                mask = np.asarray(Image.open(mask_path))
+                                mask = resize(mask, (array.shape[0], array.shape[1]), anti_aliasing=True)
+
+                                if has_more_than_x_percent_zeros(array, threshold, mask=mask):
+                                    zero_ints.append(file_path)
 
     for message in skip_list:
         print_colored(message, color='blue')
@@ -103,6 +137,8 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
 
 
 def main():
+    Image.MAX_IMAGE_PIXELS = None
+
     args = get_sys_args()
     config = Config().load_local_cfg()
 
@@ -115,7 +151,8 @@ def main():
 
     zero_ints, fail_load = check_fragment_dir(checkpoints_to_check=checkpoints_to_check,
                                               inference_root_dir=inference_root_dir,
-                                              threshold=args.no_ink_ratio)
+                                              threshold=args.no_ink_ratio,
+                                              work_dir=work_dir)
 
     print_colored(f"\nFiles with > {args.no_ink_ratio} zero percentage:", color="purple")
     print_colored("----------------------------------------------------", color="purple")
@@ -124,14 +161,12 @@ def main():
         print_colored("None", color="purple")
     print_colored("----------------------------------------------------", color="purple")
 
-
-    # print("")
-    # print(f"Files that failed to load:")
-    # print("----------------------------------------------------")
-    # for x in fail_load:
-    #     print(x)
-    # if len(fail_load) == 0:
-    #     print("None")
+    print(f"Files that failed to load:")
+    print("----------------------------------------------------")
+    for x in fail_load:
+        print(x)
+    if len(fail_load) == 0:
+        print("None")
 
 
 if __name__ == '__main__':
