@@ -21,6 +21,7 @@ CHECKPOINTS = {
     "desert-sea": "wise-energy-1190-unetr-sf-b5-231231-055216",
     "olive-wind": "olive-wind-1194-unetr-sf-b5-231231-064008",
     "curious-rain": "curious-rain-1193-unetr-sf-b5-231231-063741",
+    "zesty-shape": "zesty-shape-1196-unetr-sf-b5-231231-135846",
 
     # 512 BS
     "playful-aardvark": "playful-aardvark-1152-unetr-sf-b5-231228-170431",
