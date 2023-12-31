@@ -5,7 +5,7 @@ import numpy as np
 
 from slurm_inference import print_colored
 from utility.configs import Config
-from utility.fragments import get_frag_name_from_id
+from utility.fragments import get_frag_name_from_id, SUPERSEDED_FRAGMENTS, FRAGMENTS_IGNORE
 
 
 # # Parse command-line arguments
@@ -57,9 +57,18 @@ def get_sys_args():
 def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
     zero_ints = []
     fail_load = []
-    # Iterate over each fragment directory
+
     for fragment_id in os.listdir(inference_root_dir):
         fragment_id = fragment_id.split('fragment')[-1]
+
+        if fragment_id in SUPERSEDED_FRAGMENTS:
+            print_colored(f"SKIP:\t {get_frag_name_from_id(fragment_id)} is superseded", color='blue')
+            continue
+
+        if fragment_id in FRAGMENTS_IGNORE:
+            print_colored(f"SKIP:\t {get_frag_name_from_id(fragment_id)} is being ignored", color='blue')
+            continue
+
         print_colored(f"Checking {get_frag_name_from_id(fragment_id):15} '{fragment_id}'", color="blue")
         fragment_path = os.path.join(inference_root_dir, fragment_id)
         if os.path.isdir(fragment_path):
