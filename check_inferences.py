@@ -15,10 +15,11 @@ from utility.fragments import get_frag_name_from_id, SUPERSEDED_FRAGMENTS, FRAGM
 # args = parser.parse_args()
 
 
-def extract_info_from_paths(paths, inference_root_dir):
+def extract_info_from_paths(paths, work_dir, inference_root_dir):
     for path in paths:
         # Remove the work directory part from the path
         relative_path = path.replace(inference_root_dir, '')
+        del_path = path.replace(work_dir, '')
 
         # Extract the fragment ID, stride, and model name
         parts = relative_path.split('/')
@@ -38,7 +39,7 @@ def extract_info_from_paths(paths, inference_root_dir):
 
         # Print the formatted information
         print_colored(message=f"PLEASE CHECK:\t{frag_name:20} {fragment_id:10} {stride} ({model_name})", color="purple")
-        print_colored(f"FULL PATH:\t{relative_path}", color="purple")
+        print_colored(f"FULL PATH:\t{del_path}", color="purple")
 
 # Function to check if an array has more than x% zeros
 def has_more_than_x_percent_zeros(array, x):
@@ -114,7 +115,7 @@ def main():
 
     print_colored(f"\nFiles with > {args.no_ink_ratio} zero percentage:", color="purple")
     print_colored("----------------------------------------------------", color="purple")
-    extract_info_from_paths(paths=zero_ints, inference_root_dir=inference_root_dir)
+    extract_info_from_paths(paths=zero_ints, work_dir=work_dir, inference_root_dir=inference_root_dir)
     if len(zero_ints) == 0:
         print_colored("None", color="purple")
     print_colored("----------------------------------------------------", color="purple")
