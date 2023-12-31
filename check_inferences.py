@@ -64,14 +64,14 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
         fragment_id = fragment_id.split('fragment')[-1]
 
         if fragment_id in SUPERSEDED_FRAGMENTS:
-            skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id):15} '{fragment_id}'\tis superseded")
+            skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}\tis superseded")
             continue
 
         if fragment_id in FRAGMENTS_IGNORE:
-            skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id):15} '{fragment_id}'\tis ignored")
+            skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}\tis ignored")
             continue
 
-        print_colored(f"INFO:\t{get_frag_name_from_id(fragment_id):15} '{fragment_id}'", color="blue")
+        print_colored(f"INFO:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}", color="blue")
         fragment_path = os.path.join(inference_root_dir, fragment_id)
         if os.path.isdir(fragment_path):
             # Check each run name directory
