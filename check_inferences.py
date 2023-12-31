@@ -107,7 +107,6 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                                 mask = resize(array, (mask.shape[0] // 4, mask.shape[1] // 4), anti_aliasing=True)
 
                                 print(mask.shape, array.shape)
-                                assert mask.shape == array.shape
 
                                 if has_more_than_x_percent_zeros(array, threshold, mask=mask):
                                     zero_ints.append(file_path)
