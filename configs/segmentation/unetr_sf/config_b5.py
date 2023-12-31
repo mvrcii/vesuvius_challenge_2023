@@ -5,7 +5,8 @@ import albumentations as A
 from utility.fragments import (IRONHIDE_FRAG_ID, BLASTER_FRAG_ID,
                                THUNDERCRACKER_FRAG_ID, JETFIRE_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
                                SKYBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, HOT_ROD_FRAG_ID, SUNSTREAKER_FRAG_ID,
-                               ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID, SKYHUGE_FRAG_ID, TRAILBIGGER_FRAG_ID)
+                               ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID, SKYHUGE_FRAG_ID, TRAILBIGGER_FRAG_ID,
+                               SKYGLORIOUS_FRAG_ID)
 
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
@@ -28,8 +29,8 @@ label_size = patch_size // 4
 stride = patch_size // 2
 
 fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
-                SKYHUGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
-                DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,  # BLUEBIGGER_FRAG_ID
+                SKYHUGE_FRAG_ID, SKYGLORIOUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
+                DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,  BLUEBIGGER_FRAG_ID,
                 TRAILBIGGER_FRAG_ID]
 validation_fragments = [BLUEBIGGER_FRAG_ID]
 
@@ -45,19 +46,19 @@ take_full_dataset = False
 ink_ratio = 5
 no_ink_sample_percentage = 1
 
-seed = 101010
+seed = 42
 epochs = -1
 unetr_out_channels = 32
 
 val_interval = 1
 
-lr = 8e-5  # 1e-4
+lr = 1e-4  # 1e-4
 step_lr_steps = 2
-step_lr_factor = 0.98
+step_lr_factor = 0.97
 weight_decay = 0.005
 epsilon = 1e-3
 
-losses = [('masked-focal', 2.0), ('masked-dice', 1.0)]
+losses = [('masked-focal', 5.0), ('masked-dice', 1.0)]
 focal_gamma = 3.0
 focal_alpha = 0.85
 dice_smoothing = 0.05
@@ -73,6 +74,11 @@ train_aug = [
     A.HorizontalFlip(p=0.75),
     A.VerticalFlip(p=0.75),
     A.RandomRotate90(p=0.75),
+    A.RandomGamma(p=0.2, gamma_limit=(70, 130), eps=None),
+    A.AdvancedBlur(p=0.1, always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
+                   rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
+    A.GridDistortion(p=0.05, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
+                     border_mode=0, value=(0, 0, 0), mask_value=None, normalized=False),
     # A.RandomBrightnessContrast(p=0.25),
     # A.OneOf([
     #     A.GaussNoise(var_limit=[10, 50]),
