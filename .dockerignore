@@ -35,6 +35,7 @@ wandb
 
 venv
 __pycache__
+**/__pycache__/
 slurm*.out
 data/datasets/**
 multilayer_approach/datasets/**

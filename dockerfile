@@ -10,7 +10,21 @@ COPY . .
 
 # Install any needed packages specified in requirements.txt
 # Note: Since PyTorch is already installed, make sure it's not in requirements.txt or use '--no-deps' to avoid re-installing it
-RUN pip install --no-cache-dir -r requirements.txt
+
+
+# Set the DEBIAN_FRONTEND variable to noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install required system dependencies
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    tzdata
+
+# Reset the DEBIAN_FRONTEND variable
+ENV DEBIAN_FRONTEND=
+
+RUN pip install --no-cache-dir -r requirements.txt --no-deps
 
 # Define the command to run your application
 # Replace 'your_script.py' with the script you want to run, e.g., 'train.py'
