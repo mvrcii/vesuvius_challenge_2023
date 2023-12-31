@@ -48,9 +48,14 @@ def extract_info_from_paths(paths, work_dir, inference_root_dir):
 # Function to check if an array has more than x% zeros
 def has_more_than_x_percent_zeros(image, threshold, mask):
     mask_blacks = np.count_nonzero(mask == 0)
-    blacks = (np.count_nonzero(image == 0) - mask_blacks)
+    image_blacks = np.count_nonzero(image == 0)
+    blacks = (image_blacks - mask_blacks)
     assert blacks >= 0
-    return (blacks / image.size) > threshold
+    blacks_perc = blacks / image.size
+    print("Blacks In Mask=", mask_blacks)
+    print("Blacks In Image=", image_blacks)
+    print("Blacks in Image (in %)=", blacks_perc)
+    return blacks_perc > threshold
 
 
 def get_sys_args():
