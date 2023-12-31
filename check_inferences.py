@@ -54,7 +54,7 @@ def has_more_than_x_percent_zeros(array, x):
 def get_sys_args():
     parser = argparse.ArgumentParser(description="Check a given inference directory with numpy files.")
     parser.add_argument('fragments_root_dir', type=str, help='The root directory of all fragment inference results to check.')
-    parser.add_argument('ink_threshold', type=int, default=0.5, help='A threshold that determines how '
+    parser.add_argument('ink_threshold', type=float, default=0.5, help='A threshold that determines how '
                                                                      'much minimum percentage of non-ink (pixels with value 0)'
                                                                      'must be present in a .npy file.')
     return parser.parse_args()
