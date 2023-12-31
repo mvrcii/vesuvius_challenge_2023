@@ -30,16 +30,15 @@ def extract_info_from_paths(paths, inference_root_dir):
             stride = 'S4'
         else:
             stride = 'S?'
-        model_name_parts = parts[-2].split('_')[:2]  # First two substrings after the timestamp
+        model_name_parts = '-'.join(parts[-2].split('_')[:2][-1].split('-')[0:2])  # First two substrings after the timestamp
+        print(model_name_parts)
         model_name = '-'.join(model_name_parts)
 
-        # Retrieve the fragment name
-        print(fragment_id)
         frag_name = get_frag_name_from_id(fragment_id)
 
         # Print the formatted information
-        print_colored(message=f"PLEASE CHECK: {frag_name:20} {fragment_id:10} {stride} ({model_name})", color="purple")
-
+        print_colored(message=f"PLEASE CHECK:\t{frag_name:20} {fragment_id:10} {stride} ({model_name})", color="purple")
+        print_colored(f"FULL PATH:\t{relative_path}", color="purple")
 
 # Function to check if an array has more than x% zeros
 def has_more_than_x_percent_zeros(array, x):
