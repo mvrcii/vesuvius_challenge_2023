@@ -303,7 +303,7 @@ if __name__ == '__main__':
 
     train_fragments = cfg.fragment_ids
     val_fragments = cfg.validation_fragments
-    fragments = train_fragments + val_fragments
+    fragments = list(set(train_fragments).union(val_fragments))
     clear_dataset(config=cfg)
 
     extract_patches(cfg, fragments, label_dir)
