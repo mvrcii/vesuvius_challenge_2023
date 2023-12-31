@@ -32,7 +32,7 @@ fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG
                 SKYHUGE_FRAG_ID, SKYGLORIOUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
                 DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,  BLUEBIGGER_FRAG_ID,
                 TRAILBIGGER_FRAG_ID]
-validation_fragments = [BLUEBIGGER_FRAG_ID]
+validation_fragments = [GRIMHUGE_FRAG_ID]
 
 # Training parameters
 z_augment = True
@@ -46,11 +46,11 @@ dataset_fraction = 1.0
 take_full_dataset = False
 # Only relevant if take_full_dataset == False
 ink_ratio = 15
-no_ink_sample_percentage = 0.75
+no_ink_sample_percentage = 1
 
-seed = 43
+seed = 87660
 epochs = -1
-unetr_out_channels = 48
+unetr_out_channels = 32
 
 val_interval = 1
 
@@ -60,9 +60,9 @@ step_lr_factor = 0.98
 weight_decay = 0.001
 epsilon = 1e-3
 
-losses = [('masked-dice', 1.0), ('masked-focal', 4)]
-focal_gamma = 3.0
-focal_alpha = 0.85
+losses = [('masked-dice', 1.0), ('masked-focal', 1.0)]
+focal_gamma = 2.0
+focal_alpha = 0.75
 dice_smoothing = 0.05
 
 num_workers = 16
@@ -73,15 +73,23 @@ val_batch_size = train_batch_size
 train_aug = [
     A.RandomResizedCrop(height=patch_size, width=patch_size, scale=(0.78, 1.0),
                         ratio=(0.75, 1.51), interpolation=0, p=0.25),
-    A.HorizontalFlip(p=0.27),
-    A.VerticalFlip(p=0.27),
-    A.RandomRotate90(p=0.27),
-    A.RandomGamma(p=0.2, gamma_limit=(70, 130), eps=None),
-    A.AdvancedBlur(p=0.1, always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
-                   rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
-    A.GridDistortion(p=0.05, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
-                     border_mode=0, value=(0, 0, 0), mask_value=None, normalized=False),
-    A.ChannelDropout(p=0.2, channel_drop_range=(1, 5), fill_value=0),
+    A.HorizontalFlip(p=0.25),
+    A.VerticalFlip(p=0.25),
+    A.RandomRotate90(p=0.25),
+    # A.RandomBrightnessContrast(p=0.25),
+    # A.OneOf([
+    #     A.GaussNoise(var_limit=[10, 50]),
+    #     A.GaussianBlur(),
+    #     A.MotionBlur(),
+    # ], p=0.25),
+    # A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
+    # A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
+    #                rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
+    # A.ChannelDropout(always_apply=True, channel_drop_range=(1, 1), fill_value=0),
+    # A.Downscale(always_apply=True, scale_min=0.55, scale_max=0.99),
+    # A.GridDistortion(p=0.05, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
+    #                  border_mode=0, value=(0, 0, 0), mask_value=None, normalized=False),
+    A.ChannelDropout(p=0.2, channel_drop_range=(1, 4), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
 val_aug = [
