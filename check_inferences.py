@@ -59,7 +59,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
     fail_load = []
     # Iterate over each fragment directory
     for fragment_id in os.listdir(inference_root_dir):
-        fragment_id = fragment_id.removeprefix('fragment')
+        fragment_id = 'fragment'.split(fragment_id)[0]
         print_colored(f"Checking {get_frag_name_from_id(fragment_id):15} '{fragment_id}'", color="blue")
         fragment_path = os.path.join(inference_root_dir, fragment_id)
         if os.path.isdir(fragment_path):
