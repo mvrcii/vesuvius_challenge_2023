@@ -22,7 +22,7 @@ def extract_info_from_paths(paths, inference_root_dir):
 
         # Extract the fragment ID, stride, and model name
         parts = relative_path.split('/')
-        fragment_id = parts[2].replace('fragment', '')
+        fragment_id = parts[1].replace('fragment', '')
         file_name = parts[-1]
         if 'stride-2' in file_name:
             stride = 'S2'
