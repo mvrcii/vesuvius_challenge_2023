@@ -1,3 +1,4 @@
+import glob
 import os
 import subprocess
 import argparse
@@ -9,8 +10,11 @@ RESET = "\033[0m"
 
 def download_checkpoint(checkpoint_name, hostname):
     checkpoint_dir = os.path.join("checkpoints", checkpoint_name)
-    if os.path.isdir(checkpoint_dir):
-        print(f"{GREEN}Checkpoint folder already exists. Exiting to prevent overwrite.{RESET}")
+    checkpoint_pattern = os.path.join(checkpoint_dir, 'best-checkpoint*.ckpt')
+
+    # Check if directory exists and contains the required file
+    if os.path.isdir(checkpoint_dir) and glob.glob(checkpoint_pattern):
+        print(f"{GREEN}Checkpoint folder already exists with the required file. Exiting to prevent overwrite.{RESET}")
         sys.exit()
 
     print(f"{GREEN}Download process initiated!{RESET}")

@@ -104,7 +104,7 @@ def main():
         message = f"INFO:\t{get_frag_name_from_id(fragment_id)} {stride_str}{tta_str} ({checkpoint_name}) {job_id}"
         print_colored(message=message, color="purple")
         if not args.no_tail:
-            delay_seconds = 2  # Adjust this value as needed
+            delay_seconds = 5  # Adjust this value as needed
             print_colored(f"INFO:\tWaiting for {delay_seconds} seconds before tailing the log file...", color="blue")
             time.sleep(delay_seconds)
 
