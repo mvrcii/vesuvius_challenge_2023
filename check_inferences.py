@@ -78,6 +78,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
             for sub_dir in os.listdir(fragment_path):
                 for checkpoint in checkpoints_to_check:
                     if checkpoint not in sub_dir:
+                        print("model dir not found", checkpoint)
                         continue
                     run_path = os.path.join(fragment_path, sub_dir)
                     if os.path.isdir(run_path):
