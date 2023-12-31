@@ -26,11 +26,15 @@ for fragment_id in os.listdir(fragments_dir):
     if os.path.isdir(fragment_path):
         # Check each run name directory
         for sub_dir in os.listdir(fragment_path):
+            print("Checking", sub_dir)
             for run_name in runs_to_ckeck:
                 if not sub_dir.endswith(run_name):
+                    print(sub_dir)
+                    print("does not end with ", run_name)
                     continue
                 run_path = os.path.join(fragment_path, sub_dir)
                 if os.path.isdir(run_path):
+                    print("searching in ", run_path)
                     # Process each .npy file
                     for file in os.listdir(run_path):
                         if file.endswith(".npy"):
