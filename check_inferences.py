@@ -46,19 +46,24 @@ for fragment_id in os.listdir(fragments_dir):
                     for file in os.listdir(run_path):
                         if file.endswith(".npy"):
                             file_path = os.path.join(run_path, file)
-                            # try:
-                            array = np.load(file_path)
-                            if has_more_than_x_percent_zeros(array, report_zero_percent):
-                                zero_ints.append(file_path)
-                            # except Exception as e:
-                            #     fail_load.append(file_path)
+                            try:
+                                array = np.load(file_path)
+                                if has_more_than_x_percent_zeros(array, report_zero_percent):
+                                    zero_ints.append(file_path)
+                            except Exception as e:
+                                fail_load.append(file_path)
 
+print("")
 print(f"Files with > {report_zero_percent} zero percentage:")
 print("----------------------------------------------------")
 for x in zero_ints:
     print(x)
+if len(zero_ints) == 0:
+    print("None")
 print("")
 print(f"Files that failed to load:")
 print("----------------------------------------------------")
 for x in fail_load:
     print(x)
+if len(fail_load) == 0:
+    print("None")
