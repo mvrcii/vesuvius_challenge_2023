@@ -127,8 +127,6 @@ class Config:
 
         keys_to_ignore = [
             'config_file_name',
-            'train_aug',
-            'val_aug',
             'os',
             'A',
             'prepend_info',
