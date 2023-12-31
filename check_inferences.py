@@ -60,8 +60,8 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
 
     skip_list = []
 
-    for fragment_id in os.listdir(inference_root_dir):
-        fragment_id = fragment_id.split('fragment')[-1]
+    for fragment_dir in os.listdir(inference_root_dir):
+        fragment_id = fragment_dir.split('fragment')[-1]
 
         if fragment_id in SUPERSEDED_FRAGMENTS:
             skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}\tis superseded")
@@ -72,27 +72,21 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold):
             continue
 
         print_colored(f"INFO:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}", color="blue")
-        fragment_path = os.path.join(inference_root_dir, fragment_id)
-        print("fragment path", fragment_path)
+
+        fragment_path = os.path.join(inference_root_dir, fragment_dir)
         if os.path.isdir(fragment_path):
-            # Check each run name directory
             for sub_dir in os.listdir(fragment_path):
                 for checkpoint in checkpoints_to_check:
-                    print("model dirs", checkpoint)
                     if checkpoint not in sub_dir:
-                        print("model dir not found", checkpoint)
                         continue
                     run_path = os.path.join(fragment_path, sub_dir)
                     if os.path.isdir(run_path):
                         for file in os.listdir(run_path):
                             if file.endswith(".npy"):
                                 file_path = os.path.join(run_path, file)
-                                print("checking", file_path)
-
                                 try:
                                     array = np.load(file_path)
                                     if has_more_than_x_percent_zeros(array, threshold):
-                                        print("zero int!")
                                         zero_ints.append(file_path)
                                 except Exception as e:
                                     fail_load.append(file_path)
