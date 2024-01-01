@@ -137,7 +137,6 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
         fragment_path = os.path.join(inference_root_dir, fragment_dir)
 
         groups = ['stride-2', 'stride-4', 'tta-stride-2']
-        black_group_stats = {group: [] for group in groups}
 
         if not os.path.isdir(fragment_path):
             continue
@@ -148,6 +147,8 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
             for ckpt in checkpoints_to_check:
                 if checkpoint_str in ckpt:
                     checkpoint_dir = os.path.join(fragment_path, checkpoint)
+
+                    black_group_stats = {group: [] for group in groups}
 
                     if not os.path.isdir(checkpoint_dir):
                         continue
@@ -176,11 +177,11 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
                         print(f"{npy_file:50} -> {black_pixel_percentage:.4f}")
                         black_group_stats[group_name].append((npy_file_path, black_pixel_percentage))
 
-        print(black_group_stats.items())
-        for group, (file_path, black_values) in black_group_stats.items():
-            outliers = detect_outliers(black_values)
-            if outliers:
-                print_colored(f"OUTLIERS: in {group}: {outliers} -> {file_path}", 'red')
+                    print(black_group_stats.items())
+                    for group, (file_path, black_values) in black_group_stats.items():
+                        outliers = detect_outliers(black_values)
+                        if outliers:
+                            print_colored(f"OUTLIERS: in {group}: {outliers} -> {file_path}", 'red')
 
     for message in skip_list:
         print_colored(message, color='blue')
