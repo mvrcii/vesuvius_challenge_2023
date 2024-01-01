@@ -127,7 +127,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                     if not os.path.isdir(checkpoint_dir):
                         continue
 
-                    for npy_file in os.listdir(checkpoint_dir):
+                    for npy_file in sorted(os.listdir(checkpoint_dir)):
                         if not npy_file.endswith('.npy'):
                             continue
 
@@ -149,7 +149,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                             print_colored(f"ERROR:\tMask is none: {mask_path}", 'red')
 
                         black_pixel_percentage = calc_black_percentage(image=image, mask=mask)
-                        print(f"{npy_file:30} -> {black_pixel_percentage:.4f}")
+                        print(f"{npy_file:50} -> {black_pixel_percentage:.4f}")
                         black_group_stats[group_name].append(black_pixel_percentage)
 
     for message in skip_list:
