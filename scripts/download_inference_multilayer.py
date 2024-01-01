@@ -82,11 +82,16 @@ def closest_match(input_str, options, num_matches=1):
 
 def get_checkpoint_name(user_input, checkpoint_dict):
     short_names = checkpoint_dict.keys()
+
+    if len(user_input.split('-')) > 3:
+        return user_input
+
     match = closest_match(user_input, short_names)
     if match:
         return checkpoint_dict[match[0]]
     else:
-        return user_input
+        print("Error with checkpoint")
+        exit()
 
 
 def get_inference_result(fragment_id_or_name, checkpoint_keyword, hostname, single, force=False):
