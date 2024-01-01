@@ -154,7 +154,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
                 if checkpoint_str in ckpt:
                     checkpoint_dir = os.path.join(fragment_path, checkpoint)
 
-                    print_colored(f"INFO:\t{('-'.join(checkpoint.split('-')[0:2])).upper()}", color='blue')
+                    print_colored(f"INFO:\t{checkpoint_str.upper()}", color='blue')
                     black_group_stats = {group: [] for group in groups}
 
                     if not os.path.isdir(checkpoint_dir):
