@@ -328,11 +328,9 @@ def parse_args():
     logging.set_verbosity_error()
     Image.MAX_IMAGE_PIXELS = None
 
-    parser = argparse.ArgumentParser(description='Infer Layered Script')
+    parser = argparse.ArgumentParser(description='Infer Layered with TTA Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
-    parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
-    parser.add_argument('--resume', action='store_true', help='Continue a previously stopped inference')
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
     parser.add_argument('--gpu', type=int, default=0, help='Cuda GPU (default: 0)')
     args = parser.parse_args()

@@ -331,12 +331,10 @@ def parse_args():
     logging.set_verbosity_error()
     Image.MAX_IMAGE_PIXELS = None
 
-    parser = argparse.ArgumentParser(description='Infer Layered Script')
+    parser = argparse.ArgumentParser(description='Infer Layered without TTA Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
-    parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
-                                                              'for the inference')
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
     parser.add_argument('--gpu', type=int, default=0, help='Cuda GPU (default: 0)')
     parser.add_argument('--full_sweep', action='store_true', help='Do a full layer inference sweep (0-63)')
@@ -397,7 +395,7 @@ def infer_layered(checkpoint, frag_id, batch_size=4, stride=2, gpu=0):
     main(checkpoint, frag_id, batch_size, stride, gpu)
 
 
-def main(checkpoint, fragment_id, batch_size=4, stride_factor=2, gpu=0):
+def main(checkpoint, fragment_id, batch_size=4, stride_factor=2, gpu=0, full_sweep=False):
     config_path = find_py_in_dir(os.path.join('checkpoints', checkpoint))
     config = Config.load_from_file(config_path)
 
@@ -420,7 +418,7 @@ def main(checkpoint, fragment_id, batch_size=4, stride_factor=2, gpu=0):
     os.makedirs(results_dir, exist_ok=True)
 
     start_best_layer_idx, end_best_layer_idx = get_inference_range(frag_id=fragment_id)
-    if args.full_sweep:
+    if full_sweep:
         start_best_layer_idx = 0
         end_best_layer_idx = 63
 
