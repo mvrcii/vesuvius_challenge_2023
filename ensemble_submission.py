@@ -155,9 +155,11 @@ for frag_id in relevant_fragments:
     # Save the images
     max_str = "_max" if max else "_mean"
     out_path = os.path.join(out_dir, f'{weight_string}_fragment{frag_id}_ensemble{max_str}.png')
-    if flip_num is not None:
-        processed = np.flip(processed, flip_num)
     if rotate_num is not None:
-        processed = np.rot90(processed, rotate_num)  # Rotate
+        print(rotate_num)
+        ensemble = np.rot90(ensemble, rotate_num)  # Rotate
+    if flip_num is not None:
+        print(flip_num)
+        ensemble = np.flip(ensemble, flip_num)
     Image.fromarray(ensemble).save(os.path.join(out_path))
     print("Saving to ", out_path)

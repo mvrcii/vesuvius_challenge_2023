@@ -625,9 +625,11 @@ class Visualization:
         processed = self.normalize_npy_preds(processed)  # Normalize
 
         if not save_img:
+            print(self.rotate_num)
             processed = self.rot90(processed, self.rotate_num)  # Rotate
 
             if self.flip_num is not None:
+                print(self.flip_num)
                 processed = np.flip(processed, self.flip_num)
 
         threshold = float(self.threshold_var.get())
