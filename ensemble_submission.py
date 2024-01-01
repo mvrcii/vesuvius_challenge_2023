@@ -4,7 +4,7 @@ import os
 import numpy as np
 from PIL import Image
 
-from utility.fragments import IRONHIDE_FRAG_ID
+from utility.fragments import IRONHIDE_FRAG_ID, SUNSTREAKER_FRAG_ID, THUNDERCRACKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID
 
 
 def find_smallest_array_size(arrays):
