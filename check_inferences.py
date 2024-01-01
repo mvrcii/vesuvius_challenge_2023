@@ -134,11 +134,11 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
         fragment_id = fragment_dir.split('fragment')[-1]
 
         if fragment_id in SUPERSEDED_FRAGMENTS:
-            skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}\tis superseded")
+            # skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}\tis superseded")
             continue
 
         if fragment_id in FRAGMENTS_IGNORE:
-            skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}\tis ignored")
+            # skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}\tis ignored")
             continue
 
         print_colored(f"\nINFO:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}", color="blue")
