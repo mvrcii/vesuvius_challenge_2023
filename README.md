@@ -48,7 +48,9 @@ and another 90GB for the 512x512 model, so make sure ~ 200GB of free disk space 
 #### Note
 To make communication about the different fragments easier during development, we assigned an alias name to each 
 fragment e.g. `SUNSTREAKER` == `20231031143852`. The full mapping of fragment aliases to their IDs can be seen 
-in `utility/fragments.json` inside the docker image.
+in `utility/fragments.json` inside the docker image. References to these aliases
+can be found through the code, configs etc.
+
 ### 1. Set up the data locally
 When running the docker container, you need to mount a local data directory to the data directory in the docker container.
 The code expects a `data` directory on your local machine to contain a directory called `fragments`which in turn 
@@ -121,7 +123,7 @@ Any model can be trained by calling
 python train.py <config_path>
 ```
 Where ``config_path`` points to a ``config_xxxxx.py`` file. Make sure to adjust the parameter ```train_batch_size```
-in the corresponding config, according to your hardwar requirements, when training with less than 80 GB VRAM.
+in the corresponding config according to your hardwar requirements, when training with less than 80 GB VRAM.
 
 The 4 configs used for our ensemble submission are placed under `configs/submission` 
 1. ``olive-wind.py`` (128x128)
@@ -158,7 +160,7 @@ Inference can be run via
 python multilayer_approach/infer_layered_segmentation_padto16.py <checkpoint_folder> <fragment_id>
 ```
 Where checkpoint_folder points to the folder (named with a wandb name, e.g. icy-disco-1199-unetr-sf-b5-231231-223530)
-This name will be automatically generated when the train run is started.
+This name will be automatically generated when the train run is started and printed to the console when the training starts.
 
 The resulting npy files will be stored in `inference/results/fragment_<id>/<checkpiont_folder>`
 
