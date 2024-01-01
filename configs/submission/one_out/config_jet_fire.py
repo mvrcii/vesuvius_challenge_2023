@@ -27,10 +27,10 @@ patch_size = 128
 label_size = patch_size // 4
 stride = patch_size // 2
 
-fragment_ids = [TRAILBIGGER_FRAG_ID, BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
-                SKYHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID, GRIMHUGE_FRAG_ID,
+fragment_ids = [TRAILBIGGER_FRAG_ID, BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID,
+                SKYHUGE_FRAG_ID, THUNDERCRACKER_FRAG_ID, JAZZBIGGER_FRAG_ID, GRIMHUGE_FRAG_ID,
                 DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID]
-validation_fragments = [THUNDERCRACKER_FRAG_ID]
+validation_fragments = [JETFIRE_FRAG_ID]
 
 # Training parameters
 z_augment = False
@@ -74,19 +74,6 @@ train_aug = [
     A.HorizontalFlip(p=0.25),
     A.VerticalFlip(p=0.25),
     A.RandomRotate90(p=0.25),
-    # A.RandomBrightnessContrast(p=0.25),
-    # A.OneOf([
-    #     A.GaussNoise(var_limit=[10, 50]),
-    #     A.GaussianBlur(),
-    #     A.MotionBlur(),
-    # ], p=0.25),
-    # A.RandomGamma(always_apply=True, gamma_limit=(56, 150), eps=None),
-    # A.AdvancedBlur(always_apply=True, blur_limit=(3, 5), sigmaX_limit=(0.2, 1.0), sigmaY_limit=(0.2, 1.0),
-    #                rotate_limit=(-90, 90), beta_limit=(0.5, 8.0), noise_limit=(0.9, 1.1)),
-    # A.ChannelDropout(always_apply=True, channel_drop_range=(1, 1), fill_value=0),
-    # A.Downscale(always_apply=True, scale_min=0.55, scale_max=0.99),
-    # A.GridDistortion(p=0.05, num_steps=15, distort_limit=(-0.19, 0.19), interpolation=0,
-    #                  border_mode=0, value=(0, 0, 0), mask_value=None, normalized=False),
     A.ChannelDropout(p=0.2, channel_drop_range=(1, 4), fill_value=0),
     A.Normalize(mean=[0], std=[1])
 ]
