@@ -4,7 +4,9 @@ import os
 import numpy as np
 from PIL import Image
 
-from utility.fragments import IRONHIDE_FRAG_ID, SUNSTREAKER_FRAG_ID, THUNDERCRACKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID, HOT_ROD_FRAG_ID, BLASTER_FRAG_ID, JETFIRE_FRAG_ID, BLUEBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, SKYGLORIOUS_FRAG_ID, TRAILBIGGER_FRAG_ID
+from utility.fragments import IRONHIDE_FRAG_ID, SUNSTREAKER_FRAG_ID, THUNDERCRACKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, \
+    GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID, HOT_ROD_FRAG_ID, BLASTER_FRAG_ID, JETFIRE_FRAG_ID, BLUEBIGGER_FRAG_ID, \
+    DEVASBIGGER_FRAG_ID, SKYGLORIOUS_FRAG_ID, TRAILBIGGER_FRAG_ID, FragmentHandler
 
 
 def find_smallest_array_size(arrays):
@@ -91,6 +93,11 @@ max = True
 
 inf_dir = os.path.join("inference", "results")
 for frag_id in relevant_fragments:
+    frag_handler = FragmentHandler()
+
+    rotate_num = frag_handler.get_rotation(frag_id=frag_id)
+    flip_num = frag_handler.get_flip(frag_id=frag_id)
+
     # list holding all npy files to find smallest common size
     npy_files = []
 
@@ -148,5 +155,7 @@ for frag_id in relevant_fragments:
     # Save the images
     max_str = "_max" if max else "_mean"
     out_path = os.path.join(out_dir, f'{weight_string}_fragment{frag_id}_ensemble{max_str}.png')
+    processed = np.flip(processed, flip_num)
+    processed = np.rot90(processed, rotate_num)  # Rotate
     Image.fromarray(ensemble).save(os.path.join(out_path))
     print("Saving to ", out_path)
