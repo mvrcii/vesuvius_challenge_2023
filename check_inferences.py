@@ -178,7 +178,10 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
                         black_group_stats[group_name].append((npy_file_path, black_pixel_percentage))
 
                     print(black_group_stats.items())
-                    for group, (file_path, black_values) in black_group_stats.items():
+                    for x in black_group_stats.items():
+                        print(x)
+                        exit()
+                        # group, (file_path, black_values)
                         outliers = detect_outliers(black_values)
                         if outliers:
                             print_colored(f"OUTLIERS: in {group}: {outliers} -> {file_path}", 'red')
