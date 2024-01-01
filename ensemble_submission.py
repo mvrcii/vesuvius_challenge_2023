@@ -73,11 +73,12 @@ def is_relevant(inf_dir, checkpoint_names):
             return c
     return "invalid"
 
+from utility.checkpoints import WISE_ENERGY, OLIVE_WIND, DESERT_SEA, CURIOUS_RAIN
 
 # Goes over all importants fragments (13)
-relevant_fragments = [IRONHIDE_FRAG_ID]
-checkpoint_names = ["desert-sea-1183", "efficient-aardvark"]
-checkpoint_weights = {"desert-sea-1183": 0.5, "efficient-aardvark": 0.5}
+relevant_fragments = [SUNSTREAKER_FRAG_ID]
+checkpoint_names = [WISE_ENERGY, OLIVE_WIND, DESERT_SEA, CURIOUS_RAIN]
+checkpoint_weights = {WISE_ENERGY: 0.1, OLIVE_WIND: 0.4, CURIOUS_RAIN: 0.2, DESERT_SEA: 0.3}
 out_dir = os.path.join("data", "ensemble_results")
 
 inf_dir = os.path.join("inference", "results")
@@ -99,7 +100,10 @@ for frag_id in relevant_fragments:
         for file in os.listdir(inf_dir_path):
             if file.endswith(".npy"):
                 file_path = os.path.join(inf_dir_path, file)
+                print(file_path)
+
                 arr = np.load(file_path)
+                print(arr.shape)
                 npy_files.append(arr)
                 model_files[c_name].append(arr)
     smallest_size = find_smallest_array_size(npy_files)

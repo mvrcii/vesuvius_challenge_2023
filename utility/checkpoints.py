@@ -30,6 +30,11 @@ CHECKPOINTS = {
     "wise-energy": "wise-energy-1190-unetr-sf-b5-231231-055216",
 }
 
+CURIOUS_RAIN = CHECKPOINTS['curious-rain']
+DESERT_SEA = CHECKPOINTS['desert-sea']
+OLIVE_WIND = CHECKPOINTS['olive-wind']
+WISE_ENERGY = CHECKPOINTS['wise-energy']
+
 # UPBEAT_TREE = CHECKPOINTS["upbeat-tree"]
 # DEFT_YOGURT = CHECKPOINTS["deft-yogurt"]
 # PLAYFUL_FIREFLY = CHECKPOINTS["playful-firefly"]
