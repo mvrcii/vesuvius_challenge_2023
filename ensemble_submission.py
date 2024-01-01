@@ -109,28 +109,27 @@ for frag_id in relevant_fragments:
     if frag_id == SUNSTREAKER_FRAG_ID:
         checkpoint_weights = checkpoint_weights_SUNSTREAKER
     elif frag_id == THUNDERCRACKER_FRAG_ID:
-        pass
-    #     checkpoint_weights = checkpoint_weights_THUNDERCRACKER
-    # elif frag_id == ULTRA_MAGNUS_FRAG_ID:
-    #     checkpoint_weights = checkpoint_weights_ULTRA_MAGNUS
-    # elif frag_id == GRIMHUGE_FRAG_ID:
-    #     checkpoint_weights = checkpoint_weights_GRIMHUGE
-    # elif frag_id == JAZZBIGGER_FRAG_ID:
-    #     checkpoint_weights = checkpoint_weights_JAZZBIGGER
-    # elif frag_id == HOT_ROD_FRAG_ID:
-    #     checkpoint_weights = checkpoint_weights_HOT_ROD
-    # elif frag_id == BLASTER_FRAG_ID:
-    #     checkpoint_weights = checkpoint_weights_BLASTER
-    # elif frag_id == JETFIRE_FRAG_ID:
-    #     checkpoint_weights = checkpoint_weights_JETFIRE
-    # elif frag_id == BLUEBIGGER_FRAG_ID:
-    #     checkpoint_weights = checkpoint_weights_BLUEBIGGER
-    # elif frag_id == DEVASBIGGER_FRAG_ID:
-    #     checkpoint_weights = checkpoint_weights_DEVASBIGGER
-    # elif frag_id == SKYGLORIOUS_FRAG_ID:
-    #     checkpoint_weights = checkpoint_weights_SKYGLORIOUS
-    # elif frag_id == TRAILBIGGER_FRAG_ID:
-    #     checkpoint_weights = checkpoint_weights_TRAILBIGGER
+        checkpoint_weights = checkpoint_weights_THUNDERCRACKER
+    elif frag_id == ULTRA_MAGNUS_FRAG_ID:
+        checkpoint_weights = checkpoint_weights_ULTRA_MAGNUS
+    elif frag_id == GRIMHUGE_FRAG_ID:
+        checkpoint_weights = checkpoint_weights_GRIMHUGE
+    elif frag_id == JAZZBIGGER_FRAG_ID:
+        checkpoint_weights = checkpoint_weights_JAZZBIGGER
+    elif frag_id == HOT_ROD_FRAG_ID:
+        checkpoint_weights = checkpoint_weights_HOT_ROD
+    elif frag_id == BLASTER_FRAG_ID:
+        checkpoint_weights = checkpoint_weights_BLASTER
+    elif frag_id == JETFIRE_FRAG_ID:
+        checkpoint_weights = checkpoint_weights_JETFIRE
+    elif frag_id == BLUEBIGGER_FRAG_ID:
+        checkpoint_weights = checkpoint_weights_BLUEBIGGER
+    elif frag_id == DEVASBIGGER_FRAG_ID:
+        checkpoint_weights = checkpoint_weights_DEVASBIGGER
+    elif frag_id == SKYGLORIOUS_FRAG_ID:
+        checkpoint_weights = checkpoint_weights_SKYGLORIOUS
+    elif frag_id == TRAILBIGGER_FRAG_ID:
+        checkpoint_weights = checkpoint_weights_TRAILBIGGER
     frag_handler = FragmentHandler()
 
     rotate_num = frag_handler.get_rotation(frag_id=frag_id)
