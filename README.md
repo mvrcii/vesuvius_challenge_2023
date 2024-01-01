@@ -70,9 +70,8 @@ which contains the .tif files numbered with 5 digits, e.g. `00032.tif`
         │   └── slices/
         │       ├── 00001.tif
         │       ├── 00002.tif
-        │       ├── 00003.tif
         │       ...
-        │       └── [Other .tif files]
+        │       └── 00064.tif
 ###  2. Download the app.tar docker image from Google Drive (link provided in submission mail)
 ###  3. Load the docker image
 ```
