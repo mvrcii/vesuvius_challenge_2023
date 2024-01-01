@@ -13,7 +13,7 @@ from skimage.transform import resize
 from tqdm import tqdm
 
 from utility.configs import Config
-from utility.fragments import FragmentHandler, SUPERSEDED_FRAGMENTS
+from utility.fragments import FragmentHandler, SUPERSEDED_FRAGMENTS, FRAGMENTS_IGNORE
 
 
 def combine_layers(predictions, max_distance):
@@ -192,6 +192,8 @@ def main():
     # Filter valid fragments only
     valid_frags = []
     for frag_id in all_frag_dirs:
+        if frag_id in SUPERSEDED_FRAGMENTS or frag_id in FRAGMENTS_IGNORE:
+            continue
         if not has_valid_ckpt_dirs(frag_root, frag_id):
             continue
         frag_name = FragmentHandler().get_name(frag_id=frag_id)
