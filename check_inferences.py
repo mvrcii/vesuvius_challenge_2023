@@ -205,7 +205,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
 def main():
     Image.MAX_IMAGE_PIXELS = None
 
-    args = get_sys_args()
+    # args = get_sys_args()
     config = Config().load_local_cfg()
 
     work_dir = os.path.expanduser(config.work_dir)
@@ -223,19 +223,19 @@ def main():
                                               inference_root_dir=inference_root_dir,
                                               work_dir=work_dir)
 
-    print_colored(f"\nFiles with > {args.no_ink_ratio} zero percentage:", color="purple")
-    print_colored("----------------------------------------------------", color="purple")
-    extract_info_from_paths(paths=zero_ints, work_dir=work_dir, inference_root_dir=inference_root_dir)
-    if len(zero_ints) == 0:
-        print_colored("None", color="purple")
-    print_colored("----------------------------------------------------", color="purple")
-
-    print(f"Files that failed to load:")
-    print("----------------------------------------------------")
-    for x in fail_load:
-        print(x)
-    if len(fail_load) == 0:
-        print("None")
+    # print_colored(f"\nFiles with > {args.no_ink_ratio} zero percentage:", color="purple")
+    # print_colored("----------------------------------------------------", color="purple")
+    # extract_info_from_paths(paths=zero_ints, work_dir=work_dir, inference_root_dir=inference_root_dir)
+    # if len(zero_ints) == 0:
+    #     print_colored("None", color="purple")
+    # print_colored("----------------------------------------------------", color="purple")
+    #
+    # print(f"Files that failed to load:")
+    # print("----------------------------------------------------")
+    # for x in fail_load:
+    #     print(x)
+    # if len(fail_load) == 0:
+    #     print("None")
 
 
 if __name__ == '__main__':
