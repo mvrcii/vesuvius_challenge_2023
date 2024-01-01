@@ -73,7 +73,10 @@ def is_relevant(inf_dir, checkpoint_names):
             return c
     return "invalid"
 
-from utility.checkpoints import WISE_ENERGY, OLIVE_WIND, DESERT_SEA, CURIOUS_RAIN
+WISE_ENERGY = 'wise-energy'
+OLIVE_WIND = 'olive-wind'
+DESERT_SEA = 'desert-sea'
+CURIOUS_RAIN = 'curious-rain'
 
 # Goes over all importants fragments (13)
 relevant_fragments = [SUNSTREAKER_FRAG_ID]
