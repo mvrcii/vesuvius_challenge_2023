@@ -8,14 +8,11 @@ from utility.fragments import HOT_ROD_FRAG_ID, BLASTER_FRAG_ID, IRONHIDE_FRAG_ID
 
 def main():
     checkpoint_keys = ['wise-energy', 'olive-wind', 'curious-rain', 'desert-sea']
-    # checkpoint_keys = ['zesty-shape']
 
     fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
                     SKYGLORIOUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
                     DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID,
                     TRAILBIGGER_FRAG_ID]
-
-    fragment_ids = [HOT_ROD_FRAG_ID]
 
     tta = False
     batch_size = 4

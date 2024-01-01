@@ -76,18 +76,31 @@ def is_relevant(inf_dir, checkpoint_names):
     return "invalid"
 
 
-
 WISE_ENERGY = 'wise-energy'
 OLIVE_WIND = 'olive-wind'
 DESERT_SEA = 'desert-sea'
 CURIOUS_RAIN = 'curious-rain'
 
 checkpoint_weights_SUNSTREAKER = {WISE_ENERGY: 0.33, OLIVE_WIND: 0.23, CURIOUS_RAIN: 0.23, DESERT_SEA: 0.23}
+checkpoint_weights_THUNDERCRACKER = {WISE_ENERGY: 0.5, OLIVE_WIND: 0.5, CURIOUS_RAIN: 0, DESERT_SEA: 0}
+checkpoint_weights_GRIMHUGE = {WISE_ENERGY: 0.1, OLIVE_WIND: 0.2, CURIOUS_RAIN: 0.3, DESERT_SEA: 0.3}
+checkpoint_weights_BLUEBIGGER = {WISE_ENERGY: 0.1, OLIVE_WIND: 0.1, CURIOUS_RAIN: 0, DESERT_SEA: 0.8}
+checkpoint_weights_ULTRA_MAGNUS = checkpoint_weights_SUNSTREAKER
+checkpoint_weights_IRON_HIDE = {WISE_ENERGY: 0.33, OLIVE_WIND: 0.33, CURIOUS_RAIN: 0.33, DESERT_SEA: 0.0}
+checkpoint_weights_JETFIRE = {WISE_ENERGY: 0.3, OLIVE_WIND: 0.8, CURIOUS_RAIN: 0.3, DESERT_SEA: 0.4}
+checkpoint_weights_JAZZBIGGER = {WISE_ENERGY: 0.15, OLIVE_WIND: 0.4, CURIOUS_RAIN: 0.2, DESERT_SEA: 0.4}
+checkpoint_weights_HOT_ROD = checkpoint_weights_BLUEBIGGER
+checkpoint_weights_BLASTER = checkpoint_weights_SUNSTREAKER
+checkpoint_weights_DEVASBIGGER = checkpoint_weights_SUNSTREAKER
+checkpoint_weights_SKYGLORIOUS = checkpoint_weights_JETFIRE
+checkpoint_weights_TRAILBIGGER = checkpoint_weights_SUNSTREAKER
 
 # Goes over all importants fragments (13)
-relevant_fragments = [THUNDERCRACKER_FRAG_ID]
-checkpoint_names = [WISE_ENERGY, OLIVE_WIND, DESERT_SEA, CURIOUS_RAIN]
-checkpoint_weights = {WISE_ENERGY: 0.33, OLIVE_WIND: 0.23, CURIOUS_RAIN: 0.23, DESERT_SEA: 0.23}
+relevant_fragments = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
+                      SKYGLORIOUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
+                      DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID,
+                      TRAILBIGGER_FRAG_ID]
+
 out_dir = os.path.join("data", "ensemble_results")
 max = True
 
@@ -139,6 +152,7 @@ for frag_id in relevant_fragments:
         inf_dir_path = os.path.join(fragment_dir, inf_dir)
         for file in os.listdir(inf_dir_path):
             if file.endswith(".npy") and file.startswith('tta'):
+                # if file.endswith(".npy"):
                 file_path = os.path.join(inf_dir_path, file)
                 print(file_path)
 
