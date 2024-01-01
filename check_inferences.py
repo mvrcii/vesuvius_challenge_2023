@@ -50,16 +50,18 @@ def extract_info_from_paths(paths, work_dir, inference_root_dir):
 
 
 def binarize_image(array):
-    # Binarize the image: 0 remains 0, anything greater becomes 255
-    return np.where(array > 0.01, 1, 0)
+    return np.where(array > 0, 1, 0)
 
 
 # Function to check if an array has more than x% zeros
 def calc_black_percentage(image, mask):
+    image = resize(image, image.shape // 4, anti_aliasing=True)
     image = binarize_image(image)
 
     mask_resized = resize(mask, image.shape, anti_aliasing=True)
-    mask_resized = mask_resized == 0.0
+    mask_resized = mask_resized == 0
+
+    print(image.shape, mask_resized.shape)
 
     unique_black = (image == 0) & mask_resized
     unique_black_count = np.count_nonzero(unique_black)
@@ -143,7 +145,6 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                         if not os.path.isfile(mask_path):
                             raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
                         mask = np.asarray(Image.open(mask_path))
-                        # mask = resize(mask, (image.shape[0], image.shape[1]), anti_aliasing=True)
 
                         if mask is None:
                             print_colored(f"ERROR:\tMask is none: {mask_path}", 'red')
