@@ -106,6 +106,18 @@ def detect_outliers(data, m=2):
     return [x for x in data if abs(x - mean) > m * std_dev]
 
 
+def custom_sort_key(file_name):
+    if 'stride-4' in file_name:
+        priority = 3
+    elif 'tta-stride-2' in file_name:
+        priority = 2
+    elif 'stride-2' in file_name:
+        priority = 1
+    else:
+        priority = 4  # Default for any other file names
+    return priority, file_name
+
+
 def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work_dir):
     zero_ints = []
     fail_load = []
@@ -142,7 +154,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                     if not os.path.isdir(checkpoint_dir):
                         continue
 
-                    for npy_file in sorted(os.listdir(checkpoint_dir)):
+                    for npy_file in sorted(os.listdir(checkpoint_dir), key=custom_sort_key):
                         if not npy_file.endswith('.npy'):
                             continue
 
