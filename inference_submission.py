@@ -1,8 +1,7 @@
-import subprocess
-import sys
-
+from multilayer_approach.infer_layered_segmentation_padto16 import infer_layered
+from multilayer_approach.infer_layered_segmentation_padto16_tta import infer_layered_with_tta
 from utility.checkpoints import CHECKPOINTS
-from utility.fragments import RICHI_FRAG_ID, RICHI2_FRAG_ID, HOT_ROD_FRAG_ID
+from utility.fragments import HOT_ROD_FRAG_ID
 
 
 def main():
@@ -15,29 +14,21 @@ def main():
     #                 TRAILBIGGER_FRAG_ID]
 
     fragment_ids = [HOT_ROD_FRAG_ID]
-    tta = False
 
-    script = f"multilayer_approach/infer_layered_segmentation_padto16.py"
-    if tta:
-        script = f"multilayer_approach/infer_layered_segmentation_padto16_tta.py"
+    tta = False
+    batch_size = 4
+    stride = 2
 
     for checkpoint_key in checkpoint_keys:
         checkpoint = CHECKPOINTS[checkpoint_key]
 
         for fragment_id in fragment_ids:
             print(f"Start Inference with {checkpoint} and {fragment_id}")
-            command = [sys.executable,
-                       script,
-                       str(checkpoint), str(fragment_id),
-                       '--stride', str(2)]
 
             if tta:
-                command.append('--tta')
-
-            try:
-                subprocess.run(command, check=True, stderr=subprocess.PIPE, text=True)
-            except subprocess.CalledProcessError as e:
-                print(f"Error occurred: {e.stderr}")
+                infer_layered_with_tta(checkpoint=checkpoint, frag_id=fragment_id, stride=stride)
+            else:
+                infer_layered(checkpoint=checkpoint, frag_id=fragment_id, stride=stride, batch_size=batch_size)
 
 
 if __name__ == '__main__':
