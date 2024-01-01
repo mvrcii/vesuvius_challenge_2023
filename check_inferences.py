@@ -64,8 +64,6 @@ def calc_black_percentage(image, mask, downsample_factor=8):
     mask_resized = resize(mask, (new_height, new_width), anti_aliasing=False)
     mask_binarized = binarize_image(mask_resized)
 
-    print(image.shape, mask_resized.shape)
-
     unique_black = (image_binarized == 0) & (mask_binarized == 0)
     unique_black_count = np.count_nonzero(unique_black)
 
@@ -97,13 +95,19 @@ def find_group_name_in_filename(filename, group_names):
 
 
 def detect_outliers(data, m=1.5):
-    """Detect outliers in data. An outlier is defined as a value that is more than m standard deviations from the mean."""
+    """
+    Detect outliers in data. An outlier is defined as a value that is more than m standard deviations from the mean.
+    Returns a tuple of (outliers, mean, standard deviation).
+    Outliers are returned as a list of tuples, each tuple containing the index and the value of the outlier.
+    """
     if not data:
-        return []
+        return [], None, None
 
     mean = sum(data) / len(data)
     std_dev = (sum((x - mean) ** 2 for x in data) / len(data)) ** 0.5
-    return [x for x in data if abs(x - mean) > m * std_dev]
+    outliers = [(index, value) for index, value in enumerate(data) if abs(value - mean) > m * std_dev]
+
+    return outliers, mean, std_dev
 
 
 def custom_sort_key(file_name):
@@ -118,7 +122,7 @@ def custom_sort_key(file_name):
     return priority, file_name
 
 
-def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work_dir):
+def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
     zero_ints = []
     fail_load = []
     skip_list = []
@@ -139,7 +143,6 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
         fragment_path = os.path.join(inference_root_dir, fragment_dir)
 
         groups = ['stride-2', 'stride-4', 'tta-stride-2']
-        black_group_stats = {group: [] for group in groups}
 
         if not os.path.isdir(fragment_path):
             continue
@@ -150,6 +153,9 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
             for ckpt in checkpoints_to_check:
                 if checkpoint_str in ckpt:
                     checkpoint_dir = os.path.join(fragment_path, checkpoint)
+
+                    print_colored(f"INFO:\t{'-'.join(checkpoint_str.split('-')[0:2]).upper()}", color='blue')
+                    black_group_stats = {group: [] for group in groups}
 
                     if not os.path.isdir(checkpoint_dir):
                         continue
@@ -176,12 +182,21 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
 
                         black_pixel_percentage = calc_black_percentage(image=image, mask=mask)
                         print(f"{npy_file:50} -> {black_pixel_percentage:.4f}")
-                        black_group_stats[group_name].append((npy_file_path, black_pixel_percentage))
+                        file_path = npy_file_path.replace(work_dir + os.sep, '')
+                        black_group_stats[group_name].append((file_path, black_pixel_percentage))
 
-        for group, (file_path, black_values) in black_group_stats.items():
-            outliers = detect_outliers(black_values)
-            if outliers:
-                print_colored(f"OUTLIERS: in {group}: {outliers} -> {file_path}", 'red')
+                    for group, tuples in black_group_stats.items():
+                        black_values = []
+                        file_paths = []
+
+                        for file_path, black_value in tuples:
+                            black_values.append(black_value)
+                            file_paths.append(file_path)
+
+                        outliers, mean, std_dev = detect_outliers(black_values, m=2)
+
+                        for idx, outlier_val in outliers:
+                            print_colored(f"OUTLIER: in {group}: {outlier_val} -> {file_paths[idx]}", 'red')
 
     for message in skip_list:
         print_colored(message, color='blue')
@@ -192,7 +207,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
 def main():
     Image.MAX_IMAGE_PIXELS = None
 
-    args = get_sys_args()
+    # args = get_sys_args()
     config = Config().load_local_cfg()
 
     work_dir = os.path.expanduser(config.work_dir)
@@ -208,22 +223,7 @@ def main():
 
     zero_ints, fail_load = check_fragment_dir(checkpoints_to_check=checkpoints_to_check,
                                               inference_root_dir=inference_root_dir,
-                                              threshold=args.no_ink_ratio,
                                               work_dir=work_dir)
-
-    print_colored(f"\nFiles with > {args.no_ink_ratio} zero percentage:", color="purple")
-    print_colored("----------------------------------------------------", color="purple")
-    extract_info_from_paths(paths=zero_ints, work_dir=work_dir, inference_root_dir=inference_root_dir)
-    if len(zero_ints) == 0:
-        print_colored("None", color="purple")
-    print_colored("----------------------------------------------------", color="purple")
-
-    print(f"Files that failed to load:")
-    print("----------------------------------------------------")
-    for x in fail_load:
-        print(x)
-    if len(fail_load) == 0:
-        print("None")
 
 
 if __name__ == '__main__':

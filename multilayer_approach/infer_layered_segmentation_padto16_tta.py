@@ -228,7 +228,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
             out_x_start = x * stride_out
             out_x_end = out_x_start + label_size
 
-
             x_start = x * stride
             x_end = x_start + patch_size
             y_start = y * stride
@@ -325,15 +324,9 @@ def normalize_npy_preds(array):
 
 
 def parse_args():
-    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
-    logging.set_verbosity_error()
-    Image.MAX_IMAGE_PIXELS = None
-
-    parser = argparse.ArgumentParser(description='Infer Layered Script')
+    parser = argparse.ArgumentParser(description='Infer Layered with TTA Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
-    parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
-    parser.add_argument('--resume', action='store_true', help='Continue a previously stopped inference')
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
     parser.add_argument('--gpu', type=int, default=0, help='Cuda GPU (default: 0)')
     args = parser.parse_args()
@@ -389,18 +382,19 @@ def get_inference_range(frag_id):
     return start_best_layer_idx, end_best_layer_idx
 
 
-def main():
-    args = parse_args()
+def infer_layered_with_tta(checkpoint, frag_id, stride=2, gpu=0):
+    main(checkpoint, frag_id, stride, gpu)
 
-    model_folder_name = args.checkpoint_folder_name
-    fragment_id = args.fragment_id
-    stride_factor = args.stride
-    gpu = args.gpu
 
-    config_path = find_py_in_dir(os.path.join('checkpoints', model_folder_name))
+def main(checkpoint, fragment_id, stride_factor=2, gpu=0):
+    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
+    logging.set_verbosity_error()
+    Image.MAX_IMAGE_PIXELS = None
+
+    config_path = find_py_in_dir(os.path.join('checkpoints', checkpoint))
     config = Config.load_from_file(config_path)
 
-    model, model_path = load_model(cfg=config, model_path=model_folder_name, gpu=gpu)
+    model, model_path = load_model(cfg=config, model_path=checkpoint, gpu=gpu)
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_name = model_path.split(f"checkpoints{os.sep}")[-1]
@@ -459,7 +453,7 @@ def main():
 
         # Process each N-layer range
         infer_full_fragment_layer(model=model,
-                                  ckpt_name=model_folder_name,
+                                  ckpt_name=checkpoint,
                                   stride_factor=stride_factor,
                                   fragment_id=fragment_id,
                                   config=config,
@@ -470,4 +464,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+
+    main(checkpoint=args.checkpoint_folder_name,
+         fragment_id=args.fragment_id,
+         stride_factor=args.stride,
+         gpu=args.gpu)

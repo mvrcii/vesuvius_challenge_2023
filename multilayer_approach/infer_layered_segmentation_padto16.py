@@ -49,7 +49,6 @@ def read_fragment(contrasted, patch_size, work_dir, fragment_id, layer_start, la
     images = []
 
     for i in tqdm(range(layer_start, layer_start + layer_count)):
-
         fragment = "fragments_contrasted" if contrasted else "fragments"
         img_path = os.path.join(work_dir, "data", fragment, f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
@@ -84,7 +83,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
 
     contrasted = getattr(config, 'contrasted', False)
     print("Using contrasted fragment slices" if contrasted else "Using normal fragment slices")
-
 
     # Loading images [12, Height, Width]
     images = read_fragment(contrasted=contrasted, patch_size=patch_size, work_dir=config.work_dir,
@@ -227,7 +225,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     # Average the predictions
     out_arr = torch.where(pred_counts > 0, torch.div(out_arr, pred_counts), out_arr)
 
-
     torch.cuda.empty_cache()
     output = out_arr.cpu().numpy()
     print("Saving finally")
@@ -329,16 +326,10 @@ def process_image(array, frag_id, dimensions):
 
 
 def parse_args():
-    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
-    logging.set_verbosity_error()
-    Image.MAX_IMAGE_PIXELS = None
-
-    parser = argparse.ArgumentParser(description='Infer Layered Script')
+    parser = argparse.ArgumentParser(description='Infer Layered without TTA Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size (default: 16)')
-    parser.add_argument('--labels', action='store_true', help='Additionally store labels pngs '
-                                                              'for the inference')
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
     parser.add_argument('--gpu', type=int, default=0, help='Cuda GPU (default: 0)')
     parser.add_argument('--full_sweep', action='store_true', help='Do a full layer inference sweep (0-63)')
@@ -395,19 +386,19 @@ def get_inference_range(frag_id):
     return start_best_layer_idx, end_best_layer_idx
 
 
-def main():
-    args = parse_args()
+def infer_layered(checkpoint, frag_id, batch_size=4, stride=2, gpu=0):
+    main(checkpoint, frag_id, batch_size, stride, gpu)
 
-    model_folder_name = args.checkpoint_folder_name
-    fragment_id = args.fragment_id
-    batch_size = args.batch_size
-    stride_factor = args.stride
-    gpu = args.gpu
 
-    config_path = find_py_in_dir(os.path.join('checkpoints', model_folder_name))
+def main(checkpoint, fragment_id, batch_size=4, stride_factor=2, gpu=0, full_sweep=False):
+    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
+    logging.set_verbosity_error()
+    Image.MAX_IMAGE_PIXELS = None
+
+    config_path = find_py_in_dir(os.path.join('checkpoints', checkpoint))
     config = Config.load_from_file(config_path)
 
-    model, model_path = load_model(cfg=config, model_path=model_folder_name, gpu=gpu)
+    model, model_path = load_model(cfg=config, model_path=checkpoint, gpu=gpu)
 
     date_time_string = datetime.now().strftime("%Y%m%d-%H%M%S")
     model_name = model_path.split(f"checkpoints{os.sep}")[-1]
@@ -426,7 +417,7 @@ def main():
     os.makedirs(results_dir, exist_ok=True)
 
     start_best_layer_idx, end_best_layer_idx = get_inference_range(frag_id=fragment_id)
-    if args.full_sweep:
+    if full_sweep:
         start_best_layer_idx = 0
         end_best_layer_idx = 63
 
@@ -447,7 +438,7 @@ def main():
 
         # Process each N-layer range
         infer_full_fragment_layer(model=model,
-                                  ckpt_name=model_folder_name,
+                                  ckpt_name=checkpoint,
                                   batch_size=batch_size,
                                   stride_factor=stride_factor,
                                   fragment_id=fragment_id,
@@ -458,4 +449,10 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+
+    main(checkpoint=args.checkpoint_folder_name,
+         fragment_id=args.fragment_id,
+         batch_size=args.batch_size,
+         stride_factor=args.stride,
+         gpu=args.gpu)
