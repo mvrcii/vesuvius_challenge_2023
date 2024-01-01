@@ -54,22 +54,22 @@ def binarize_image(array):
 
 
 # Function to check if an array has more than x% zeros
-def calc_black_percentage(image, mask):
-    new_height = image.shape[0] // 4
-    new_width = image.shape[1] // 4
+def calc_black_percentage(image, mask, downsample_factor=8):
+    new_height = image.shape[0] // downsample_factor
+    new_width = image.shape[1] // downsample_factor
 
-    image = resize(image, (new_height, new_width), anti_aliasing=True)
-    image = binarize_image(image)
+    image_resized = resize(image, (new_height, new_width), anti_aliasing=False)
+    image_binarized = binarize_image(image_resized)
 
-    mask_resized = resize(mask, image.shape, anti_aliasing=True)
-    mask_resized = mask_resized == 0
+    mask_resized = resize(mask, (new_height, new_width), anti_aliasing=False)
+    mask_binarized = binarize_image(mask_resized)
 
     print(image.shape, mask_resized.shape)
 
-    unique_black = (image == 0) & mask_resized
+    unique_black = (image_binarized == 0) & (mask_binarized == 0)
     unique_black_count = np.count_nonzero(unique_black)
 
-    non_black_mask_count = np.count_nonzero(mask_resized)
+    non_black_mask_count = np.count_nonzero(mask_binarized == 0)
 
     black_pixel_percentage = round(unique_black_count / non_black_mask_count if non_black_mask_count > 0 else 0, 6)
 
