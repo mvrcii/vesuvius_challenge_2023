@@ -64,8 +64,6 @@ def calc_black_percentage(image, mask, downsample_factor=8):
     mask_resized = resize(mask, (new_height, new_width), anti_aliasing=False)
     mask_binarized = binarize_image(mask_resized)
 
-    print(image.shape, mask_resized.shape)
-
     unique_black = (image_binarized == 0) & (mask_binarized == 0)
     unique_black_count = np.count_nonzero(unique_black)
 
