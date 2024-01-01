@@ -103,6 +103,9 @@ def detect_outliers(data, m=1.5):
     if not data:
         return [], None, None
 
+    if len(data) == 1:
+        return [(index, value) for index, value in enumerate(data)], None, None
+
     mean = sum(data) / len(data)
     std_dev = (sum((x - mean) ** 2 for x in data) / len(data)) ** 0.5
     outliers = [(index, value) for index, value in enumerate(data) if abs(value - mean) > m * std_dev]
@@ -138,7 +141,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
             skip_list.append(f"SKIP:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}\tis ignored")
             continue
 
-        print_colored(f"INFO:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}", color="blue")
+        print_colored(f"\nINFO:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}", color="blue")
 
         fragment_path = os.path.join(inference_root_dir, fragment_dir)
 
@@ -193,7 +196,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
                             black_values.append(black_value)
                             file_paths.append(file_path)
 
-                        outliers, mean, std_dev = detect_outliers(black_values, m=2)
+                        outliers, mean, std_dev = detect_outliers(black_values, m=1.5)
 
                         for idx, outlier_val in outliers:
                             print_colored(f"OUTLIER: in {group}: {outlier_val} -> {file_paths[idx]}", 'red')
