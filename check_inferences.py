@@ -120,38 +120,36 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
         for checkpoint in os.listdir(fragment_path):
             checkpoint = checkpoint.split('_')[-1]
 
-            if checkpoint not in checkpoints_to_check:
-                print_colored(f"SKIP:\tCheckpoint not in checkpoints to check: {checkpoint}", 'blue')
-                continue
+            for ckpt in checkpoints_to_check:
+                if checkpoint in ckpt:
+                    checkpoint_dir = os.path.join(fragment_path, checkpoint)
 
-            checkpoint_dir = os.path.join(fragment_path, checkpoint)
+                    if not os.path.isdir(checkpoint_dir):
+                        continue
 
-            if not os.path.isdir(checkpoint_dir):
-                continue
+                    for npy_file in os.listdir(checkpoint_dir):
+                        if not npy_file.endswith('.npy'):
+                            continue
 
-            for npy_file in os.listdir(checkpoint_dir):
-                if not npy_file.endswith('.npy'):
-                    continue
+                        npy_file_path = os.path.join(checkpoint_dir, npy_file)
 
-                npy_file_path = os.path.join(checkpoint_dir, npy_file)
+                        group_name = find_group_name_in_filename(filename=npy_file, group_names=groups)
+                        if not group_name:
+                            print_colored('WARNING:\t No group name found for', npy_file_path, 'red')
 
-                group_name = find_group_name_in_filename(filename=npy_file, group_names=groups)
-                if not group_name:
-                    print_colored('WARNING:\t No group name found for', npy_file_path, 'red')
+                        image = np.load(npy_file_path)
+                        mask_path = os.path.join(work_dir, "data", "fragments",
+                                                 f"fragment{fragment_id}", "mask.png")
+                        if not os.path.isfile(mask_path):
+                            raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
+                        mask = np.asarray(Image.open(mask_path))
+                        # mask = resize(mask, (image.shape[0], image.shape[1]), anti_aliasing=True)
 
-                image = np.load(npy_file_path)
-                mask_path = os.path.join(work_dir, "data", "fragments",
-                                         f"fragment{fragment_id}", "mask.png")
-                if not os.path.isfile(mask_path):
-                    raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
-                mask = np.asarray(Image.open(mask_path))
-                # mask = resize(mask, (image.shape[0], image.shape[1]), anti_aliasing=True)
+                        if mask is None:
+                            print_colored(f"ERROR:\tMask is none: {mask_path}", 'red')
 
-                if mask is None:
-                    print_colored(f"ERROR:\tMask is none: {mask_path}", 'red')
-
-                black_pixel_percentage = calc_black_percentage(image=image, mask=mask)
-                black_group_stats[group_name].append(black_pixel_percentage)
+                        black_pixel_percentage = calc_black_percentage(image=image, mask=mask)
+                        black_group_stats[group_name].append(black_pixel_percentage)
 
     for message in skip_list:
         print_colored(message, color='blue')
