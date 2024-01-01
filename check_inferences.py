@@ -78,7 +78,7 @@ def calc_black_percentage(image, mask, downsample_factor=8):
 
 def get_sys_args():
     parser = argparse.ArgumentParser(description="Check a given inference directory with numpy files.")
-    parser.add_argument('checkpoint_list', type=str, help='Comma-separated list of checkpoint names')
+    # parser.add_argument('checkpoint_list', type=str, help='Comma-separated list of checkpoint names')
     parser.add_argument('no_ink_ratio', type=float, default=0.5, help='A threshold that determines how '
                                                                       'much minimum percentage of non-ink (pixels with value 0)'
                                                                       'must be present in a .npy file.')
@@ -94,6 +94,16 @@ def find_group_name_in_filename(filename, group_names):
         return matches[0]
     else:
         return None
+
+
+def detect_outliers(data, m=2):
+    """Detect outliers in data. An outlier is defined as a value that is more than m standard deviations from the mean."""
+    if not data:
+        return []
+
+    mean = sum(data) / len(data)
+    std_dev = (sum((x - mean) ** 2 for x in data) / len(data)) ** 0.5
+    return [x for x in data if abs(x - mean) > m * std_dev]
 
 
 def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work_dir):
@@ -156,6 +166,13 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                         print(f"{npy_file:50} -> {black_pixel_percentage:.4f}")
                         black_group_stats[group_name].append(black_pixel_percentage)
 
+        for group, black_values in black_group_stats.items():
+            outliers = detect_outliers(black_values)
+            if outliers:
+                print(f"Outliers in {group}: {outliers}")
+            else:
+                print(f"No outliers detected in {group}.")
+
     for message in skip_list:
         print_colored(message, color='blue')
 
@@ -170,8 +187,6 @@ def main():
 
     work_dir = os.path.expanduser(config.work_dir)
     inference_root_dir = os.path.join(work_dir, "inference", "results")
-
-    checkpoints_to_check = args.checkpoint_list.split(',')
 
     checkpoints_to_check = [CHECKPOINTS['wise-energy'],
                             CHECKPOINTS['olive-wind'],
