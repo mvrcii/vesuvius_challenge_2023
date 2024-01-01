@@ -3,40 +3,42 @@
 We started off by handlabelling crackles up to a precision of 4 layers, these labels can be found in 
 `archive\labels\handmade_labels\four_layer_handmade`.
 
-We then trained multiple Segformer models with 4 in-channels on this data (simply passing 4 layers into the 4
-in-channels, basically  discarding the 3D information).
+We then trained multiple Segformer models with 4 in-channels on this data (passing 4 layers into the 4
+in-channels of the model, discarding the 3D information).
 
 
 The results of these models can be found in `data/labels/four_layer/binarized`.
 
-We then continued to train models on the predictions of the previous models which to our surprise produced better and 
-better results, until we found first letters, these can be seen for example in
+We then continued to train models on the predictions of the previous models - which to our surprise produced better and 
+better results - until we found our first letters. These can be seen in:
 `data/labels/four_layer/binarized/lively-meadow-695-segformer-b2-231206-230820/20231005123336/inklabels_36_39.png`. 
 
 We then shifted our approach from 4-layer models to a 12 layer model, specifically a UNETR + Segformer B5 
-(inspired by the kaggle competition winners.)
+(similar to the kaggle competition winners). Since UNETR needs 16 layers, we zero-padded our input, due to the fact that in many 
+fragments taking more than 12 layers would include faulty ink signals from higher / lower layers due to layer skipping
+during segmentation.
 
 We then trained these models by overlaying all of our 4 layer labels corresponding to the "best" 12 layer block. 
-(By having a model with 4 layer precision
-we could precisely tell which 12 layers were the best, to combat layer skipping, which would otherwise introduce
-noise / false letters.
+By having a model with 4 layer precision we could precisely tell which 12 layers were the best to combat layer skipping, which would otherwise introduce
+noise and false letters.
 
-Here we repeated our approach of retraining on previous predictions, however we included a crucial new detail: 
-An "ignore" mask. Instead of giving the model a binary label (ink/no-ink), we added a third mask, to manually
-annotate areas where the predictions of the previous model were uncertain / obviously wrong. Instead of fixing
+From there on we repeated our approach of retraining on previous predictions. However, we included a crucial new detail: 
+an "ignore" mask. Instead of giving the model a binary label (ink/no-ink), we added a third mask to manually
+annotate areas where the predictions of the previous model were uncertain or obviously wrong. Instead of fixing
 them, e.g. filling a hole in a very obvious interrupted vertical line, we marked these spots with an ignore mask, 
-which effectively removed the underlying pixels from the loss calculation. this way the previously wrong prediction 
-can not propagate to the next model. With this method we also avoided the risk of accidentally manually annotating ink
-where there is no ink. Surprisingly, these ignored areas then iteratively improved as we trained more and more models, 
+which effectively removed the underlying pixels from the loss calculation. This way the previously wrong prediction 
+can not propagate to the next model iteration. With this method we also achieved to reduce the risk of accidentally manually annotating ink
+where there is no ink. Surprisingly, following this approach, these ignored areas then iteratively improved as we trained more and more models, 
 allowing us to iteratively reduce the area that we ignore in the loss.
 
 Our first set of 12 layer labels can be found in `data/labels/twelve_layer` 
 
-Finally our biggest boost in performance came by **decreasing** our patch size from 512x512 down to 128x128.
+ A final big leap in performance was achieved by **decreasing** our patch size from 512x512 down to 128x128.
 This made our model way more precise and also made us more confident in our predictions as it reduced the risk
 for hallucinations.
 
-The final results were created using an ensemble of 128x128 models and one 512x512 model.
+The final results were created using an ensemble of 128x128 models and one 512x512 model, which improved the best 
+aspects of both models. The 128 model contributed to sharper edges while the 512 model helped to reduce overall noise.
 
 ## Requirements:
 For inference 24 GB VRAM is enough (e.g. RTX 4090). The models were trained on 8xH100s (80GB VRAM each),
@@ -174,9 +176,9 @@ Note: Any uniquely identifying substring of the checkpoint works here, so the fu
 
 
 ### Hallucination mitigation
-We are very certain that our model is not prone to hallucination. Mostly due to the fact that a patch size
-of 128x128 is not nearly enough to cover a notable part of a letter, additionally our predictions match very
-closely to those that have been shared publicly on the discord of other users. The 512x512 model's patch size 
+We are quite certain that our model is not prone to hallucination, due to the fact that a patch size
+of 128x128 is not nearly enough to cover a notable part of a letter. Furthermore our predictions match very
+closely to those that have been shared publicly on the discord by other users. The 512x512 model's patch size 
 could in theory be big enough to hallucinate notable parts of letters, but its predictions very closely match 
 those of the 128x128 models.
 We also trained models with a 64x64 resolution, which also confirmed the results found by the other models, 
