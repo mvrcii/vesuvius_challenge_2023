@@ -112,11 +112,10 @@ for frag_id in relevant_fragments:
     smallest_size = find_smallest_array_size(npy_files)
 
     # Crop all arrays to the smallest size
-    cropped_arrays = crop_arrays(npy_files, smallest_size)
     for c in model_files.keys():
         # replace list of npy files with mean
+        model_files[c] = crop_arrays(model_files, smallest_size)
         model_files[c] = np.mean(np.stack(model_files[c]), axis=0)
-    print(len(cropped_arrays))
 
     ensemble_arr = []
     for c in model_files.keys():
