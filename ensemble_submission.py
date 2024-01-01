@@ -152,7 +152,6 @@ for frag_id in relevant_fragments:
         inf_dir_path = os.path.join(fragment_dir, inf_dir)
         for file in os.listdir(inf_dir_path):
             if file.endswith(".npy"):
-                # if file.endswith(".npy"):
                 file_path = os.path.join(inf_dir_path, file)
                 print(file_path)
 
