@@ -55,7 +55,10 @@ def binarize_image(array):
 
 # Function to check if an array has more than x% zeros
 def calc_black_percentage(image, mask):
-    image = resize(image, image.shape // 4, anti_aliasing=True)
+    new_height = image.shape[0] // 4
+    new_width = image.shape[1] // 4
+
+    image = resize(image, (new_height, new_width), anti_aliasing=True)
     image = binarize_image(image)
 
     mask_resized = resize(mask, image.shape, anti_aliasing=True)
