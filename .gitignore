@@ -11,6 +11,7 @@ venv
 __pycache__
 slurm*.out
 checkpoints
+checkpoints_archive
 data/datasets/**
 multilayer_approach/datasets/**
 inference/results/**
