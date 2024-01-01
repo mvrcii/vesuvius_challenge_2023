@@ -81,8 +81,9 @@ CURIOUS_RAIN = 'curious-rain'
 # Goes over all importants fragments (13)
 relevant_fragments = [SUNSTREAKER_FRAG_ID]
 checkpoint_names = [WISE_ENERGY, OLIVE_WIND, DESERT_SEA, CURIOUS_RAIN]
-checkpoint_weights = {WISE_ENERGY: 0.1, OLIVE_WIND: 0.4, CURIOUS_RAIN: 0.2, DESERT_SEA: 0.3}
+checkpoint_weights = {WISE_ENERGY: 0.5, OLIVE_WIND: 0.25, CURIOUS_RAIN: 0.25, DESERT_SEA: 0.0}
 out_dir = os.path.join("data", "ensemble_results")
+tta = True
 
 inf_dir = os.path.join("inference", "results")
 for frag_id in relevant_fragments:
@@ -101,7 +102,7 @@ for frag_id in relevant_fragments:
             continue
         inf_dir_path = os.path.join(fragment_dir, inf_dir)
         for file in os.listdir(inf_dir_path):
-            if file.endswith(".npy"):
+            if file.endswith(".npy") and file.startswith('tta'):
                 file_path = os.path.join(inf_dir_path, file)
                 print(file_path)
 
@@ -113,12 +114,16 @@ for frag_id in relevant_fragments:
 
     # Crop all arrays to the smallest size
     for c in model_files.keys():
+        if len(model_files[c]) == 0:
+            continue
         # replace list of npy files with mean
         model_files[c] = crop_arrays(model_files[c], smallest_size)
         model_files[c] = np.mean(np.stack(model_files[c]), axis=0)
 
     ensemble_arr = []
     for c in model_files.keys():
+        if len(model_files[c]) == 0:
+            continue
         ensemble_arr.append((model_files[c], checkpoint_weights[c]))
     ensemble = weighted_ensemble(ensemble_arr)
     ensemble = (255 - (ensemble * 255)).astype(np.uint8)
