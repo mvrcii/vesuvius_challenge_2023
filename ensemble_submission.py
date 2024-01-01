@@ -80,6 +80,7 @@ WISE_ENERGY = 'wise-energy'
 OLIVE_WIND = 'olive-wind'
 DESERT_SEA = 'desert-sea'
 CURIOUS_RAIN = 'curious-rain'
+checkpoint_names = [WISE_ENERGY, OLIVE_WIND, DESERT_SEA, CURIOUS_RAIN]
 
 checkpoint_weights_SUNSTREAKER = {WISE_ENERGY: 0.33, OLIVE_WIND: 0.23, CURIOUS_RAIN: 0.23, DESERT_SEA: 0.23}
 checkpoint_weights_THUNDERCRACKER = {WISE_ENERGY: 0.5, OLIVE_WIND: 0.5, CURIOUS_RAIN: 0, DESERT_SEA: 0}
@@ -150,8 +151,7 @@ for frag_id in relevant_fragments:
             continue
         inf_dir_path = os.path.join(fragment_dir, inf_dir)
         for file in os.listdir(inf_dir_path):
-            if file.endswith(".npy") and file.startswith('tta'):
-                # if file.endswith(".npy"):
+            if file.endswith(".npy"):
                 file_path = os.path.join(inf_dir_path, file)
                 print(file_path)
 

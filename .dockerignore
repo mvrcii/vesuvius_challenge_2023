@@ -45,7 +45,3 @@ inference/single_results/**
 slurm_logs/
 conf_local.py
 checkpoints_archive/
-
-
-# debug undo this
-data/**
