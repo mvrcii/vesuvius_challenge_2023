@@ -35,8 +35,7 @@ def main():
                 command.append('--tta')
 
             try:
-                result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                print(result.stdout)
+                subprocess.run(command, check=True, stderr=subprocess.PIPE, text=True)
             except subprocess.CalledProcessError as e:
                 print(f"Error occurred: {e.stderr}")
 
