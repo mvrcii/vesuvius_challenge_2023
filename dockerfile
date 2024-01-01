@@ -25,7 +25,6 @@ RUN apt-get update && apt-get install -y \
 ENV DEBIAN_FRONTEND=
 
 RUN pip install --no-cache-dir -r requirements.txt
-RUN echo -e 'import os\nwork_dir = os.path.join("/usr/src/app")\nnode = True' > /usr/src/app/conf_local.py
 
 ENV PYTHONPATH "${PYTHONPATH}:/usr/src/app"
 # Define the command to run your application
