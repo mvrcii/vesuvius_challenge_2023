@@ -16,6 +16,8 @@ Here we repeated our approach of retraining on previous predictions, however we 
 allowing us to iteratively reduce the area that we ignore in the loss.
 Our first set of 12 layer labels can be found in `data/labels/twelve_layer` 
 
+Finally our biggest boost in performance came by **decreasing** our patch size from 512x512 down to 128x128. This made our model way more precise and also made us more confident in our predictions as it reduced the risk for hallucinations.
+
 
 ## Requirements:
 For inference 24 GB VRAM is enough (e.g. RTX 4090). The models were trained on 8xH100s (80GB VRAM each), but with smaller batch sizes, training on 24GB is possible.
@@ -24,8 +26,8 @@ When reproducing the training, the dataset creation can take up to 90GB for the 
 #### Note
 To make communication about the different fragments easier during development, we assigned an alias name to each fragment e.g. `SUNSTREAKER` == `20231031143852`. The full mapping of fragment aliases to their IDs can be seen in `utility/fragments.json` inside the docker image.
 ### 1. Set up the data locally
-
-The code expects a `data` directory to contain a directory called `fragments`which in turn contains directories of the format
+When running the docker container, you need to mount a local data directory to the data directory in the docker container.
+The code expects a `data` directory on your local machine to contain a directory called `fragments`which in turn contains directories of the format
 `fragment<id>` e.g. `fragment2023101284423`.
 These fragment directories should contain the mask file (`mask.png`) and a subdirectory called `slices` which contains the .tif files numbered with 5 digits, e.g. `00032.tif`
 
@@ -90,10 +92,11 @@ python train.py <config_path>
 ```
 Where ``config_path`` points to a ``config_xxxxx.py`` file. Make sure to adjust the parameter ```train_batch_size``` in the corresponding config, according to your hardwar requirements, when training with less than 80 GB VRAM.
 
-The 3 configs used for our ensemble submission are placed under `configs/submission` 
+The 4 configs used for our ensemble submission are placed under `configs/submission` 
 1. ``olive_wind.py`` (128x128)
 2. ``curious_rain.py``(128x128)
-3. ``wise_enegry.py``(512x512)
+3. ``desert_sea.py`` (128x128)
+4. ``wise_enegry.py``(512x512)
 
 Since our approach was to iteratively train models on their own predictions (e.g. train on 4422) => infer on 4422 => repeat, we also included configs for models that did not get any labels for the fragments they are inferring on:
 
@@ -107,10 +110,14 @@ python multilayer_approach/infer_layered_segmentation_padto16.py <checkpoint_fol
 Where checkpoint_folder points to the folder (named with a wandb name, e.g. icy-disco-1199-unetr-sf-b5-231231-223530)
 This name will be automatically generated when the train run is started.
 
+The resulting npy files will be stored in `inference/results/fragment_<id>/<checkpiont_folder>`
+
+
 
 
 ### Hallucination mitigation
 We are very certain that our model is not prone to hallucination. Mostly due to the fact that a patch size of 128x128 is not nearly enough to cover a notable part of a letter, additionally our predictions match very closely to those that have been shared publicly on the discord of other users. The 512x512 model's patch size could in theory be big enough to hallucinate notable parts of letters, but its predictions very closely match those of the 128x128 models.
+We also trained models with a 64x64 resolution, which also confirmed the results found by the other models, but slightly underperforming them due to higher noise content.
 
 
 
