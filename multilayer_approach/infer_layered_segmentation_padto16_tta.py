@@ -387,6 +387,10 @@ def infer_layered_with_tta(checkpoint, frag_id, stride=2, gpu=0):
 
 
 def main(checkpoint, fragment_id, stride_factor=2, gpu=0):
+    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
+    logging.set_verbosity_error()
+    Image.MAX_IMAGE_PIXELS = None
+
     config_path = find_py_in_dir(os.path.join('checkpoints', checkpoint))
     config = Config.load_from_file(config_path)
 
@@ -460,10 +464,6 @@ def main(checkpoint, fragment_id, stride_factor=2, gpu=0):
 
 
 if __name__ == '__main__':
-    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
-    logging.set_verbosity_error()
-    Image.MAX_IMAGE_PIXELS = None
-
     args = parse_args()
 
     main(checkpoint=args.checkpoint_folder_name,
