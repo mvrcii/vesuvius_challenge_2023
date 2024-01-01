@@ -207,7 +207,6 @@ def main():
 
     zero_ints, fail_load = check_fragment_dir(checkpoints_to_check=checkpoints_to_check,
                                               inference_root_dir=inference_root_dir,
-                                              threshold=args.no_ink_ratio,
                                               work_dir=work_dir)
 
     print_colored(f"\nFiles with > {args.no_ink_ratio} zero percentage:", color="purple")
