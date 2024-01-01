@@ -326,10 +326,6 @@ def process_image(array, frag_id, dimensions):
 
 
 def parse_args():
-    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
-    logging.set_verbosity_error()
-    Image.MAX_IMAGE_PIXELS = None
-
     parser = argparse.ArgumentParser(description='Infer Layered without TTA Script')
     parser.add_argument('checkpoint_folder_name', type=str, help='Checkpoint folder name')
     parser.add_argument('fragment_id', type=str, help='Fragment ID')
@@ -449,6 +445,10 @@ def main(checkpoint, fragment_id, batch_size=4, stride_factor=2, gpu=0, full_swe
 
 
 if __name__ == '__main__':
+    warnings.filterwarnings('ignore', category=UserWarning, module='albumentations.*')
+    logging.set_verbosity_error()
+    Image.MAX_IMAGE_PIXELS = None
+
     args = parse_args()
 
     main(checkpoint=args.checkpoint_folder_name,
