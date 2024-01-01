@@ -53,7 +53,8 @@ def read_fragment(contrasted, patch_size, work_dir, fragment_id, layer_start, la
 
         if not os.path.isfile(img_path):
             if contrasted:
-                raise Exception(f"Missing Contrasted Slice file: {os.path.join(fragment_id, 'slices', f'{i:05}.tif')}")
+                print(f"Missing Contrasted Slice file: {os.path.join(fragment_id, 'slices', f'{i:05}.tif')}")
+                exit()
 
             print(f"Downloading missing Slice file: {os.path.join(fragment_id, 'slices', f'{i:05}.tif')}")
             if fragment_id in SUPERSEDED_FRAGMENTS:

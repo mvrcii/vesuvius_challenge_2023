@@ -86,8 +86,7 @@ def get_checkpoint_name(user_input, checkpoint_dict):
     if match:
         return checkpoint_dict[match[0]]
     else:
-        print(f"No valid checkpoint found for: {user_input}")
-        exit()
+        return user_input
 
 
 def get_inference_result(fragment_id_or_name, checkpoint_keyword, hostname, single, force=False):
