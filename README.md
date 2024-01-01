@@ -75,7 +75,7 @@ which contains the .tif files numbered with 5 digits, e.g. `00032.tif`
 ###  2. Download the app.tar docker image from Google Drive (link provided in submission mail)
 ###  3. Load the docker image
 ```
-docker load -i myapp.tar
+docker load -i app.tar
 ```
 ### 4. Run the docker image
 
