@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 
 import numpy as np
 from PIL import Image
@@ -53,31 +54,20 @@ def binarize_image(array):
 
 
 # Function to check if an array has more than x% zeros
-def has_more_than_x_percent_zeros(array, threshold, mask=None):
-    array = binarize_image(array)
+def calc_black_percentage(image, mask):
+    image = binarize_image(image)
 
-    if mask is not None:
-        # Resize the mask to match the array dimensions
-        mask_resized = resize(mask, array.shape, anti_aliasing=True)
+    mask_resized = resize(mask, image.shape, anti_aliasing=True)
+    mask_resized = mask_resized == 0.0
 
-        mask_resized = mask_resized == 0.0
+    unique_black = (image == 0) & mask_resized
+    unique_black_count = np.count_nonzero(unique_black)
 
-        # Calculate unique black pixels in the array not covered by the mask
-        unique_black = (array == 0) & mask_resized
-        unique_black_count = np.count_nonzero(unique_black)
+    non_black_mask_count = np.count_nonzero(mask_resized)
 
-        # Count non-black pixels in the mask
-        non_black_mask_count = np.count_nonzero(mask_resized)
-    else:
-        print("Mask is None")
-        unique_black_count = np.count_nonzero(array == 0)
-        non_black_mask_count = np.size(array)
-
-    # Calculate percentage and check against threshold
     black_pixel_percentage = round(unique_black_count / non_black_mask_count if non_black_mask_count > 0 else 0, 6)
 
-    print("Black pixel percentage:", black_pixel_percentage)
-    return black_pixel_percentage > threshold
+    return black_pixel_percentage
 
 
 def get_sys_args():
@@ -89,10 +79,20 @@ def get_sys_args():
     return parser.parse_args()
 
 
+def find_group_name_in_filename(filename, group_names):
+    pattern = '|'.join(re.escape(name) for name in group_names)
+
+    matches = re.findall(pattern, filename)
+
+    if len(matches) == 1:
+        return matches[0]
+    else:
+        return None
+
+
 def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work_dir):
     zero_ints = []
     fail_load = []
-
     skip_list = []
 
     for fragment_dir in os.listdir(inference_root_dir):
@@ -109,26 +109,45 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
         print_colored(f"INFO:\t{get_frag_name_from_id(fragment_id):15} {fragment_id:15}", color="blue")
 
         fragment_path = os.path.join(inference_root_dir, fragment_dir)
-        if os.path.isdir(fragment_path):
-            for sub_dir in os.listdir(fragment_path):
-                for checkpoint in checkpoints_to_check:
-                    if checkpoint not in sub_dir:
-                        continue
-                    run_path = os.path.join(fragment_path, sub_dir)
-                    if os.path.isdir(run_path):
-                        for file in os.listdir(run_path):
-                            if file.endswith(".npy"):
-                                file_path = os.path.join(run_path, file)
-                                array = np.load(file_path)
-                                mask_path = os.path.join(work_dir, "data", "fragments",
-                                                         f"fragment{fragment_id}", "mask.png")
-                                if not os.path.isfile(mask_path):
-                                    raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
-                                mask = np.asarray(Image.open(mask_path))
-                                mask = resize(mask, (array.shape[0], array.shape[1]), anti_aliasing=True)
 
-                                if has_more_than_x_percent_zeros(array, threshold, mask=mask):
-                                    zero_ints.append(file_path)
+        groups = ['stride-2', 'stride-4', 'tta-stride-2']
+        black_group_stats = {group: [] for group in groups}
+
+        if not os.path.isdir(fragment_path):
+            continue
+
+        for checkpoint in os.listdir(fragment_path):
+            if checkpoint not in checkpoints_to_check:
+                continue
+
+            checkpoint_dir = os.path.join(fragment_path, checkpoint)
+
+            if not os.path.isdir(checkpoint_dir):
+                continue
+
+            for npy_file in os.listdir(checkpoint_dir):
+                if not npy_file.endswith('.npy'):
+                    continue
+
+                npy_file_path = os.path.join(checkpoint_dir, npy_file)
+
+                group_name = find_group_name_in_filename(filename=npy_file, group_names=groups)
+                if not group_name:
+                    print_colored('WARNING:\t No group name found for', npy_file_path, 'red')
+
+                image = np.load(npy_file_path)
+                mask_path = os.path.join(work_dir, "data", "fragments",
+                                         f"fragment{fragment_id}", "mask.png")
+                if not os.path.isfile(mask_path):
+                    raise ValueError(f"Mask file does not exist for fragment: {fragment_id}")
+                mask = np.asarray(Image.open(mask_path))
+                # mask = resize(mask, (image.shape[0], image.shape[1]), anti_aliasing=True)
+
+                if mask is None:
+                    print_colored(f"ERROR:\tMask is none: {mask_path}", 'red')
+
+                black_pixel_percentage = calc_black_percentage(image=image, mask=mask)
+                black_group_stats[group_name].append(black_pixel_percentage)
 
     for message in skip_list:
         print_colored(message, color='blue')
