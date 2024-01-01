@@ -7,6 +7,7 @@ from PIL import Image
 from skimage.transform import resize
 
 from slurm_inference import print_colored
+from utility.checkpoints import CHECKPOINTS
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id, SUPERSEDED_FRAGMENTS, FRAGMENTS_IGNORE
 
@@ -118,6 +119,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
 
         for checkpoint in os.listdir(fragment_path):
             if checkpoint not in checkpoints_to_check:
+                print_colored(f"SKIP: Checkpoint not in checkpoints to check: {checkpoint}", 'blue')
                 continue
 
             checkpoint_dir = os.path.join(fragment_path, checkpoint)
@@ -165,8 +167,14 @@ def main():
     inference_root_dir = os.path.join(work_dir, "inference", "results")
 
     checkpoints_to_check = args.checkpoint_list.split(',')
+
+    checkpoints_to_check = [CHECKPOINTS['wise-energy'],
+                            CHECKPOINTS['olive-wind'],
+                            CHECKPOINTS['curious-rain']]
+
+    print_colored("Checkpoints to check:", 'purple')
     for checkpoint in checkpoints_to_check:
-        print_colored(f"INFO:\tChecking {checkpoint}", color="purple")
+        print_colored(f"{checkpoint}", color="purple")
 
     zero_ints, fail_load = check_fragment_dir(checkpoints_to_check=checkpoints_to_check,
                                               inference_root_dir=inference_root_dir,
