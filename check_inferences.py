@@ -118,7 +118,7 @@ def custom_sort_key(file_name):
     return priority, file_name
 
 
-def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work_dir):
+def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
     zero_ints = []
     fail_load = []
     skip_list = []
@@ -178,6 +178,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                         print(f"{npy_file:50} -> {black_pixel_percentage:.4f}")
                         black_group_stats[group_name].append((npy_file_path, black_pixel_percentage))
 
+        print(black_group_stats.items())
         for group, (file_path, black_values) in black_group_stats.items():
             outliers = detect_outliers(black_values)
             if outliers:
