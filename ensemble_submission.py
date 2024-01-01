@@ -2,15 +2,17 @@ import glob
 import os
 
 import numpy as np
-
 from PIL import Image
+
 from utility.fragments import IRONHIDE_FRAG_ID
+
 
 def find_smallest_array_size(arrays):
     """ Finds the smallest array size among the given numpy arrays. """
     min_rows = min(arr.shape[0] for arr in arrays)
     min_cols = min(arr.shape[1] for arr in arrays)
     return min_rows, min_cols
+
 
 def find_npy_files(directory):
     """
