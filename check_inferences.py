@@ -149,7 +149,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
                             print_colored(f"ERROR:\tMask is none: {mask_path}", 'red')
 
                         black_pixel_percentage = calc_black_percentage(image=image, mask=mask)
-                        print(f"{npy_file:30} -> {black_pixel_percentage:.4d}")
+                        print(f"{npy_file:30} -> {black_pixel_percentage:.4f}")
                         black_group_stats[group_name].append(black_pixel_percentage)
 
     for message in skip_list:
