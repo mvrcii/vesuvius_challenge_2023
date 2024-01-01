@@ -100,6 +100,7 @@ for frag_id in relevant_fragments:
             if file.endswith(".npy"):
                 file_path = os.path.join(inf_dir_path, file)
                 arr = np.load(file_path)
+                print(arr.shape)
                 npy_files.append(arr)
                 model_files[c_name].append(arr)
     smallest_size = find_smallest_array_size(npy_files)
