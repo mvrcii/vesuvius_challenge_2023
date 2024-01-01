@@ -154,6 +154,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
                 if checkpoint_str in ckpt:
                     checkpoint_dir = os.path.join(fragment_path, checkpoint)
 
+                    print_colored(f"INFO:\t{('-'.join(checkpoint.split('-')[0:2])).upper()}", color='blue')
                     black_group_stats = {group: [] for group in groups}
 
                     if not os.path.isdir(checkpoint_dir):
@@ -181,7 +182,8 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
 
                         black_pixel_percentage = calc_black_percentage(image=image, mask=mask)
                         print(f"{npy_file:50} -> {black_pixel_percentage:.4f}")
-                        black_group_stats[group_name].append((npy_file_path, black_pixel_percentage))
+                        file_path = npy_file_path.replace(work_dir + os.sep, '')
+                        black_group_stats[group_name].append((file_path, black_pixel_percentage))
 
                     for group, tuples in black_group_stats.items():
                         black_values = []
@@ -191,7 +193,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
                             black_values.append(black_value)
                             file_paths.append(file_path)
 
-                        outliers, mean, std_dev = detect_outliers(black_values, m=1.5)
+                        outliers, mean, std_dev = detect_outliers(black_values, m=2)
 
                         for idx, outlier_val in outliers:
                             print_colored(f"OUTLIER: in {group}: {outlier_val} -> {file_paths[idx]}", 'red')
@@ -222,20 +224,6 @@ def main():
     zero_ints, fail_load = check_fragment_dir(checkpoints_to_check=checkpoints_to_check,
                                               inference_root_dir=inference_root_dir,
                                               work_dir=work_dir)
-
-    # print_colored(f"\nFiles with > {args.no_ink_ratio} zero percentage:", color="purple")
-    # print_colored("----------------------------------------------------", color="purple")
-    # extract_info_from_paths(paths=zero_ints, work_dir=work_dir, inference_root_dir=inference_root_dir)
-    # if len(zero_ints) == 0:
-    #     print_colored("None", color="purple")
-    # print_colored("----------------------------------------------------", color="purple")
-    #
-    # print(f"Files that failed to load:")
-    # print("----------------------------------------------------")
-    # for x in fail_load:
-    #     print(x)
-    # if len(fail_load) == 0:
-    #     print("None")
 
 
 if __name__ == '__main__':
