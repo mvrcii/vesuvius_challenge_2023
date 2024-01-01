@@ -96,7 +96,7 @@ def find_group_name_in_filename(filename, group_names):
         return None
 
 
-def detect_outliers(data, m=2):
+def detect_outliers(data, m=1.5):
     """Detect outliers in data. An outlier is defined as a value that is more than m standard deviations from the mean."""
     if not data:
         return []
@@ -176,14 +176,12 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
 
                         black_pixel_percentage = calc_black_percentage(image=image, mask=mask)
                         print(f"{npy_file:50} -> {black_pixel_percentage:.4f}")
-                        black_group_stats[group_name].append(black_pixel_percentage)
+                        black_group_stats[group_name].append((npy_file_path, black_pixel_percentage))
 
-        for group, black_values in black_group_stats.items():
+        for group, (file_path, black_values) in black_group_stats.items():
             outliers = detect_outliers(black_values)
             if outliers:
-                print(f"Outliers in {group}: {outliers}")
-            else:
-                print(f"No outliers detected in {group}.")
+                print_colored(f"OUTLIERS: in {group}: {outliers} -> {file_path}", 'red')
 
     for message in skip_list:
         print_colored(message, color='blue')
