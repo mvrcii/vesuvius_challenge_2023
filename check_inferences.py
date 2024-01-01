@@ -121,7 +121,7 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
             checkpoint = checkpoint.split('_')[-1]
 
             if checkpoint not in checkpoints_to_check:
-                print_colored(f"SKIP: Checkpoint not in checkpoints to check: {checkpoint}", 'blue')
+                print_colored(f"SKIP:\tCheckpoint not in checkpoints to check: {checkpoint}", 'blue')
                 continue
 
             checkpoint_dir = os.path.join(fragment_path, checkpoint)
