@@ -49,7 +49,7 @@ def read_fragment(contrasted, patch_size, work_dir, fragment_id, layer_start, la
     images = []
 
     for i in tqdm(range(layer_start, layer_start + layer_count)):
-
+        print(i)
         fragment = "fragments_contrasted" if contrasted else "fragments"
         img_path = os.path.join(work_dir, "data", fragment, f"fragment{fragment_id}", "slices", f"{i:05}.tif")
 
