@@ -73,17 +73,21 @@ def is_relevant(inf_dir, checkpoint_names):
             return c
     return "invalid"
 
+
+
 WISE_ENERGY = 'wise-energy'
 OLIVE_WIND = 'olive-wind'
 DESERT_SEA = 'desert-sea'
 CURIOUS_RAIN = 'curious-rain'
 
+checkpoint_weights_SUNSTREAKER = {WISE_ENERGY: 0.33, OLIVE_WIND: 0.23, CURIOUS_RAIN: 0.23, DESERT_SEA: 0.23}
+
 # Goes over all importants fragments (13)
-relevant_fragments = [SUNSTREAKER_FRAG_ID]
+relevant_fragments = [THUNDERCRACKER_FRAG_ID]
 checkpoint_names = [WISE_ENERGY, OLIVE_WIND, DESERT_SEA, CURIOUS_RAIN]
-checkpoint_weights = {WISE_ENERGY: 0.5, OLIVE_WIND: 0.25, CURIOUS_RAIN: 0.25, DESERT_SEA: 0.0}
+checkpoint_weights = {WISE_ENERGY: 0.33, OLIVE_WIND: 0.23, CURIOUS_RAIN: 0.23, DESERT_SEA: 0.23}
 out_dir = os.path.join("data", "ensemble_results")
-tta = True
+max = True
 
 inf_dir = os.path.join("inference", "results")
 for frag_id in relevant_fragments:
@@ -118,7 +122,10 @@ for frag_id in relevant_fragments:
             continue
         # replace list of npy files with mean
         model_files[c] = crop_arrays(model_files[c], smallest_size)
-        model_files[c] = np.mean(np.stack(model_files[c]), axis=0)
+        if max:
+            model_files[c] = np.max(np.stack(model_files[c]), axis=0)
+        else:
+            model_files[c] = np.mean(np.stack(model_files[c]), axis=0)
 
     ensemble_arr = []
     for c in model_files.keys():
@@ -139,6 +146,7 @@ for frag_id in relevant_fragments:
     ### debug
 
     # Save the images
-    out_path = os.path.join(out_dir, f'{weight_string}_fragment{frag_id}_ensemble.png')
+    max_str = "_max" if max else "_mean"
+    out_path = os.path.join(out_dir, f'{weight_string}_fragment{frag_id}_ensemble{max_str}.png')
     Image.fromarray(ensemble).save(os.path.join(out_path))
     print("Saving to ", out_path)
