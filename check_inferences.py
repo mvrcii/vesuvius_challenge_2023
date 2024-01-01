@@ -118,11 +118,10 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, threshold, work
             continue
 
         for checkpoint in os.listdir(fragment_path):
-            checkpoint = checkpoint.split('_')[-1]
+            checkpoint_str = checkpoint.split('_')[-1]
 
             for ckpt in checkpoints_to_check:
-                if checkpoint in ckpt:
-                    print(checkpoint, ckpt)
+                if checkpoint_str in ckpt:
                     checkpoint_dir = os.path.join(fragment_path, checkpoint)
 
                     if not os.path.isdir(checkpoint_dir):
