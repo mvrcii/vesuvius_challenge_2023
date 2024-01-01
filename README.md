@@ -93,15 +93,32 @@ python train.py <config_path>
 Where ``config_path`` points to a ``config_xxxxx.py`` file. Make sure to adjust the parameter ```train_batch_size``` in the corresponding config, according to your hardwar requirements, when training with less than 80 GB VRAM.
 
 The 4 configs used for our ensemble submission are placed under `configs/submission` 
-1. ``olive_wind.py`` (128x128)
-2. ``curious_rain.py``(128x128)
-3. ``desert_sea.py`` (128x128)
-4. ``wise_enegry.py``(512x512)
+1. ``olive-wind.py`` (128x128)
+2. ``curious-rain.py``(128x128)
+3. ``desert-sea.py`` (128x128)
+4. ``wise-energy.py``(512x512)
 
-Since our approach was to iteratively train models on their own predictions (e.g. train on 4422) => infer on 4422 => repeat, we also included configs for models that did not get any labels for the fragments they are inferring on:
+We provide trained checkpoints of all of these models.
 
-These are placed in `configs/segmentation/unetr_sf/one_out`.
-Here the naming scheme indicates the fragment left out of the training set, e.g. `config_sunstreaker.py` does not include the `SUNSTREAKER` fragment in its training set. 
+Since our approach was to iteratively train models on their own predictions (e.g. train on 4422) => infer on 4422 => repeat, we also included configs for models that do not get any labels for the fragments they are inferring on:
+
+These are placed in `configs/segmentation/one_out`.
+Here the naming scheme indicates the fragment left out of the training set, e.g. `config_sunstreaker.py` does not include the `SUNSTREAKER` fragment in its training set.  (Note, check ``utils/fragments.json`` for alias-to-ID mapping.)
+
+We provide trained checkpoints for the following fragments 
+
+*FragmentID left out of training : checkpoint path*
+
+1.``20231016151002`` : ``dazzling-haze-1197-unetr-sf-b5-231231-223336``
+
+2.``20230702185753`` : ``lucky-field-1198-unetr-sf-b5-231231-223422``
+
+3.``20231210121321`` : ``icy-disco-1199-unetr-sf-b5-231231-223530``
+
+The ``supplementary`` directory in google drive contains their raw predictions, proving the generalizational capabilities, and confirming the correctness of our ensemble predictions which were partially trained on previous predictions no the same fragment.
+
+
+
 ## Running inference with a trained model
 Inference can be run via
 ```
@@ -112,328 +129,15 @@ This name will be automatically generated when the train run is started.
 
 The resulting npy files will be stored in `inference/results/fragment_<id>/<checkpiont_folder>`
 
+You can quickly extract the results to your local data directory as an image using
+````commandline
+python get_single_results.py <fragment_id> <checkpoint_name>
+````
+E.g. `python get_single_results.py 20231016151002 dazzling-haze`
 
+Note: Any uniquely identifying substring of the checkpoint works here, so the full name is not required.
 
 
 ### Hallucination mitigation
 We are very certain that our model is not prone to hallucination. Mostly due to the fact that a patch size of 128x128 is not nearly enough to cover a notable part of a letter, additionally our predictions match very closely to those that have been shared publicly on the discord of other users. The 512x512 model's patch size could in theory be big enough to hallucinate notable parts of letters, but its predictions very closely match those of the 128x128 models.
 We also trained models with a 64x64 resolution, which also confirmed the results found by the other models, but slightly underperforming them due to higher noise content.
-
-
-
-
-x
-
-
-
-
-
-x
-
-
-
-
-x
-x
-
-
-
-x
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-x
-x
-x
-x
-x
-
-
-
-
-x
-
-
-
-
-
-
-
-x
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-x
-
-
-
-
-
-
-
-
-
-
-
-
-x
-
-
-
