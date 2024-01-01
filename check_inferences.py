@@ -95,13 +95,19 @@ def find_group_name_in_filename(filename, group_names):
 
 
 def detect_outliers(data, m=1.5):
-    """Detect outliers in data. An outlier is defined as a value that is more than m standard deviations from the mean."""
+    """
+    Detect outliers in data. An outlier is defined as a value that is more than m standard deviations from the mean.
+    Returns a tuple of (outliers, mean, standard deviation).
+    Outliers are returned as a list of tuples, each tuple containing the index and the value of the outlier.
+    """
     if not data:
-        return []
+        return [], None, None
 
     mean = sum(data) / len(data)
     std_dev = (sum((x - mean) ** 2 for x in data) / len(data)) ** 0.5
-    return [x for x in data if abs(x - mean) > m * std_dev]
+    outliers = [(index, value) for index, value in enumerate(data) if abs(value - mean) > m * std_dev]
+
+    return outliers, mean, std_dev
 
 
 def custom_sort_key(file_name):
@@ -177,14 +183,18 @@ def check_fragment_dir(checkpoints_to_check, inference_root_dir, work_dir):
                         print(f"{npy_file:50} -> {black_pixel_percentage:.4f}")
                         black_group_stats[group_name].append((npy_file_path, black_pixel_percentage))
 
-                    print(black_group_stats.items())
-                    for x in black_group_stats.items():
-                        print(x)
-                        exit()
-                        # group, (file_path, black_values)
-                        outliers = detect_outliers(black_values)
-                        if outliers:
-                            print_colored(f"OUTLIERS: in {group}: {outliers} -> {file_path}", 'red')
+                    for group, tuples in black_group_stats.items():
+                        black_values = []
+                        file_paths = []
+
+                        for file_path, black_value in tuples:
+                            black_values.append(black_value)
+                            file_paths.append(file_path)
+
+                        outliers, mean, std_dev = detect_outliers(black_values, m=1.5)
+
+                        for idx, outlier_val in outliers:
+                            print_colored(f"OUTLIER: in {group}: {outlier_val} -> {file_paths[idx]}", 'red')
 
     for message in skip_list:
         print_colored(message, color='blue')
