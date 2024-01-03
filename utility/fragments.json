@@ -57,6 +57,30 @@
     ]
   },
   {
+    "id": "20231016151000",
+    "name": "JAZZ"
+  },
+  {
+    "id": "20230827161847",
+    "name": "STARSCREAM"
+  },
+  {
+    "id": "20230904135535",
+    "name": "SOUNDWAVE"
+  },
+  {
+    "id": "20230909121925",
+    "name": "RATCHET"
+  },
+  {
+    "id": "20230522181603",
+    "name": "MEGATRON"
+  },
+  {
+    "id": "20231024093300",
+    "name": "OPTIMUS"
+  },
+  {
     "id": "20231016151001",
     "name": "JAZZILLA",
     "best_layers_start_indices": [
@@ -114,6 +138,10 @@
     ],
     "boost_threshold": 0.000001,
     "rotation": 0
+  },
+  {
+    "id": "20230702185752",
+    "name": "BUMBLEBEE"
   },
   {
     "id": "20230702185753",

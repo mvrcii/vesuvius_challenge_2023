@@ -73,7 +73,7 @@ def clean_all_fragment_label_dirs(config: Config):
 def create_dataset(target_dir, config: Config, frag_id, channels, label_dir):
     os.makedirs(target_dir, exist_ok=True)
 
-    fragment_dir = os.path.join(config.data_root_dir, "fragments", f"fragment{frag_id}")
+    fragment_dir = os.path.join(config.data_root_dir, "../fragments", f"fragment{frag_id}")
     if not os.path.isdir(fragment_dir):
         raise ValueError(f"Fragment directory does not exist: {fragment_dir}")
 

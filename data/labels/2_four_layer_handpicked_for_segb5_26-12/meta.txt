@@ -1,0 +1,3 @@
+- After UNET3D and Slice approach
+- Just before the UNETR + SegFormer Approach
+- Never trained with those labels

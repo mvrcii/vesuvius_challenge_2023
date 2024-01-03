@@ -62,7 +62,7 @@ def print_checks(errors, valids):
 
 def validate_fragment_files(frag_id, cfg, label_dir):
     errors = []
-    frag_dir = os.path.join(cfg.work_dir, "data", "fragments", f"fragment{frag_id}")
+    frag_dir = os.path.join(cfg.work_dir, "data", "../fragments", f"fragment{frag_id}")
     frag_label_dir = os.path.join(label_dir, f"{frag_id}")
 
     errors.extend(validate_fragment_dir(frag_dir))

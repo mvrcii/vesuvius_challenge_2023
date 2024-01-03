@@ -1,0 +1,5 @@
+- 4-Layered
+- Purely hand-tuned labels
+- Not uniformly picked layers from each fragment (only those that we had)
+
+- Used to train STELLAR-VIOLET

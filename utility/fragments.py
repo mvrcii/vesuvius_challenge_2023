@@ -103,17 +103,26 @@ class FragmentHandler(metaclass=SingletonMeta):
 
 
 # TRAIN SET ALPHA
-JETFIRE_FRAG_ID = FragmentHandler().get_id("JETFIRE")
 ULTRA_MAGNUS_FRAG_ID = FragmentHandler().get_id("ULTRA_MAGNUS")
 IRONHIDE_FRAG_ID = FragmentHandler().get_id("IRONHIDE")
-BLASTER_FRAG_ID = FragmentHandler().get_id("BLASTER")
 HOT_ROD_FRAG_ID = FragmentHandler().get_id("HOT_ROD")
 THUNDERCRACKER_FRAG_ID = FragmentHandler().get_id("THUNDERCRACKER")
 SUNSTREAKER_FRAG_ID = FragmentHandler().get_id("SUNSTREAKER")
 
+STARSCREAM_FRAG_ID = FragmentHandler().get_id("STARSCREAM")
+JETFIRE_FRAG_ID = FragmentHandler().get_id("JETFIRE")
+
+OPTIMUS_FRAG_ID = FragmentHandler().get_id("OPTIMUS")
+MEGATRON_FRAG_ID = FragmentHandler().get_id("MEGATRON")
+BUMBLEBEE_FRAG_ID = FragmentHandler().get_id("BUMBLEBEE")
+BLASTER_FRAG_ID = FragmentHandler().get_id("BLASTER")
+
+JAZZ_FRAG_ID = FragmentHandler().get_id("JAZZ")
 JAZZILLA_FRAG_ID = FragmentHandler().get_id("JAZZILLA")
 JAZZBIGGER_FRAG_ID = FragmentHandler().get_id("JAZZBIGGER")
 
+RATCHET_FRAG_ID = FragmentHandler().get_id("RATCHET")
+SOUNDWAVE_FRAG_ID = FragmentHandler().get_id("SOUNDWAVE")
 GRIMLARGE_FRAG_ID = FragmentHandler().get_id("GRIMLARGE")
 GRIMHUGE_FRAG_ID = FragmentHandler().get_id("GRIMHUGE")
 
@@ -143,11 +152,16 @@ FRAGMENTS_ALPHA = [JETFIRE_FRAG_ID, GRIMLARGE_FRAG_ID]
 FRAGMENTS_BETA = [BLASTER_FRAG_ID, HOT_ROD_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,
                   DEVASTATOR_FRAG_ID, SKYWARP_FRAG_ID, IRONHIDE_FRAG_ID]
 
-FRAGMENTS_IGNORE = [TITLE1_FRAG_ID, TITLE2_FRAG_ID, RICHI_FRAG_ID, RICHI2_FRAG_ID, RICHI3_FRAG_ID]
+# Fragments that are included in newer fragments but are not superseded, or fragments that are irrelevant
+FRAGMENTS_IGNORE = [TITLE1_FRAG_ID, TITLE2_FRAG_ID, RICHI_FRAG_ID, RICHI2_FRAG_ID, RICHI3_FRAG_ID,
+                    MEGATRON_FRAG_ID, STARSCREAM_FRAG_ID, SOUNDWAVE_FRAG_ID, RATCHET_FRAG_ID,
+                    OPTIMUS_FRAG_ID]
 
+# Fragments that are superseded -> changes download url to superseded
 SUPERSEDED_FRAGMENTS = [GRIMLARGE_FRAG_ID, JAZZILLA_FRAG_ID, DEVASTATOR_FRAG_ID,
                         SKYWARP_FRAG_ID, BLUESTREAK_FRAG_ID, SKYBIGGER_FRAG_ID,
-                        TRAILBREAKER_FRAG_ID, SKYHUGE_FRAG_ID, SKYLINE_FRAG_ID]
+                        TRAILBREAKER_FRAG_ID, SKYHUGE_FRAG_ID, SKYLINE_FRAG_ID,
+                        BUMBLEBEE_FRAG_ID, JAZZ_FRAG_ID]
 
 
 def get_frag_name_from_id(frag_id):

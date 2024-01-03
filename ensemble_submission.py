@@ -96,7 +96,7 @@ checkpoint_weights_DEVASBIGGER = checkpoint_weights_SUNSTREAKER
 checkpoint_weights_SKYGLORIOUS = checkpoint_weights_JETFIRE
 checkpoint_weights_TRAILBIGGER = checkpoint_weights_SUNSTREAKER
 
-# Goes over all importants fragments (13)
+# Goes over all important fragments (13)
 relevant_fragments = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
                       SKYGLORIOUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
                       DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID,
@@ -136,10 +136,10 @@ for frag_id in relevant_fragments:
     rotate_num = frag_handler.get_rotation(frag_id=frag_id)
     flip_num = frag_handler.get_flip(frag_id=frag_id)
 
-    # list holding all npy files to find smallest common size
+    # list holding all npy files to find the smallest common size
     npy_files = []
 
-    # list holding model npy files to allow ensembling them together first
+    # list holding model npy files to allow ensemble them together first
     model_files = {}
     for c in checkpoint_names:
         model_files[c] = []
