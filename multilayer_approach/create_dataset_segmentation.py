@@ -297,8 +297,7 @@ if __name__ == '__main__':
 
     LABEL_INFO_LIST = []
 
-    # todo fix path
-    label_dir = os.path.join(cfg.work_dir, "data", "labels", "twelve_layer_unetr_it3", "binarized")
+    label_dir = os.path.join(cfg.work_dir, "data", "labels", "6_twelve_layer_unetr_it3", "binarized")
     print("Using label dir:", label_dir)
 
     train_fragments = cfg.fragment_ids
