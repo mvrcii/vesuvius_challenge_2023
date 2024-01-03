@@ -6,24 +6,20 @@ Leveraging the synergy of UNETR, SegFormer, and Transformer Fragment IDs, MT3 em
 We started off by handlabelling crackles up to a precision of 4 layers, these labels can be found in 
 `archive\labels\handmade_labels\four_layer_handmade`.
 
-We then trained multiple Segformer models with 4 in-channels on this data (passing 4 layers into the 4
-in-channels of the model, discarding the 3D information).
+To get started, we trained multiple SegFormer models with 4 input layers on the handlabelled data by passing 4 stacked data layers into the
+input layers of the model, discarding the 3D information.
 
 
 The results of these models can be found in `data/labels/four_layer/binarized`.
 
 We then continued to train models on the predictions of the previous models - which to our surprise produced better and 
-better results - until we found our first letters. These can be seen in:
+better results - until we found our first letter. These can be seen in:
 `data/labels/four_layer/binarized/lively-meadow-695-segformer-b2-231206-230820/20231005123336/inklabels_36_39.png`. 
 
-We then shifted our approach from 4-layer models to a 12 layer model, specifically a UNETR + Segformer B5 
-(similar to the kaggle competition winners). Since UNETR needs 16 layers, we zero-padded our input, due to the fact that in many 
-fragments taking more than 12 layers would include faulty ink signals from higher / lower layers due to layer skipping
-during segmentation.
+We then shifted our approach from 4-layer models to a 12-layer model, specifically a UNETR as encoder combined with a Segformer B5 as decoder
+(similar to the kaggle competition winners). We found that, for most fragments, the use of more than 12 layers would result in incorrect colour signals from higher and lower layers due to layer skipping during segmentation. Since the UNETR architecture requires 16 input layers we had to zero-pad our input.
 
-We then trained these models by overlaying all of our 4 layer labels corresponding to the "best" 12 layer block. 
-By having a model with 4 layer precision we could precisely tell which 12 layers were the best to combat layer skipping, which would otherwise introduce
-noise and false letters.
+We then trained these models by overlaying all of our 4-layer labels corresponding to the "best" 12 layer block. By having a model with 4-layer precision we could precisely tell which 12 layers were the best to combat layer skipping, which would otherwise introduce noise and false letters.
 
 From there on we repeated our approach of retraining on previous predictions. However, we included a crucial new detail: 
 an "ignore" mask. Instead of giving the model a binary label (ink/no-ink), we added a third mask to manually
@@ -31,17 +27,16 @@ annotate areas where the predictions of the previous model were uncertain or obv
 them, e.g. filling a hole in a very obvious interrupted vertical line, we marked these spots with an ignore mask, 
 which effectively removed the underlying pixels from the loss calculation. This way the previously wrong prediction 
 can not propagate to the next model iteration. With this method we also achieved to reduce the risk of accidentally manually annotating ink
-where there is no ink. Surprisingly, following this approach, these ignored areas then iteratively improved as we trained more and more models, 
-allowing us to iteratively reduce the area that we ignore in the loss.
+where there is no ink. By following this approach, we were able to iteratively improve the areas that were previously ignored as we trained more models. 
+This allowed us to gradually reduce the area that we ignore in the loss function.
 
-Our first set of 12 layer labels can be found in `data/labels/twelve_layer` 
+Our first set of 12-layer labels can be found in `data/labels/twelve_layer` 
 
- A final big leap in performance was achieved by **decreasing** our patch size from 512x512 down to 128x128.
-This made our model way more precise and also made us more confident in our predictions as it reduced the risk
-for hallucinations.
+A significant improvement in performance was achieved by **reducing** the patch size from 512x512 to 128x128.
+This increased the precision of our model and boosted our confidence in our predictions by reducing the risk of hallucinations.
 
-The final results were created using an ensemble of 128x128 models and one 512x512 model, which improved the best 
-aspects of both models. The 128 model contributed to sharper edges while the 512 model helped to reduce overall noise.
+The final result is a combination of an ensemble of 128x128 models with a 512x512 model, which has the best features of both models. 
+features of both models. The 128 model contributed to sharper edges, while the 512 model helped to reduce overall noise.
 
 ## Requirements:
 For inference 24 GB VRAM is enough (e.g. RTX 4090). The models were trained on 8xH100s (80GB VRAM each),
@@ -56,7 +51,7 @@ fragment e.g. `SUNSTREAKER` == `20231031143852`. The full mapping of fragment al
 in `utility/fragments.json` inside the docker image. References to these aliases
 can be found through the code, configs etc.
 
-### 1. Set up the data locally
+### 1. Setting up the data locally
 When running the docker container, you need to mount a local data directory to the data directory in the docker container.
 The code expects a `data` directory on your local machine to contain a directory called `fragments`which in turn 
 contains directories of the format
@@ -80,7 +75,7 @@ which contains the .tif files numbered with 5 digits, e.g. `00032.tif`
 ```
 docker load -i app.tar
 ```
-### 4. Run the docker image
+### 4. Running the docker image
 
 ```
 docker run -it --gpus all -v <your_local_data_directory>:/usr/src/app/data submission bash
@@ -95,7 +90,7 @@ This will create a directory ``fragments_contrasted`` in your local data directo
 files from your original ``fragments`` directory, preprocess them (increase contrast) and save them to 
 ``fragments_contrasted``.
 
-### 6. Running inference
+### 6. Running the inference
 
 ````commandline
 python inference_submission.py
@@ -103,7 +98,7 @@ python inference_submission.py
 Note: This can take very long due to high TTA, the script has a variable ``tta=True`` which can be 
 set to false, this will speed up inference by ~ 8x. (but produce slightly noisier images)
 
-### 7. Ensemble and create images
+### 7. Ensemble and creating images
 Once Inference is done, run
 
 ````commandline
@@ -178,10 +173,8 @@ Note: Any uniquely identifying substring of the checkpoint works here, so the fu
 
 
 ### Hallucination mitigation
-We are quite certain that our model is not prone to hallucination, due to the fact that a patch size
-of 128x128 is not nearly enough to cover a notable part of a letter. Furthermore our predictions match very
-closely to those that have been shared publicly on the discord by other users. The 512x512 model's patch size 
-could in theory be big enough to hallucinate notable parts of letters, but its predictions very closely match 
-those of the 128x128 models.
-We also trained models with a 64x64 resolution, which also confirmed the results found by the other models, 
+We are confident that our model is not prone to hallucination because a patch size of 128x128 is not sufficient to cover a significant portion of a letter.
+Additionally, our predictions closely match those shared publicly on Discord by other users. 
+While the 512x512 model's patch size could theoretically lead to hallucination of notable parts of letters, its predictions also closely match those of the 128x128 models.
+A 64x64 resolution was also trained and confirmed the results of the other models, but underperformed slightly due to higher noise.he results found by the other models, 
 but slightly underperforming them due to higher noise content.
