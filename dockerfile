@@ -11,7 +11,6 @@ COPY . .
 # Install any needed packages specified in requirements.txt
 # Note: Since PyTorch is already installed, make sure it's not in requirements.txt or use '--no-deps' to avoid re-installing it
 
-
 # Set the DEBIAN_FRONTEND variable to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -19,7 +18,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
-    tzdata
+    tzdata \
+    vim
 
 # Reset the DEBIAN_FRONTEND variable
 ENV DEBIAN_FRONTEND=
