@@ -91,8 +91,8 @@ files from your original ``fragments`` directory, preprocess them (increase cont
 ````commandline
 python inference_submission.py
 ````
-Note: This can take very long due to high TTA, the script has a variable ``tta=True`` which can be 
-set to false, this will speed up inference by ~ 8x. (but produce slightly noisier images)
+Note: This can take very long due to high TTA, the script has a variable ``tta`` (default value is false), which can be 
+activated. However, this will slow down inference by approximately 8 times but produce slightly less noisy images.
 
 ### 7. Ensemble and creating images
 Once Inference is done, run
@@ -100,8 +100,8 @@ Once Inference is done, run
 ````commandline
 python ensemble_submission.py
 ````
-This will combine the previously created predictions, and save the resulting images to your local
-`data/ensemble_results`
+This will combine the previously created predictions, and save the resulting images on your locally mounted folder
+`fragments/ensemble_results`.
 
 
 # Training 
@@ -118,7 +118,7 @@ Any model can be trained by calling
 python train.py <config_path>
 ```
 Where ``config_path`` points to a ``config_xxxxx.py`` file. Make sure to adjust the parameter ```train_batch_size```
-in the corresponding config according to your hardwar requirements, when training with less than 80 GB VRAM.
+in the corresponding config according to your hardware requirements, when training with less than 80 GB VRAM.
 
 The 4 configs used for our ensemble submission are placed under `configs/submission` 
 1. ``olive-wind.py`` (128x128)
@@ -126,9 +126,9 @@ The 4 configs used for our ensemble submission are placed under `configs/submiss
 3. ``desert-sea.py`` (128x128)
 4. ``wise-energy.py``(512x512)
 
-We provide trained checkpoints of all of these models.
+We provide trained checkpoints for all these models.
 
-Since our approach was to iteratively train models on their own predictions (e.g. train on 4422) => infer on 4422 => 
+Since our approach was to iteratively train models on their own predictions (e.g., train on 4422) => infer on 4422 => 
 repeat, we also included configs for models that do not get any labels for the fragments they are inferring on:
 
 These are placed in `configs/segmentation/one_out`.
@@ -139,14 +139,14 @@ We provide trained checkpoints for the following fragments
 
 *FragmentID left out of training : checkpoint path*
 
-1.``20231016151002`` : ``dazzling-haze-1197-unetr-sf-b5-231231-223336``
+1.``20231016151002`` : ``checkpoints/dazzling-haze-1197-unetr-sf-b5-231231-223336``
 
-2.``20230702185753`` : ``lucky-field-1198-unetr-sf-b5-231231-223422``
+2.``20230702185753`` : ``checkpoints/lucky-field-1198-unetr-sf-b5-231231-223422``
 
-3.``20231210121321`` : ``icy-disco-1199-unetr-sf-b5-231231-223530``
+3.``20231210121321`` : ``checkpoints/icy-disco-1199-unetr-sf-b5-231231-223530``
 
-The ``supplementary`` directory in google drive contains their raw predictions, proving the generalizational 
-capabilities, and confirming the correctness of our ensemble predictions which were partially trained on previous 
+The ``supplementary`` directory in Google Drive contains their raw predictions, proving the generalization 
+capabilities, and confirm the correctness of our ensemble predictions, which were partially trained on previous 
 predictions on the same fragment.
 
 ## Running inference with a trained model
@@ -157,9 +157,9 @@ python multilayer_approach/infer_layered_segmentation_padto16.py <checkpoint_fol
 Where checkpoint_folder points to the folder (named with a wandb name, e.g. icy-disco-1199-unetr-sf-b5-231231-223530)
 This name will be automatically generated when the train run is started and printed to the console when the training starts.
 
-The resulting npy files will be stored in `inference/results/fragment_<id>/<checkpiont_folder>`
+The resulting npy files will be stored in `inference/results/fragment_<id>/<checkpoint_folder>`
 
-You can quickly extract the results to your local data directory as an image using
+You can quickly extract the results to your local `fragments/single_results` data directory as an image by using
 ````commandline
 python get_single_results.py <fragment_id> <checkpoint_name>
 ````
@@ -173,4 +173,4 @@ We are confident that our model is not prone to hallucination because a patch si
 Additionally, our predictions closely match those shared publicly on Discord by other users. 
 While the 512x512 model's patch size could theoretically lead to hallucination of notable parts of letters, its predictions also closely match those of the 128x128 models.
 A 64x64 resolution was also trained and confirmed the results of the other models, but underperformed slightly due to higher noise.he results found by the other models, 
-but slightly underperforming them due to higher noise content.
+but slightly under-performing them due to higher noise content.

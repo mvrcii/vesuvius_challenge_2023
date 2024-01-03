@@ -31,7 +31,7 @@ def mean_of_npy_files(directory_path, fragment_id):
 
 
 if __name__ == "__main__":
-    out_dir = os.path.join("data", "single_results")
+    out_dir = os.path.join("fragments", "single_results")
     os.makedirs(out_dir, exist_ok=True)
     if len(sys.argv) != 3:
         print("Usage: python script.py <fragment_id> <checkpoint_name>")
