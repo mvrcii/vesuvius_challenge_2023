@@ -4,7 +4,6 @@ import sys
 import types
 import warnings
 from datetime import datetime
-print(sys.executable)
 
 import numpy as np
 import torch

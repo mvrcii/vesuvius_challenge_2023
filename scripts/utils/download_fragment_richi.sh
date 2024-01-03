@@ -27,7 +27,7 @@ fi
 
 
 # Configuration based on option
-outputFolder="data/fragments/fragment${outputFragmentID}/slices"
+outputFolder="fragments/fragment${outputFragmentID}/slices"
 #baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/${fragmentID}/layers/"
 baseUrl="http://dl2.ash2txt.org/richi-uploads/ThaumatoAnakalyptor/scroll_3/sample_segments2/working_700_small_12/layers/"
 

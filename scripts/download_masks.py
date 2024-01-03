@@ -18,7 +18,7 @@ def download_masks():
     username = 'registeredusers'
     password = 'only'
 
-    base_dir = 'data/fragments'
+    base_dir = 'fragments'
 
     if not os.path.exists(base_dir):
         print(f"{RED}Base directory does not exist: {base_dir}{RESET}")

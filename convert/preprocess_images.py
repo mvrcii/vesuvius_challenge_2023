@@ -57,7 +57,7 @@ def copy_mask(file_dir, input_dir, output_dir):
 def main():
     control_points = [(0, 0), (128, 64), (255, 255)]
     lut = create_lut_16bit(control_points)
-    input_dir = os.path.join('data', 'fragments')
+    input_dir = os.path.join('fragments')
     output_dir = os.path.join('data', 'fragments_contrasted')
     all_files = []
 

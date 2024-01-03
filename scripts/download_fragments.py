@@ -39,7 +39,7 @@ def determine_slice_range(fragment_id, single_layer):
 
 
 def check_downloaded_slices(fragment_id, start_slice, end_slice):
-    fragment_dir = f"data/fragments/fragment{fragment_id}/slices"
+    fragment_dir = f"fragments/fragment{fragment_id}/slices"
     missing_slices = []
     existing_slices = []
     slice_sizes = {}

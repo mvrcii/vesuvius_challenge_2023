@@ -118,7 +118,7 @@ def has_valid_ckpt_dirs(frag_root, frag_id):
 
 
 def get_target_dims(work_dir, frag_id):
-    frag_dir = os.path.join(work_dir, "data", "fragments", f"fragment{frag_id}")
+    frag_dir = os.path.join(work_dir, "fragments", f"fragment{frag_id}")
 
     target_dims = None
 
