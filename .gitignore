@@ -5,6 +5,7 @@ conf_local.py
 
 *.npy
 *.tif
+fragments/**/layers
 wandb
 *.tar
 venv
