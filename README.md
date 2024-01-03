@@ -1,5 +1,5 @@
-# UNLEASHING THE MT3: A TRANSFORMER TRIAD POWERPLAY 
-Delving into the synergy of UNETR, SegFormer, and Transformer-Enhanced Fragment IDs for groundbreaking advancements in machine learning.
+# MT3: Unearthing History with a Transformer Triad
+Leveraging the synergy of UNETR, SegFormer, and Transformer Fragment IDs, MT3 employs an innovative masking technique to discern ink on ancient scrolls buried by Vesuvius' ash. This method carefully omits uncertain areas from loss calculations during training, ensuring precise and accurate machine learning interpretations without negative influence from ambiguous data.
 
 ## General approach
 
