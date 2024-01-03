@@ -26,10 +26,6 @@ ENV DEBIAN_FRONTEND=
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN echo $'import os \n\
-    work_dir = os.path.join("/usr/src/app")\n\
-    node = True' > /usr/src/app/conf_local.py
-
 ENV PYTHONPATH "${PYTHONPATH}:/usr/src/app"
 # Define the command to run your application
 # Replace 'your_script.py' with the script you want to run, e.g., 'train.py'
