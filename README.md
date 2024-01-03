@@ -1,7 +1,7 @@
 # MT3: Unearthing History with a Transformer Triad
 Leveraging the synergy of UNETR, SegFormer, and Transformer Fragment IDs, MT3 employs an innovative masking technique to discern ink on ancient scrolls buried by Vesuvius' ash. This method carefully omits uncertain areas from loss calculations during training, ensuring precise and accurate machine learning interpretations without negative influence from ambiguous data.
 
-## General approach
+## Our approach
 
 We started off by handlabelling crackles up to a precision of 4 layers, these labels can be found in 
 `archive\labels\handmade_labels\four_layer_handmade`.
