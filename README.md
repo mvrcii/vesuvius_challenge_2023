@@ -1,3 +1,6 @@
+# UNLEASHING THE MT3: A TRANSFORMER TRIAD POWERPLAY 
+Delving into the synergy of UNETR, SegFormer, and Transformer-Enhanced Fragment IDs for groundbreaking advancements in machine learning.
+
 ## General approach
 
 We started off by handlabelling crackles up to a precision of 4 layers, these labels can be found in 
