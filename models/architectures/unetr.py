@@ -81,8 +81,6 @@ class SelfAttention(nn.Module):
         mixed_key_layer = self.key(hidden_states)
         mixed_value_layer = self.value(hidden_states)
 
-        # hidden_states = hidden_states.to(dtype=torch.float32)
-
         # Perform attention mat mul calculations with fp32
         # https://github.com/pytorch/pytorch/issues/40497
         with torch.cuda.amp.autocast_mode.autocast(enabled=False):
@@ -93,6 +91,9 @@ class SelfAttention(nn.Module):
             attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
             attention_scores = attention_scores / math.sqrt(self.attention_head_size)
             attention_probs = self.softmax(attention_scores)
+
+            # TODO: Try to extract/visualize attention map
+
             weights = attention_probs if self.vis else None
             attention_probs = self.attn_dropout(attention_probs)
 
@@ -100,10 +101,7 @@ class SelfAttention(nn.Module):
             context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
             new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
             context_layer = context_layer.view(*new_context_layer_shape)
-            # print("context", context_layer.dtype)
-            # Assuming self.out is an instance of nn.Linear
-            # print("Weight dtype:", self.out.weight.dtype)
-            # print("Bias dtype:", self.out.bias.dtype)
+
         attention_output = self.out(context_layer)
         attention_output = self.proj_dropout(attention_output)
         return attention_output, weights
