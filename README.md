@@ -3,7 +3,7 @@ Leveraging the synergy of UNETR, SegFormer, and Transformer Fragment IDs, MT3 em
 
 ## Our approach
 
-We started off by handlabelling crackles up to a precision of 4 layers, these labels can be found in 
+We started off by hand-labelling crackles up to a precision of 4 layers, these labels can be found in 
 `archive\labels\handmade_labels\four_layer_handmade`.
 
 To get started, we trained multiple SegFormer models with 4 input layers on the handlabelled data by passing 4 stacked data layers into the
