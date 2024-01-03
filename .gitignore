@@ -6,7 +6,7 @@ conf_local.py
 *.npy
 *.tif
 wandb
-
+*.tar
 venv
 __pycache__
 slurm*.out
