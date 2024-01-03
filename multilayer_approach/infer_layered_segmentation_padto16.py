@@ -50,13 +50,13 @@ def read_fragment(contrasted, patch_size, work_dir, fragment_id, layer_start, la
 
     for i in tqdm(range(layer_start, layer_start + layer_count)):
         fragment = "fragments_contrasted" if contrasted else "fragments"
-        img_path = os.path.join(work_dir, "data", fragment, f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+        img_path = os.path.join(work_dir, "data", fragment, f"fragment{fragment_id}", "layers", f"{i:05}.tif")
 
         if not os.path.isfile(img_path):
             if contrasted:
-                raise Exception(f"Missing Contrasted Slice file: {os.path.join(fragment_id, 'slices', f'{i:05}.tif')}")
+                raise Exception(f"Missing Contrasted Layer file: {os.path.join(fragment_id, 'layers', f'{i:05}.tif')}")
 
-            print(f"Downloading missing Slice file: {os.path.join(fragment_id, 'slices', f'{i:05}.tif')}")
+            print(f"Downloading missing Layer file: {os.path.join(fragment_id, 'layers', f'{i:05}.tif')}")
             if fragment_id in SUPERSEDED_FRAGMENTS:
                 print("Warning: Fragment superseded, added suffix for download!")
                 fragment_id += "_superseded"
@@ -82,7 +82,7 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
     expected_patch_shape_extracted = (12, patch_size, patch_size)
 
     contrasted = getattr(config, 'contrasted', False)
-    print("Using contrasted fragment slices" if contrasted else "Using normal fragment slices")
+    print("Using contrasted fragment layers" if contrasted else "Using normal fragment layers")
 
     # Loading images [12, Height, Width]
     images = read_fragment(contrasted=contrasted, patch_size=patch_size, work_dir=config.work_dir,
@@ -245,16 +245,16 @@ def get_target_dims(work_dir, frag_id):
 
     target_dims = None
 
-    slice_dir = os.path.join(frag_dir, "slices")
-    if os.path.isdir(slice_dir):
+    layer_dir = os.path.join(frag_dir, "layers")
+    if os.path.isdir(layer_dir):
         for i in range(0, 63):
             if target_dims:
                 return target_dims
 
-            img_path = os.path.join(slice_dir, f"{i:05}.tif")
+            img_path = os.path.join(layer_dir, f"{i:05}.tif")
 
             if not os.path.isfile(img_path):
-                print(f"Downloading Slice file for dimensions: {os.path.join(frag_id, 'slices', f'{i:05}.tif')}")
+                print(f"Downloading Layer file for dimensions: {os.path.join(frag_id, 'layers', f'{i:05}.tif')}")
                 command = ['bash', "./scripts/utils/download_fragment.sh", frag_id, f'{i:05} {i:05}']
                 subprocess.run(command, check=True)
 

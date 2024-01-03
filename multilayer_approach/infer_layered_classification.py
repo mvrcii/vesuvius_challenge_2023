@@ -53,7 +53,7 @@ def read_fragment(patch_size, work_dir, fragment_id, layer_start, layer_count):
     images = []
 
     for i in tqdm(range(layer_start, layer_start + layer_count)):
-        img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "slices", f"{i:05}.tif")
+        img_path = os.path.join(work_dir, "data", "fragments", f"fragment{fragment_id}", "layers", f"{i:05}.tif")
 
         image = cv2.imread(img_path, 0)
         assert 1 < np.asarray(image).max() <= 255, "Invalid image index {}".format(i)
@@ -221,13 +221,13 @@ def get_target_dims(work_dir, frag_id):
 
     target_dims = None
 
-    slice_dir = os.path.join(frag_dir, "slices")
-    if os.path.isdir(slice_dir):
+    layer_dir = os.path.join(frag_dir, "layers")
+    if os.path.isdir(layer_dir):
         for i in range(0, 63):
             if target_dims:
                 return target_dims
 
-            img_path = os.path.join(slice_dir, f"{i:05}.tif")
+            img_path = os.path.join(layer_dir, f"{i:05}.tif")
             if os.path.isfile(img_path):
                 image = cv2.imread(img_path, 0)
                 target_dims = image.shape

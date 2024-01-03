@@ -199,7 +199,7 @@ def read_fragment_images_for_channels(root_dir, patch_size, channels, ch_block_s
     images = []
 
     for channel in tqdm(channels):
-        img_path = os.path.join(root_dir, "slices", f"{channel:05}.tif")
+        img_path = os.path.join(root_dir, "layers", f"{channel:05}.tif")
 
         assert os.path.isfile(img_path), "Fragment file does not exist"
 

@@ -22,9 +22,9 @@ def validate_fragments(config, fragments, label_dir):
 
 def validate_fragment_files(frag_id, cfg, label_dir):
     errors = []
-    frag_dir = os.path.join(cfg.work_dir, "data", "fragments", f"fragment{frag_id}")
+    frag_dir = os.path.join(cfg.work_dir, "fragments", f"fragment{frag_id}")
     frag_label_dir = os.path.join(label_dir, f"{frag_id}")
-    frag_slice_dir = os.path.join(frag_dir, 'slices')
+    frag_layer_dir = os.path.join(frag_dir, 'layers')
     inklabel_path = os.path.join(frag_label_dir, f"inklabels.png")
     ignore_path = os.path.join(frag_label_dir, f"ignore.png")
     mask_path = os.path.join(frag_dir, "mask.png")
@@ -37,9 +37,9 @@ def validate_fragment_files(frag_id, cfg, label_dir):
     if not os.path.isdir(frag_label_dir):
         errors.append(f"\033[91mReason:\t\tLabel directory {frag_label_dir} not found\033[0m")
 
-    # Check if slice dir (data/fragments/fragment{frag_id}/slices) exists
-    if not os.path.isdir(frag_slice_dir):
-        errors.append(f"\033[91mReason:\t\tSlice directory {frag_slice_dir} not found\033[0m")
+    # Check if layer dir (data/fragments/fragment{frag_id}/layers) exists
+    if not os.path.isdir(frag_layer_dir):
+        errors.append(f"\033[91mReason:\t\tLayer directory {frag_layer_dir} not found\033[0m")
 
     # Check if inklabel exists
     if not os.path.isfile(inklabel_path):
@@ -65,17 +65,17 @@ def validate_fragment_files(frag_id, cfg, label_dir):
 
     required_channels = set(range(required_channels_start, required_channels_end + 1))
 
-    # Check which slice files exist
-    existing_slice_channels = set(extract_indices(frag_slice_dir, pattern=r'(\d+).tif'))
+    # Check which layer files exist
+    existing_layer_channels = set(extract_indices(frag_layer_dir, pattern=r'(\d+).tif'))
     # Check if any are missing
-    missing_slice_channels = required_channels - existing_slice_channels
+    missing_layer_channels = required_channels - existing_layer_channels
 
-    if missing_slice_channels:
+    if missing_layer_channels:
         errors.append(
-            f"\033[91mReason:\t\tSlice channel files {format_ranges(sorted(list(missing_slice_channels)))} not found\033[0m")
+            f"\033[91mReason:\t\tLayer channel files {format_ranges(sorted(list(missing_layer_channels)))} not found\033[0m")
 
     # Of those existing, get only those that we need
-    valid_channels = existing_slice_channels.intersection(required_channels)
+    valid_channels = existing_layer_channels.intersection(required_channels)
 
     return errors, sorted(list(valid_channels))
 

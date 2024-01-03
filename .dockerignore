@@ -44,4 +44,3 @@ inference/archived_results/**
 inference/single_results/**
 slurm_logs/
 checkpoints_archive/
-conf_local.py
