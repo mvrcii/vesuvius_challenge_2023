@@ -53,23 +53,19 @@ can be found through the code, configs etc.
 
 ### 1. Setting up the data locally
 When running the docker container, you need to mount a local data directory to the data directory in the docker container.
-The code expects a `data` directory on your local machine to contain a directory called `fragments`which in turn 
-contains directories of the format
-`fragment<id>` e.g. `fragment2023101284423`.
-These fragment directories should contain the mask file (`mask.png`) and a subdirectory called `slices` 
+The code expects a directory on your local machine called `fragments` which contains subdirectories of the format `fragment<id>` e.g. `fragment2023101284423`.
+These fragment directories must contain the mask file (`mask.png`) and a subdirectory called `layers` 
 which contains the .tif files numbered with 5 digits, e.g. `00032.tif`
 
-    data/
+    fragments/
     │
-    └── fragments/
-        │
-        ├── fragment2023101284423/
-        │   ├── mask.png
-        │   └── slices/
-        │       ├── 00001.tif
-        │       ├── 00002.tif
-        │       ...
-        │       └── 00064.tif
+    ├── fragment2023101284423/
+    │   ├── mask.png
+    │   └── layers/
+    │       ├── 00001.tif
+    │       ├── 00002.tif
+    │       ...
+    │       └── 00064.tif
 ###  2. Download the app.tar docker image from Google Drive (link provided in submission mail)
 ###  3. Load the docker image
 ```
@@ -78,7 +74,7 @@ docker load -i app.tar
 ### 4. Running the docker image
 
 ```
-docker run -it --gpus all -v <your_local_data_directory>:/usr/src/app/data submission bash
+docker run -it --gpus all -v <your_local_data_directory>:/usr/src/app/fragments submission bash
 ```
 ### 5. Data Preprocessing
 Once inside the interactive shell, your working directory should be `/usr/src/app`.
