@@ -96,8 +96,8 @@ files from your original ``fragments`` directory, preprocess them (increase cont
 ````commandline
 python inference_submission.py
 ````
-Note: This can take very long due to high TTA, the script has a variable ``tta`` (default value is false), which can be 
-activated. However, this will slow down inference by approximately 8 times but produce slightly less noisy images.
+Note: This can take very long due to high TTA, the script has a variable ``tta`` (default value is true), which can be 
+set to False. This will speed up inference by ~x8 but produce slightly noisier images.
 
 ### 7. Ensemble and creating images
 Once Inference is done, run
