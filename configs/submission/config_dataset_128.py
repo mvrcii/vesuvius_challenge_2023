@@ -36,7 +36,7 @@ stride = patch_size // 2
 # TODO: Fix bugs for submission
 fragment_ids = [IRONHIDE_FRAG_ID]
 
-validation_fragments = [IRONHIDE_FRAG_ID]
+validation_fragments = [JAZZBIGGER_FRAG_ID]
 # validation_fragments = [GRIMHUGE_FRAG_ID]
 
 # Training parameters
