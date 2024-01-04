@@ -1,52 +1,63 @@
-# MT3: Unearthing History with a Transformer Triad
-Leveraging the synergy of UNETR, SegFormer, and Transformer Fragment IDs, MT3 employs an innovative masking technique to discern ink on ancient scrolls buried by Vesuvius' ash. This method carefully omits uncertain areas from loss calculations during training, ensuring precise and accurate machine learning interpretations without negative influence from ambiguous data.
-
 ## Our approach
 
-We started off by hand-labelling crackles up to a precision of 4 layers, these labels can be found in 
-`archive\labels\handmade_labels\four_layer_handmade`.
+We started off by hand-labelling visible crackles up to a precision of 4 layers, these early labels can be found in 
+`data/labels/0_hand_four_layer/raw`. (*Note: all paths are referring to paths from the project root: `usr/src/app` 
+inside the docker container*)
 
 To get started, we trained multiple SegFormer models with 4 input layers on the handlabelled data by passing 4 stacked data layers into the
-input layers of the model, discarding the 3D information.
+input channels of the model, discarding the 3D information.
 
 
-The results of these models can be found in `data/labels/four_layer/binarized`.
+The results of these models can be found in `data/labels/1_four_layer/binarized`.
 
 We then continued to train models on the predictions of the previous models - which to our surprise produced better and 
-better results - until we found our first letter. These can be seen in:
-`data/labels/four_layer/binarized/lively-meadow-695-segformer-b2-231206-230820/20231005123336/inklabels_36_39.png`. 
+better results - until we found our first letters. These can be seen in:
+`data/labels/1_four_layer/binarized/lively-meadow-695-segformer-b2-231206-230820/20231005123336/inklabels_36_39.png`. 
 
 We then shifted our approach from 4-layer models to a 12-layer model, specifically a UNETR as encoder combined with a Segformer B5 as decoder
-(similar to the kaggle competition winners). We found that, for most fragments, the use of more than 12 layers would result in incorrect colour signals from higher and lower layers due to layer skipping during segmentation. Since the UNETR architecture requires 16 input layers we had to zero-pad our input.
+(similar to the kaggle competition winners). We found that, for most fragments, the use of more than 12 layers would 
+result in incorrect ink signals from higher and lower layers due to layer skipping during segmentation. Since the UNETR
+architecture requires 16 input layers we had to zero-pad our input.
 
-We then trained these models by overlaying all of our 4-layer labels corresponding to the "best" 12 layer block. By having a model with 4-layer precision we could precisely tell which 12 layers were the best to combat layer skipping, which would otherwise introduce noise and false letters.
+We then trained these models by overlaying all of our 4-layer labels corresponding to the "best" 12 layer block.
+By having a model with 4-layer precision we could precisely tell which 12 layers were the best to combat layer skipping,
+which would otherwise introduce noise and false letters.
 
 From there on we repeated our approach of retraining on previous predictions. However, we included a crucial new detail: 
 an "ignore" mask. Instead of giving the model a binary label (ink/no-ink), we added a third mask to manually
 annotate areas where the predictions of the previous model were uncertain or obviously wrong. Instead of fixing
 them, e.g. filling a hole in a very obvious interrupted vertical line, we marked these spots with an ignore mask, 
 which effectively removed the underlying pixels from the loss calculation. This way the previously wrong prediction 
-can not propagate to the next model iteration. With this method we also achieved to reduce the risk of accidentally manually annotating ink
-where there is no ink. By following this approach, we were able to iteratively improve the areas that were previously ignored as we trained more models. 
-This allowed us to gradually reduce the area that we ignore in the loss function.
+can not propagate to the next model iteration. With this method we also achieved to reduce the risk of accidentally 
+manually annotating ink where there is no ink. By following this approach, we were able to iteratively improve the
+areas that were previously ignored as we trained more models. This allowed us to gradually reduce the area that we 
+ignore in the loss function.
 
-Our first set of 12-layer labels can be found in `data/labels/twelve_layer` 
+Our first set of 12-layer labels can be found in `data/labels/3_twelve_layer` 
 
 A significant improvement in performance was achieved by **reducing** the patch size from 512x512 to 128x128.
 This increased the precision of our model and boosted our confidence in our predictions by reducing the risk of hallucinations.
 
-The final result is a combination of an ensemble of 128x128 models with a 512x512 model, which has the best features of both models. 
-features of both models. The 128 model contributed to sharper edges, while the 512 model helped to reduce overall noise.
+The final result is a combination of an ensemble of three 128x128 models with one 512x512 model, which 
+allowed us to combine the best features of both models.
+The 128 model contributed to sharper edges, while the 512 model helped to reduce overall noise.
 
 ## Requirements:
 ### VRAM
 For inference 24 GB VRAM is enough (e.g. RTX 4090). The models were trained on 8xH100s (80GB VRAM each),
-but with smaller batch sizes, training on 24GB is possible.
+but with smaller batch sizes, training on 24GB is possible. *(Although the 512x512 model then only allows for a batch_size of 1)*
 
 ### Diskspace
+For inference, our `preprocess_images.py` script will preprocess all fragment files in the mounted fragment directory, and
+save them in a new `fragments_contrasted` directory inside the docker container. This means that for this step, you will need 
+the amount of disk space your fragment directory is currently taking up.
+
+(If you only want to reproduce inference, it is recommended to move all unnecessary fragment_id directories to some other temporary 
+directory, to avoid processing them)
+
 When reproducing the training, the dataset creation can take up to 90GB for the 128x128 model, 
-and another 90GB for the 512x512 model, so make sure ~ 200GB of free disk space is available 
-(not counting the disk space already occupied by the raw fragment tif files).
+and another 90GB for the 512x512 model, so make sure an additional ~ 200GB of free disk space is available.
+
 
 ### Wandb
 For training, a Wandb account is necessary, as we use wandb to auto-generate run names and log metrics.
@@ -54,10 +65,10 @@ For training, a Wandb account is necessary, as we use wandb to auto-generate run
 To make communication about the different fragments easier during development, we assigned an alias name to each 
 fragment e.g. `SUNSTREAKER` == `20231031143852`. The full mapping of fragment aliases to their IDs can be seen 
 in `utility/fragments.json` inside the docker image. References to these aliases
-can be found through the code, configs etc.
+can be found throughout the code, configs etc.
 
 ### 1. Setting up the data locally
-When running the docker container, you need to mount a local data directory to the data directory in the docker container.
+When running the docker container, you need to mount a local fragment directory to the fragment directory in the docker container.
 The code expects a directory on your local machine called `fragments` which contains subdirectories of the format `fragment<id>` e.g. `fragment2023101284423`.
 These fragment directories must contain the mask file (`mask.png`) and a subdirectory called `layers` 
 which contains the .tif files numbered with 5 digits, e.g. `00032.tif`
@@ -79,7 +90,7 @@ docker load -i app.tar
 ### 4. Running the docker image
 
 ```
-docker run -it --gpus all -v <your_local_data_directory>:/usr/src/app/fragments submission bash
+docker run -it --gpus all -v <your_local_fragment_directory>:/usr/src/app/fragments submission bash
 ```
 ### 5. Data Preprocessing
 Once inside the interactive shell, your working directory should be `/usr/src/app`.
@@ -87,7 +98,7 @@ From here you can run
 ````commandline
 python convert/preprocess_images.py 
 ````
-This will create a directory ``fragments_contrasted`` in your local data directory, load all fragment 
+This will create a directory ``fragments_contrasted`` inside the docker container, load all fragment 
 files from your original ``fragments`` directory, preprocess them (increase contrast) and save them to 
 ``fragments_contrasted``.
 
@@ -171,6 +182,7 @@ python multilayer_approach/infer_layered_segmentation_padto16.py <checkpoint_fol
 ```
 Where checkpoint_folder points to the folder (named with a wandb name, e.g. icy-disco-1199-unetr-sf-b5-231231-223530)
 This name will be automatically generated when the train run is started and printed to the console when the training starts.
+(It can also be viewed and copied from the Wandb dashboard.)
 
 The resulting npy files will be stored in `inference/results/fragment_<id>/<checkpoint_folder>`
 
