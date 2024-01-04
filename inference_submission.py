@@ -9,17 +9,14 @@ from utility.fragments import HOT_ROD_FRAG_ID, BLASTER_FRAG_ID, IRONHIDE_FRAG_ID
 def main():
     checkpoint_keys = ['olive-wind', 'wise-energy', 'curious-rain', 'desert-sea']
 
-    # fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
-    #                 SKYGLORIOUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
-    #                 DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID,
-    #                 TRAILBIGGER_FRAG_ID]
+    fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
+                    SKYGLORIOUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID, JAZZBIGGER_FRAG_ID,
+                    DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID,
+                    TRAILBIGGER_FRAG_ID]
 
-    # TODO: Fix bugs for submission
-    fragment_ids = [IRONHIDE_FRAG_ID]
-
-    tta = False
-    batch_size = 2
-    stride = 1
+    tta = True
+    batch_size = 4
+    stride = 2
 
     for checkpoint_key in checkpoint_keys:
         checkpoint = CHECKPOINTS[checkpoint_key]
