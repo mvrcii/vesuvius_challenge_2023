@@ -269,9 +269,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, stride_factor, fr
                           out_x_start=out_x_start, out_x_end=out_x_end)
 
             patch_counter += 1
-            if patch_counter % 100 == 0:
-                print("Saving")
-                np.save(npy_file_path, out_arr.cpu().numpy())
 
     progress_bar.close()
 

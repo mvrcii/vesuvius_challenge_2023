@@ -204,9 +204,6 @@ def infer_full_fragment_layer(model, npy_file_path, ckpt_name, batch_size, strid
                 batches = []
                 batch_indices = []
 
-            if batch_counter % 1000 == 0:
-                np.save(npy_file_path, out_arr.cpu().numpy())
-
     # Process any remaining patches
     if batches:
         transformed_images = [transform(image=image)['image'] for image in batches]
