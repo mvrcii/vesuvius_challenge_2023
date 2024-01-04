@@ -39,12 +39,17 @@ The final result is a combination of an ensemble of 128x128 models with a 512x51
 features of both models. The 128 model contributed to sharper edges, while the 512 model helped to reduce overall noise.
 
 ## Requirements:
+### VRAM
 For inference 24 GB VRAM is enough (e.g. RTX 4090). The models were trained on 8xH100s (80GB VRAM each),
 but with smaller batch sizes, training on 24GB is possible.
 
+### Diskspace
 When reproducing the training, the dataset creation can take up to 90GB for the 128x128 model, 
 and another 90GB for the 512x512 model, so make sure ~ 200GB of free disk space is available 
 (not counting the disk space already occupied by the raw fragment tif files).
+
+### Wandb
+For training, a Wandb account is necessary, as we use wandb to auto-generate run names and log metrics.
 #### Note
 To make communication about the different fragments easier during development, we assigned an alias name to each 
 fragment e.g. `SUNSTREAKER` == `20231031143852`. The full mapping of fragment aliases to their IDs can be seen 
@@ -125,6 +130,10 @@ python train.py <config_path>
 ```
 Where ``config_path`` points to a ``config_xxxxx.py`` file. Make sure to adjust the parameter ```train_batch_size```
 in the corresponding config according to your hardware requirements, when training with less than 80 GB VRAM.
+
+## Important:
+When prompted, select to use an existing Wandb account and paste your API key. This is crucial as certain
+parsing methods expect the checkpoint names to be in the Wandb format, which does not work when doing offline logging.
 
 The 4 configs used for our ensemble submission are placed under `configs/submission` 
 1. ``olive-wind.py`` (128x128)
