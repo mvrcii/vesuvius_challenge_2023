@@ -107,9 +107,15 @@ This will combine the previously created predictions, and save the resulting ima
 # Training 
 ### Dataset creation
 Before a model can be trained, the dataset has to be created.
-Make sure you completed the step `Data Preprocessing` mentioned above, then run: 
+Make sure you completed the step `Data Preprocessing` mentioned above, then run the following 2 commands: 
+### 128x128 Dataset creation
 ```commandline
-python multilayer_approach/create_dataset_segmentation.py configs/submission/config_dataset.py
+python multilayer_approach/create_dataset_segmentation.py configs/submission/config_dataset_128.py
+```
+
+### 512x512 Dataset creation
+```commandline
+python multilayer_approach/create_dataset_segmentation.py configs/submission/config_dataset_512.py
 ```
 
 ### Training
