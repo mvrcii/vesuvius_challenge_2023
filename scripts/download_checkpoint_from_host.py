@@ -19,7 +19,7 @@ def download_checkpoint(checkpoint_name, hostname):
 
     print(f"{GREEN}Download process initiated!{RESET}")
 
-    full_server_path = "~/kaggle1stReimp/checkpoints"
+    full_server_path = "~/MT3/checkpoints"
     command = f'scp -r "{hostname}:{full_server_path}/{checkpoint_name}" "checkpoints"'
     subprocess.run(command)
 

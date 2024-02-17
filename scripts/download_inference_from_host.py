@@ -54,8 +54,8 @@ def find_directory_on_remote(server_path, fragment_id, model_run_dir):
 
 def get_server_path(hostname, result_dir):
     server_paths = {
-        "vast": f"~/kaggle1stReimp/inference/{result_dir}",
-        "andro": f"~/kaggle1stReimp/inference/{result_dir}"
+        "vast": f"~/MT3/inference/{result_dir}",
+        "andro": f"~/MT3/inference/{result_dir}"
     }
 
     if hostname not in server_paths:

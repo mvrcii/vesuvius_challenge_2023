@@ -12,7 +12,7 @@ _base_ = [
 segmentation = True
 
 # PATHS
-work_dir = os.path.join("/scratch", "medfm", "vesuv", "kaggle1stReimp")
+work_dir = os.path.join("/scratch", "medfm", "vesuv", "MT3")
 base_label_dir = os.path.join("data", "base_label_files")
 data_root_dir = "data"
 dataset_target_dir = os.path.join("data", "datasets")

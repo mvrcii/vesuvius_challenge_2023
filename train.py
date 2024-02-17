@@ -150,7 +150,7 @@ def main():
         seed_everything(config.seed)
         np.random.seed(config.seed)
 
-    wandb_logger = WandbLogger(project="Kaggle1stReimp", entity="wuesuv")
+    wandb_logger = WandbLogger(project="MT3", entity="wuesuv")
 
     log_wandb_hyperparams(config=config, wandb_logger=wandb_logger)
 

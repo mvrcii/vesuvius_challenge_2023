@@ -12,7 +12,7 @@ SSH Key Marcel: `DUMMY`
 
 - Clone the repository
     ```bash
-    git clone git@github.com:JakeGonder/kaggle1stReimp.git
+    git clone git@github.com:JakeGonder/MT3.git
     ```
     Username: JakeGonder
     Token: `DUMMY`
@@ -37,7 +37,7 @@ Install `requirements.txt`, as well as other required python packages:
 ## Create local config conf_local.py in project root!
 ```
 import os
-work_dir = os.path.join(os.path.expanduser("~/kaggle1stReimp"))
+work_dir = os.path.join(os.path.expanduser("~/MT3"))
 node = True
 ```
 

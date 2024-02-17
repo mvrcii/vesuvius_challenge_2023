@@ -6,7 +6,7 @@
 
 source ~/anaconda3/etc/profile.d/conda.sh
 conda init bash
-cd /mnt/vesuv/home/nowak/kaggle1stReimp 
+cd /mnt/vesuv/home/nowak/MT3
 export PYTHONPATH="$PWD:$PYTHONPATH"
 conda activate vesuv
 

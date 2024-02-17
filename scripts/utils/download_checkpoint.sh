@@ -12,9 +12,9 @@ HOSTNAME=$2
 
 # Set the server path based on the hostname
 if [ "$HOSTNAME" = "vast" ]; then
-    SERVER_PATH="~/kaggle1stReimp/checkpoints"
+    SERVER_PATH="~/MT3/checkpoints"
 else
-    SERVER_PATH="/scratch/medfm/vesuv/kaggle1stReimp/checkpoints"
+    SERVER_PATH="/scratch/medfm/vesuv/MT3/checkpoints"
 fi
 
 # Full path on the server

@@ -15,7 +15,7 @@ def main():
 
     for frag_id in fragments:
         command = ["python",
-                   "scripts/download_inference.py",
+                   "scripts/download_inference_from_host.py",
                    frag_id,
                    checkpoint,
                    "vast",
