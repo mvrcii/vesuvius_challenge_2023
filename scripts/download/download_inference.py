@@ -94,8 +94,8 @@ def get_checkpoint_name(user_input, checkpoint_dict):
         exit()
 
 
-def get_inference_result(fragment_id_or_name, checkpoint_keyword, hostname, single, force=False):
-    result_dir = "single_results" if single else "results"
+def get_inference_result(fragment_id_or_name, checkpoint_keyword, hostname, force=False):
+    result_dir = "results"
     server_path = get_server_path(hostname, result_dir)
     fragment_ids = FragmentHandler().get_ids()
     fragment_names = FragmentHandler().get_names()
@@ -220,4 +220,4 @@ if __name__ == "__main__":
 
     get_inference_result(fragment_id_or_name=args.fragment_id,
                          checkpoint_keyword=args.checkpoint_folder_name,
-                         hostname=args.hostname, single=False, force=args.force)
+                         hostname=args.hostname, force=args.force)

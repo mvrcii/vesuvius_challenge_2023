@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-from scripts.combine_predictions import has_valid_ckpt_dirs
+from scripts.visualize.combine_predictions import has_valid_ckpt_dirs
 from utility.configs import Config
 from utility.fragments import FragmentHandler
 

@@ -4,7 +4,7 @@ import sys
 import requests
 from requests.auth import HTTPBasicAuth
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from utility.fragments import SUPERSEDED_FRAGMENTS
 
 GREEN = "\033[92m"

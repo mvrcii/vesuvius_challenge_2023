@@ -48,19 +48,16 @@ def combine_layers(predictions, max_distance):
     return combined
 
 
-def get_start_layer_idx(filename, single_layer):
-    if single_layer:
-        return int(filename.split('_')[2].split('.')[0])
-    else:
-        return int(filename.split('_')[2])
+def get_start_layer_idx(filename):
+    return int(filename.split('_')[2])
 
 
-def get_common_layers(model_dir, selected_layers, single_layer):
+def get_common_layers(model_dir, selected_layers):
     paths = [x for x in os.listdir(model_dir) if x.endswith('.npy') and not x.startswith('maxed_logits')]
 
     layers = []
     for filename in paths:
-        layers.append(get_start_layer_idx(filename, single_layer))
+        layers.append(get_start_layer_idx(filename))
 
     layers = set(layers).intersection(selected_layers)
 
@@ -156,7 +153,6 @@ def parse_args():
     parser.add_argument('--save_all_layers', action='store_true', help='Save all layer files (in total 61)')
     parser.add_argument('--max_ensemble', action='store_true', help='Show the max ensemble between two models')
     parser.add_argument('--submission', action='store_true', help='Formats file names in submission mode')
-    parser.add_argument('--single_layer', action='store_true', help='Combine predictions for single layer checkpoints')
 
     args = parser.parse_args()
 
@@ -183,8 +179,7 @@ def main():
 
     config = Config().load_local_cfg()
 
-    single_layer = args.single_layer
-    results_dir = 'single_results' if single_layer else 'results'
+    results_dir = 'results'
     frag_root = os.path.join(config.work_dir, 'inference', results_dir)
 
     all_frag_dirs = [frag_id.split('fragment')[1] for frag_id in os.listdir(frag_root)]
@@ -228,11 +223,11 @@ def main():
     target_dims = get_target_dims(work_dir=config.work_dir, frag_id=frag_id)
 
     Visualization(frag_id=frag_id, root_dir=frag_dir, target_dims=target_dims, model_name=model_name,
-                  model_dir=model_dir, single_layer=single_layer)
+                  model_dir=model_dir)
 
 
 class Visualization:
-    def __init__(self, frag_id, root_dir, target_dims, model_name, model_dir, single_layer):
+    def __init__(self, frag_id, root_dir, target_dims, model_name, model_dir):
         assert isinstance(target_dims, tuple) and len(target_dims) == 2, "target_dims must be a tuple of two elements"
 
         self.root_dir = root_dir
@@ -248,12 +243,10 @@ class Visualization:
         # start and end layer idx are both inclusive!
         start_layer_idx, end_layer_idx = 0, 60
         selected_layers = list(range(start_layer_idx, end_layer_idx + 1))
-        valid_layers = get_common_layers(model_dir=model_dir, selected_layers=selected_layers,
-                                         single_layer=single_layer)
+        valid_layers = get_common_layers(model_dir=model_dir, selected_layers=selected_layers)
 
         self.model_layer_idcs, self.model_layer_values, self.file_names = load_predictions(root_dir=model_dir,
-                                                                                           layer_indices=valid_layers,
-                                                                                           single_layer=single_layer)
+                                                                                           layer_indices=valid_layers)
         start_layer_idx, end_layer_idx = FragmentHandler().get_best_layers(frag_id=frag_id)
 
         self.model_name = model_name
@@ -292,7 +285,8 @@ class Visualization:
         save_button.pack(side="left")
         invert_button = Button(utility_frame, text="Invert colors", command=lambda: self.invert_colors())
         invert_button.pack(side="left")
-        save_transparent_button = Button(utility_frame, text="Save Transparent", command=lambda: self.save_snapshot(transparent=True))
+        save_transparent_button = Button(utility_frame, text="Save Transparent",
+                                         command=lambda: self.save_snapshot(transparent=True))
         save_transparent_button.pack(side="left")
 
         # Create a frame for the mode selection buttons
@@ -464,7 +458,7 @@ class Visualization:
         new_dir_name = prefix + "_".join(simplified_parts) + "_" + timestamp
         return new_dir_name
 
-    def save_snapshot(self, transparent = False):
+    def save_snapshot(self, transparent=False):
         global type_list
         # Save in model dir within fragment for single model
         model_dir = self.model_dir
@@ -718,7 +712,7 @@ class Visualization:
             self.layer_label.config(text=f"Current Layer: {self.file_names[int(new_layer)]}")
 
 
-def load_predictions(root_dir, single_layer, layer_indices=None):
+def load_predictions(root_dir, layer_indices=None):
     global type_list
     layer_idcs = list()
     layer_values = []
@@ -748,10 +742,10 @@ def load_predictions(root_dir, single_layer, layer_indices=None):
         type_list[0] = type_list[selection]
         file_paths = [x for x in file_paths if x.startswith(check_start)]
 
-    file_paths.sort(key=lambda x: get_start_layer_idx(x, single_layer))
+    file_paths.sort(key=lambda x: get_start_layer_idx(x))
 
     for filename in file_paths:
-        layer_start_idx = get_start_layer_idx(filename, single_layer)
+        layer_start_idx = get_start_layer_idx(filename)
 
         # If layer_indices are given, check if layer_start_idx is contained
         if layer_indices and layer_start_idx not in layer_indices:
