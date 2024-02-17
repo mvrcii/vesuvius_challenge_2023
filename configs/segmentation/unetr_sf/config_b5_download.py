@@ -8,6 +8,10 @@ from utility.fragments import (IRONHIDE_FRAG_ID, BLASTER_FRAG_ID,
                                ULTRA_MAGNUS_FRAG_ID, BLUEBIGGER_FRAG_ID, SKYHUGE_FRAG_ID, TRAILBIGGER_FRAG_ID,
                                SKYGLORIOUS_FRAG_ID)
 
+# NOTE:
+# THIS CONFIG IS ONLY USED FOR DOWNLOAD
+# THUS ALL FRAGMENTS ARE CONTAINED IN fragment_ids
+
 _base_ = [
     "configs/schedules/adamw_cosine_lr.py",
 ]

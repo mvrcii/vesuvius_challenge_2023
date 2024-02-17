@@ -120,16 +120,12 @@ def get_callbacks(cfg, model_run_dir):
         os.makedirs(model_run_dir, exist_ok=True)
         cfg.save_to_file(model_run_dir)
 
-        monitor_metric = "val_accuracy"
-        filename_metric = "{val_accuracy:.2f}"  # Default filename metric placeholder
-
-        if cfg.segmentation:
-            monitor_metric = "val_iou"
-            filename_metric = "{val_iou:.2f}"  # Change filename metric placeholder for segmentation
+        monitor_metric = "val_iou"
+        filename_metric = "{val_iou:.2f}"
 
         checkpoint_callback = ModelCheckpoint(
             dirpath=model_run_dir,
-            filename=f"best-checkpoint-{{epoch}}-{filename_metric}",  # Use dynamic metric in filename
+            filename=f"best-checkpoint-{{epoch}}-{filename_metric}",
             save_top_k=1,
             monitor=monitor_metric,
             mode="max",
