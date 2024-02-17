@@ -11,8 +11,8 @@ from PIL import Image
 from skimage.transform import resize
 from tqdm import tqdm
 
-from multilayer_approach.data_validation import validate_fragments
 from data.utils import write_to_config
+from multilayer_approach.data_validation import validate_fragments
 from utility.configs import Config
 from utility.fragments import get_frag_name_from_id
 
@@ -252,7 +252,8 @@ def read_fragment_images_for_channels(root_dir, patch_size, channels, ch_block_s
         images.append(image)
 
     images = np.stack(images, axis=0)
-    assert images.ndim == 3 and images.shape[0] == ch_block_size, f"Images shape {images.shape}, ch_block_size {ch_block_size}"
+    assert images.ndim == 3 and images.shape[
+        0] == ch_block_size, f"Images shape {images.shape}, ch_block_size {ch_block_size}"
 
     return np.array(images)
 
@@ -280,20 +281,12 @@ def read_label(label_path, patch_size):
     return label
 
 
-def get_sys_args():
-    # Create the parser
-    parser = argparse.ArgumentParser(description='Process some strings.')
-
-    # Required string argument
-    parser.add_argument('config_path', type=str)
-
-    args = parser.parse_args()
-    return args.config_path
-
-
 if __name__ == '__main__':
-    config_path = get_sys_args()
-    cfg = Config.load_from_file(config_path)
+    parser = argparse.ArgumentParser(description='Create a dataset for segmentation based on a given config')
+    parser.add_argument('config_path', type=str)
+    args = parser.parse_args()
+
+    cfg = Config.load_from_file(args.config_path)
 
     LABEL_INFO_LIST = []
 
