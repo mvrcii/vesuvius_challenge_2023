@@ -19,17 +19,18 @@ data_root_dir = "data"
 
 
 # CONTRASTED DATASET
-contrasted = False
-dataset_target_dir = os.path.join("multilayer_approach", "datasets", "unetr")
+contrasted = True
+dataset_target_dir = os.path.join("data", "datasets", "unetr")
 #contrasted = True
 #dataset_target_dir = os.path.join("multilayer_approach", "datasets", "unetr_contrasted")
 
 
 # BASE DATA - FRAGMENTS (all included here)
-fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
-                SKYHUGE_FRAG_ID, SKYGLORIOUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID,
-                JAZZBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,
-                BLUEBIGGER_FRAG_ID, TRAILBIGGER_FRAG_ID]
+# fragment_ids = [BLASTER_FRAG_ID, IRONHIDE_FRAG_ID, HOT_ROD_FRAG_ID, JETFIRE_FRAG_ID,
+#                 SKYHUGE_FRAG_ID, SKYGLORIOUS_FRAG_ID, THUNDERCRACKER_FRAG_ID, GRIMHUGE_FRAG_ID,
+#                 JAZZBIGGER_FRAG_ID, DEVASBIGGER_FRAG_ID, SUNSTREAKER_FRAG_ID, ULTRA_MAGNUS_FRAG_ID,
+#                 BLUEBIGGER_FRAG_ID, TRAILBIGGER_FRAG_ID]
+fragment_ids = [GRIMHUGE_FRAG_ID]
 validation_fragments = [GRIMHUGE_FRAG_ID]
 
 
