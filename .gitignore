@@ -6,6 +6,7 @@ conf_local.py
 *.npy
 *.tif
 fragments/**/layers
+
 wandb
 *.tar
 venv
@@ -14,6 +15,7 @@ slurm*.out
 checkpoints
 checkpoints_archive
 data/datasets/**
+data/fragments_contrasted/**
 multilayer_approach/datasets/**
 inference/results/**
 inference/archived_results/**
