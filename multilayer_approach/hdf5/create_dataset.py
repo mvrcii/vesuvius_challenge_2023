@@ -30,9 +30,26 @@ def validate_file(path, file_description="file"):
         raise ValueError(f"{file_description.capitalize()} file does not exist: {path}")
 
 
-def extract_patches(config, frags, label_dir):
+def extract_patches(config, label_dir):
+    # Get fragments
+    frags = list(set(cfg.fragment_ids).union(cfg.validation_fragments))
+
+    dataset_path = os.path.join(config.dataset_target_dir, str(config.patch_size), "dataset.hdf5")
+    if os.path.isfile(dataset_path):
+        with h5py.File(dataset_path, 'r') as dataset:
+            for frag_id in frags:
+                frag_name = get_frag_name_from_id(frag_id)
+
+                if frag_name in dataset:
+                    print(f"Fragment {frag_id} already exists")
+                    frags.remove(frag_id)
+
     frag_id_2_layer = validate_fragments(config, frags, label_dir)
-    logging.info(f"Starting to create dataset for fragments: {frags}")
+    print("\nSTAGE 2:\tEXTRACTING PATCHES")
+    print("FRAGMENTS:")
+    for frag_id in frag_id_2_layer.keys():
+        print(frag_id, "\t", get_frag_name_from_id(frag_id))
+    print("\n")
 
     for fragment_id, layers in frag_id_2_layer.items():
         process_fragment(label_dir=label_dir, config=config, frag_id=fragment_id, layers=layers)
@@ -50,13 +67,12 @@ def extract_patches(config, frags, label_dir):
 
 
 def clear_dataset(config: Config):
-    print("Clearing patch size", config.patch_size)
+    print("STAGE 1:\tCLEANING DATASET")
     root_dir = os.path.join(config.dataset_target_dir, str(config.patch_size))
     if os.path.isdir(root_dir):
         shutil.rmtree(root_dir)
-        print("Deleted dataset directory:", root_dir)
-    else:
-        print("Dataset directory does not exist yet, nothing delete:", root_dir)
+        print("DELETED:\t", root_dir)
+    print("\n")
 
 
 def process_fragment(config, frag_id, layers, label_dir):
@@ -103,7 +119,7 @@ def process_fragment(config, frag_id, layers, label_dir):
                                                                   start_layer=min(layers))
 
     total_patches = patch_cnt + skipped_cnt + ignore_skipped_count
-    print(f"- Total={total_patches} | Patches={patch_cnt} | Skipped={skipped_cnt} | Ignored = {ignore_skipped_count}")
+    print(f"Total={total_patches} | Patches={patch_cnt} | Skipped={skipped_cnt} | Ignored = {ignore_skipped_count}")
 
 
 def process_layers(tensors, config: Config, target_dir, frag_id, start_layer):
@@ -143,6 +159,20 @@ def process_layers(tensors, config: Config, target_dir, frag_id, start_layer):
     with h5py.File(hdf_filepath, 'a') as hdf_file:
         frag_name = get_frag_name_from_id(frag_id).upper()
         frag_group = hdf_file.create_group(frag_name) if frag_name not in hdf_file else hdf_file[frag_name]
+
+        frag_meta_data = {
+            "frag_id": frag_id,
+            "start_layer": start_layer,
+            "patch_size": config.patch_size,
+            "stride": config.stride,
+            "label_size": config.label_size,
+            "in_chans": config.in_chans,
+            "frag_name": frag_name,
+            "label_dims": label_arr.shape
+        }
+
+        for key, value in frag_meta_data.items():
+            frag_group.attrs[key] = value
 
         patch_cnt = 0
 
@@ -190,11 +220,19 @@ def process_layers(tensors, config: Config, target_dir, frag_id, start_layer):
                 label_pixel_count = np.prod(label_patch.shape)
                 # assert label_pixel_count != 0
 
-                # calculate ink percentage of scaled down label patch
+                # Calculate ink percentage of scaled down label patch
                 ink_percentage = int((label_patch.sum() / label_pixel_count) * 100)
                 # assert 0 <= ink_percentage <= 100
 
-                # calculate keep percentage of scaled down keep patch
+                # Discard images with less than 5% ink pixels
+                if ink_percentage < cfg.ink_ratio:
+                    ignore_skipped += 1
+                    continue
+
+                # TODO: Temporarily remember patches with ink_percentage == 0 and randomly save as many as we have patches
+                # TODO: with ink_percentage > ink_ratio
+
+                # Calculate keep percentage of scaled down keep patch
                 keep_percent = int((keep_patch.sum() / np.prod(keep_patch.shape)) * 100)
                 # assert 0 <= keep_percent <= 100
                 ignore_percent = 100 - keep_percent
@@ -210,23 +248,21 @@ def process_layers(tensors, config: Config, target_dir, frag_id, start_layer):
                 else:
                     patch_group = frag_group[f"img_patch_{patch_cnt}"]
 
-                # Save image patch to hdf5
+                # Save patches to fragment patch group within the hdf5 file
                 patch_group.create_dataset("image_patch", data=image_patch)
                 patch_group.create_dataset("label_patch", data=label_patch)
                 patch_group.create_dataset("keep_patch", data=keep_patch)
 
-                meta_data = {
+                # Additionally add metadata to the patch group
+                patch_meta_data = {
                     "frag_id": frag_id,
                     "start_layer": start_layer,
                     "ink_percentage": ink_percentage,
                     "ignore_percent": ignore_percent,
-                    "x1": x1,
-                    "y1": y1,
-                    "x2": x2,
-                    "y2": y2
+                    "bbox": (x1, y1, x2, y2)
                 }
 
-                for key, value in meta_data.items():
+                for key, value in patch_meta_data.items():
                     patch_group.attrs[key] = value
 
     return patch_cnt, mask_skipped, ignore_skipped
@@ -287,14 +323,12 @@ if __name__ == '__main__':
 
     cfg = Config.load_from_file(args.config_path)
 
-    LABEL_INFO_LIST = []
-
     label_dir = os.path.join(cfg.work_dir, "data", "labels", "6_twelve_layer_unetr_it3", "binarized")
-    print("Using label dir:", label_dir)
 
-    train_fragments = cfg.fragment_ids
-    val_fragments = cfg.validation_fragments
-    fragments = list(set(train_fragments).union(val_fragments))
-    clear_dataset(config=cfg)
+    print("STAGE 0:")
+    print("LABEL_DIR:\t", label_dir)
+    print("PATCH_SIZE:\t", cfg.patch_size, "\n")
 
-    extract_patches(cfg, fragments, label_dir)
+    # clear_dataset(config=cfg)
+
+    extract_patches(cfg, label_dir)
