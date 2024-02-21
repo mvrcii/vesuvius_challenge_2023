@@ -35,6 +35,22 @@ DESERT_SEA = CHECKPOINTS['desert-sea']
 OLIVE_WIND = CHECKPOINTS['olive-wind']
 WISE_ENERGY = CHECKPOINTS['wise-energy']
 
+def get_checkpoint_name(user_input, checkpoint_dict, short_names=False):
+    short_names = checkpoint_dict.keys()
+
+    if len(user_input.split('-')) > 3:
+        return user_input
+
+    match = closest_match(user_input, short_names)
+    if match:
+        if short_names:
+            return checkpoint_dict[match[0]], match[0]
+        return checkpoint_dict[match[0]]
+    else:
+        print("Error with checkpoint")
+        exit()
+
+
 # UPBEAT_TREE = CHECKPOINTS["upbeat-tree"]
 # DEFT_YOGURT = CHECKPOINTS["deft-yogurt"]
 # PLAYFUL_FIREFLY = CHECKPOINTS["playful-firefly"]

@@ -80,19 +80,6 @@ def closest_match(input_str, options, num_matches=1):
     cutoff_value = 0.1  # Adjust as needed
     return get_close_matches(input_str.lower(), options, n=num_matches, cutoff=cutoff_value)
 
-def get_checkpoint_name(user_input, checkpoint_dict):
-    short_names = checkpoint_dict.keys()
-
-    if len(user_input.split('-')) > 3:
-        return user_input
-
-    match = closest_match(user_input, short_names)
-    if match:
-        return checkpoint_dict[match[0]]
-    else:
-        print("Error with checkpoint")
-        exit()
-
 
 def get_inference_result(fragment_id_or_name, checkpoint_keyword, hostname, force=False):
     result_dir = "results"
