@@ -67,6 +67,7 @@ def main():
     parser.add_argument("checkpoint_path", type=str, help="Path to the checkpoint file.")
     parser.add_argument('fragment_id', type=str, help='The fragment to infer.')
     parser.add_argument('--stride', type=int, default=2, help='Stride (default: 2)')
+    parser.add_argument('--bs', type=int, default=4, help='Batch Size (default: 4)')
     args = parser.parse_args()
 
     fragment_id = get_fragment_id(fragment_id_or_name=args.fragment_id, confidence=0.8)
@@ -78,7 +79,10 @@ def main():
     message = f"INFO:\t{fragment_id} {get_frag_name_from_id(fragment_id)} stride={str(args.stride)} ({short_name})"
     print_colored(message=message, color="purple")
 
-    infer_layered(checkpoint=checkpoint_path, fragment_id=fragment_id, stride_factor=args.stride)
+    infer_layered(checkpoint=checkpoint_path,
+                  fragment_id=fragment_id,
+                  stride_factor=args.stride,
+                  batch_size=args.bs)
 
 
 if __name__ == "__main__":
