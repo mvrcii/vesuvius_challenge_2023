@@ -3,9 +3,9 @@ import os
 import shutil
 import subprocess
 import sys
-from difflib import get_close_matches, SequenceMatcher
+from difflib import SequenceMatcher
 
-from utility.checkpoints import CHECKPOINTS
+from utility.checkpoints import CHECKPOINTS, get_checkpoint_name
 from utility.fragments import get_frag_name_from_id, FragmentHandler
 
 
@@ -74,11 +74,6 @@ def dynamic_closest_matches(input_str, options, threshold=0.6):
     scored_options = [(option, similarity_score(input_str, option)) for option in options]
     close_matches = [option for option, score in scored_options if score >= threshold]
     return sorted(close_matches, key=lambda x: -similarity_score(input_str, x))
-
-
-def closest_match(input_str, options, num_matches=1):
-    cutoff_value = 0.1  # Adjust as needed
-    return get_close_matches(input_str.lower(), options, n=num_matches, cutoff=cutoff_value)
 
 
 def get_inference_result(fragment_id_or_name, checkpoint_keyword, hostname, force=False):
