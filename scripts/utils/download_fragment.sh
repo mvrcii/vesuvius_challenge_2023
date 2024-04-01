@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Description:
+# This script is used to download fragments from a specified scroll.
+# Usage:
+# ./download_fragment.sh <fragmentID> [scrollID] [sliceRange]
+# - fragmentID: Mandatory. The ID of the fragment to download.
+# - scrollID: Optional. The ID of the scroll, defaults to 1 if not provided.
+# - sliceRange: Optional. A comma-separated list of file ranges to download, e.g., "0 64".
+# Example:
+# ./download_fragment.sh 20231012184423 1 "0 64"
+
 # Basic authentication
 user="registeredusers"
 password="only"
@@ -11,27 +21,35 @@ if [ "$#" -lt 1 ]; then
     exit 1
 fi
 
-# Assign the first argument to a variable
+# Assign arguments
 fragmentID="$1"
-string_argument="$2"
+scrollID="${2:-1}" # Default scroll ID to 1 if not provided
+sliceRange="$3" # Optional slice range
 
-IFS=',' read -r -a ranges <<< "$string_argument"
+# Translate numeric scroll ID into scroll name
+case "$scrollID" in
+    1) scrollName="Scroll1" ;;
+    2) scrollName="Scroll2" ;;
+    3) scrollName="PHerc0332" ;;
+    4) scrollName="PHerc1667" ;;
+    *) echo "Invalid scroll ID provided"; exit 1 ;;
+esac
 
-# Check if fragmentID ends with "_superseded"
+echo $sliceRange
+echo "Processing for Scroll ID: $scrollName with range: $sliceRange"
+
+IFS=',' read -r -a ranges <<< "$sliceRange"
+
+# Handle "_superseded" in fragmentID for outputFolder
 if [[ $fragmentID == *"_superseded" ]]; then
-    # Remove "_superseded" suffix for outputFolder
     outputFragmentID=${fragmentID%"_superseded"}
 else
     outputFragmentID=$fragmentID
 fi
 
-
-# Configuration based on option
+# Configuration based on options
 outputFolder="fragments/fragment${outputFragmentID}/layers"
-baseUrl="http://dl.ash2txt.org/full-scrolls/Scroll1.volpkg/paths/${fragmentID}/layers/"
-#baseUrl="http://dl.ash2txt.org/richi-uploads/ThaumatoAnakalyptor/scroll1/working_first_letter/layers/"
-
-# Use the provided or default slice range
+baseUrl="http://dl.ash2txt.org/full-scrolls/${scrollName}.volpkg/paths/${fragmentID}/layers/"
 overwriteExistingFiles=false
 
 # Create output folder if it doesn't exist
@@ -43,8 +61,8 @@ download_file() {
     local outputFile=$2
 
     if $overwriteExistingFiles || [ ! -f "$outputFile" ]; then
-        echo "Downloading file: $outputFile"
-        curl -s -u "$credentials" -o "$outputFile" "$url" || echo "Error downloading file: $outputFile $url"
+        echo "Downloading: $outputFile Url: $url"
+        curl -s -u "$credentials" -o "$outputFile" "$url" || echo "Error downloading file: $outputFile"
     else
         echo "File $outputFile already exists, skipping download."
     fi
