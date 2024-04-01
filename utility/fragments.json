@@ -349,5 +349,13 @@
       33
     ],
     "rotation": -1
+  },
+  {
+    "id": "20240304141530",
+    "name": "SCROLL4",
+    "best_layers_start_indices": [
+      28,
+      42
+    ]
   }
 ]
