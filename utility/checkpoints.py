@@ -1,4 +1,5 @@
 import os
+from difflib import get_close_matches
 
 CHECKPOINTS = {
     # "playful-firefly": "playful-firefly-737-segformer-b2-231209-143850",
@@ -34,6 +35,12 @@ CURIOUS_RAIN = CHECKPOINTS['curious-rain']
 DESERT_SEA = CHECKPOINTS['desert-sea']
 OLIVE_WIND = CHECKPOINTS['olive-wind']
 WISE_ENERGY = CHECKPOINTS['wise-energy']
+
+
+def closest_match(input_str, options, num_matches=1):
+    cutoff_value = 0.1  # Adjust as needed
+    return get_close_matches(input_str.lower(), options, n=num_matches, cutoff=cutoff_value)
+
 
 def get_checkpoint_name(user_input, checkpoint_dict, short_names=False):
     short_names = checkpoint_dict.keys()
@@ -104,7 +111,6 @@ def get_ckpt_name_from_id(checkpoint_name):
         if checkpoint == checkpoint_name:
             return name
     return "Unknown Checkpoint"
-
 
 # WHEELJACK
 # GALVATRON
