@@ -17,3 +17,6 @@ Moves the contrasted layer files to the correct directory for a follow-up datase
 
 Create the dataset for the segmentation task:
 `python multilayer_approach/create_dataset_segmentation.py configs/segmentation/unetr_sf/64/config_stage2_starter.py`
+
+### 5. Train the model
+`python train.py configs/segmentation/unetr_sf/64/config_stage2_starter.py`
