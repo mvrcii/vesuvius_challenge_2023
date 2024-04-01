@@ -1,26 +1,10 @@
 import argparse
-import re
-import subprocess
-import time
 
 from multilayer_approach.infer_layered_segmentation_padto16 import main as infer_layered
 from scripts.download_inference_from_host import dynamic_closest_matches
+from slurm_inference import print_colored
 from utility.checkpoints import CHECKPOINTS, get_checkpoint_name
 from utility.fragments import get_frag_name_from_id, FragmentHandler
-
-
-def print_colored(message, color, _print=True):
-    colors = {
-        "blue": '\033[94m',
-        "green": '\033[92m',
-        "red": '\033[91m',
-        "purple": '\033[95m',
-        "end": '\033[0m',
-    }
-    if _print:
-        print(f"{colors[color]}{message}{colors['end']}")
-    else:
-        return f"{colors[color]}{message}{colors['end']}"
 
 
 def get_fragment_id(fragment_id_or_name, confidence):
@@ -71,11 +55,11 @@ def main():
     args = parser.parse_args()
 
     fragment_id = get_fragment_id(fragment_id_or_name=args.fragment_id, confidence=0.8)
-    checkpoint_path, short_name = get_checkpoint_name(args.checkpoint_path, checkpoint_dict=CHECKPOINTS,short_names=True)
+    checkpoint_path, short_name = get_checkpoint_name(args.checkpoint_path, checkpoint_dict=CHECKPOINTS)
 
     script_name = f"multilayer_approach/infer_layered_segmentation_padto16.py"
-    print_colored(f"INFO:\tUsing {script_name}", "blue")
 
+    print_colored(f"INFO:\tUsing {script_name}", "blue")
     message = f"INFO:\t{fragment_id} {get_frag_name_from_id(fragment_id)} stride={str(args.stride)} ({short_name})"
     print_colored(message=message, color="purple")
 
