@@ -22,3 +22,8 @@ termcolor
 future
 timm
 segmentation_models_pytorch
+argparse
+torch
+torchvision
+scipy
+imageio
