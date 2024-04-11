@@ -166,3 +166,7 @@ SUPERSEDED_FRAGMENTS = [GRIMLARGE_FRAG_ID, JAZZILLA_FRAG_ID, DEVASTATOR_FRAG_ID,
 
 def get_frag_name_from_id(frag_id):
     return FragmentHandler().get_name(frag_id)
+
+
+def get_frag_id_from_name(frag_name):
+    return FragmentHandler().get_id(frag_name)

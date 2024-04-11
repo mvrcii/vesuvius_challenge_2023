@@ -2,7 +2,6 @@ torchmetrics
 scikit-learn
 scikit-image
 transformers==4.35.0
-
 matplotlib
 numpy
 tqdm
@@ -12,8 +11,10 @@ einops
 opencv-python
 pillow
 lightning
-h5py
 
+h5py
+batchgenerators
+monai
 pandas
 requests
 beautifulsoup4
@@ -21,3 +22,8 @@ termcolor
 future
 timm
 segmentation_models_pytorch
+argparse
+torch
+torchvision
+scipy
+imageio

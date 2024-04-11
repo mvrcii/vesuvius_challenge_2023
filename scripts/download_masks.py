@@ -49,7 +49,9 @@ def download_masks():
                 elif url_frag_id == "RICHI3":
                     print("Warning: Unusual download url!")
                     url = f'http://dl2.ash2txt.org/richi-uploads/ThaumatoAnakalyptor/scroll_3/sample_segments2/working_700_small_12/thaumato_mask.png'
-
+                elif url_frag_id == "20240304141530":
+                    print("Warning: Unusual download url!")
+                    url = f'http://dl.ash2txt.org/full-scrolls/PHerc1667.volpkg/paths/{url_frag_id}/{mask_id}_mask.png'
 
                 try:
                     response = requests.get(url, auth=HTTPBasicAuth(username, password))

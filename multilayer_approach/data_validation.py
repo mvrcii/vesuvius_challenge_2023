@@ -6,19 +6,19 @@ from utility.fragments import FragmentHandler
 
 
 def validate_fragments(config, fragments, label_dir):
-    frag_id_2_channels = {}
+    frag_id_2_layers = {}
 
     for frag_id in fragments:
-        val_errors, frag_channels = validate_fragment_files(frag_id=frag_id, cfg=config,
+        val_errors, frag_layers = validate_fragment_files(frag_id=frag_id, cfg=config,
                                                             label_dir=label_dir)
         if len(val_errors) > 0:
             print("Excluded fragment", frag_id)
             print("\n".join(val_errors))
-        elif len(frag_channels) > 0:
+        elif len(frag_layers) > 0:
             print("Fragment", frag_id, "is valid")
-            frag_id_2_channels[frag_id] = frag_channels
+            frag_id_2_layers[frag_id] = frag_layers
 
-    return frag_id_2_channels
+    return frag_id_2_layers
 
 def validate_fragment_files(frag_id, cfg, label_dir):
     errors = []
@@ -35,23 +35,23 @@ def validate_fragment_files(frag_id, cfg, label_dir):
 
     # Check if label dir (multilayer_approach/base_labels/3_binarized/fragment{frag_id}) exists
     if not os.path.isdir(frag_label_dir):
-        errors.append(f"\033[91mReason:\t\tLabel directory {frag_label_dir} not found\033[0m")
+        errors.append(f"\033[91mReason:\t\tLabel directory {frag_label_dir} not found in:\n{frag_label_dir}\033[0m")
 
     # Check if layer dir (data/fragments/fragment{frag_id}/layers) exists
     if not os.path.isdir(frag_layer_dir):
-        errors.append(f"\033[91mReason:\t\tLayer directory {frag_layer_dir} not found\033[0m")
+        errors.append(f"\033[91mReason:\t\tLayer directory {frag_layer_dir} not found in:\n{frag_layer_dir}\033[0m")
 
     # Check if inklabel exists
     if not os.path.isfile(inklabel_path):
-        errors.append(f"\033[91mReason:\t\tInklabel file {inklabel_path} not found\033[0m")
+        errors.append(f"\033[91mReason:\t\tInklabel file {inklabel_path} not found in:\n{inklabel_path}\033[0m")
 
     # Check if ignore exists
     if not os.path.isfile(ignore_path):
-        errors.append(f"\033[91mReason:\t\tIgnore file {ignore_path} not found\033[0m")
+        errors.append(f"\033[91mReason:\t\tIgnore file {ignore_path} not found in:\n{ignore_path}\033[0m")
 
     # Check if mask exists
     if not os.path.isfile(mask_path):
-        errors.append(f"\033[91mReason:\t\tMask file not found\033[0m")
+        errors.append(f"\033[91mReason:\t\tMask file not found in:\n{mask_path}\033[0m")
 
     # Stop if any errors occurred
     if len(errors) > 0:

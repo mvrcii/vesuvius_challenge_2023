@@ -3,8 +3,8 @@ import re
 import subprocess
 import time
 
-from scripts.download_inference_from_host import dynamic_closest_matches, get_checkpoint_name
-from utility.checkpoints import CHECKPOINTS
+from scripts.download_inference_from_host import dynamic_closest_matches
+from utility.checkpoints import CHECKPOINTS, get_checkpoint_name
 from utility.fragments import get_frag_name_from_id, FragmentHandler
 
 

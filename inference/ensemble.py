@@ -12,7 +12,7 @@ def load_and_process_data(directory, frag_id, architecture):
     start_layer, end_layer = FragmentHandler().get_best_12_layers(frag_id)  # inclusive
     layer_indices = set(range(start_layer, end_layer + 1))
 
-    files = [file for file in os.listdir(directory) if file.startswith('sigmoid_logits') and
+    files = [file for file in os.listdir(directory) if file.startswith('stride-2-sigmoid_logits') and
              file.endswith('.npy') and not file.startswith('maxed_logits')]
     files.sort(key=lambda x: int(x.split('_')[2]))
 

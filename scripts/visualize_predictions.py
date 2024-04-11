@@ -119,7 +119,7 @@ def get_target_dims(work_dir, frag_id):
 
     target_dims = None
 
-    slice_dir = os.path.join(frag_dir, "slices")
+    slice_dir = os.path.join(frag_dir, "layers")
     os.makedirs(slice_dir, exist_ok=True)
 
     if os.path.isdir(slice_dir):
@@ -138,7 +138,7 @@ def get_target_dims(work_dir, frag_id):
         if frag_id in SUPERSEDED_FRAGMENTS:
             print("Warning: Fragment superseded, added suffix for download!")
             frag_id += "_superseded"
-        print(f"Downloading Slice file for dimensions: {os.path.join(frag_id, 'slices', f'{i:05}.tif')}")
+        print(f"Downloading Slice file for dimensions: {os.path.join(frag_id, 'layers', f'{i:05}.tif')}")
         command = ['bash', "./scripts/utils/download_fragment.sh", frag_id, f'{i:05} {i:05}']
         subprocess.run(command, check=True)
         image = cv2.imread(img_path, 0)

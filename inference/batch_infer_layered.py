@@ -2,7 +2,7 @@ import subprocess
 import sys
 
 from utility.checkpoints import get_ckpt_name_from_id
-from utility.fragments import JETFIRE_FRAG_ID, get_frag_name_from_id
+from utility.fragments import JETFIRE_FRAG_ID, get_frag_name_from_id, BLASTER_FRAG_ID
 
 
 def print_colored(message, color):
@@ -28,7 +28,7 @@ def print_colored(message, color):
 # boost_threshold = True
 # verbose = False
 
-FRAGMENT_IDS = [JETFIRE_FRAG_ID]
+FRAGMENT_IDS = [BLASTER_FRAG_ID]
 model = "trim-sun-761-segformer-b2-231213-021154"
 
 print("Fragments for inference:\t", ", ".join(FRAGMENT_IDS))
