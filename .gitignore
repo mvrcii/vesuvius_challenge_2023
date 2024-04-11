@@ -7,6 +7,7 @@ conf_local.py
 *.tif
 fragments/**/layers
 
+*.DS_Store
 wandb
 *.tar
 venv
