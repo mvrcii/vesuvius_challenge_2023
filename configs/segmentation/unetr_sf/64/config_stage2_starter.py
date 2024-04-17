@@ -20,7 +20,7 @@ data_root_dir = "data"
 
 # CONTRASTED DATASET
 contrasted = True
-dataset_target_dir = os.path.join("data", "datasets", "unetr")
+dataset_target_dir = os.path.join("data", "datasets", "unetr_sf")
 #contrasted = True
 #dataset_target_dir = os.path.join("multilayer_approach", "datasets", "unetr_contrasted")
 
