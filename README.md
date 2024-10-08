@@ -1,4 +1,5 @@
-## Our approach
+## Vesuvius Challenge Progress Prize
+![](https://github.com/mvrcii/vesuvius/blob/main/docs/4423.gif)
 
 We started off by hand-labelling visible crackles up to a precision of 4 layers, these early labels can be found in 
 `data/labels/0_hand_four_layer/raw`. (*Note: all paths are referring to paths from the project root: `usr/src/app` 
