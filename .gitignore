@@ -1,11 +1,14 @@
 conf_local.py
 
+.DS_store
 .idea
 *.xml
 
 *.npy
 *.tif
 fragments/**/layers
+fragments_contrasted
+
 wandb
 *.tar
 venv
